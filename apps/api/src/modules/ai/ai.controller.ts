@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { CopywriterService } from './copywriter.service';
+import { DesignerService } from './designer.service';
 import { ExecutePromptDto } from './dto/execute-prompt.dto';
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
@@ -24,11 +25,22 @@ export class GenerateCopyDto {
   lengthLimit?: number;
 }
 
+export class GenerateImageDto {
+  @IsString()
+  @IsNotEmpty()
+  prompt!: string;
+
+  @IsString()
+  @IsOptional()
+  size?: string;
+}
+
 @Controller('ai')
 export class AiController {
   constructor(
     private readonly aiService: AiService,
     private readonly copywriterService: CopywriterService,
+    private readonly designerService: DesignerService,
   ) {}
 
   @Post('execute')
@@ -51,6 +63,12 @@ export class AiController {
       dto.tone,
       dto.lengthLimit,
     );
+  }
+
+  @Post('designer/generate')
+  @HttpCode(HttpStatus.OK)
+  async generateImage(@Body() dto: GenerateImageDto) {
+    return this.designerService.generateImage(dto.prompt, dto.size);
   }
 
   @Get('status')
