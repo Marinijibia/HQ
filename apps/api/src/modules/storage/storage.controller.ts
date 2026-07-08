@@ -21,7 +21,14 @@ export class StorageController {
   @Post('upload')
   @ApiOperation({ summary: 'Secure upload file to cloud bucket' })
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+  async uploadFile(
+    @UploadedFile()
+    file: {
+      buffer: Buffer;
+      originalname: string;
+      mimetype: string;
+    },
+  ) {
     if (!file) {
       throw new BadRequestException('No file uploaded.');
     }

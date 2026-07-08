@@ -7,11 +7,29 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { AiService } from './ai.service';
+import { CopywriterService } from './copywriter.service';
 import { ExecutePromptDto } from './dto/execute-prompt.dto';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+
+export class GenerateCopyDto {
+  @IsString()
+  @IsNotEmpty()
+  prompt!: string;
+
+  @IsString()
+  @IsOptional()
+  tone?: string;
+
+  @IsOptional()
+  lengthLimit?: number;
+}
 
 @Controller('ai')
 export class AiController {
-  constructor(private readonly aiService: AiService) {}
+  constructor(
+    private readonly aiService: AiService,
+    private readonly copywriterService: CopywriterService,
+  ) {}
 
   @Post('execute')
   @HttpCode(HttpStatus.OK)
@@ -23,6 +41,16 @@ export class AiController {
   @HttpCode(HttpStatus.OK)
   async generateCopy(@Body() dto: ExecutePromptDto) {
     return this.aiService.executePrompt(dto);
+  }
+
+  @Post('copywriter/generate')
+  @HttpCode(HttpStatus.OK)
+  async generateCopywriting(@Body() dto: GenerateCopyDto) {
+    return this.copywriterService.generateCopywritingDraft(
+      dto.prompt,
+      dto.tone,
+      dto.lengthLimit,
+    );
   }
 
   @Get('status')
