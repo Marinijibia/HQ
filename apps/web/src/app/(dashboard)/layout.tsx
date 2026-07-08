@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSidebarStore } from '@/stores/sidebarStore';
-import { Button } from '@hq/ui';
+import { Button, Card } from '@hq/ui';
 import {
   LayoutDashboard,
   Users,
@@ -39,6 +39,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { isOpen: isSidebarOpen, toggle: toggleSidebar } = useSidebarStore();
   const isConnected = true;
+  const [showNotifications, setShowNotifications] = React.useState(false);
+  const notifications = [
+    {
+      id: '1',
+      title: 'Mission Approved',
+      text: 'CEO Elena approved Petroleum Outreach strategy.',
+      time: '5m ago',
+    },
+    {
+      id: '2',
+      title: 'System Security Audited',
+      text: 'Jack Bauer completed zero-trust endpoint checks.',
+      time: '20m ago',
+    },
+    {
+      id: '3',
+      title: 'Invoice Paid',
+      text: 'Growth tier renewal verified successfully.',
+      time: '1h ago',
+    },
+  ];
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
@@ -58,11 +79,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="relative">
+        <div className="flex items-center space-x-4 relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={() => setShowNotifications(!showNotifications)}
+          >
             <Bell className="h-4 w-4" />
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-hq-purple"></span>
           </Button>
+
+          {showNotifications && (
+            <Card className="absolute right-0 top-12 z-50 w-80 p-4 border border-hq-graphite/40 bg-hq-graphite/95 shadow-level-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between pb-2 border-b border-hq-graphite/40">
+                <span className="font-bold text-xs text-white">Notifications Feed</span>
+                <button
+                  onClick={() => setShowNotifications(false)}
+                  className="text-xs text-foreground/50 hover:text-foreground"
+                >
+                  Dismiss All
+                </button>
+              </div>
+              <div className="mt-3 space-y-3">
+                {notifications.map((n) => (
+                  <div key={n.id} className="text-xs space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-foreground">{n.title}</span>
+                      <span className="text-[9px] text-foreground/45">{n.time}</span>
+                    </div>
+                    <p className="text-foreground/60 leading-tight">{n.text}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
           <div className="flex items-center space-x-2 select-none">
             <div className="h-8 w-8 rounded-full bg-hq-blue/20 border border-hq-blue/40 flex items-center justify-center font-bold text-hq-blue text-xs uppercase">
               ED
