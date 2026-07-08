@@ -328,7 +328,7 @@ export default function OnboardingPage() {
                   <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
               ) : (
-                <Link href="/dashboard">
+                <Link href="/onboarding/first-mission">
                   <Button
                     variant="success"
                     className="text-xs font-semibold flex items-center gap-1.5"
