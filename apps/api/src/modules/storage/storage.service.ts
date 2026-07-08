@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -9,6 +9,16 @@ export class StorageService {
   private readonly logger = new Logger(StorageService.name);
   private readonly localStoragePath: string;
   private readonly useGcs: boolean;
+  private readonly maxFileSize = 50 * 1024 * 1024; // 50MB
+  private readonly mimeAllowlist = [
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'image/svg+xml',
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+    'video/mp4',
+  ];
 
   constructor(private readonly configService: ConfigService) {
     this.localStoragePath = path.resolve(
@@ -21,12 +31,26 @@ export class StorageService {
     }
   }
 
+  validateFile(size: number, mimeType: string) {
+    if (size > this.maxFileSize) {
+      throw new BadRequestException(
+        'Security Check Failed: File size exceeds the maximum limit of 50MB.',
+      );
+    }
+    if (!this.mimeAllowlist.includes(mimeType)) {
+      throw new BadRequestException(
+        `Security Check Failed: MIME type "${mimeType}" is not allowed.`,
+      );
+    }
+  }
+
   async uploadFile(
     fileBuffer: Buffer,
     originalName: string,
-    _mimeType: string,
+    mimeType: string,
   ): Promise<{ gcsPath: string; size: number; sha256: string }> {
     const size = fileBuffer.length;
+    this.validateFile(size, mimeType);
 
     // Calculate SHA-256 hash checksum for file integrity
     const hash = crypto.createHash('sha256');
