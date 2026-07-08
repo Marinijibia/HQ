@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { MissionRepository } from './mission.repository';
+import { CosService } from './cos.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { EntitlementGuard } from '../auth/entitlement.guard';
@@ -53,7 +54,10 @@ export class UpdateMissionDto {
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('missions')
 export class MissionController {
-  constructor(private readonly missionRepository: MissionRepository) {}
+  constructor(
+    private readonly missionRepository: MissionRepository,
+    private readonly cosService: CosService,
+  ) {}
 
   @Post()
   @UseGuards(EntitlementGuard)
@@ -142,5 +146,17 @@ export class MissionController {
     return this.missionRepository.update(id, {
       status: MissionStatus.ARCHIVED,
     });
+  }
+
+  @Post(':id/plan')
+  @ApiOperation({
+    summary: 'Generate Task WBS DAG plan using AI Chief of Staff',
+  })
+  async plan(@Param('id') id: string) {
+    const mission = await this.missionRepository.findById(id);
+    if (!mission) {
+      throw new NotFoundException('Mission not found');
+    }
+    return this.cosService.generateTaskDAG(mission.objective);
   }
 }
