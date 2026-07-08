@@ -2,9 +2,10 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSidebarStore } from '@/stores/sidebarStore';
-import { Button, Card } from '@hq/ui';
+import { useCommandPaletteStore } from '@/stores/commandPaletteStore';
+import { Button, Card, Input } from '@hq/ui';
 import {
   LayoutDashboard,
   Users,
@@ -37,9 +38,28 @@ const navItems: SidebarNavItem[] = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { isOpen: isSidebarOpen, toggle: toggleSidebar } = useSidebarStore();
+  const {
+    isOpen: isPaletteOpen,
+    toggle: togglePalette,
+    setOpen: setPaletteOpen,
+  } = useCommandPaletteStore();
+  const [search, setSearch] = React.useState('');
   const isConnected = true;
   const [showNotifications, setShowNotifications] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        togglePalette();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePalette]);
+
   const notifications = [
     {
       id: '1',
@@ -205,6 +225,88 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </footer>
+
+      {/* Global Command Palette Overlay (Cmd + K) */}
+      {isPaletteOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setPaletteOpen(false)}
+        >
+          <Card
+            className="w-full max-w-lg border border-hq-graphite/40 bg-hq-graphite/95 shadow-level-5 overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-hq-graphite/40">
+              <Input
+                autoFocus
+                placeholder="Type a command or search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full h-10"
+              />
+            </div>
+            <div className="max-h-60 overflow-y-auto p-2 space-y-1">
+              {[
+                {
+                  name: 'Go to Dashboard',
+                  action: () => {
+                    router.push('/dashboard');
+                    setPaletteOpen(false);
+                  },
+                },
+                {
+                  name: 'Go to Boardroom',
+                  action: () => {
+                    router.push('/boardroom');
+                    setPaletteOpen(false);
+                  },
+                },
+                {
+                  name: 'Go to Missions',
+                  action: () => {
+                    router.push('/missions');
+                    setPaletteOpen(false);
+                  },
+                },
+                {
+                  name: 'Go to Settings',
+                  action: () => {
+                    router.push('/settings');
+                    setPaletteOpen(false);
+                  },
+                },
+                {
+                  name: 'Go to Billing',
+                  action: () => {
+                    router.push('/billing');
+                    setPaletteOpen(false);
+                  },
+                },
+                {
+                  name: 'Toggle Sidebar',
+                  action: () => {
+                    toggleSidebar();
+                    setPaletteOpen(false);
+                  },
+                },
+              ]
+                .filter((cmd) => cmd.name.toLowerCase().includes(search.toLowerCase()))
+                .map((cmd, idx) => (
+                  <button
+                    key={idx}
+                    onClick={cmd.action}
+                    className="w-full text-left rounded-md px-3 py-2.5 text-xs text-foreground/80 hover:bg-hq-blue/10 hover:text-white hover:border border border-transparent hover:border-hq-blue/20 transition-all font-medium flex items-center justify-between"
+                  >
+                    <span>{cmd.name}</span>
+                    <span className="text-[9px] text-foreground/45 bg-hq-graphite/40 px-1.5 py-0.5 rounded">
+                      Action
+                    </span>
+                  </button>
+                ))}
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
