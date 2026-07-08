@@ -1,0 +1,156 @@
+name: HQ CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install Dependencies
+        run: |
+          yarn config set network-timeout 300000
+          yarn install --frozen-lockfile
+
+      - name: Run Linters
+        run: yarn lint
+
+      - name: Run Tests
+        run: yarn test
+
+  build-and-deploy-staging:
+    name: Build & Deploy Staging
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Setup Google Cloud Auth
+      - name: Authenticate with GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      # Configure docker with GCP Artifact Registry credentials
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      # Build & Push API Docker image
+      - name: Build & Push API
+        run: |
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_STAGING }}/hq-repo/hq-api:latest -f apps/api/Dockerfile .
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_STAGING }}/hq-repo/hq-api:latest
+
+      # Build & Push Web Client Docker image
+      - name: Build & Push Web
+        run: |
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_STAGING }}/hq-repo/hq-web:latest -f apps/web/Dockerfile .
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_STAGING }}/hq-repo/hq-web:latest
+
+      # Deploy to GCP Cloud Run Staging
+      - name: Deploy API to Cloud Run Staging
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: hq-api-staging
+          image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_STAGING }}/hq-repo/hq-api:latest
+          region: us-central1
+
+      - name: Deploy Web to Cloud Run Staging
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: hq-web-staging
+          image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_STAGING }}/hq-repo/hq-web:latest
+          region: us-central1
+
+  e2e-tests:
+    name: Run E2E Integration Tests
+    needs: build-and-deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run E2E Tests against Staging URL
+        run: yarn workspace @hq/web test:e2e
+        env:
+          BASE_URL: ${{ secrets.STAGING_WEB_URL }}
+
+  deploy-production:
+    name: Deploy Production
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Setup Google Cloud Auth
+      - name: Authenticate with GCP Production
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_PROD }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      # Build & Push API Production image
+      - name: Build & Push API
+        run: |
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_PROD }}/hq-repo/hq-api:prod -f apps/api/Dockerfile .
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_PROD }}/hq-repo/hq-api:prod
+
+      # Build & Push Web Production image
+      - name: Build & Push Web
+        run: |
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_PROD }}/hq-repo/hq-web:prod -f apps/web/Dockerfile .
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_PROD }}/hq-repo/hq-web:prod
+
+      # Deploy to GCP Cloud Run Production
+      - name: Deploy API to Cloud Run Production
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: hq-api
+          image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_PROD }}/hq-repo/hq-api:prod
+          region: us-central1
+
+      - name: Deploy Web to Cloud Run Production
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: hq-web
+          image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_PROD }}/hq-repo/hq-web:prod
+          region: us-central1

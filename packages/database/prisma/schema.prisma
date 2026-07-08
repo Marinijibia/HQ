@@ -1,0 +1,576 @@
+// packages/database/prisma/schema.prisma
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ==========================================
+// 1. ORGANIZATIONAL HIERARCHY & TENANCY (E24)
+// ==========================================
+
+model Company {
+  id                 String              @id @default(uuid()) @db.Uuid
+  name               String
+  slug               String              @unique
+  logoUrl            String?             @map("logo_url")
+  primaryColor       String?             @map("primary_color")
+  secondaryColor     String?             @map("secondary_color")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  deletedAt          DateTime?           @map("deleted_at")
+  createdBy          String?             @db.Uuid @map("created_by")
+  updatedBy          String?             @db.Uuid @map("updated_by")
+  deletedBy          String?             @db.Uuid @map("deleted_by")
+
+  // Hierarchical Structure
+  parentId           String?             @db.Uuid @map("parent_id")
+  parent             Company?            @relation("CompanyHierarchy", fields: [parentId], references: [id])
+  children           Company[]           @relation("CompanyHierarchy")
+
+  // Level Category (E24 Enterprise levels)
+  level              CompanyLevel        @default(BUSINESS_UNIT)
+
+  // Relations
+  users              User[]
+  brands             Brand[]
+  headquarters       Headquarters[]
+  departments        Department[]
+  missions           Mission[]
+  conversations      Conversation[]
+  assets             Asset[]
+  knowledgeBases     KnowledgeBase[]
+  memories           ExecutiveMemory[]
+  notifications      Notification[]
+  subscriptions      Subscription[]
+  invoices           Invoice[]
+  usageRecords       UsageRecord[]
+  auditLogs          AuditLog[]
+  analytics          Analytics[]
+
+  @@index([parentId])
+  @@index([slug])
+  @@map("companies")
+}
+
+enum CompanyLevel {
+  ENTERPRISE
+  REGION
+  COUNTRY
+  BUSINESS_UNIT
+}
+
+model Brand {
+  id             String       @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  toneOfVoice    String?      @map("tone_of_voice")
+  targetAudience String?      @map("target_audience")
+  industry       String?
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+  createdBy      String?      @db.Uuid @map("created_by")
+  updatedBy      String?      @db.Uuid @map("updated_by")
+  deletedBy      String?      @db.Uuid @map("deleted_by")
+
+  companyId      String       @db.Uuid @map("company_id")
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("brands")
+}
+
+model Headquarters {
+  id             String       @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+  createdBy      String?      @db.Uuid @map("created_by")
+  updatedBy      String?      @db.Uuid @map("updated_by")
+  deletedBy      String?      @db.Uuid @map("deleted_by")
+
+  companyId      String       @db.Uuid @map("company_id")
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("headquarters")
+}
+
+model Department {
+  id             String       @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+  createdBy      String?      @db.Uuid @map("created_by")
+  updatedBy      String?      @db.Uuid @map("updated_by")
+  deletedBy      String?      @db.Uuid @map("deleted_by")
+
+  companyId      String       @db.Uuid @map("company_id")
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  teams          Team[]
+  executives     Executive[]
+
+  @@index([companyId])
+  @@map("departments")
+}
+
+model Team {
+  id             String       @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+  createdBy      String?      @db.Uuid @map("created_by")
+  updatedBy      String?      @db.Uuid @map("updated_by")
+  deletedBy      String?      @db.Uuid @map("deleted_by")
+
+  departmentId   String       @db.Uuid @map("department_id")
+  department     Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  users          User[]
+
+  @@index([departmentId])
+  @@map("teams")
+}
+
+// ==========================================
+// 2. USER MANAGEMENT & ACCESS CONTROL (E24)
+// ==========================================
+
+model User {
+  id              String           @id @default(uuid()) @db.Uuid
+  email           String           @unique
+  name            String?
+  role            UserRole         @default(MEMBER)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  deletedAt       DateTime?        @map("deleted_at")
+  createdBy       String?          @db.Uuid @map("created_by")
+  updatedBy       String?          @db.Uuid @map("updated_by")
+  deletedBy       String?          @db.Uuid @map("deleted_by")
+
+  companyId       String           @db.Uuid @map("company_id")
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  teamId          String?          @db.Uuid @map("team_id")
+  team            Team?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  // Auth/Audit relation
+  auditLogs       AuditLog[]       @relation("ActorLogs")
+
+  @@index([companyId])
+  @@index([teamId])
+  @@map("users")
+}
+
+enum UserRole {
+  ORGANIZATION_OWNER
+  SUPER_ADMINISTRATOR
+  ADMINISTRATOR
+  DEPARTMENT_MANAGER
+  TEAM_LEAD
+  EXECUTIVE_USER
+  MEMBER
+  AUDITOR
+  VIEWER
+}
+
+// ==========================================
+// 3. AI EXECUTIVES (E12, E25)
+// ==========================================
+
+model Executive {
+  id             String       @id @default(uuid()) @db.Uuid
+  name           String
+  roleKey        String       @unique @map("role_key")
+  title          String
+  biography      String?
+  systemPrompt   String?      @map("system_prompt")
+  avatarUrl      String?      @map("avatar_url")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+  createdBy      String?      @db.Uuid @map("created_by")
+  updatedBy      String?      @db.Uuid @map("updated_by")
+  deletedBy      String?      @db.Uuid @map("deleted_by")
+
+  departmentId   String       @db.Uuid @map("department_id")
+  department     Department   @relation(fields: [departmentId], references: [id])
+
+  tasks          MissionTask[]
+  memories       ExecutiveMemory[]
+
+  @@index([departmentId])
+  @@map("executives")
+}
+
+// ==========================================
+// 4. MISSIONS & TASK GRAPH (E15)
+// ==========================================
+
+model Mission {
+  id             String         @id @default(uuid()) @db.Uuid
+  objective      String
+  status         MissionStatus  @default(DRAFT)
+  healthScore    String         @default("Excellent") @map("health_score")
+  deadline       DateTime?
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  deletedAt      DateTime?      @map("deleted_at")
+  createdBy      String?        @db.Uuid @map("created_by")
+  updatedBy      String?        @db.Uuid @map("updated_by")
+  deletedBy      String?        @db.Uuid @map("deleted_by")
+
+  companyId      String         @db.Uuid @map("company_id")
+  company        Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Legal Hold override
+  isLegalHold    Boolean        @default(false) @map("is_legal_hold")
+
+  tasks          MissionTask[]
+  conversations  Conversation[]
+  assets         Asset[]
+  memories       ExecutiveMemory[]
+
+  @@index([companyId])
+  @@map("missions")
+}
+
+enum MissionStatus {
+  DRAFT
+  QUEUED
+  PLANNING
+  EXECUTING
+  REVIEWING
+  APPROVED
+  DELIVERED
+  ARCHIVED
+  LEARNING_COMPLETE
+}
+
+model MissionTask {
+  id             String         @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  status         TaskStatus     @default(PENDING)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  deletedAt      DateTime?      @map("deleted_at")
+
+  missionId      String         @db.Uuid @map("mission_id")
+  mission        Mission        @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  executiveId    String?        @db.Uuid @map("executive_id")
+  executive      Executive?     @relation(fields: [executiveId], references: [id], onDelete: SetNull)
+
+  // Task Graph dependencies (DAG execution)
+  dependencies   TaskDependency[] @relation("DependentTask")
+  dependents     TaskDependency[] @relation("PrerequisiteTask")
+
+  @@index([missionId])
+  @@index([executiveId])
+  @@map("mission_tasks")
+}
+
+enum TaskStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+model TaskDependency {
+  id             String      @id @default(uuid()) @db.Uuid
+  taskId         String      @db.Uuid @map("task_id")
+  prereqId       String      @db.Uuid @map("prereq_id")
+
+  task           MissionTask @relation("DependentTask", fields: [taskId], references: [id], onDelete: Cascade)
+  prerequisite   MissionTask @relation("PrerequisiteTask", fields: [prereqId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, prereqId])
+  @@map("task_dependencies")
+}
+
+// ==========================================
+// 5. CHATS & CONVERSATIONS
+// ==========================================
+
+model Conversation {
+  id             String            @id @default(uuid()) @db.Uuid
+  title          String?
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  companyId      String            @db.Uuid @map("company_id")
+  company        Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  missionId      String?           @db.Uuid @map("mission_id")
+  mission        Mission?          @relation(fields: [missionId], references: [id], onDelete: SetNull)
+
+  messages       ChatMessage[]
+
+  @@index([companyId])
+  @@index([missionId])
+  @@map("conversations")
+}
+
+model ChatMessage {
+  id             String       @id @default(uuid()) @db.Uuid
+  senderId       String       @db.Uuid @map("sender_id") // Can map to Executive or User
+  senderType     String       @map("sender_type")       // "USER" or "EXECUTIVE"
+  content        String
+  timestamp      DateTime     @default(now()) @map("timestamp")
+
+  conversationId String       @db.Uuid @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("chat_messages")
+}
+
+// ==========================================
+// 6. KNOWLEDGE & DATA STORAGE (E17)
+// ==========================================
+
+model Asset {
+  id             String             @id @default(uuid()) @db.Uuid
+  filename       String
+  fileSize       Int                @map("file_size")
+  mimeType       String             @map("mime_type")
+  sha256         String             @map("sha256")
+  gcsPath        String             @map("gcs_path")
+  classification DataClassification @default(CONFIDENTIAL)
+  isLegalHold    Boolean            @default(false) @map("is_legal_hold")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+  deletedAt      DateTime?          @map("deleted_at")
+
+  companyId      String             @db.Uuid @map("company_id")
+  company        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  missionId      String?            @db.Uuid @map("mission_id")
+  mission        Mission?           @relation(fields: [missionId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([missionId])
+  @@map("assets")
+}
+
+enum DataClassification {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  RESTRICTED
+}
+
+model KnowledgeBase {
+  id             String             @id @default(uuid()) @db.Uuid
+  title          String
+  content        String
+  embedding      Unsupported("vector(1536)")? // pgvector storage
+  classification DataClassification @default(CONFIDENTIAL)
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  companyId      String             @db.Uuid @map("company_id")
+  company        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("knowledge_base")
+}
+
+// ==========================================
+// 7. HIERARCHICAL MEMORY LAYER (E14)
+// ==========================================
+
+model ExecutiveMemory {
+  id             String             @id @default(uuid()) @db.Uuid
+  key            String
+  value          String
+  layer          MemoryLayer
+  embedding      Unsupported("vector(1536)")? // pgvector storage
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  companyId      String             @db.Uuid @map("company_id")
+  company        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  executiveId    String?            @db.Uuid @map("executive_id")
+  executive      Executive?         @relation(fields: [executiveId], references: [id], onDelete: SetNull)
+
+  missionId      String?            @db.Uuid @map("mission_id")
+  mission        Mission?           @relation(fields: [missionId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([executiveId])
+  @@index([missionId])
+  @@map("executive_memories")
+}
+
+enum MemoryLayer {
+  USER
+  ORGANIZATION
+  EXECUTIVE
+  MISSION
+  WORKING
+  KNOWLEDGE_LIBRARY
+}
+
+// ==========================================
+// 8. BILLING & SAAS SUBSCRIPTIONS (E10)
+// ==========================================
+
+model Plan {
+  id             String         @id @default(uuid()) @db.Uuid
+  name           String
+  code           String         @unique
+  description    String?
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  entitlements   Entitlement[]
+  subscriptions  Subscription[]
+
+  @@map("plans")
+}
+
+model Entitlement {
+  id             String       @id @default(uuid()) @db.Uuid
+  key            String
+  description    String?
+
+  planId         String       @db.Uuid @map("plan_id")
+  plan           Plan         @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, key])
+  @@map("entitlements")
+}
+
+model Subscription {
+  id                 String             @id @default(uuid()) @db.Uuid
+  status             SubscriptionStatus @default(TRIAL)
+  currentPeriodStart DateTime           @map("current_period_start")
+  currentPeriodEnd   DateTime           @map("current_period_end")
+  trialStart         DateTime?          @map("trial_start")
+  trialEnd           DateTime?          @map("trial_end")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  companyId          String             @unique @db.Uuid @map("company_id")
+  company            Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  planId             String             @db.Uuid @map("plan_id")
+  plan               Plan               @relation(fields: [planId], references: [id])
+
+  invoices           Invoice[]
+
+  @@index([companyId])
+  @@index([planId])
+  @@map("subscriptions")
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELLED
+  EXPIRED
+}
+
+model Invoice {
+  id             String       @id @default(uuid()) @db.Uuid
+  amount         Float
+  currency       String       @default("USD")
+  status         String
+  invoiceUrl     String?      @map("invoice_url")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  companyId      String       @db.Uuid @map("company_id")
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  subscriptionId String       @db.Uuid @map("subscription_id")
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([subscriptionId])
+  @@map("invoices")
+}
+
+model UsageRecord {
+  id             String       @id @default(uuid()) @db.Uuid
+  type           String       // "CREDITS", "MISSIONS", "STORAGE"
+  quantity       Int
+  resetAt        DateTime     @map("reset_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  companyId      String       @db.Uuid @map("company_id")
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("usage_records")
+}
+
+// ==========================================
+// 9. AUDITING, OBSERVABILITY & NOTIFICATIONS
+// ==========================================
+
+model Notification {
+  id             String       @id @default(uuid()) @db.Uuid
+  title          String
+  message        String
+  read           Boolean      @default(false)
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  companyId      String       @db.Uuid @map("company_id")
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id             String       @id @default(uuid()) @db.Uuid
+  eventType      String       @map("event_type")
+  metadata       Json
+  isLegalHold    Boolean      @default(false) @map("is_legal_hold")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  companyId      String       @db.Uuid @map("company_id")
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  actorId        String?      @db.Uuid @map("actor_id")
+  actor          User?        @relation("ActorLogs", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([actorId])
+  @@map("audit_logs")
+}
+
+model Analytics {
+  id             String       @id @default(uuid()) @db.Uuid
+  metricName     String       @map("metric_name")
+  metricValue    Float        @map("metric_value")
+  dimensions     Json?
+  timestamp      DateTime     @default(now()) @map("timestamp")
+
+  companyId      String       @db.Uuid @map("company_id")
+  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("analytics")
+}
