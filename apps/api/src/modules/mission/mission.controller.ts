@@ -13,6 +13,7 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { MissionRepository } from './mission.repository';
 import { CosService } from './cos.service';
+import { MoeService } from './moe.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { EntitlementGuard } from '../auth/entitlement.guard';
@@ -57,6 +58,7 @@ export class MissionController {
   constructor(
     private readonly missionRepository: MissionRepository,
     private readonly cosService: CosService,
+    private readonly moeService: MoeService,
   ) {}
 
   @Post()
@@ -158,5 +160,13 @@ export class MissionController {
       throw new NotFoundException('Mission not found');
     }
     return this.cosService.generateTaskDAG(mission.objective);
+  }
+
+  @Get(':id/health')
+  @ApiOperation({
+    summary: 'Calculate real-time mission execution health metrics',
+  })
+  async getHealth(@Param('id') id: string) {
+    return this.moeService.calculateHealthScore(id);
   }
 }
