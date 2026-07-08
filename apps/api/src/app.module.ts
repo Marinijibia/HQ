@@ -16,7 +16,8 @@ import { UserModule } from './modules/user/user.module';
 import { ExecutiveModule } from './modules/executive/executive.module';
 import { MissionModule } from './modules/mission/mission.module';
 
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
@@ -54,6 +55,28 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     }),
     StorageModule,
     IntegrationModule,
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000,
+        limit: 3,
+      },
+      {
+        name: 'medium',
+        ttl: 60000,
+        limit: 120,
+      },
+      {
+        name: 'ai',
+        ttl: 60000,
+        limit: 30,
+      },
+      {
+        name: 'auth',
+        ttl: 60000,
+        limit: 5,
+      },
+    ]),
   ],
   controllers: [AppController],
   providers: [
@@ -65,6 +88,10 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     {
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })
