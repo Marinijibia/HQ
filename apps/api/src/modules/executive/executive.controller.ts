@@ -10,8 +10,9 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ExecutiveRepository } from './executive.repository';
 import { CeoService } from './ceo.service';
+import { QaService } from './qa.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class ChatExecutiveDto {
   @IsString()
@@ -25,6 +26,20 @@ export class AnalyzeObjectiveDto {
   objective!: string;
 }
 
+export class EvaluateDeliverableDto {
+  @IsString()
+  @IsNotEmpty()
+  objective!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  content!: string;
+
+  @IsString()
+  @IsOptional()
+  tone?: string;
+}
+
 @ApiTags('Executives')
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
@@ -33,6 +48,7 @@ export class ExecutiveController {
   constructor(
     private readonly executiveRepository: ExecutiveRepository,
     private readonly ceoService: CeoService,
+    private readonly qaService: QaService,
   ) {}
 
   @Get()
@@ -53,6 +69,16 @@ export class ExecutiveController {
   })
   async analyze(@Body() dto: AnalyzeObjectiveDto) {
     return this.ceoService.compileStrategicSummary(dto.objective);
+  }
+
+  @Post('qa/evaluate')
+  @ApiOperation({ summary: 'Spawn QA validation gate pre-flight testing' })
+  async evaluate(@Body() dto: EvaluateDeliverableDto) {
+    return this.qaService.evaluateDeliverable(
+      dto.objective,
+      dto.content,
+      dto.tone,
+    );
   }
 
   @Get(':id')
