@@ -15,6 +15,7 @@ import { CompanyModule } from './modules/company/company.module';
 import { UserModule } from './modules/user/user.module';
 import { ExecutiveModule } from './modules/executive/executive.module';
 import { MissionModule } from './modules/mission/mission.module';
+import { AiModule } from './modules/ai/ai.module';
 
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
@@ -43,6 +44,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     UserModule,
     ExecutiveModule,
     MissionModule,
+    AiModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
