@@ -17,6 +17,7 @@ import { ExecutiveModule } from './modules/executive/executive.module';
 import { MissionModule } from './modules/mission/mission.module';
 import { AiModule } from './modules/ai/ai.module';
 import { PromptModule } from './modules/prompt/prompt.module';
+import { MemoryModule } from './modules/memory/memory.module';
 
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
@@ -47,6 +48,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     MissionModule,
     AiModule,
     PromptModule,
+    MemoryModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

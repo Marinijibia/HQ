@@ -109,13 +109,18 @@ export class MoeService {
     if (mission.tasks && mission.tasks.length > 0) {
       let confidenceSum = 0;
       mission.tasks.forEach((t) => {
-        if (t.status === 'ERROR') {
+        const task = t as unknown as {
+          status: string;
+          revisionCount?: number;
+          confidenceScore?: number;
+        };
+        if (task.status === 'FAILED') {
           warningsCount++;
         }
-        if (t.revisionCount) {
-          revisionCount += t.revisionCount;
+        if (task.revisionCount) {
+          revisionCount += task.revisionCount;
         }
-        confidenceSum += t.confidenceScore || 90;
+        confidenceSum += task.confidenceScore || 90;
       });
       averageConfidence = Math.round(confidenceSum / mission.tasks.length);
     }
