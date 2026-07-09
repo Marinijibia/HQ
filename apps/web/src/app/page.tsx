@@ -4,8 +4,10 @@ import * as React from 'react';
 import Link from 'next/link';
 import { Button, Card, Badge } from '@hq/ui';
 import { ShieldCheck, BrainCircuit, Rocket, ChevronRight, ArrowRight } from 'lucide-react';
+import { useAuth } from '../contexts/auth-context';
 
 export default function LandingPage() {
+  const { user } = useAuth();
   return (
     <div className="min-h-screen bg-[#0A0A0C] text-[#F2F2F7] flex flex-col justify-between font-sans select-none">
       {/* Navigation */}
@@ -17,16 +19,26 @@ export default function LandingPage() {
           <span className="font-bold tracking-tight text-white text-lg">HQ</span>
         </div>
         <div className="flex items-center space-x-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" className="text-sm">
-              Dashboard
-            </Button>
-          </Link>
-          <Link href="/boardroom">
-            <Button variant="primary" className="text-sm">
-              Boardroom
-            </Button>
-          </Link>
+          {user ? (
+            <Link href="/dashboard">
+              <Button variant="primary" className="text-sm">
+                Enter Boardroom
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/login">
+                <Button variant="ghost" className="text-sm">
+                  Login
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="primary" className="text-sm">
+                  Get Started
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
@@ -47,9 +59,9 @@ export default function LandingPage() {
             operational growth autonomously.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Link href="/dashboard">
+            <Link href={user ? '/dashboard' : '/login'}>
               <Button size="lg" variant="primary" className="flex items-center gap-2">
-                Get Started Free
+                {user ? 'Enter Boardroom' : 'Get Started Free'}
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
@@ -136,7 +148,7 @@ export default function LandingPage() {
                   <li className="flex items-center gap-1.5">✓ Standard API rate limits</li>
                 </ul>
               </div>
-              <Link href="/dashboard" className="w-full">
+              <Link href={user ? '/dashboard' : '/login'} className="w-full">
                 <Button variant="secondary" className="w-full">
                   Deploy Free
                 </Button>
@@ -161,7 +173,7 @@ export default function LandingPage() {
                   <li className="flex items-center gap-1.5">✓ Decoupled GCS fallback paths</li>
                 </ul>
               </div>
-              <Link href="/dashboard" className="w-full">
+              <Link href={user ? '/dashboard' : '/login'} className="w-full">
                 <Button variant="primary" className="w-full">
                   Subscribe Now
                 </Button>
@@ -183,7 +195,7 @@ export default function LandingPage() {
                   <li className="flex items-center gap-1.5">✓ Priority direct AI execution</li>
                 </ul>
               </div>
-              <Link href="/dashboard" className="w-full">
+              <Link href={user ? '/dashboard' : '/login'} className="w-full">
                 <Button variant="accent" className="w-full">
                   Contact Sales
                 </Button>

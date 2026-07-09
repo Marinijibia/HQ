@@ -40,7 +40,7 @@ const navItems: SidebarNavItem[] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { isOpen: isSidebarOpen, toggle: toggleSidebar } = useSidebarStore();
 
   React.useEffect(() => {
@@ -157,14 +157,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             </Card>
           )}
-          <div className="flex items-center space-x-2 select-none">
-            <div className="h-8 w-8 rounded-full bg-hq-blue/20 border border-hq-blue/40 flex items-center justify-center font-bold text-hq-blue text-xs uppercase">
-              ED
+          <div className="flex items-center space-x-3 select-none">
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 rounded-full bg-hq-blue/20 border border-hq-blue/40 flex items-center justify-center font-bold text-hq-blue text-xs uppercase">
+                ED
+              </div>
+              <div className="hidden sm:block text-left">
+                <p className="text-xs font-semibold leading-tight">Elena Rostova</p>
+                <p className="text-[10px] text-foreground/55 leading-none">CEO & Owner</p>
+              </div>
             </div>
-            <div className="hidden sm:block text-left">
-              <p className="text-xs font-semibold leading-tight">Elena Rostova</p>
-              <p className="text-[10px] text-foreground/55 leading-none">CEO & Owner</p>
-            </div>
+            <Button
+              variant="ghost"
+              className="text-red-400 hover:text-red-500 text-[10px] px-2.5 h-8 font-bold border border-red-500/10 hover:border-red-500/30 transition-all bg-red-500/5 hover:bg-red-500/10 rounded-md"
+              onClick={async () => {
+                await logout();
+                router.push('/login');
+              }}
+            >
+              Sign Out
+            </Button>
           </div>
         </div>
       </header>
