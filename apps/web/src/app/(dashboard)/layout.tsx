@@ -192,7 +192,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* Content Workspace Panel */}
-        <main className="flex-1 overflow-y-auto p-8 relative">{children}</main>
+        <main className="flex-1 overflow-y-auto p-8 relative animate-in fade-in slide-in-from-bottom-2 duration-300">
+          {children}
+        </main>
       </div>
 
       {/* Global Status Bar */}
