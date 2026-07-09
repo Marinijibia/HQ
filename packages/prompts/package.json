@@ -2,6 +2,7 @@
   "name": "@hq/prompts",
   "version": "1.0.0",
   "private": true,
+  "main": "src/index.ts",
   "scripts": {
     "build": "echo 'No build script defined'",
     "test": "echo 'No test script defined'"
