@@ -24,9 +24,27 @@ export class HttpCacheInterceptor implements NestInterceptor {
     const request = httpContext.getRequest();
     const { method, url } = request;
 
-    // Cache only GET requests
+    // Clear cache on write mutations
     if (method !== 'GET') {
-      return next.handle();
+      return next.handle().pipe(
+        tap(async () => {
+          try {
+            const prefix = url.split('?')[0].split('/').slice(0, 3).join('/');
+            const keys = await this.redis.keys(`http_cache:*${prefix}*`);
+            if (keys.length > 0) {
+              await this.redis.del(...keys);
+              this.logger.log(
+                `Invalidated cache keys matching prefix: ${prefix} (${keys.length} keys)`,
+              );
+            }
+          } catch (err) {
+            this.logger.error(
+              `Failed to invalidate cache keys for: ${url}`,
+              err,
+            );
+          }
+        }),
+      );
     }
 
     const cacheKey = `http_cache:${url}`;
