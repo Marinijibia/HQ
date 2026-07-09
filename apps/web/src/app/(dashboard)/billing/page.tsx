@@ -16,6 +16,31 @@ export default function BillingPage() {
     { id: 'INV-001', amount: '$0.00', status: 'Paid', date: 'Jul 01, 2026' },
   ];
 
+  const [loading, setLoading] = React.useState(false);
+
+  const handleUpgrade = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ planCode: 'growth' }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        window.location.href = 'https://checkout.stripe.com/pay/cs_test_mock';
+      }
+    } catch (error) {
+      window.location.href = 'https://checkout.stripe.com/pay/cs_test_mock';
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-8 select-none">
       {/* Title */}
@@ -46,9 +71,14 @@ export default function BillingPage() {
               </p>
             </div>
           </div>
-          <Button variant="accent" className="flex items-center gap-1 text-xs px-4 h-9 shrink-0">
+          <Button
+            variant="accent"
+            className="flex items-center gap-1 text-xs px-4 h-9 shrink-0"
+            disabled={loading}
+            onClick={handleUpgrade}
+          >
             <Sparkles className="h-4 w-4" />
-            Scale to Growth Plan
+            {loading ? 'Redirecting...' : 'Scale to Growth Plan'}
           </Button>
         </CardContent>
       </Card>
