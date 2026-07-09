@@ -2,6 +2,7 @@
   "name": "hq-monorepo",
   "private": true,
   "version": "1.0.0",
+  "packageManager": "yarn@1.22.22",
   "workspaces": [
     "apps/*",
     "packages/*"

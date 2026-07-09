@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '../contexts/auth-context';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // Prevent sharing query client instance between requests under SSR
@@ -17,5 +18,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }),
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </AuthProvider>
+  );
 }

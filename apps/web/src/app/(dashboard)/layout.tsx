@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '../../contexts/auth-context';
 import { useSidebarStore } from '@/stores/sidebarStore';
 import { useCommandPaletteStore } from '@/stores/commandPaletteStore';
 import { Button, Card, Input } from '@hq/ui';
@@ -39,7 +40,14 @@ const navItems: SidebarNavItem[] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user, loading } = useAuth();
   const { isOpen: isSidebarOpen, toggle: toggleSidebar } = useSidebarStore();
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
   const {
     isOpen: isPaletteOpen,
     toggle: togglePalette,
@@ -80,6 +88,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       time: '1h ago',
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white select-none">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="h-8 w-8 rounded-full border-2 border-hq-cyan border-t-transparent animate-spin"></div>
+          <p className="text-xs text-foreground/50">Verifying Boardroom Credentials...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
