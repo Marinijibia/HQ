@@ -95,7 +95,7 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4.5 justify-center pt-6">
-            <Link href={user ? '/dashboard' : '/login'}>
+            <Link href={user ? '/dashboard' : '/onboarding'}>
               <Button
                 size="lg"
                 variant="primary"
@@ -218,7 +218,7 @@ export default function LandingPage() {
                   </ul>
                 </div>
               </div>
-              <Link href={user ? '/dashboard' : '/login'} className="w-full">
+              <Link href={user ? '/dashboard' : '/onboarding'} className="w-full">
                 <Button
                   variant="secondary"
                   className="w-full text-xs font-bold h-10 border-[#1E1E24] hover:bg-[#1E1E24]/20 transition-all"
@@ -266,7 +266,7 @@ export default function LandingPage() {
                   </ul>
                 </div>
               </div>
-              <Link href={user ? '/dashboard' : '/login'} className="w-full">
+              <Link href={user ? '/dashboard' : '/onboarding'} className="w-full">
                 <Button
                   variant="primary"
                   className="w-full text-xs font-bold h-10 bg-gradient-to-r from-hq-blue to-hq-purple text-white border-none shadow-[0_0_15px_rgba(14,165,233,0.2)] hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all"
@@ -306,7 +306,7 @@ export default function LandingPage() {
                   </ul>
                 </div>
               </div>
-              <Link href={user ? '/dashboard' : '/login'} className="w-full">
+              <Link href={user ? '/dashboard' : '/onboarding'} className="w-full">
                 <Button
                   variant="accent"
                   className="w-full text-xs font-bold h-10 border-hq-purple/40 hover:bg-hq-purple/10 transition-all"
