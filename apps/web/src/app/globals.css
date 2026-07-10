@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable manual class-based dark mode toggling in Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-hq-blue: #0A84FF;
   --color-hq-cyan: #30D158;
@@ -7,8 +10,9 @@
   --color-hq-white: #FFFFFF;
   --color-hq-graphite: #1C1C1E;
 
-  --color-background: #0A0A0C;
-  --color-foreground: #F2F2F7;
+  /* Reference dynamic CSS Custom Properties for theme states */
+  --color-background: var(--bg-color);
+  --color-foreground: var(--text-color);
 
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -27,8 +31,21 @@
   --radius-pill: 9999px;
 }
 
+/* Light Mode Defaults */
+:root {
+  --bg-color: #F9F9FB;
+  --text-color: #1A1A1E;
+}
+
+/* Dark Mode Overrides */
+.dark {
+  --bg-color: #0A0A0C;
+  --text-color: #F2F2F7;
+}
+
 body {
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background: var(--bg-color);
+  color: var(--text-color);
   font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }

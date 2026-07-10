@@ -58,7 +58,7 @@ export default function IntegrationsPage() {
           return (
             <Card
               key={idx}
-              className="p-6 space-y-5 border border-black/5 dark:border-[#1E1E24]/60 bg-white/50 dark:bg-black/40 backdrop-blur-md hover:border-hq-blue/40 transition-colors flex flex-col justify-between"
+              className="p-6 space-y-5 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md hover:border-hq-blue/40 transition-colors flex flex-col justify-between"
             >
               <div className="space-y-4">
                 <div className="flex justify-between items-start">
@@ -83,7 +83,7 @@ export default function IntegrationsPage() {
                 </span>
                 <Button
                   variant="ghost"
-                  className="text-xs font-semibold px-3 h-8 border border-black/5 dark:border-[#1E1E24] hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 flex items-center gap-1"
+                  className="text-xs font-semibold px-3 h-8 border border-black/10 dark:border-[#1E1E24] hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 flex items-center gap-1"
                 >
                   <LinkIcon className="h-3 w-3" />
                   Connect

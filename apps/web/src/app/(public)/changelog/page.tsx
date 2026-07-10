@@ -59,7 +59,7 @@ export default function ChangelogPage() {
             className="relative flex flex-col sm:flex-row items-start sm:justify-between gap-6"
           >
             {/* Timeline Marker Dot */}
-            <div className="absolute left-6 sm:left-1/2 -translate-x-1/2 top-1.5 h-4.5 w-4.5 rounded-full bg-hq-blue border-4 border-[#030303] shadow-[0_0_15px_rgba(14,165,233,0.3)] z-10 shrink-0" />
+            <div className="absolute left-6 sm:left-1/2 -translate-x-1/2 top-1.5 h-4.5 w-4.5 rounded-full bg-hq-blue border-4 border-[#F9F9FB] dark:border-[#030303] shadow-[0_0_15px_rgba(14,165,233,0.3)] z-10 shrink-0" />
 
             {/* Left Column: Version details */}
             <div className="pl-14 sm:pl-0 sm:w-[45%] text-left sm:text-right space-y-1.5">
@@ -79,7 +79,7 @@ export default function ChangelogPage() {
 
             {/* Right Column: Changes Card */}
             <div className="pl-14 sm:pl-0 sm:w-[45%]">
-              <Card className="p-6 border border-black/5 dark:border-[#1E1E24]/60 bg-white/50 dark:bg-black/40 backdrop-blur-md space-y-4">
+              <Card className="p-6 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md space-y-4">
                 <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white leading-snug">
                   {u.title}
                 </h3>

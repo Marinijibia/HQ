@@ -71,7 +71,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   key={link.name}
                   href={link.href}
                   className={`text-xs font-semibold transition-colors ${
-                    isActive ? 'text-hq-cyan font-bold' : 'text-foreground/75 hover:text-white'
+                    isActive
+                      ? 'text-hq-cyan font-bold'
+                      : 'text-foreground/75 hover:text-[#1A1A1E] dark:hover:text-white'
                   }`}
                 >
                   {link.name}
@@ -167,7 +169,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block text-sm font-medium py-1.5 transition-colors ${
-                  pathname === link.href ? 'text-hq-cyan' : 'text-foreground/75 hover:text-white'
+                  pathname === link.href
+                    ? 'text-hq-cyan'
+                    : 'text-foreground/75 hover:text-[#1A1A1E] dark:hover:text-white'
                 }`}
               >
                 {link.name}
@@ -199,16 +203,28 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <footer className="h-16 flex items-center justify-between border-t border-black/5 dark:border-[#1E1E24]/50 px-6 sm:px-12 bg-[#F9F9FB]/40 dark:bg-black/40 text-xs text-foreground/45 z-10 relative">
         <span>© 2026 HQ Inc. All rights reserved.</span>
         <div className="flex items-center space-x-6">
-          <Link href="/privacy" className="hover:text-white transition-colors">
+          <Link
+            href="/privacy"
+            className="hover:text-[#1A1A1E] dark:hover:text-white transition-colors"
+          >
             Privacy
           </Link>
-          <Link href="/terms" className="hover:text-white transition-colors">
+          <Link
+            href="/terms"
+            className="hover:text-[#1A1A1E] dark:hover:text-white transition-colors"
+          >
             Terms
           </Link>
-          <Link href="/security" className="hover:text-white transition-colors">
+          <Link
+            href="/security"
+            className="hover:text-[#1A1A1E] dark:hover:text-white transition-colors"
+          >
             Security
           </Link>
-          <Link href="/status" className="hover:text-white transition-colors">
+          <Link
+            href="/status"
+            className="hover:text-[#1A1A1E] dark:hover:text-white transition-colors"
+          >
             Status
           </Link>
         </div>

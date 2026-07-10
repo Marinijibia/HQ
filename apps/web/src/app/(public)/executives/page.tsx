@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { Card, Badge } from '@hq/ui';
-// No icons needed here
 
 export default function ExecutivesPage() {
   const directors = [
@@ -53,7 +52,7 @@ export default function ExecutivesPage() {
         >
           AI C-SUITE DIRECTORS DIRECTORY
         </Badge>
-        <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+        <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Meet Your Executive Team
         </h1>
         <p className="text-foreground/50 text-sm max-w-xl mx-auto leading-relaxed">
@@ -67,11 +66,11 @@ export default function ExecutivesPage() {
         {directors.map((d) => (
           <Card
             key={d.name}
-            className="p-6 space-y-4 border border-[#1E1E24]/60 bg-black/40 backdrop-blur-md hover:border-white/20 transition-colors text-left"
+            className="p-6 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md hover:border-black/20 dark:hover:border-white/20 transition-colors text-left animate-in fade-in duration-350"
           >
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-white">{d.name}</h3>
+                <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">{d.name}</h3>
                 <p className="text-xs text-foreground/75 font-semibold">{d.role}</p>
               </div>
               <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full border ${d.color}`}>

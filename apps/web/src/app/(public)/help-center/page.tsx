@@ -30,7 +30,7 @@ export default function HelpCenterPage() {
         >
           HELP CENTER & FAQ
         </Badge>
-        <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+        <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Frequently Asked Questions
         </h1>
         <p className="text-foreground/50 text-sm leading-relaxed max-w-xl mx-auto">
@@ -43,9 +43,9 @@ export default function HelpCenterPage() {
         {faqs.map((f, idx) => (
           <Card
             key={idx}
-            className="p-6 border border-[#1E1E24]/60 bg-black/40 backdrop-blur-md text-left space-y-2"
+            className="p-6 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md text-left space-y-2"
           >
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white flex items-center gap-2">
               <HelpCircle className="h-4.5 w-4.5 text-hq-cyan shrink-0" />
               {f.q}
             </h3>

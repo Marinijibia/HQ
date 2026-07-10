@@ -19,7 +19,7 @@ export default function PricingPage() {
         >
           PRICING & LIMITATIONS
         </Badge>
-        <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+        <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Simple, Transparent Plans
         </h1>
         <p className="text-foreground/50 text-sm max-w-xl mx-auto leading-relaxed">
@@ -30,19 +30,21 @@ export default function PricingPage() {
       {/* Grid */}
       <div className="grid gap-8 md:grid-cols-3">
         {/* Free Starter */}
-        <Card className="p-7 flex flex-col justify-between h-[420px] border border-[#1E1E24] bg-black/25 backdrop-blur-md hover:border-[#1E1E24]/90 transition-all duration-300">
+        <Card className="p-7 flex flex-col justify-between h-[420px] border border-black/10 dark:border-[#1E1E24] bg-white dark:bg-black/25 backdrop-blur-md hover:border-black/20 dark:hover:border-white/20 transition-all duration-300">
           <div className="space-y-5 text-left">
             <div className="space-y-1">
-              <h3 className="text-base font-bold text-foreground/90">Free Starter</h3>
+              <h3 className="text-base font-bold text-[#1A1A1E] dark:text-foreground/90">
+                Free Starter
+              </h3>
               <p className="text-[10px] text-foreground/45">Best for exploratory testing</p>
             </div>
-            <div className="text-4xl font-extrabold text-white">
+            <div className="text-4xl font-extrabold text-[#1A1A1E] dark:text-white">
               $0<span className="text-xs font-normal text-foreground/45 ml-1">/ month</span>
             </div>
             <p className="text-xs text-foreground/50 leading-relaxed">
               Deploy a starter boardroom and launch single campaign tasks.
             </p>
-            <div className="border-t border-[#1E1E24] pt-4">
+            <div className="border-t border-black/5 dark:border-[#1E1E24] pt-4">
               <ul className="text-xs space-y-2.5 text-foreground/70">
                 <li className="flex items-center gap-2">
                   <Cpu className="h-3.5 w-3.5 text-hq-blue" />
@@ -62,7 +64,7 @@ export default function PricingPage() {
           <Link href={user ? '/dashboard' : '/onboarding'} className="w-full">
             <Button
               variant="secondary"
-              className="w-full text-xs font-bold h-10 border-[#1E1E24] hover:bg-[#1E1E24]/20 transition-all"
+              className="w-full text-xs font-bold h-10 border-black/10 dark:border-[#1E1E24] hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 transition-all"
             >
               Deploy Free
             </Button>
@@ -70,7 +72,7 @@ export default function PricingPage() {
         </Card>
 
         {/* Growth Tier */}
-        <Card className="p-7 flex flex-col justify-between h-[420px] border-hq-blue/50 bg-[#070D19]/45 backdrop-blur-md relative shadow-[0_0_30px_rgba(14,165,233,0.15)] hover:border-hq-blue transition-all duration-300">
+        <Card className="p-7 flex flex-col justify-between h-[420px] border border-hq-blue/30 dark:border-hq-blue/50 bg-hq-blue/5 dark:bg-[#070D19]/45 backdrop-blur-md relative shadow-[0_0_30px_rgba(14,165,233,0.08)] dark:shadow-[0_0_30px_rgba(14,165,233,0.15)] hover:border-hq-blue transition-all duration-300">
           <div className="absolute top-4 right-4">
             <Badge
               variant="premium"
@@ -81,20 +83,20 @@ export default function PricingPage() {
           </div>
           <div className="space-y-5 text-left">
             <div className="space-y-1">
-              <h3 className="text-base font-bold text-white">Growth Team</h3>
+              <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">Growth Team</h3>
               <p className="text-[10px] text-hq-cyan/80">Best for collaborative scales</p>
             </div>
-            <div className="text-4xl font-extrabold text-white">
+            <div className="text-4xl font-extrabold text-[#1A1A1E] dark:text-white">
               $99<span className="text-xs font-normal text-foreground/45 ml-1">/ month</span>
             </div>
             <p className="text-xs text-foreground/50 leading-relaxed">
               Run concurrent workflows, custom memory vectors, and high speed failovers.
             </p>
-            <div className="border-t border-[#1E1E24] pt-4">
+            <div className="border-t border-black/5 dark:border-[#1E1E24] pt-4">
               <ul className="text-xs space-y-2.5 text-foreground/70">
                 <li className="flex items-center gap-2">
                   <Cpu className="h-3.5 w-3.5 text-hq-cyan" />
-                  <span className="text-white">10 Active Running Missions</span>
+                  <span className="text-[#1A1A1E] dark:text-white">10 Active Running Missions</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Layers className="h-3.5 w-3.5 text-hq-cyan" />
@@ -118,19 +120,19 @@ export default function PricingPage() {
         </Card>
 
         {/* Enterprise Tier */}
-        <Card className="p-7 flex flex-col justify-between h-[420px] border border-hq-purple/50 bg-[#140C20]/25 backdrop-blur-md hover:border-hq-purple transition-all duration-300">
+        <Card className="p-7 flex flex-col justify-between h-[420px] border border-black/10 dark:border-hq-purple/50 bg-white dark:bg-[#140C20]/25 backdrop-blur-md hover:border-hq-purple transition-all duration-300">
           <div className="space-y-5 text-left">
             <div className="space-y-1">
-              <h3 className="text-base font-bold text-white">Enterprise</h3>
+              <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">Enterprise</h3>
               <p className="text-[10px] text-hq-purple-300">Best for global corporations</p>
             </div>
-            <div className="text-4xl font-extrabold text-white">
+            <div className="text-4xl font-extrabold text-[#1A1A1E] dark:text-white">
               $499<span className="text-xs font-normal text-foreground/45 ml-1">/ month</span>
             </div>
             <p className="text-xs text-foreground/50 leading-relaxed">
               Infinite workspace capacity, complete legal holds overrides, and priority queues.
             </p>
-            <div className="border-t border-[#1E1E24] pt-4">
+            <div className="border-t border-black/5 dark:border-[#1E1E24] pt-4">
               <ul className="text-xs space-y-2.5 text-foreground/70">
                 <li className="flex items-center gap-2">
                   <Cpu className="h-3.5 w-3.5 text-[#C084FC]" />

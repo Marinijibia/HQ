@@ -30,7 +30,7 @@ export default function CareersPage() {
         >
           WE ARE HIRING
         </Badge>
-        <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+        <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Build the Future of Autonomy
         </h1>
         <p className="text-foreground/50 text-sm leading-relaxed max-w-xl mx-auto">
@@ -44,13 +44,13 @@ export default function CareersPage() {
         {jobs.map((j, idx) => (
           <Card
             key={idx}
-            className="p-6 border border-[#1E1E24]/60 bg-black/40 backdrop-blur-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left"
+            className="p-6 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left"
           >
             <div className="space-y-1.5">
               <span className="text-[9px] text-hq-purple font-bold uppercase tracking-wider">
                 {j.dept}
               </span>
-              <h3 className="text-base font-bold text-white">{j.title}</h3>
+              <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">{j.title}</h3>
               <div className="flex items-center space-x-4 text-xs text-foreground/45">
                 <span className="flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5" />
@@ -64,7 +64,7 @@ export default function CareersPage() {
             </div>
             <Button
               variant="secondary"
-              className="text-xs h-9 border-[#1E1E24] hover:bg-[#1E1E24]/20 shrink-0"
+              className="text-xs h-9 border-black/5 dark:border-[#1E1E24] hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 shrink-0"
             >
               Apply Now
             </Button>
