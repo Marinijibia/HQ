@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@hq/ui';
 import { useAuth } from '../../contexts/auth-context';
-import { Menu as MenuIcon, X as XIcon } from 'lucide-react';
+import { useTheme } from '../../contexts/theme-context';
+import { Menu as MenuIcon, X as XIcon, Sun, Moon } from 'lucide-react';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   const pathname = usePathname();
   const [scrolled, setScrolled] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -33,9 +35,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   ];
 
   return (
-    <div className="min-h-screen bg-[#030303] text-[#F2F2F7] flex flex-col justify-between font-sans relative overflow-hidden select-none">
+    <div className="min-h-screen bg-[#F9F9FB] dark:bg-[#030303] text-[#1A1A1E] dark:text-[#F2F2F7] flex flex-col justify-between font-sans relative overflow-hidden select-none">
       {/* Decorative Dot Grid Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(#1e1e24_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(#1e1e24_1px,transparent_1px)] [background-size:16px_16px] opacity-10 dark:opacity-20 pointer-events-none"></div>
 
       {/* Giant Ambient Glows */}
       <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-hq-blue/5 blur-[120px] pointer-events-none"></div>
@@ -45,8 +47,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
           scrolled
-            ? 'bg-[#030303]/80 backdrop-blur-xl border-[#1E1E24]/80 shadow-lg py-3'
-            : 'bg-[#030303]/40 backdrop-blur-md border-[#1E1E24]/30 py-4'
+            ? 'bg-[#F9F9FB]/80 dark:bg-[#030303]/80 backdrop-blur-xl border-black/5 dark:border-[#1E1E24]/80 shadow-lg py-3'
+            : 'bg-[#F9F9FB]/40 dark:bg-[#030303]/40 backdrop-blur-md border-black/5 dark:border-[#1E1E24]/30 py-4'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 sm:px-12 flex items-center justify-between">
@@ -80,6 +82,19 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
           {/* Actions */}
           <div className="hidden lg:flex items-center space-x-4">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full border border-[#1E1E24]/60 bg-[#1E1E24]/10 text-foreground/75 hover:text-white transition-colors"
+              aria-label="Toggle Theme"
+            >
+              {isDarkMode ? (
+                <Sun className="h-4 w-4 text-amber-400" />
+              ) : (
+                <Moon className="h-4 w-4 text-indigo-400" />
+              )}
+            </button>
+            <div className="h-5 w-px bg-[#1E1E24]/40" />
+
             {user ? (
               <Link href="/dashboard">
                 <Button
@@ -113,6 +128,17 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
           {/* Mobile Menu Button */}
           <div className="flex lg:hidden items-center space-x-3">
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 rounded-full border border-[#1E1E24]/60 bg-[#1E1E24]/10 text-foreground/75 hover:text-white transition-colors"
+              aria-label="Toggle Theme"
+            >
+              {isDarkMode ? (
+                <Sun className="h-4 w-4 text-amber-400" />
+              ) : (
+                <Moon className="h-4 w-4 text-indigo-400" />
+              )}
+            </button>
             {!user && (
               <Link href="/login">
                 <Button
@@ -134,7 +160,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-[#030303]/95 border-b border-[#1E1E24]/60 backdrop-blur-xl px-6 py-4 space-y-2.5 animate-in slide-in-from-top-2 duration-200">
+          <div className="lg:hidden bg-[#F9F9FB]/95 dark:bg-[#030303]/95 border-b border-black/10 dark:border-[#1E1E24]/60 backdrop-blur-xl px-6 py-4 space-y-2.5 animate-in slide-in-from-top-2 duration-200">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
@@ -170,7 +196,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <div className="flex-1 pt-20 relative z-10 flex flex-col justify-between">{children}</div>
 
       {/* Footer */}
-      <footer className="h-16 flex items-center justify-between border-t border-[#1E1E24]/50 px-6 sm:px-12 bg-black/40 text-xs text-foreground/45 z-10 relative">
+      <footer className="h-16 flex items-center justify-between border-t border-black/5 dark:border-[#1E1E24]/50 px-6 sm:px-12 bg-[#F9F9FB]/40 dark:bg-black/40 text-xs text-foreground/45 z-10 relative">
         <span>© 2026 HQ Inc. All rights reserved.</span>
         <div className="flex items-center space-x-6">
           <Link href="/privacy" className="hover:text-white transition-colors">
