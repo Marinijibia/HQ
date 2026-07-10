@@ -14,65 +14,15 @@ import {
   Cpu,
   Layers,
 } from 'lucide-react';
-import { useAuth } from '../contexts/auth-context';
+import { useAuth } from '../../contexts/auth-context';
 
 export default function LandingPage() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#030303] text-[#F2F2F7] flex flex-col justify-between font-sans relative overflow-hidden select-none">
-      {/* Decorative Dot Grid Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(#1e1e24_1px,transparent_1px)] [background-size:16px_16px] opacity-30 pointer-events-none"></div>
-
-      {/* Giant Ambient Glows */}
-      <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-hq-blue/10 blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-hq-purple/10 blur-[130px] pointer-events-none"></div>
-
-      {/* Top Navbar */}
-      <nav className="flex h-16 items-center justify-between border-b border-[#1E1E24]/60 px-6 sm:px-12 bg-black/40 backdrop-blur-xl sticky top-0 z-40 transition-all">
-        <div className="flex items-center space-x-2.5">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-hq-blue via-[#8B5CF6] to-hq-purple flex items-center justify-center font-extrabold text-white text-sm shadow-[0_0_15px_rgba(14,165,233,0.3)]">
-            HQ
-          </div>
-          <span className="font-extrabold tracking-tight text-white text-xl">
-            HQ<span className="text-hq-cyan">.</span>
-          </span>
-        </div>
-        <div className="flex items-center space-x-4">
-          {user ? (
-            <Link href="/dashboard">
-              <Button
-                variant="primary"
-                className="text-xs font-semibold px-4 h-9 bg-gradient-to-r from-hq-blue to-hq-purple text-white border-none shadow-[0_0_15px_rgba(14,165,233,0.2)] hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all"
-              >
-                Enter Boardroom
-              </Button>
-            </Link>
-          ) : (
-            <>
-              <Link href="/login">
-                <Button
-                  variant="ghost"
-                  className="text-xs font-semibold text-foreground/75 hover:text-white transition-colors"
-                >
-                  Login
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button
-                  variant="primary"
-                  className="text-xs font-semibold px-4.5 h-9 bg-gradient-to-r from-[#1E1B4B] to-[#311042] border border-hq-purple/40 text-white hover:border-hq-purple transition-all"
-                >
-                  Get Started
-                </Button>
-              </Link>
-            </>
-          )}
-        </div>
-      </nav>
-
+    <div className="flex-1 flex flex-col justify-between">
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center px-6 text-center py-24 relative z-10">
+      <section className="flex-1 flex flex-col items-center justify-center px-6 text-center py-20 relative z-10">
         <div className="max-w-4xl space-y-8">
           <Badge
             variant="ai"
@@ -120,7 +70,7 @@ export default function LandingPage() {
       </section>
 
       {/* Premium Features Section */}
-      <section className="px-6 py-24 sm:px-12 border-t border-[#1E1E24]/50 bg-gradient-to-b from-[#0A0A0C]/50 to-transparent relative z-10">
+      <section className="px-6 py-20 sm:px-12 border-t border-[#1E1E24]/50 bg-gradient-to-b from-[#0A0A0C]/50 to-transparent relative z-10">
         <div className="max-w-6xl mx-auto space-y-16">
           <div className="text-center space-y-3">
             <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
@@ -176,7 +126,7 @@ export default function LandingPage() {
       </section>
 
       {/* Premium Pricing Sections */}
-      <section className="px-6 py-24 sm:px-12 border-t border-[#1E1E24]/50 relative z-10 bg-gradient-to-b from-transparent to-[#0A0A0C]/30">
+      <section className="px-6 py-20 sm:px-12 border-t border-[#1E1E24]/50 relative z-10 bg-gradient-to-b from-transparent to-[#0A0A0C]/30">
         <div className="max-w-6xl mx-auto space-y-16">
           <div className="text-center space-y-3">
             <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
@@ -318,16 +268,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="h-16 flex items-center justify-between border-t border-[#1E1E24]/50 px-6 sm:px-12 bg-black/40 text-xs text-foreground/45 z-10 relative">
-        <span>© 2026 HQ Inc. All rights reserved.</span>
-        <div className="flex items-center space-x-4">
-          <span className="hover:text-white cursor-pointer transition-colors">Terms</span>
-          <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
-          <span className="hover:text-white cursor-pointer transition-colors">Security</span>
-        </div>
-      </footer>
     </div>
   );
 }
