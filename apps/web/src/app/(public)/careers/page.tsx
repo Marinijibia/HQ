@@ -44,7 +44,7 @@ export default function CareersPage() {
         {jobs.map((j, idx) => (
           <Card
             key={idx}
-            className="p-6 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left"
+            className="p-6 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left"
           >
             <div className="space-y-1.5">
               <span className="text-[9px] text-hq-purple font-bold uppercase tracking-wider">
@@ -64,7 +64,7 @@ export default function CareersPage() {
             </div>
             <Button
               variant="secondary"
-              className="text-xs h-9 border-black/5 dark:border-[#1E1E24] hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 shrink-0"
+              className="text-xs h-9 border-card-border hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 shrink-0"
             >
               Apply Now
             </Button>

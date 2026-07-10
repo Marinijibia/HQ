@@ -58,7 +58,7 @@ export default function IntegrationsPage() {
           return (
             <Card
               key={idx}
-              className="p-6 space-y-5 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md hover:border-hq-blue/40 transition-colors flex flex-col justify-between"
+              className="p-6 space-y-5 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md hover:border-hq-blue/40 flex flex-col justify-between"
             >
               <div className="space-y-4">
                 <div className="flex justify-between items-start">
@@ -67,7 +67,7 @@ export default function IntegrationsPage() {
                   >
                     <Icon className="h-5.5 w-5.5" />
                   </div>
-                  <span className="text-[9px] font-bold text-foreground/45 uppercase tracking-wider bg-black/5 dark:bg-[#1E1E24]/40 border border-black/5 dark:border-[#1E1E24] px-2 py-0.5 rounded">
+                  <span className="text-[9px] font-bold text-foreground/45 uppercase tracking-wider bg-black/5 dark:bg-[#1E1E24]/40 border border-card-border px-2 py-0.5 rounded">
                     {i.category}
                   </span>
                 </div>
@@ -76,14 +76,14 @@ export default function IntegrationsPage() {
                   <p className="text-xs text-foreground/50 leading-relaxed">{i.desc}</p>
                 </div>
               </div>
-              <div className="pt-4 border-t border-black/5 dark:border-[#1E1E24]/40 flex items-center justify-between">
+              <div className="pt-4 border-t border-card-border flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-xs text-green-500 font-semibold">
                   <CheckCircle className="h-4 w-4" />
                   {i.status}
                 </span>
                 <Button
                   variant="ghost"
-                  className="text-xs font-semibold px-3 h-8 border border-black/10 dark:border-[#1E1E24] hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 flex items-center gap-1"
+                  className="text-xs font-semibold px-3 h-8 border border-card-border hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 flex items-center gap-1"
                 >
                   <LinkIcon className="h-3 w-3" />
                   Connect

@@ -48,7 +48,7 @@ export default function ResourcesPage() {
           return (
             <Card
               key={idx}
-              className="p-6 space-y-5 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md text-left"
+              className="p-6 space-y-5 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition text-left"
             >
               <div className="h-10 w-10 rounded-lg bg-hq-blue/10 flex items-center justify-center text-hq-blue border border-hq-blue/20">
                 <Icon className="h-5 w-5" />

@@ -24,7 +24,7 @@ export default function AboutPage() {
       </div>
 
       {/* Vision Statement highlighted */}
-      <div className="border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-[#0A0A0C]/50 rounded-2xl p-8 text-center space-y-4">
+      <div className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition rounded-2xl p-8 text-center space-y-4">
         <span className="text-[10px] text-hq-cyan font-bold tracking-widest uppercase">
           Core Mission Statement
         </span>
@@ -36,7 +36,7 @@ export default function AboutPage() {
 
       {/* Rationale Cards */}
       <div className="grid gap-6 md:grid-cols-2 text-left">
-        <Card className="p-6 space-y-3 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md">
+        <Card className="p-6 space-y-3 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
           <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">Why We Built HQ</h3>
           <p className="text-xs text-foreground/50 leading-relaxed">
             Every business needs domain specialists, but hiring an entire C-suite is
@@ -44,7 +44,7 @@ export default function AboutPage() {
           </p>
         </Card>
 
-        <Card className="p-6 space-y-3 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md">
+        <Card className="p-6 space-y-3 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
           <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">
             Our Product Principles
           </h3>

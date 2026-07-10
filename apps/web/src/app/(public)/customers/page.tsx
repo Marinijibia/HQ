@@ -46,7 +46,7 @@ export default function CustomersPage() {
         {testimonials.map((t, idx) => (
           <Card
             key={idx}
-            className="p-7 space-y-6 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md relative text-left"
+            className="p-7 space-y-6 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition relative text-left"
           >
             <Quote className="absolute top-6 right-6 h-8 w-8 text-hq-blue/10" />
             <div className="space-y-1.5">
@@ -57,7 +57,7 @@ export default function CustomersPage() {
                 &ldquo;{t.quote}&rdquo;
               </p>
             </div>
-            <div className="pt-2 border-t border-black/5 dark:border-[#1E1E24]/40">
+            <div className="pt-2 border-t border-card-border">
               <p className="text-xs font-semibold text-[#1A1A1E] dark:text-white">{t.author}</p>
             </div>
           </Card>

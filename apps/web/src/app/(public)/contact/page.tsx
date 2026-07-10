@@ -59,7 +59,7 @@ export default function ContactPage() {
         </div>
 
         {/* Contact Form */}
-        <Card className="p-6 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md">
+        <Card className="p-6 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
           {success ? (
             <div className="text-center py-8 space-y-3">
               <p className="text-sm font-semibold text-[#1A1A1E] dark:text-white">
@@ -76,7 +76,7 @@ export default function ContactPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="bg-white dark:bg-[#0A0A0C] border-black/10 dark:border-[#1E1E24] text-[#1A1A1E] dark:text-white focus-visible:ring-hq-blue"
+                  className="bg-white dark:bg-[#0A0A0C] border-card-border text-[#1A1A1E] dark:text-white focus-visible:ring-hq-blue"
                 />
               </div>
 
@@ -88,7 +88,7 @@ export default function ContactPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-white dark:bg-[#0A0A0C] border-black/10 dark:border-[#1E1E24] text-[#1A1A1E] dark:text-white focus-visible:ring-hq-blue"
+                  className="bg-white dark:bg-[#0A0A0C] border-card-border text-[#1A1A1E] dark:text-white focus-visible:ring-hq-blue"
                 />
               </div>
 
@@ -99,7 +99,7 @@ export default function ContactPage() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   required
-                  className="h-24 w-full rounded-md border border-black/10 dark:border-[#1E1E24] bg-white dark:bg-[#0A0A0C] px-3 py-2 text-sm text-[#1A1A1E] dark:text-white focus:outline-none focus:ring-1 focus:ring-hq-blue"
+                  className="h-24 w-full rounded-md border border-card-border bg-white dark:bg-[#0A0A0C] px-3 py-2 text-sm text-[#1A1A1E] dark:text-white focus:outline-none focus:ring-1 focus:ring-hq-blue"
                 />
               </div>
 

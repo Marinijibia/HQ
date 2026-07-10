@@ -36,7 +36,7 @@ export default function StatusPage() {
         {nodes.map((n, idx) => (
           <Card
             key={idx}
-            className="p-6 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md flex items-center justify-between"
+            className="p-6 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition flex items-center justify-between"
           >
             <div className="space-y-1">
               <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white flex items-center gap-1.5">

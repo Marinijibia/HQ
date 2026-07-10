@@ -79,7 +79,7 @@ export default function ChangelogPage() {
 
             {/* Right Column: Changes Card */}
             <div className="pl-14 sm:pl-0 sm:w-[45%]">
-              <Card className="p-6 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md space-y-4">
+              <Card className="p-6 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition space-y-4">
                 <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white leading-snug">
                   {u.title}
                 </h3>

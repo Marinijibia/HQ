@@ -26,7 +26,7 @@ export default function SecurityPage() {
 
       {/* Grid */}
       <div className="grid gap-8 md:grid-cols-3 text-left">
-        <Card className="p-6 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md">
+        <Card className="p-6 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
           <div className="h-10 w-10 rounded-lg bg-hq-blue/10 flex items-center justify-center text-hq-blue border border-hq-blue/20">
             <Key className="h-5 w-5" />
           </div>
@@ -39,7 +39,7 @@ export default function SecurityPage() {
           </p>
         </Card>
 
-        <Card className="p-6 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md">
+        <Card className="p-6 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
           <div className="h-10 w-10 rounded-lg bg-hq-purple/10 flex items-center justify-center text-hq-purple border border-hq-purple/20">
             <CheckSquare className="h-5 w-5" />
           </div>
@@ -52,7 +52,7 @@ export default function SecurityPage() {
           </p>
         </Card>
 
-        <Card className="p-6 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md">
+        <Card className="p-6 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
           <div className="h-10 w-10 rounded-lg bg-hq-cyan/10 flex items-center justify-center text-hq-cyan border border-hq-cyan/20">
             <ShieldAlert className="h-5 w-5" />
           </div>

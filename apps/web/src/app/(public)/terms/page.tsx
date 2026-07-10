@@ -16,7 +16,7 @@ export default function TermsPage() {
         <p className="text-xs text-foreground/45">Last Updated: July 2026</p>
       </div>
 
-      <Card className="p-6 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md text-xs text-foreground/50 leading-relaxed space-y-4 font-normal">
+      <Card className="p-6 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition text-xs text-foreground/50 leading-relaxed space-y-4 font-normal">
         <h2 className="text-sm font-bold text-[#1A1A1E] dark:text-white">1. Service Definition</h2>
         <p>
           HQ provides an intelligent executive Operating System to plan, orchestrate, and audit

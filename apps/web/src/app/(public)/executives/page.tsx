@@ -66,7 +66,7 @@ export default function ExecutivesPage() {
         {directors.map((d) => (
           <Card
             key={d.name}
-            className="p-6 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md hover:border-black/20 dark:hover:border-white/20 transition-colors text-left animate-in fade-in duration-350"
+            className="p-6 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition hover:border-black/20 dark:hover:border-white/20 transition-colors text-left animate-in fade-in duration-350"
           >
             <div className="flex justify-between items-start">
               <div className="space-y-1">

@@ -26,7 +26,7 @@ export default function FeaturesPage() {
 
       {/* Grid of features */}
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="p-6 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md text-left">
+        <Card className="p-6 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
           <div className="h-10 w-10 rounded-lg bg-hq-blue/10 flex items-center justify-center text-hq-blue border border-hq-blue/20">
             <GitBranch className="h-5 w-5" />
           </div>
@@ -39,7 +39,7 @@ export default function FeaturesPage() {
           </p>
         </Card>
 
-        <Card className="p-6 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md text-left">
+        <Card className="p-6 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
           <div className="h-10 w-10 rounded-lg bg-hq-purple/10 flex items-center justify-center text-hq-purple border border-hq-purple/20">
             <Layers className="h-5 w-5" />
           </div>
@@ -52,7 +52,7 @@ export default function FeaturesPage() {
           </p>
         </Card>
 
-        <Card className="p-6 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md text-left">
+        <Card className="p-6 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
           <div className="h-10 w-10 rounded-lg bg-hq-cyan/10 flex items-center justify-center text-hq-cyan border border-hq-cyan/20">
             <RotateCcw className="h-5 w-5" />
           </div>
@@ -67,7 +67,7 @@ export default function FeaturesPage() {
       </div>
 
       {/* Interactive Visual Block */}
-      <div className="border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-[#0A0A0C]/50 rounded-2xl p-8 relative overflow-hidden">
+      <div className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition rounded-2xl p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-hq-blue/5 rounded-full blur-[100px]" />
         <div className="max-w-2xl space-y-4 relative z-10 text-left">
           <h2 className="text-xl font-bold text-[#1A1A1E] dark:text-white flex items-center gap-2">

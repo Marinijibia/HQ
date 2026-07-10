@@ -59,7 +59,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="flex items-center gap-1.5 font-bold px-6 h-11 border-black/10 dark:border-[#1E1E24] text-foreground/80 hover:text-[#1A1A1E] dark:hover:text-white hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 transition-all"
+                className="flex items-center gap-1.5 font-bold px-6 h-11 border-card-border bg-card-bg shadow-[var(--card-shadow)] text-foreground/80 hover:text-[#1A1A1E] dark:hover:text-white hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 transition-all card-transition"
               >
                 Meet the Board
                 <ChevronRight className="h-4.5 w-4.5" />
@@ -70,7 +70,7 @@ export default function LandingPage() {
       </section>
 
       {/* Premium Features Section */}
-      <section className="px-6 py-20 sm:px-12 border-t border-black/5 dark:border-[#1E1E24]/50 bg-gradient-to-b from-black/5 dark:from-[#0A0A0C]/50 to-transparent relative z-10">
+      <section className="px-6 py-20 sm:px-12 border-t border-card-border bg-gradient-to-b from-black/5 dark:from-[#0A0A0C]/50 to-transparent relative z-10">
         <div className="max-w-6xl mx-auto space-y-16">
           <div className="text-center space-y-3">
             <h2 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-4xl">
@@ -83,7 +83,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid gap-8 md:grid-cols-3">
-            <Card className="p-7 space-y-5 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md hover:border-hq-blue/40 transition-all hover:translate-y-[-4px] duration-300">
+            <Card className="p-7 space-y-5 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md hover:border-hq-blue/45 transition-all hover:translate-y-[-4px] duration-300">
               <div className="h-10 w-10 rounded-lg bg-hq-blue/10 border border-hq-blue/20 flex items-center justify-center text-hq-blue">
                 <BrainCircuit className="h-5.5 w-5.5" />
               </div>
@@ -98,7 +98,7 @@ export default function LandingPage() {
               </div>
             </Card>
 
-            <Card className="p-7 space-y-5 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md hover:border-hq-purple/40 transition-all hover:translate-y-[-4px] duration-300">
+            <Card className="p-7 space-y-5 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md hover:border-hq-purple/45 transition-all hover:translate-y-[-4px] duration-300">
               <div className="h-10 w-10 rounded-lg bg-hq-purple/10 border border-hq-purple/20 flex items-center justify-center text-hq-purple">
                 <Rocket className="h-5.5 w-5.5" />
               </div>
@@ -113,7 +113,7 @@ export default function LandingPage() {
               </div>
             </Card>
 
-            <Card className="p-7 space-y-5 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md hover:border-hq-cyan/40 transition-all hover:translate-y-[-4px] duration-300">
+            <Card className="p-7 space-y-5 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md hover:border-hq-cyan/45 transition-all hover:translate-y-[-4px] duration-300">
               <div className="h-10 w-10 rounded-lg bg-hq-cyan/10 border border-hq-cyan/20 flex items-center justify-center text-hq-cyan">
                 <ShieldCheck className="h-5.5 w-5.5" />
               </div>
@@ -132,7 +132,7 @@ export default function LandingPage() {
       </section>
 
       {/* Premium Pricing Sections */}
-      <section className="px-6 py-20 sm:px-12 border-t border-black/5 dark:border-[#1E1E24]/50 relative z-10 bg-gradient-to-b from-transparent to-black/5 dark:to-[#0A0A0C]/30">
+      <section className="px-6 py-20 sm:px-12 border-t border-card-border relative z-10 bg-gradient-to-b from-transparent to-black/5 dark:to-[#0A0A0C]/30">
         <div className="max-w-6xl mx-auto space-y-16">
           <div className="text-center space-y-3">
             <h2 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-4xl">
@@ -145,7 +145,7 @@ export default function LandingPage() {
 
           <div className="grid gap-8 md:grid-cols-3">
             {/* Free Starter */}
-            <Card className="p-7 flex flex-col justify-between h-[420px] border border-black/10 dark:border-[#1E1E24] bg-white dark:bg-black/25 backdrop-blur-md hover:border-black/20 dark:hover:border-white/20 transition-all duration-300">
+            <Card className="p-7 flex flex-col justify-between h-[420px] border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition hover:border-black/20 dark:hover:border-white/20 transition-all duration-300">
               <div className="space-y-5 text-left">
                 <div className="space-y-1">
                   <h3 className="text-base font-bold text-[#1A1A1E] dark:text-foreground/90">
@@ -159,7 +159,7 @@ export default function LandingPage() {
                 <p className="text-xs text-foreground/50 leading-relaxed">
                   Deploy a starter boardroom and launch single campaign tasks.
                 </p>
-                <div className="border-t border-black/5 dark:border-[#1E1E24] pt-4">
+                <div className="border-t border-card-border pt-4">
                   <ul className="text-xs space-y-2.5 text-foreground/70">
                     <li className="flex items-center gap-2">
                       <Cpu className="h-3.5 w-3.5 text-hq-blue" />
@@ -179,7 +179,7 @@ export default function LandingPage() {
               <Link href={user ? '/dashboard' : '/onboarding'} className="w-full">
                 <Button
                   variant="secondary"
-                  className="w-full text-xs font-bold h-10 border-black/10 dark:border-[#1E1E24] hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 transition-all"
+                  className="w-full text-xs font-bold h-10 border-card-border hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 transition-all"
                 >
                   Deploy Free
                 </Button>
@@ -187,7 +187,7 @@ export default function LandingPage() {
             </Card>
 
             {/* Growth Tier */}
-            <Card className="p-7 flex flex-col justify-between h-[420px] border border-hq-blue/30 dark:border-hq-blue/50 bg-hq-blue/5 dark:bg-[#070D19]/45 backdrop-blur-md relative shadow-[0_0_30px_rgba(14,165,233,0.08)] dark:shadow-[0_0_30px_rgba(14,165,233,0.15)] hover:border-hq-blue transition-all duration-300">
+            <Card className="p-7 flex flex-col justify-between h-[420px] border border-hq-blue/30 dark:border-hq-blue/50 bg-[#0A84FF]/5 dark:bg-[#070D19]/45 backdrop-blur-md relative shadow-[var(--card-shadow)] hover:border-hq-blue transition-all duration-300 card-transition">
               <div className="absolute top-4 right-4">
                 <Badge
                   variant="premium"
@@ -209,7 +209,7 @@ export default function LandingPage() {
                 <p className="text-xs text-foreground/50 leading-relaxed">
                   Run concurrent workflows, custom memory vectors, and high speed failovers.
                 </p>
-                <div className="border-t border-black/5 dark:border-[#1E1E24] pt-4">
+                <div className="border-t border-card-border pt-4">
                   <ul className="text-xs space-y-2.5 text-foreground/70">
                     <li className="flex items-center gap-2">
                       <Cpu className="h-3.5 w-3.5 text-hq-cyan" />
@@ -239,7 +239,7 @@ export default function LandingPage() {
             </Card>
 
             {/* Enterprise Tier */}
-            <Card className="p-7 flex flex-col justify-between h-[420px] border border-black/10 dark:border-hq-purple/50 bg-white dark:bg-[#140C20]/25 backdrop-blur-md hover:border-hq-purple transition-all duration-300">
+            <Card className="p-7 flex flex-col justify-between h-[420px] border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition hover:border-hq-purple transition-all duration-300">
               <div className="space-y-5 text-left">
                 <div className="space-y-1">
                   <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">Enterprise</h3>
@@ -251,7 +251,7 @@ export default function LandingPage() {
                 <p className="text-xs text-foreground/50 leading-relaxed">
                   Infinite workspace capacity, complete legal holds overrides, and priority queues.
                 </p>
-                <div className="border-t border-black/5 dark:border-[#1E1E24] pt-4">
+                <div className="border-t border-card-border pt-4">
                   <ul className="text-xs space-y-2.5 text-foreground/70">
                     <li className="flex items-center gap-2">
                       <Cpu className="h-3.5 w-3.5 text-[#C084FC]" />

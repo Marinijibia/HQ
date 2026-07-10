@@ -26,7 +26,7 @@ export default function SolutionsPage() {
 
       {/* Solutions list */}
       <div className="grid gap-8 md:grid-cols-2">
-        <Card className="p-7 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md text-left">
+        <Card className="p-7 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-lg bg-hq-blue/10 flex items-center justify-center text-hq-blue border border-hq-blue/20">
               <Cpu className="h-5 w-5" />
@@ -39,7 +39,7 @@ export default function SolutionsPage() {
           </p>
         </Card>
 
-        <Card className="p-7 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md text-left">
+        <Card className="p-7 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-lg bg-hq-purple/10 flex items-center justify-center text-hq-purple border border-hq-purple/20">
               <HardHat className="h-5 w-5" />
@@ -52,7 +52,7 @@ export default function SolutionsPage() {
           </p>
         </Card>
 
-        <Card className="p-7 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md text-left">
+        <Card className="p-7 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-lg bg-hq-cyan/10 flex items-center justify-center text-hq-cyan border border-hq-cyan/20">
               <TrendingUp className="h-5 w-5" />
@@ -65,7 +65,7 @@ export default function SolutionsPage() {
           </p>
         </Card>
 
-        <Card className="p-7 space-y-4 border border-black/10 dark:border-[#1E1E24]/60 bg-white dark:bg-black/40 backdrop-blur-md text-left">
+        <Card className="p-7 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-lg bg-[#E0F2FE]/10 flex items-center justify-center text-sky-400 border border-sky-400/20">
               <Globe className="h-5 w-5" />
