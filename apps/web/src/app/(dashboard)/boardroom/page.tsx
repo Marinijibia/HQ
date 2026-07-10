@@ -205,6 +205,23 @@ export default function BoardroomPage() {
     return matchesDept && matchesSearch;
   });
 
+  const handleExecutePill = (queryText: string) => {
+    setConsoleMessages((prev) => [...prev, { sender: 'Owner', text: queryText, role: 'Owner' }]);
+    setIsConsoleThinking(true);
+    setTimeout(() => {
+      setConsoleMessages((prev) => [
+        ...prev,
+        {
+          sender: ceoName,
+          role: 'CEO',
+          text: `Owner, I am initiating task deliberation on "${queryText}". The corresponding parameters have been delegated to relevant C-Suite directors.`,
+        },
+      ]);
+      setIsConsoleThinking(false);
+      setActiveCollaborations(['strategy_director', 'software_engineering_director']);
+    }, 2000);
+  };
+
   const handleConsoleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userQuery.trim()) return;
@@ -432,6 +449,17 @@ export default function BoardroomPage() {
                   </li>
                 </ul>
               </div>
+              <div className="pt-2">
+                <Button
+                  size="sm"
+                  onClick={() => handleExecutePill('Execute corporate Q3 petroleum targets')}
+                  className="w-full text-[10px] font-bold text-white flex items-center justify-center gap-1 shadow-md hover:scale-[1.01] transition-all animate-pulse"
+                  style={{ backgroundColor: brandColor }}
+                >
+                  <Zap className="h-3 w-3" />
+                  Approve Q3 Logistics Mission
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -480,7 +508,23 @@ export default function BoardroomPage() {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="p-3 border-t border-card-border shrink-0 bg-[#F9F9FB] dark:bg-[#0A0A0C]">
+            <CardFooter className="p-3 border-t border-card-border shrink-0 bg-[#F9F9FB] dark:bg-[#0A0A0C] flex flex-col gap-2 w-full">
+              {/* Usability Suggestion Pills */}
+              <div className="flex flex-wrap gap-1.5 w-full">
+                {['Audit Stripe webhooks', 'Formulate marketing plan', 'Delegate task review'].map(
+                  (pill) => (
+                    <button
+                      key={pill}
+                      type="button"
+                      onClick={() => handleExecutePill(pill)}
+                      className="px-2 py-0.5 rounded-lg border border-card-border bg-card-bg hover:bg-black/5 dark:hover:bg-white/5 text-[9px] font-bold text-foreground/60 transition-all"
+                    >
+                      + {pill}
+                    </button>
+                  ),
+                )}
+              </div>
+
               <form onSubmit={handleConsoleSubmit} className="flex gap-2 w-full">
                 <Input
                   value={userQuery}
