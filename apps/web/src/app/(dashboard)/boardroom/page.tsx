@@ -24,8 +24,10 @@ import {
   ArrowRight,
   RefreshCw,
 } from 'lucide-react';
+import { useAuth } from '../../../contexts/auth-context';
 
 interface BoardExecutive {
+  id?: string;
   name: string;
   roleKey: string;
   title: string;
@@ -38,6 +40,7 @@ interface BoardExecutive {
 }
 
 export default function BoardroomPage() {
+  const { token } = useAuth();
   const [selectedDept, setSelectedDept] = React.useState<string>('All');
   const [searchQuery, setSearchQuery] = React.useState<string>('');
   const [inspectingExec, setInspectingExec] = React.useState<BoardExecutive | null>(null);
@@ -56,20 +59,6 @@ export default function BoardroomPage() {
   // Custom onboarding data sync states
   const [ceoName, setCeoName] = React.useState('Elena Rostova');
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
-
-  React.useEffect(() => {
-    // Read from onboarding draft if available
-    const draftStr = localStorage.getItem('hq_onboarding_draft');
-    if (draftStr) {
-      try {
-        const draft = JSON.parse(draftStr);
-        if (draft.ceoName) setCeoName(draft.ceoName);
-        if (draft.brandColor) setBrandColor(draft.brandColor);
-      } catch (e) {
-        console.warn('Error reading onboarding draft:', e);
-      }
-    }
-  }, []);
 
   const seededExecutives: BoardExecutive[] = [
     {
@@ -188,6 +177,77 @@ export default function BoardroomPage() {
     },
   ];
 
+  const [executives, setExecutives] = React.useState<BoardExecutive[]>(seededExecutives);
+
+  React.useEffect(() => {
+    // Read from onboarding draft if available
+    const draftStr = localStorage.getItem('hq_onboarding_draft');
+    if (draftStr) {
+      try {
+        const draft = JSON.parse(draftStr);
+        if (draft.ceoName) setCeoName(draft.ceoName);
+        if (draft.brandColor) setBrandColor(draft.brandColor);
+      } catch (e) {
+        console.warn('Error reading onboarding draft:', e);
+      }
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const fetchExecutives = async () => {
+      try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        const res = await fetch('/api/executives', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map(
+            (exec: {
+              id: string;
+              name: string;
+              roleKey: string;
+              title: string;
+              biography?: string;
+              department?: { name: string };
+            }) => ({
+              id: exec.id,
+              name: exec.name,
+              roleKey: exec.roleKey,
+              title: exec.title,
+              department: exec.department?.name || 'Technology',
+              status: 'Available',
+              currentTask: exec.roleKey === 'ceo' ? 'Evaluating global operational targets' : '',
+              confidence: 'High',
+              biography: exec.biography || '',
+              alignment: 95,
+            }),
+          );
+          // Make sure our custom onboarding CEO name is preserved if match roleKey
+          const finalExecs = mapped.map((e: BoardExecutive) => {
+            if (e.roleKey === 'ceo') {
+              return { ...e, name: ceoName };
+            }
+            return e;
+          });
+          setExecutives(finalExecs);
+        } else {
+          setExecutives(seededExecutives);
+        }
+      } catch (e) {
+        setExecutives(seededExecutives);
+      }
+    };
+    if (token) {
+      fetchExecutives();
+    } else {
+      setExecutives(seededExecutives);
+    }
+  }, [token, ceoName]);
+
   const departments = [
     'All',
     'Executive Office',
@@ -197,7 +257,7 @@ export default function BoardroomPage() {
     'Legal & Compliance',
   ];
 
-  const filteredExecs = seededExecutives.filter((exec) => {
+  const filteredExecs = executives.filter((exec) => {
     const matchesDept = selectedDept === 'All' || exec.department === selectedDept;
     const matchesSearch =
       exec.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -205,47 +265,65 @@ export default function BoardroomPage() {
     return matchesDept && matchesSearch;
   });
 
-  const handleExecutePill = (queryText: string) => {
+  const handleExecutePill = async (queryText: string) => {
     setConsoleMessages((prev) => [...prev, { sender: 'Owner', text: queryText, role: 'Owner' }]);
     setIsConsoleThinking(true);
-    setTimeout(() => {
-      setConsoleMessages((prev) => [
-        ...prev,
-        {
-          sender: ceoName,
-          role: 'CEO',
-          text: `Owner, I am initiating task deliberation on "${queryText}". The corresponding parameters have been delegated to relevant C-Suite directors.`,
-        },
-      ]);
-      setIsConsoleThinking(false);
-      setActiveCollaborations(['strategy_director', 'software_engineering_director']);
-    }, 2000);
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const targetExec = executives.find((e) => e.roleKey === 'ceo') || executives[0];
+      const execId = targetExec?.id;
+      if (!execId) throw new Error('No backend ID found');
+
+      const res = await fetch(`/api/executives/${execId}/chat`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ message: queryText }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConsoleMessages((prev) => [
+          ...prev,
+          {
+            sender: targetExec.name,
+            role: 'CEO',
+            text: data.response || `Strategic task deliberation registered on "${queryText}".`,
+          },
+        ]);
+      } else {
+        throw new Error('API Chat response failed');
+      }
+    } catch (e) {
+      // Fallback simulation
+      setTimeout(() => {
+        setConsoleMessages((prev) => [
+          ...prev,
+          {
+            sender: ceoName,
+            role: 'CEO',
+            text: `Owner, I am initiating task deliberation on "${queryText}". The corresponding parameters have been delegated to relevant C-Suite directors.`,
+          },
+        ]);
+      }, 1000);
+    } finally {
+      setTimeout(() => {
+        setIsConsoleThinking(false);
+        setActiveCollaborations(['strategy_director', 'software_engineering_director']);
+      }, 1000);
+    }
   };
 
-  const handleConsoleSubmit = (e: React.FormEvent) => {
+  const handleConsoleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userQuery.trim()) return;
 
     const query = userQuery;
     setUserQuery('');
-    setConsoleMessages((prev) => [...prev, { sender: 'Owner', text: query, role: 'Owner' }]);
-    setIsConsoleThinking(true);
-
-    // Simulate boardroom agents exchanging data and formulating a response plan
-    setTimeout(() => {
-      // CEO responds back
-      setConsoleMessages((prev) => [
-        ...prev,
-        {
-          sender: ceoName,
-          role: 'CEO',
-          text: `Owner, I have received your request. I am convening Alistair (Strategy) and Linus (Tech) to formulate a blueprint. Direct actions have been seeded into the backlog.`,
-        },
-      ]);
-      setIsConsoleThinking(false);
-      // Update active connection paths to Strategy & Tech
-      setActiveCollaborations(['strategy_director', 'software_engineering_director']);
-    }, 2000);
+    await handleExecutePill(query);
   };
 
   return (

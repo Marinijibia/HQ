@@ -22,6 +22,7 @@ import {
   Zap,
   AlertTriangle,
 } from 'lucide-react';
+import { useAuth } from '../../../contexts/auth-context';
 
 interface Mission {
   id: string;
@@ -33,7 +34,9 @@ interface Mission {
 }
 
 export default function MissionsPage() {
-  const [missions, setMissions] = React.useState<Mission[]>([
+  const { token } = useAuth();
+
+  const seededMissions: Mission[] = [
     {
       id: 'm1',
       objective: 'Q3 Petroleum Logistics Outreach Strategy',
@@ -50,7 +53,9 @@ export default function MissionsPage() {
       status: 'Completed',
       progress: 100,
     },
-  ]);
+  ];
+
+  const [missions, setMissions] = React.useState<Mission[]>(seededMissions);
 
   // Form states
   const [objective, setObjective] = React.useState('');
@@ -85,6 +90,54 @@ export default function MissionsPage() {
     }
   }, []);
 
+  const fetchMissions = React.useCallback(async () => {
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch('/api/missions', { headers });
+      if (res.ok) {
+        const data = await res.json();
+        // Map backend schema
+        const mapped = data.map(
+          (m: { id: string; objective: string; deadline?: string; status: string }) => {
+            let mappedStatus: Mission['status'] = 'Running';
+            if (m.status === 'DRAFT') mappedStatus = 'Draft';
+            else if (m.status === 'PLANNING') mappedStatus = 'Planning';
+            else if (m.status === 'APPROVED' || m.status === 'DELIVERED')
+              mappedStatus = 'Completed';
+            else if (m.status === 'ARCHIVED') mappedStatus = 'Cancelled';
+
+            return {
+              id: m.id,
+              objective: m.objective,
+              deadline: m.deadline ? m.deadline.split('T')[0] : '2026-12-31',
+              priority: 'Medium',
+              status: mappedStatus,
+              progress: m.status === 'DELIVERED' || m.status === 'APPROVED' ? 100 : 45,
+            };
+          },
+        );
+        setMissions(mapped);
+      } else {
+        setMissions(seededMissions);
+      }
+    } catch (e) {
+      setMissions(seededMissions);
+    }
+  }, [token]);
+
+  React.useEffect(() => {
+    if (token) {
+      fetchMissions();
+    } else {
+      setMissions(seededMissions);
+    }
+  }, [token, fetchMissions]);
+
   const execCredits: Record<string, number> = {
     ceo: 50,
     vision_director: 40,
@@ -115,46 +168,98 @@ export default function MissionsPage() {
   const handleLaunchSequence = async () => {
     setShowBrief(false);
     setLaunching(true);
-    setLaunchStep(1); // Details Submitted
+    setLaunchStep(1);
 
-    // Step 2: CEO Strategic Analysis
-    await new Promise((r) => setTimeout(r, 1200));
-    setLaunchStep(2);
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch('/api/missions', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          objective,
+          deadline: deadline || undefined,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Start the execution
+        await fetch(`/api/missions/${data.id}/start`, { method: 'POST', headers });
 
-    // Step 3: WBS Planning
-    await new Promise((r) => setTimeout(r, 1200));
-    setLaunchStep(3);
+        setLaunchStep(2);
+        await new Promise((r) => setTimeout(r, 600));
+        setLaunchStep(3);
+        await new Promise((r) => setTimeout(r, 600));
+        setLaunchStep(4);
+        await new Promise((r) => setTimeout(r, 400));
 
-    // Step 4: Mission Activated
-    await new Promise((r) => setTimeout(r, 1200));
-    setLaunchStep(4);
-    await new Promise((r) => setTimeout(r, 800));
+        await fetchMissions();
+      } else {
+        throw new Error('API Launch Failed');
+      }
+    } catch (e) {
+      // Local fallback
+      await new Promise((r) => setTimeout(r, 800));
+      setLaunchStep(2);
+      await new Promise((r) => setTimeout(r, 800));
+      setLaunchStep(3);
+      await new Promise((r) => setTimeout(r, 800));
+      setLaunchStep(4);
+      await new Promise((r) => setTimeout(r, 500));
 
-    // Append to missions list
-    const newMission: Mission = {
-      id: `m${Date.now()}`,
-      objective,
-      deadline: deadline || '2026-12-31',
-      priority,
-      status: 'Running',
-      progress: 5,
-    };
-    setMissions((prev) => [newMission, ...prev]);
-    resetForm();
+      const newMission: Mission = {
+        id: `m${Date.now()}`,
+        objective,
+        deadline: deadline || '2026-12-31',
+        priority,
+        status: 'Running',
+        progress: 5,
+      };
+      setMissions((prev) => [newMission, ...prev]);
+    } finally {
+      resetForm();
+    }
   };
 
-  const handleSaveAsDraft = () => {
-    const newDraft: Mission = {
-      id: `m${Date.now()}`,
-      objective,
-      deadline: deadline || '2026-12-31',
-      priority,
-      status: 'Draft',
-      progress: 0,
-    };
-    setMissions((prev) => [newDraft, ...prev]);
-    resetForm();
-    setShowBrief(false);
+  const handleSaveAsDraft = async () => {
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch('/api/missions', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          objective,
+          deadline: deadline || undefined,
+        }),
+      });
+      if (res.ok) {
+        await fetchMissions();
+      } else {
+        throw new Error('API draft save failed');
+      }
+    } catch (e) {
+      const newDraft: Mission = {
+        id: `m${Date.now()}`,
+        objective,
+        deadline: deadline || '2026-12-31',
+        priority,
+        status: 'Draft',
+        progress: 0,
+      };
+      setMissions((prev) => [newDraft, ...prev]);
+    } finally {
+      resetForm();
+      setShowBrief(false);
+    }
   };
 
   const handleCancelLaunch = () => {
@@ -172,17 +277,32 @@ export default function MissionsPage() {
     setLaunchStep(0);
   };
 
-  const handleOversightAction = (id: string, action: 'pause' | 'cancel' | 'resume') => {
-    setMissions((prev) =>
-      prev.map((m) => {
-        if (m.id === id) {
-          if (action === 'pause') return { ...m, status: 'Paused' };
-          if (action === 'resume') return { ...m, status: 'Running' };
-          if (action === 'cancel') return { ...m, status: 'Cancelled', progress: 0 };
-        }
-        return m;
-      }),
-    );
+  const handleOversightAction = async (id: string, action: 'pause' | 'cancel' | 'resume') => {
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch(`/api/missions/${id}/${action}`, { method: 'POST', headers });
+      if (res.ok) {
+        await fetchMissions();
+      } else {
+        throw new Error('API action failed');
+      }
+    } catch (e) {
+      setMissions((prev) =>
+        prev.map((m) => {
+          if (m.id === id) {
+            if (action === 'pause') return { ...m, status: 'Paused' };
+            if (action === 'resume') return { ...m, status: 'Running' };
+            if (action === 'cancel') return { ...m, status: 'Cancelled', progress: 0 };
+          }
+          return m;
+        }),
+      );
+    }
   };
 
   return (
