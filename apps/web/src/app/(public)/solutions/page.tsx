@@ -11,14 +11,14 @@ export default function SolutionsPage() {
       <div className="text-center space-y-3">
         <Badge
           variant="premium"
-          className="px-3 py-1 rounded-full text-[10px] tracking-widest font-bold"
+          className="px-3.5 py-1 rounded-full text-xs tracking-widest font-bold"
         >
           TAILORED INDUSTRY BLUEPRINTS
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Designed for Your Domain
         </h1>
-        <p className="text-foreground/50 text-sm max-w-xl mx-auto leading-relaxed">
+        <p className="text-foreground/50 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
           HQ seeds distinct executive profiles and workflows to address specific sector complexities
           and compliance guidelines.
         </p>
@@ -33,7 +33,7 @@ export default function SolutionsPage() {
             </div>
             <h3 className="text-lg font-bold text-[#1A1A1E] dark:text-white">Technology & SaaS</h3>
           </div>
-          <p className="text-xs text-foreground/50 leading-relaxed">
+          <p className="text-sm text-foreground/50 leading-relaxed">
             Configure automated git releases, run package checks via Linus Kovacs (Eng. Director),
             and coordinate marketing outreach strategies under Alistair Thorne.
           </p>
@@ -46,7 +46,7 @@ export default function SolutionsPage() {
             </div>
             <h3 className="text-lg font-bold text-[#1A1A1E] dark:text-white">Energy & Petroleum</h3>
           </div>
-          <p className="text-xs text-foreground/50 leading-relaxed">
+          <p className="text-sm text-foreground/50 leading-relaxed">
             Verify international logistics pipelines, audit safety reports, and review compliance
             parameters guided by Rashid Al-Mansoori (Petroleum Director).
           </p>
@@ -59,7 +59,7 @@ export default function SolutionsPage() {
             </div>
             <h3 className="text-lg font-bold text-[#1A1A1E] dark:text-white">Venture & Finance</h3>
           </div>
-          <p className="text-xs text-foreground/50 leading-relaxed">
+          <p className="text-sm text-foreground/50 leading-relaxed">
             Evaluate investment pipelines, check asset valuations, track weekly budget expenditures,
             and plan scaling rounds.
           </p>
@@ -74,7 +74,7 @@ export default function SolutionsPage() {
               Consulting & Agency
             </h3>
           </div>
-          <p className="text-xs text-foreground/50 leading-relaxed">
+          <p className="text-sm text-foreground/50 leading-relaxed">
             Generate proposal pitches, audit client deliverables, summarize strategic research data,
             and manage client communications efficiently.
           </p>

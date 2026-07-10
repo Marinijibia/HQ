@@ -38,14 +38,14 @@ export default function IntegrationsPage() {
       <div className="text-center space-y-3">
         <Badge
           variant="premium"
-          className="px-3 py-1 rounded-full text-[10px] tracking-widest font-bold"
+          className="px-3.5 py-1 rounded-full text-xs tracking-widest font-bold"
         >
           THIRD-PARTY CONNECTORS
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Connected Ecosystem
         </h1>
-        <p className="text-foreground/50 text-sm max-w-xl mx-auto leading-relaxed">
+        <p className="text-foreground/50 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
           HQ integrates directly with your existing developer, operations, and financial tools using
           secure signature-verifying webhook listeners.
         </p>
@@ -73,11 +73,11 @@ export default function IntegrationsPage() {
                 </div>
                 <div className="space-y-1.5">
                   <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">{i.name}</h3>
-                  <p className="text-xs text-foreground/50 leading-relaxed">{i.desc}</p>
+                  <p className="text-sm text-foreground/50 leading-relaxed">{i.desc}</p>
                 </div>
               </div>
               <div className="pt-4 border-t border-card-border flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs text-green-500 font-semibold">
+                <span className="flex items-center gap-1.5 text-sm text-green-500 font-semibold">
                   <CheckCircle className="h-4 w-4" />
                   {i.status}
                 </span>

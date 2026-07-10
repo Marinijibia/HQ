@@ -36,16 +36,13 @@ export default function ChangelogPage() {
     <div className="py-12 max-w-4xl mx-auto px-6 space-y-16">
       {/* Header */}
       <div className="text-center space-y-3">
-        <Badge
-          variant="ai"
-          className="px-3 py-1 rounded-full text-[10px] tracking-widest font-bold"
-        >
+        <Badge variant="ai" className="px-3.5 py-1 rounded-full text-xs tracking-widest font-bold">
           HQ OS CHANGELOG & UPDATES
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Product Releases
         </h1>
-        <p className="text-foreground/50 text-sm max-w-xl mx-auto leading-relaxed">
+        <p className="text-foreground/50 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
           Follow our active product engineering history as we build and release updates to the
           C-Suite AI Operating System.
         </p>
@@ -71,8 +68,8 @@ export default function ChangelogPage() {
                   {u.badge}
                 </span>
               </div>
-              <div className="flex sm:flex-row-reverse items-center gap-1.5 text-xs text-foreground/45">
-                <Calendar className="h-3.5 w-3.5" />
+              <div className="flex sm:flex-row-reverse items-center gap-1.5 text-sm text-foreground/45">
+                <Calendar className="h-4 w-4" />
                 <span>{u.date}</span>
               </div>
             </div>
@@ -80,10 +77,10 @@ export default function ChangelogPage() {
             {/* Right Column: Changes Card */}
             <div className="pl-14 sm:pl-0 sm:w-[45%]">
               <Card className="p-6 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition space-y-4">
-                <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white leading-snug">
+                <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white leading-snug">
                   {u.title}
                 </h3>
-                <ul className="space-y-2 text-xs text-foreground/50 list-disc list-inside leading-relaxed pl-1">
+                <ul className="space-y-2 text-sm text-foreground/50 list-disc list-inside leading-relaxed pl-1">
                   {u.changes.map((change, cIdx) => (
                     <li key={cIdx}>{change}</li>
                   ))}

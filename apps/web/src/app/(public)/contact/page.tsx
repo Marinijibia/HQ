@@ -24,14 +24,14 @@ export default function ContactPage() {
       <div className="text-center space-y-3">
         <Badge
           variant="premium"
-          className="px-3 py-1 rounded-full text-[10px] tracking-widest font-bold"
+          className="px-3.5 py-1 rounded-full text-xs tracking-widest font-bold"
         >
           CONTACT SALES & SUPPORT
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Get in Touch
         </h1>
-        <p className="text-foreground/50 text-sm leading-relaxed max-w-xl mx-auto">
+        <p className="text-foreground/50 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
           Schedule a live product walkthrough, ask compliance questions, or request assistance from
           developer support channels.
         </p>
@@ -42,17 +42,17 @@ export default function ContactPage() {
         {/* Info list */}
         <div className="space-y-6">
           <h3 className="text-lg font-bold text-[#1A1A1E] dark:text-white">How can we help?</h3>
-          <p className="text-xs text-foreground/50 leading-relaxed">
+          <p className="text-sm text-foreground/50 leading-relaxed">
             Our team typically responds to incoming queries in under 2 hours during normal business
             operations.
           </p>
           <div className="space-y-4">
-            <div className="flex items-center space-x-3 text-xs text-foreground/75">
-              <Mail className="h-4 w-4 text-hq-blue" />
+            <div className="flex items-center space-x-3 text-sm text-foreground/75">
+              <Mail className="h-5 w-5 text-hq-blue" />
               <span>sales@hq.corp</span>
             </div>
-            <div className="flex items-center space-x-3 text-xs text-foreground/75">
-              <Calendar className="h-4 w-4 text-hq-purple" />
+            <div className="flex items-center space-x-3 text-sm text-foreground/75">
+              <Calendar className="h-5 w-5 text-hq-purple" />
               <span>Schedule a Demo</span>
             </div>
           </div>
@@ -62,13 +62,13 @@ export default function ContactPage() {
         <Card className="p-6 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
           {success ? (
             <div className="text-center py-8 space-y-3">
-              <p className="text-sm font-semibold text-[#1A1A1E] dark:text-white">
+              <p className="text-base font-semibold text-[#1A1A1E] dark:text-white">
                 Message sent successfully!
               </p>
-              <p className="text-xs text-foreground/50">Our team will get back to you shortly.</p>
+              <p className="text-sm text-foreground/50">Our team will get back to you shortly.</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleSubmit} className="space-y-4 text-sm">
               <div className="space-y-1.5 text-left">
                 <label className="font-semibold text-foreground/75">Your Name</label>
                 <Input

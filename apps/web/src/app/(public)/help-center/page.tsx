@@ -26,14 +26,14 @@ export default function HelpCenterPage() {
       <div className="text-center space-y-3">
         <Badge
           variant="premium"
-          className="px-3 py-1 rounded-full text-[10px] tracking-widest font-bold"
+          className="px-3.5 py-1 rounded-full text-xs tracking-widest font-bold"
         >
           HELP CENTER & FAQ
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Frequently Asked Questions
         </h1>
-        <p className="text-foreground/50 text-sm leading-relaxed max-w-xl mx-auto">
+        <p className="text-foreground/50 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
           Need assistance setting up your workspace? Check these helpful articles first.
         </p>
       </div>
@@ -45,11 +45,11 @@ export default function HelpCenterPage() {
             key={idx}
             className="p-6 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition text-left space-y-2"
           >
-            <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white flex items-center gap-2">
-              <HelpCircle className="h-4.5 w-4.5 text-hq-cyan shrink-0" />
+            <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white flex items-center gap-2">
+              <HelpCircle className="h-5 w-5 text-hq-cyan shrink-0" />
               {f.q}
             </h3>
-            <p className="text-xs text-foreground/50 leading-relaxed pl-6.5">{f.a}</p>
+            <p className="text-sm text-foreground/50 leading-relaxed pl-7">{f.a}</p>
           </Card>
         ))}
       </div>

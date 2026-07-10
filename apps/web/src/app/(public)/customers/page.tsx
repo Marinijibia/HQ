@@ -28,14 +28,14 @@ export default function CustomersPage() {
       <div className="text-center space-y-3">
         <Badge
           variant="premium"
-          className="px-3 py-1 rounded-full text-[10px] tracking-widest font-bold"
+          className="px-3.5 py-1 rounded-full text-xs tracking-widest font-bold"
         >
           CUSTOMER SUCCESS STORIES
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Scale Confidently with HQ
         </h1>
-        <p className="text-foreground/50 text-sm max-w-xl mx-auto leading-relaxed">
+        <p className="text-foreground/50 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
           From fast-growing SaaS startups to complex logistics enterprises, HQ helps organizations
           make better decisions autonomously.
         </p>
@@ -53,12 +53,12 @@ export default function CustomersPage() {
               <span className="text-[10px] text-hq-cyan font-bold tracking-wider uppercase">
                 {t.company} — {t.industry}
               </span>
-              <p className="text-sm text-[#1A1A1E] dark:text-white leading-relaxed font-normal">
+              <p className="text-base text-[#1A1A1E] dark:text-white leading-relaxed font-normal">
                 &ldquo;{t.quote}&rdquo;
               </p>
             </div>
             <div className="pt-2 border-t border-card-border">
-              <p className="text-xs font-semibold text-[#1A1A1E] dark:text-white">{t.author}</p>
+              <p className="text-sm font-semibold text-[#1A1A1E] dark:text-white">{t.author}</p>
             </div>
           </Card>
         ))}

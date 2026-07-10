@@ -15,14 +15,14 @@ export default function PricingPage() {
       <div className="text-center space-y-3">
         <Badge
           variant="premium"
-          className="px-3 py-1 rounded-full text-[10px] tracking-widest font-bold"
+          className="px-3.5 py-1 rounded-full text-xs tracking-widest font-bold"
         >
           PRICING & LIMITATIONS
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Simple, Transparent Plans
         </h1>
-        <p className="text-foreground/50 text-sm max-w-xl mx-auto leading-relaxed">
+        <p className="text-foreground/50 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
           Upgrade, downgrade, or audit credit usage records at any time. No hidden setup fees.
         </p>
       </div>
@@ -36,26 +36,26 @@ export default function PricingPage() {
               <h3 className="text-base font-bold text-[#1A1A1E] dark:text-foreground/90">
                 Free Starter
               </h3>
-              <p className="text-[10px] text-foreground/45">Best for exploratory testing</p>
+              <p className="text-xs text-foreground/45">Best for exploratory testing</p>
             </div>
             <div className="text-4xl font-extrabold text-[#1A1A1E] dark:text-white">
               $0<span className="text-xs font-normal text-foreground/45 ml-1">/ month</span>
             </div>
-            <p className="text-xs text-foreground/50 leading-relaxed">
+            <p className="text-sm text-foreground/50 leading-relaxed">
               Deploy a starter boardroom and launch single campaign tasks.
             </p>
             <div className="border-t border-card-border pt-4">
-              <ul className="text-xs space-y-2.5 text-foreground/70">
+              <ul className="text-sm space-y-2.5 text-foreground/70">
                 <li className="flex items-center gap-2">
-                  <Cpu className="h-3.5 w-3.5 text-hq-blue" />
+                  <Cpu className="h-4 w-4 text-hq-blue" />
                   <span>1 Active Running Mission</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Layers className="h-3.5 w-3.5 text-hq-blue" />
+                  <Layers className="h-4 w-4 text-hq-blue" />
                   <span>25 AI Executives Roster</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Lock className="h-3.5 w-3.5 text-hq-blue" />
+                  <Lock className="h-4 w-4 text-hq-blue" />
                   <span>Standard Rate Limits</span>
                 </li>
               </ul>
@@ -84,26 +84,26 @@ export default function PricingPage() {
           <div className="space-y-5 text-left">
             <div className="space-y-1">
               <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">Growth Team</h3>
-              <p className="text-[10px] text-hq-cyan/80">Best for collaborative scales</p>
+              <p className="text-xs text-hq-cyan/80 font-medium">Best for collaborative scales</p>
             </div>
             <div className="text-4xl font-extrabold text-[#1A1A1E] dark:text-white">
               $99<span className="text-xs font-normal text-foreground/45 ml-1">/ month</span>
             </div>
-            <p className="text-xs text-foreground/50 leading-relaxed">
+            <p className="text-sm text-foreground/50 leading-relaxed">
               Run concurrent workflows, custom memory vectors, and high speed failovers.
             </p>
             <div className="border-t border-card-border pt-4">
-              <ul className="text-xs space-y-2.5 text-foreground/70">
+              <ul className="text-sm space-y-2.5 text-foreground/70">
                 <li className="flex items-center gap-2">
-                  <Cpu className="h-3.5 w-3.5 text-hq-cyan" />
+                  <Cpu className="h-4 w-4 text-hq-cyan" />
                   <span className="text-[#1A1A1E] dark:text-white">10 Active Running Missions</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Layers className="h-3.5 w-3.5 text-hq-cyan" />
+                  <Layers className="h-4 w-4 text-hq-cyan" />
                   <span>Enhanced memory caching</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Lock className="h-3.5 w-3.5 text-hq-cyan" />
+                  <Lock className="h-4 w-4 text-hq-cyan" />
                   <span>Decoupled GCS fallback paths</span>
                 </li>
               </ul>
@@ -124,26 +124,26 @@ export default function PricingPage() {
           <div className="space-y-5 text-left">
             <div className="space-y-1">
               <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">Enterprise</h3>
-              <p className="text-[10px] text-hq-purple-300">Best for global corporations</p>
+              <p className="text-xs text-hq-purple-300 font-medium">Best for global corporations</p>
             </div>
             <div className="text-4xl font-extrabold text-[#1A1A1E] dark:text-white">
               $499<span className="text-xs font-normal text-foreground/45 ml-1">/ month</span>
             </div>
-            <p className="text-xs text-foreground/50 leading-relaxed">
+            <p className="text-sm text-foreground/50 leading-relaxed">
               Infinite workspace capacity, complete legal holds overrides, and priority queues.
             </p>
             <div className="border-t border-card-border pt-4">
-              <ul className="text-xs space-y-2.5 text-foreground/70">
+              <ul className="text-sm space-y-2.5 text-foreground/70">
                 <li className="flex items-center gap-2">
-                  <Cpu className="h-3.5 w-3.5 text-[#C084FC]" />
+                  <Cpu className="h-4 w-4 text-[#C084FC]" />
                   <span>Unlimited Active Missions</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Layers className="h-3.5 w-3.5 text-[#C084FC]" />
+                  <Layers className="h-4 w-4 text-[#C084FC]" />
                   <span>Legal Hold overrides active</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Lock className="h-3.5 w-3.5 text-[#C084FC]" />
+                  <Lock className="h-4 w-4 text-[#C084FC]" />
                   <span>Priority direct AI execution</span>
                 </li>
               </ul>

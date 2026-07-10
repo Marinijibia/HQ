@@ -9,16 +9,13 @@ export default function FeaturesPage() {
     <div className="py-12 max-w-6xl mx-auto px-6 space-y-16">
       {/* Header */}
       <div className="text-center space-y-3">
-        <Badge
-          variant="ai"
-          className="px-3 py-1 rounded-full text-[10px] tracking-widest font-bold"
-        >
+        <Badge variant="ai" className="px-3.5 py-1 rounded-full text-xs tracking-widest font-bold">
           CORE PLATFORM CAPABILITIES
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Engineered for Executive Autonomy
         </h1>
-        <p className="text-foreground/50 text-sm max-w-xl mx-auto leading-relaxed">
+        <p className="text-foreground/50 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
           HQ bridges strategic intent with actual execution through inter-agent dialogue loops and
           deep retrieval-augmented database states.
         </p>
@@ -26,40 +23,40 @@ export default function FeaturesPage() {
 
       {/* Grid of features */}
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="p-6 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
+        <Card className="p-7 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
           <div className="h-10 w-10 rounded-lg bg-hq-blue/10 flex items-center justify-center text-hq-blue border border-hq-blue/20">
             <GitBranch className="h-5 w-5" />
           </div>
           <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">
             WBS Graph Generation
           </h3>
-          <p className="text-xs text-foreground/50 leading-relaxed">
+          <p className="text-sm text-foreground/50 leading-relaxed">
             COS Arthur Steward decomposes abstract objectives into clear Work Breakdown Structure
             graphs, validating execution timelines.
           </p>
         </Card>
 
-        <Card className="p-6 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
+        <Card className="p-7 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
           <div className="h-10 w-10 rounded-lg bg-hq-purple/10 flex items-center justify-center text-hq-purple border border-hq-purple/20">
             <Layers className="h-5 w-5" />
           </div>
           <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">
             Hierarchical RAG Memory
           </h3>
-          <p className="text-xs text-foreground/50 leading-relaxed">
+          <p className="text-sm text-foreground/50 leading-relaxed">
             Accesses working, mission, and long-term organization vector spaces sequentially,
             minimizing token costs.
           </p>
         </Card>
 
-        <Card className="p-6 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
+        <Card className="p-7 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
           <div className="h-10 w-10 rounded-lg bg-hq-cyan/10 flex items-center justify-center text-hq-cyan border border-hq-cyan/20">
             <RotateCcw className="h-5 w-5" />
           </div>
           <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">
             Self-Evaluation Gate
           </h3>
-          <p className="text-xs text-foreground/50 leading-relaxed">
+          <p className="text-sm text-foreground/50 leading-relaxed">
             Validates output drafts on tone, completeness, and corporate policy guidelines before
             final dispatch.
           </p>
@@ -74,7 +71,7 @@ export default function FeaturesPage() {
             <Network className="h-5 w-5 text-hq-blue" />
             Parallel Execution Engine
           </h2>
-          <p className="text-xs text-foreground/50 leading-relaxed">
+          <p className="text-sm text-foreground/50 leading-relaxed">
             Unlike standard AI chatbots that generate simple text, HQ converts tasks into executable
             workflows running on independent worker containers, tracking billing limits and auditing
             outputs.

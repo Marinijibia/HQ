@@ -18,14 +18,14 @@ export default function StatusPage() {
       <div className="text-center space-y-3">
         <Badge
           variant="premium"
-          className="px-3 py-1 rounded-full text-[10px] tracking-widest font-bold bg-green-500/10 border-green-500/35 text-green-400"
+          className="px-3.5 py-1 rounded-full text-xs tracking-widest font-bold bg-green-500/10 border-green-500/35 text-green-400"
         >
           ALL SYSTEMS OPERATIONAL
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           System Status & Health
         </h1>
-        <p className="text-foreground/50 text-sm max-w-xl mx-auto leading-relaxed">
+        <p className="text-foreground/50 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
           Monitor real-time latency metrics and system availability logs for all backend monolith
           services.
         </p>
@@ -39,14 +39,14 @@ export default function StatusPage() {
             className="p-6 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition flex items-center justify-between"
           >
             <div className="space-y-1">
-              <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white flex items-center gap-1.5">
-                <Server className="h-4 w-4 text-hq-blue" />
+              <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white flex items-center gap-1.5">
+                <Server className="h-5 w-5 text-hq-blue" />
                 {n.name}
               </h3>
-              <p className="text-[10px] text-foreground/45">Latency: {n.latency}</p>
+              <p className="text-xs text-foreground/45">Latency: {n.latency}</p>
             </div>
-            <span className="flex items-center gap-1.5 text-xs text-green-400 font-semibold bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/30">
-              <CheckCircle className="h-3.5 w-3.5" />
+            <span className="flex items-center gap-1.5 text-sm text-green-400 font-semibold bg-green-500/10 px-2.5 py-0.5 rounded-full border border-green-500/30">
+              <CheckCircle className="h-4 w-4" />
               {n.status}
             </span>
           </Card>

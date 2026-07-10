@@ -46,16 +46,13 @@ export default function ExecutivesPage() {
     <div className="py-12 max-w-6xl mx-auto px-6 space-y-16">
       {/* Header */}
       <div className="text-center space-y-3">
-        <Badge
-          variant="ai"
-          className="px-3 py-1 rounded-full text-[10px] tracking-widest font-bold"
-        >
+        <Badge variant="ai" className="px-3.5 py-1 rounded-full text-xs tracking-widest font-bold">
           AI C-SUITE DIRECTORS DIRECTORY
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
           Meet Your Executive Team
         </h1>
-        <p className="text-foreground/50 text-sm max-w-xl mx-auto leading-relaxed">
+        <p className="text-foreground/50 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
           HQ deploys a team of pre-seeded domain experts that collaborate dynamically via message
           loops to plan, solve, and execute.
         </p>
@@ -71,13 +68,13 @@ export default function ExecutivesPage() {
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">{d.name}</h3>
-                <p className="text-xs text-foreground/75 font-semibold">{d.role}</p>
+                <p className="text-sm text-foreground/75 font-semibold">{d.role}</p>
               </div>
               <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full border ${d.color}`}>
                 {d.dept}
               </span>
             </div>
-            <p className="text-xs text-foreground/50 leading-relaxed italic">
+            <p className="text-sm text-foreground/50 leading-relaxed italic">
               &ldquo;{d.text}&rdquo;
             </p>
           </Card>
