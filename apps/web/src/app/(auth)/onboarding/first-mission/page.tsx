@@ -17,6 +17,38 @@ import { ArrowRight, Loader2, CheckCircle, Twitter, Linkedin, Sparkles } from 'l
 export default function FirstMissionPage() {
   const [progress, setProgress] = React.useState(0);
   const [currentStep, setCurrentStep] = React.useState(1); // 1: Strategy, 2: Writing, 3: Legal, 4: Finished
+  const [missionTitle, setMissionTitle] = React.useState('Guided Launch Campaign');
+  const [missionObjective, setMissionObjective] = React.useState('Compose Q3 Social Launch Copy');
+
+  React.useEffect(() => {
+    const recommended = sessionStorage.getItem('hq_recommended_mission');
+    if (recommended) {
+      setMissionObjective(recommended);
+      if (
+        recommended.toLowerCase().includes('copywriting') ||
+        recommended.toLowerCase().includes('campaign')
+      ) {
+        setMissionTitle('Guided Launch Campaign');
+      } else if (
+        recommended.toLowerCase().includes('compliance') ||
+        recommended.toLowerCase().includes('audit')
+      ) {
+        setMissionTitle('Compliance Audit Campaign');
+      } else if (
+        recommended.toLowerCase().includes('valuation') ||
+        recommended.toLowerCase().includes('pitch')
+      ) {
+        setMissionTitle('VC Pitch & Valuation Campaign');
+      } else if (
+        recommended.toLowerCase().includes('proposal') ||
+        recommended.toLowerCase().includes('blueprint')
+      ) {
+        setMissionTitle('Client Blueprint Campaign');
+      } else {
+        setMissionTitle('Guided Launch Campaign');
+      }
+    }
+  }, []);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -64,16 +96,16 @@ export default function FirstMissionPage() {
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-bold tracking-tight text-white flex items-center justify-center gap-2">
               <Sparkles className="h-6 w-6 text-hq-blue animate-pulse" />
-              Guided Launch Campaign
+              {missionTitle}
             </h1>
             <p className="text-foreground/60 text-xs max-w-md mx-auto">
-              Your AI Board has self-orchestrated to draft your first copywriting deliverables.
+              Your AI Board has self-orchestrated to draft your first boardroom deliverables.
             </p>
           </div>
 
           <Card className="border border-hq-graphite/40 bg-hq-graphite/20">
             <CardHeader className="pb-4">
-              <CardTitle className="text-sm">Objective: Compose Q3 Social Launch Copy</CardTitle>
+              <CardTitle className="text-sm">Objective: {missionObjective}</CardTitle>
               <CardDescription className="text-xs">
                 Task Assigned to: CEO, Strategy, Copywriting, and Legal Directors
               </CardDescription>
