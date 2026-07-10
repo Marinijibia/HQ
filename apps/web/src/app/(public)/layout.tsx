@@ -27,11 +27,11 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     { name: 'Home', href: '/' },
     { name: 'Features', href: '/features' },
     { name: 'Solutions', href: '/solutions' },
-    { name: 'Executives', href: '/executives' },
+    { name: 'Integrations', href: '/integrations' },
     { name: 'Pricing', href: '/pricing' },
-    { name: 'Customers', href: '/customers' },
-    { name: 'Resources', href: '/resources' },
-    { name: 'About', href: '/about' },
+    { name: 'Changelog', href: '/changelog' },
+    { name: 'Case Studies', href: '/case-studies' },
+    { name: 'Demo', href: '/book-demo' },
   ];
 
   return (
@@ -57,7 +57,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-hq-blue via-[#8B5CF6] to-hq-purple flex items-center justify-center font-extrabold text-white text-sm shadow-[0_0_15px_rgba(14,165,233,0.3)]">
               HQ
             </div>
-            <span className="font-extrabold tracking-tight text-white text-xl">
+            <span className="font-extrabold tracking-tight text-[#1A1A1E] dark:text-white text-xl">
               HQ<span className="text-hq-cyan">.</span>
             </span>
           </Link>
