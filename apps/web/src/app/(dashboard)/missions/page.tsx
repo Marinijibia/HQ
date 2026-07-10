@@ -1,17 +1,26 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge } from '@hq/ui';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+  Button,
+  Badge,
+  Input,
+} from '@hq/ui';
 import {
   Play,
   Pause,
   XCircle,
-  Calculator,
   Compass,
-  ArrowRight,
   Loader2,
-  CalendarDays,
   PlusCircle,
+  Zap,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface Mission {
@@ -56,6 +65,25 @@ export default function MissionsPage() {
   // Launching sequence states
   const [launchStep, setLaunchStep] = React.useState<number>(0); // 0: idle, 1: submit, 2: ceo analysis, 3: wbs planning, 4: completed
   const [launching, setLaunching] = React.useState(false);
+  const [showBrief, setShowBrief] = React.useState(false);
+
+  // Custom onboarding data sync states
+  const [ceoName, setCeoName] = React.useState('Elena Rostova');
+  const [brandColor, setBrandColor] = React.useState('#0A84FF');
+
+  React.useEffect(() => {
+    // Read from onboarding draft if available
+    const draftStr = localStorage.getItem('hq_onboarding_draft');
+    if (draftStr) {
+      try {
+        const draft = JSON.parse(draftStr);
+        if (draft.ceoName) setCeoName(draft.ceoName);
+        if (draft.brandColor) setBrandColor(draft.brandColor);
+      } catch (e) {
+        console.warn('Error reading onboarding draft:', e);
+      }
+    }
+  }, []);
 
   const execCredits: Record<string, number> = {
     ceo: 50,
@@ -64,7 +92,6 @@ export default function MissionsPage() {
     technology_director: 40,
     software_engineering_director: 35,
     ai_ml_director: 45,
-    petroleum_industry_director: 60,
     finance_director: 40,
     security_director: 35,
   };
@@ -79,10 +106,14 @@ export default function MissionsPage() {
     );
   };
 
-  const handleLaunchSequence = async (e: React.FormEvent) => {
+  const triggerFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!objective) return;
+    setShowBrief(true);
+  };
 
+  const handleLaunchSequence = async () => {
+    setShowBrief(false);
     setLaunching(true);
     setLaunchStep(1); // Details Submitted
 
@@ -109,8 +140,29 @@ export default function MissionsPage() {
       progress: 5,
     };
     setMissions((prev) => [newMission, ...prev]);
+    resetForm();
+  };
 
-    // Reset Form
+  const handleSaveAsDraft = () => {
+    const newDraft: Mission = {
+      id: `m${Date.now()}`,
+      objective,
+      deadline: deadline || '2026-12-31',
+      priority,
+      status: 'Draft',
+      progress: 0,
+    };
+    setMissions((prev) => [newDraft, ...prev]);
+    resetForm();
+    setShowBrief(false);
+  };
+
+  const handleCancelLaunch = () => {
+    resetForm();
+    setShowBrief(false);
+  };
+
+  const resetForm = () => {
     setObjective('');
     setDeadline('');
     setAudience('');
@@ -134,10 +186,10 @@ export default function MissionsPage() {
   };
 
   return (
-    <div className="space-y-8 select-none">
+    <div className="space-y-8 select-none text-foreground pb-12">
       {/* Title */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
           <Compass className="h-8 w-8 text-hq-blue" />
           Mission Control
         </h1>
@@ -147,241 +199,373 @@ export default function MissionsPage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Intake Intake Form */}
+        {/* Intake Form or CEO Briefing Card */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="border border-hq-graphite/40 bg-hq-graphite/20">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <PlusCircle className="h-5 w-5 text-hq-blue" />
-                Launch AI Mission
-              </CardTitle>
-              <CardDescription>Enter objectives to orchestrate target workgroups</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {launching ? (
-                // Launching Animation Sequence Block
-                <div className="py-12 flex flex-col items-center justify-center space-y-6 text-center animate-in fade-in duration-300">
-                  <Loader2 className="h-10 w-10 text-hq-blue animate-spin" />
-                  <div className="space-y-2">
-                    <h3 className="text-base font-bold text-white">Launching Boardroom Flow</h3>
-                    <div className="flex flex-col space-y-1.5 text-xs text-foreground/60 max-w-xs mx-auto">
-                      <span className={launchStep >= 1 ? 'text-hq-cyan font-semibold' : ''}>
-                        ✓ Step 1: Submit Objective Details
-                      </span>
-                      <span className={launchStep >= 2 ? 'text-hq-cyan font-semibold' : ''}>
-                        {launchStep >= 2 ? '✓' : '•'} Step 2: CEO Strategic Analysis
-                      </span>
-                      <span className={launchStep >= 3 ? 'text-hq-cyan font-semibold' : ''}>
-                        {launchStep >= 3 ? '✓' : '•'} Step 3: Chief of Staff task planning
-                      </span>
-                      <span className={launchStep >= 4 ? 'text-hq-cyan font-semibold' : ''}>
-                        {launchStep >= 4 ? '✓' : '•'} Step 4: Mission Activated!
-                      </span>
-                    </div>
+          {showBrief ? (
+            /* CEO pre-execution Mission Briefing log */
+            <Card className="border border-card-border bg-card-bg shadow-lg animate-in zoom-in-95 duration-200">
+              <CardHeader className="border-b border-card-border pb-4">
+                <Badge variant="ai" className="w-fit text-[10px]">
+                  PRE-FLIGHT BRIEFING
+                </Badge>
+                <CardTitle className="text-xl font-extrabold text-[#1A1A1E] dark:text-white mt-1">
+                  CEO Briefing: Validate Intent
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Review the execution blueprint formulated by CEO{' '}
+                  <span className="font-bold" style={{ color: brandColor }}>
+                    {ceoName}
+                  </span>
+                  .
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="py-5 space-y-5 text-sm text-left">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-foreground/45 uppercase tracking-wider block font-bold">
+                    Mission Objective
+                  </span>
+                  <p className="text-foreground/80 font-bold leading-relaxed">{objective}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] text-foreground/45 uppercase tracking-wider block font-bold">
+                    Why This Matters
+                  </span>
+                  <p className="text-foreground/70 font-semibold leading-relaxed text-xs">
+                    This campaign directly targets client acquisition, aligns workgroups with B2B
+                    logistic targets, and builds operational resilience.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-foreground/45 uppercase tracking-wider block font-bold">
+                      Expected Duration
+                    </span>
+                    <p className="text-foreground/80 font-bold text-xs">
+                      {selectedExecs.length * 3} Days
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-foreground/45 uppercase tracking-wider block font-bold">
+                      Key Success Metric
+                    </span>
+                    <p className="text-hq-cyan font-bold text-xs">
+                      {metrics || 'Verify copywriting deliverables'}
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <form onSubmit={handleLaunchSequence} className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-foreground/75">Objective</label>
-                    <textarea
-                      placeholder="e.g. Compose strategic marketing proposal targeting West African petroleum trade routes..."
-                      value={objective}
-                      onChange={(e) => setObjective(e.target.value)}
-                      required
-                      className="min-h-24 w-full rounded-md border border-hq-graphite/40 bg-hq-graphite/30 p-3 text-sm focus:outline-none focus:ring-1 focus:ring-hq-blue text-foreground"
-                    />
-                  </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
+                <div className="p-3 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-xl flex gap-3 items-start">
+                  <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <h5 className="font-bold text-xs text-[#1A1A1E] dark:text-white">
+                      Orchestration Risk Factor
+                    </h5>
+                    <p className="text-[10px] text-foreground/50 mt-0.5">
+                      Executing tasks on multiple directories carries a minor dependency risk if
+                      checkout hooks or local keys rotate.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-wrap gap-3 border-t border-card-border pt-4 bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-b-xl">
+                <Button
+                  variant="outline"
+                  onClick={handleCancelLaunch}
+                  className="border-card-border text-xs font-bold shrink-0"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowBrief(false)}
+                  className="text-xs font-bold shrink-0"
+                >
+                  Edit Mission
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleSaveAsDraft}
+                  className="border-card-border text-xs font-bold shrink-0"
+                >
+                  Save as Draft
+                </Button>
+                <Button
+                  onClick={handleLaunchSequence}
+                  className="flex-1 text-xs font-bold text-white flex items-center justify-center gap-1 shadow-md"
+                  style={{ backgroundColor: brandColor }}
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                  Approve & Launch
+                </Button>
+              </CardFooter>
+            </Card>
+          ) : (
+            <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2 text-[#1A1A1E] dark:text-white">
+                  <PlusCircle className="h-5 w-5 text-hq-blue" />
+                  Launch AI Mission
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Enter objectives to orchestrate target workgroups
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {launching ? (
+                  // Launching Animation Sequence Block
+                  <div className="py-12 flex flex-col items-center justify-center space-y-6 text-center animate-in fade-in duration-300">
+                    <Loader2 className="h-10 w-10 text-hq-blue animate-spin" />
+                    <div className="space-y-2">
+                      <h3 className="text-base font-bold text-[#1A1A1E] dark:text-white">
+                        Launching Boardroom Flow
+                      </h3>
+                      <div className="flex flex-col space-y-1.5 text-xs text-foreground/60 max-w-xs mx-auto">
+                        <span className={launchStep >= 1 ? 'text-hq-cyan font-semibold' : ''}>
+                          ✓ Step 1: Submit Objective Details
+                        </span>
+                        <span className={launchStep >= 2 ? 'text-hq-cyan font-semibold' : ''}>
+                          {launchStep >= 2 ? '✓' : '•'} Step 2: CEO Strategic Analysis
+                        </span>
+                        <span className={launchStep >= 3 ? 'text-hq-cyan font-semibold' : ''}>
+                          {launchStep >= 3 ? '✓' : '•'} Step 3: Chief of Staff task planning
+                        </span>
+                        <span className={launchStep >= 4 ? 'text-hq-cyan font-semibold' : ''}>
+                          {launchStep >= 4 ? '✓' : '•'} Step 4: Mission Activated!
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={triggerFormSubmit} className="space-y-4 text-left">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-foreground/75">Deadline</label>
-                      <input
-                        type="date"
-                        value={deadline}
-                        onChange={(e) => setDeadline(e.target.value)}
-                        className="h-9 w-full rounded-md border border-hq-graphite/40 bg-hq-graphite/30 px-3 text-sm text-foreground focus:outline-none"
+                      <label className="text-xs font-bold text-foreground/75">Objective</label>
+                      <textarea
+                        placeholder="e.g. Compose strategic marketing proposal targeting West African petroleum trade routes..."
+                        value={objective}
+                        onChange={(e) => setObjective(e.target.value)}
+                        required
+                        className="min-h-24 w-full rounded-xl border border-card-border bg-white dark:bg-black p-3 text-sm focus:outline-none focus:ring-1 focus:ring-hq-blue text-foreground"
                       />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-foreground/75">Priority</label>
-                      <select
-                        value={priority}
-                        onChange={(e) => setPriority(e.target.value as 'Low' | 'Medium' | 'High')}
-                        className="h-9 w-full rounded-md border border-hq-graphite/40 bg-hq-graphite/30 px-3 text-sm text-foreground focus:outline-none"
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-foreground/75">Deadline</label>
+                        <input
+                          type="date"
+                          value={deadline}
+                          onChange={(e) => setDeadline(e.target.value)}
+                          className="h-9 w-full rounded-xl border border-card-border bg-white dark:bg-black px-3 text-sm text-foreground focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-foreground/75">Priority</label>
+                        <select
+                          value={priority}
+                          onChange={(e) => setPriority(e.target.value as 'Low' | 'Medium' | 'High')}
+                          className="h-9 w-full rounded-xl border border-card-border bg-white dark:bg-black px-3 text-sm text-foreground focus:outline-none"
+                        >
+                          <option value="Low">Low</option>
+                          <option value="Medium">Medium</option>
+                          <option value="High">High</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-foreground/75">
+                          Target Audience
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="e.g. B2B Trading Managers"
+                          value={audience}
+                          onChange={(e) => setAudience(e.target.value)}
+                          className="h-9 w-full border-card-border text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-foreground/75">
+                          Success Metric
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="e.g. Churn reduction or 20% conversion"
+                          value={metrics}
+                          onChange={(e) => setMetrics(e.target.value)}
+                          className="h-9 w-full border-card-border text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Selection of Board Members to estimate credits */}
+                    <div className="space-y-2 pt-2 text-left">
+                      <label className="text-xs font-bold text-foreground/75 block">
+                        Involved AI Directors
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {[
+                          { key: 'ceo', name: ceoName },
+                          { key: 'vision_director', name: 'Morgan Vance' },
+                          { key: 'strategy_director', name: 'Alistair Thorne' },
+                          { key: 'technology_director', name: 'Hiroshi Tanaka' },
+                          { key: 'software_engineering_director', name: 'Linus Kovacs' },
+                          { key: 'ai_ml_director', name: 'Sarah Ndiaye' },
+                          { key: 'finance_director', name: 'Sophia Sterling' },
+                          { key: 'security_director', name: 'Jack Bauer' },
+                        ].map((m) => {
+                          const isSelected = selectedExecs.includes(m.key);
+                          return (
+                            <button
+                              key={m.key}
+                              type="button"
+                              onClick={() => handleToggleExec(m.key)}
+                              className="px-3 py-2 border rounded-xl transition-all text-xs font-semibold text-center leading-tight flex flex-col justify-center items-center h-12"
+                              style={{
+                                borderColor: isSelected ? brandColor : undefined,
+                                backgroundColor: isSelected ? brandColor + '0d' : undefined,
+                                color: isSelected ? brandColor : undefined,
+                              }}
+                            >
+                              <span>{m.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-4 border-t border-card-border/50">
+                      <Button
+                        type="submit"
+                        className="text-xs font-bold text-white flex items-center gap-1 shadow-md"
+                        style={{ backgroundColor: brandColor }}
                       >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                      </select>
+                        <Play className="h-4.5 w-4.5" />
+                        Launch Mission
+                      </Button>
                     </div>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-foreground/75">
-                        Target Audience
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. B2B Trading Managers"
-                        value={audience}
-                        onChange={(e) => setAudience(e.target.value)}
-                        className="h-9 w-full rounded-md border border-hq-graphite/40 bg-hq-graphite/30 px-3 text-sm text-foreground focus:outline-none"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-foreground/75">
-                        Success Metric
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Churn reduction or 20% conversion"
-                        value={metrics}
-                        onChange={(e) => setMetrics(e.target.value)}
-                        className="h-9 w-full rounded-md border border-hq-graphite/40 bg-hq-graphite/30 px-3 text-sm text-foreground focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Selection of Board Members to estimate credits */}
-                  <div className="space-y-2 pt-2">
-                    <label className="text-xs font-semibold text-foreground/75 block">
-                      Involved AI Directors
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.keys(execCredits).map((exec) => {
-                        const isSelected = selectedExecs.includes(exec);
-                        return (
-                          <button
-                            type="button"
-                            key={exec}
-                            onClick={() => handleToggleExec(exec)}
-                            className={`rounded-md px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
-                              isSelected
-                                ? 'bg-hq-purple text-white shadow'
-                                : 'bg-hq-graphite/40 border border-hq-graphite/20 text-foreground/60'
-                            }`}
-                          >
-                            {exec.replace('_', ' ')}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="pt-4 flex justify-end">
-                    <Button type="submit" variant="primary" className="flex items-center gap-1.5">
-                      Launch Now
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </CardContent>
-          </Card>
+                  </form>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        {/* Credit preview & active status logs */}
+        {/* Right Side: Credit Estimator & Active Missions Overview */}
         <div className="space-y-6">
-          {/* Credit Preview */}
-          <Card className="border border-yellow-500/20 bg-yellow-500/5">
+          {/* Credit Ingest Estimator */}
+          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] text-foreground">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-yellow-500 flex items-center gap-1.5">
-                <Calculator className="h-4 w-4" />
-                Credit Estimation
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-foreground/50">
+                Outflow Credit Estimator
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-baseline">
-                <span className="text-xs text-foreground/60">Estimated Cost</span>
-                <span className="text-2xl font-bold text-white">{calculateCredits()} credits</span>
+            <CardContent className="pt-4 flex flex-col items-center">
+              <div className="text-3xl font-black text-[#1A1A1E] dark:text-white flex items-baseline gap-1">
+                <span>{calculateCredits()}</span>
+                <span className="text-xs text-foreground/45 font-bold uppercase tracking-widest">
+                  credits
+                </span>
               </div>
-              <p className="text-[10px] text-foreground/50 leading-relaxed">
-                Credits are computed dynamically based on the complexity multipliers of the active
-                Board Directors selected.
+              <p className="text-[10px] text-foreground/45 mt-1 font-semibold">
+                Based on {selectedExecs.length} assigned boardroom workgroups
               </p>
             </CardContent>
           </Card>
 
-          {/* Oversight Dashboard */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Oversight</CardTitle>
-              <CardDescription>Real-time human oversight operations</CardDescription>
+          {/* Active Missions overview list */}
+          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] text-foreground">
+            <CardHeader className="pb-3 border-b border-card-border">
+              <CardTitle className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">
+                Active Boardroom Missions
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="py-4 space-y-4 text-left">
               {missions.map((m) => (
                 <div
                   key={m.id}
-                  className="border border-hq-graphite/40 bg-hq-graphite/10 rounded-lg p-4 space-y-3"
+                  className="border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-xl p-3.5 space-y-3 shadow-sm"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h4 className="text-xs font-bold text-white line-clamp-1">{m.objective}</h4>
-                      <div className="flex items-center space-x-1.5 text-[10px] text-foreground/50 mt-0.5">
-                        <CalendarDays className="h-3 w-3" />
-                        <span>Ends: {m.deadline}</span>
+                      <h4 className="text-xs font-bold text-[#1A1A1E] dark:text-white line-clamp-2">
+                        {m.objective}
+                      </h4>
+                      <div className="flex gap-2.5 items-center mt-1 text-[10px] text-foreground/45 font-semibold">
+                        <span>Due: {m.deadline}</span>
+                        <span>•</span>
+                        <span
+                          className={m.priority === 'High' ? 'text-red-400' : 'text-foreground/50'}
+                        >
+                          {m.priority}
+                        </span>
                       </div>
                     </div>
                     <Badge
                       variant={
-                        m.status === 'Running'
+                        m.status === 'Completed'
                           ? 'success'
-                          : m.status === 'Paused'
-                            ? 'warning'
-                            : m.status === 'Completed'
-                              ? 'default'
-                              : 'error'
+                          : m.status === 'Running'
+                            ? 'ai'
+                            : 'info'
                       }
+                      className="text-[9px]"
                     >
                       {m.status}
                     </Badge>
                   </div>
 
-                  {/* Progress Slider */}
-                  <div className="w-full h-1.5 bg-hq-graphite rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-hq-blue rounded-full transition-all duration-300"
-                      style={{ width: `${m.progress}%` }}
-                    ></div>
-                  </div>
-
-                  {/* Oversight Action Trigger Buttons */}
-                  {m.status !== 'Completed' && m.status !== 'Cancelled' && (
-                    <div className="flex gap-2 pt-1">
-                      {m.status === 'Running' ? (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="h-7 text-[10px] flex-1 flex items-center justify-center gap-1"
-                          onClick={() => handleOversightAction(m.id, 'pause')}
-                        >
-                          <Pause className="h-3 w-3" />
-                          Pause
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          className="h-7 text-[10px] flex-1 flex items-center justify-center gap-1"
-                          onClick={() => handleOversightAction(m.id, 'resume')}
-                        >
-                          <Play className="h-3 w-3" />
-                          Resume
-                        </Button>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-[10px] border-red-500/20 hover:bg-red-500/10 text-red-400 flex-1 flex items-center justify-center gap-1"
-                        onClick={() => handleOversightAction(m.id, 'cancel')}
-                      >
-                        <XCircle className="h-3 w-3" />
-                        Cancel
-                      </Button>
+                  {m.status !== 'Draft' && m.status !== 'Cancelled' && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] text-foreground/50 font-bold">
+                        <span>Progress</span>
+                        <span>{m.progress}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-black/5 dark:bg-[#1E1E24] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-hq-blue rounded-full transition-all duration-300"
+                          style={{ width: `${m.progress}%` }}
+                        ></div>
+                      </div>
                     </div>
                   )}
+
+                  {/* Actions buttons for oversight */}
+                  <div className="flex justify-end gap-2 border-t border-card-border/50 pt-2.5">
+                    {m.status === 'Running' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOversightAction(m.id, 'pause')}
+                        className="text-[10px] h-7 px-2"
+                      >
+                        <Pause className="h-3 w-3 mr-1" /> Pause
+                      </Button>
+                    )}
+                    {m.status === 'Paused' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOversightAction(m.id, 'resume')}
+                        className="text-[10px] h-7 px-2"
+                      >
+                        <Play className="h-3 w-3 mr-1" /> Resume
+                      </Button>
+                    )}
+                    {(m.status === 'Running' || m.status === 'Paused' || m.status === 'Draft') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOversightAction(m.id, 'cancel')}
+                        className="text-[10px] h-7 px-2 text-red-500 hover:text-red-600"
+                      >
+                        <XCircle className="h-3 w-3 mr-1" /> Cancel
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </CardContent>
