@@ -25,6 +25,10 @@ import {
   Globe,
   Settings,
   Edit2,
+  Cpu,
+  Flame,
+  TrendingUp,
+  Briefcase,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 
@@ -110,7 +114,7 @@ export default function OnboardingPage() {
     setError(null);
     if (step === 3) {
       if (!orgName || !businessDesc) {
-        setError('Please enter your business details.');
+        setError('Please enter your organization name and business description.');
         return;
       }
     }
@@ -149,7 +153,6 @@ export default function OnboardingPage() {
     }
     setAuthLoading(true);
     try {
-      // Complete signup under the hood using default security credentials
       await signUpWithEmail(email, 'SecurePass123!');
       setStep(10); // Move to initialization step
     } catch (err) {
@@ -178,6 +181,25 @@ export default function OnboardingPage() {
     router.push('/onboarding/first-mission');
   };
 
+  // Industry card configurations
+  const industriesList = [
+    { name: 'Technology', label: 'Tech & SaaS', icon: Cpu },
+    { name: 'Energy', label: 'Energy & Petrol', icon: Flame },
+    { name: 'Finance', label: 'Finance & Invest', icon: TrendingUp },
+    { name: 'Consulting', label: 'Consulting', icon: Briefcase },
+  ];
+
+  // Company size configurations
+  const sizesList = ['1-10', '11-50', '51-200', '200+'];
+
+  // Customer type configurations
+  const customerTypesList = [
+    { type: 'B2B', label: 'B2B SaaS & Services' },
+    { type: 'B2C', label: 'B2C Consumers' },
+    { type: 'Developer', label: 'Developers & Tech' },
+    { type: 'Enterprise', label: 'Large Corporations' },
+  ];
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col justify-between font-sans relative overflow-hidden select-none">
       {/* Decorative Dot Grid Background */}
@@ -191,11 +213,11 @@ export default function OnboardingPage() {
           </div>
           <span className="font-extrabold tracking-tight text-foreground text-sm">
             HQ{' '}
-            <span className="text-foreground/45 text-xs font-normal">| Onboarding Activation</span>
+            <span className="text-foreground/45 text-xs font-normal">| Onboarding Workspace</span>
           </span>
         </div>
         {step < 10 && (
-          <div className="text-xs text-foreground/50 bg-black/5 dark:bg-[#1E1E24]/40 border border-card-border px-2.5 py-1 rounded-md">
+          <div className="text-xs text-foreground/50 bg-black/5 dark:bg-[#1E1E24]/40 border border-card-border px-3 py-1 rounded-lg font-bold">
             Step {step} of 9
           </div>
         )}
@@ -209,16 +231,16 @@ export default function OnboardingPage() {
               <Sparkles className="h-3.5 w-3.5 animate-pulse" />
               Prepare Workspace
             </p>
-            {/* Onboarding Progress Indicator */}
+            {/* Upgraded Progress Stepper indicator */}
             <div className="flex justify-between items-center gap-2 mt-4">
               {Array.from({ length: 9 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                    idx + 1 <= step
-                      ? 'bg-gradient-to-r from-hq-blue to-hq-purple'
-                      : 'bg-black/10 dark:bg-[#1E1E24]'
-                  }`}
+                  className="h-1.5 flex-1 rounded-full transition-all duration-300"
+                  style={{
+                    backgroundColor: idx + 1 <= step ? brandColor : undefined,
+                    opacity: idx + 1 <= step ? 1 : 0.15,
+                  }}
                 />
               ))}
             </div>
@@ -240,29 +262,39 @@ export default function OnboardingPage() {
                   <Badge variant="ai" className="w-fit text-[10px] tracking-widest font-bold">
                     WELCOME OWNER
                   </Badge>
-                  <CardTitle className="text-xl font-bold text-[#1A1A1E] dark:text-white">
+                  <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight">
                     Establish Your Headquarters
                   </CardTitle>
-                  <CardDescription className="text-foreground/50 text-sm">
+                  <CardDescription className="text-foreground/50 text-sm sm:text-base leading-relaxed">
                     In approximately 5 minutes, we will map your business requirements and activate
                     a custom boardroom staffed with specialized AI executives.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 text-left">
-                  <div className="space-y-3.5 text-sm text-foreground/75 leading-relaxed">
+                  <div className="space-y-4 text-sm text-foreground/75 leading-relaxed">
                     <p>
                       HQ behaves like a coordinated company. Instead of writing simple chats, you
                       assign missions. The AI Executives deliberate, delegate steps, and execute
                       workflows autonomously.
                     </p>
-                    <div className="p-4 border border-card-border bg-black/5 dark:bg-[#1E1E24]/30 rounded-xl space-y-2.5">
-                      <h4 className="font-semibold text-xs text-[#1A1A1E] dark:text-white uppercase tracking-wider">
+                    <div className="p-5 border border-card-border bg-black/5 dark:bg-[#1E1E24]/30 rounded-2xl space-y-3">
+                      <h4 className="font-bold text-xs text-[#1A1A1E] dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                        <Lock className="h-4 w-4 text-hq-blue" />
                         Activation Prerequisites
                       </h4>
-                      <ul className="text-xs text-foreground/50 space-y-1.5 list-disc list-inside">
-                        <li>Understand your primary target audiences</li>
-                        <li>Formulate short-term operational goals</li>
-                        <li>Authenticate owner identity (Step 9)</li>
+                      <ul className="text-xs text-foreground/50 space-y-2 list-none">
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-hq-blue" />
+                          Understand your primary target audiences
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-hq-blue" />
+                          Formulate short-term operational goals
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-hq-blue" />
+                          Authenticate owner identity (Step 9)
+                        </li>
                       </ul>
                     </div>
                   </div>
@@ -270,7 +302,7 @@ export default function OnboardingPage() {
                 <CardFooter>
                   <Button
                     onClick={handleNextStep}
-                    className="w-full h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5"
+                    className="w-full h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(10,132,255,0.2)] hover:scale-[1.01] transition-all"
                   >
                     Let's Begin
                     <ArrowRight className="h-4 w-4" />
@@ -283,17 +315,17 @@ export default function OnboardingPage() {
             {step === 2 && (
               <>
                 <CardHeader className="text-left space-y-1">
-                  <CardTitle className="text-xl font-bold text-[#1A1A1E] dark:text-white">
+                  <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight">
                     Onboarding Blueprint
                   </CardTitle>
                   <CardDescription className="text-foreground/50 text-sm">
                     Here is what we will configure before activating your workspace:
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-5 text-left text-sm text-foreground/75">
-                  <div className="grid gap-4.5">
-                    <div className="flex items-start gap-3">
-                      <span className="h-6.5 w-6.5 rounded-full bg-hq-blue/15 text-hq-blue font-bold text-xs flex items-center justify-center shrink-0">
+                <CardContent className="space-y-6 text-left text-sm text-foreground/75">
+                  <div className="grid gap-5">
+                    <div className="flex items-start gap-3.5">
+                      <span className="h-8 w-8 rounded-xl bg-hq-blue/15 text-hq-blue font-black text-sm flex items-center justify-center shrink-0 border border-hq-blue/10">
                         1
                       </span>
                       <div>
@@ -305,8 +337,8 @@ export default function OnboardingPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <span className="h-6.5 w-6.5 rounded-full bg-hq-purple/15 text-hq-purple font-bold text-xs flex items-center justify-center shrink-0">
+                    <div className="flex items-start gap-3.5">
+                      <span className="h-8 w-8 rounded-xl bg-hq-purple/15 text-hq-purple font-black text-sm flex items-center justify-center shrink-0 border border-hq-purple/10">
                         2
                       </span>
                       <div>
@@ -318,8 +350,8 @@ export default function OnboardingPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <span className="h-6.5 w-6.5 rounded-full bg-hq-cyan/15 text-hq-cyan font-bold text-xs flex items-center justify-center shrink-0">
+                    <div className="flex items-start gap-3.5">
+                      <span className="h-8 w-8 rounded-xl bg-hq-cyan/15 text-hq-cyan font-black text-sm flex items-center justify-center shrink-0 border border-hq-cyan/10">
                         3
                       </span>
                       <div>
@@ -337,14 +369,14 @@ export default function OnboardingPage() {
                   <Button
                     variant="outline"
                     onClick={handlePrevStep}
-                    className="border-card-border h-11 flex items-center gap-1"
+                    className="border-card-border h-11 flex items-center gap-1 font-semibold"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back
                   </Button>
                   <Button
                     onClick={handleNextStep}
-                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5"
+                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(10,132,255,0.2)] hover:scale-[1.01] transition-all"
                   >
                     Setup Workspace
                     <ArrowRight className="h-4 w-4" />
@@ -357,18 +389,18 @@ export default function OnboardingPage() {
             {step === 3 && (
               <>
                 <CardHeader className="text-left space-y-1">
-                  <CardTitle className="text-xl font-bold text-[#1A1A1E] dark:text-white flex items-center gap-1.5">
-                    <Building className="h-5.5 w-5.5 text-hq-blue" />
+                  <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight flex items-center gap-2">
+                    <Building className="h-6 w-6 text-hq-blue" />
                     Discover Your Business
                   </CardTitle>
                   <CardDescription className="text-foreground/50 text-sm">
                     Enter operational parameters to ground your board's context.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 text-left text-sm">
+                <CardContent className="space-y-5 text-left text-sm">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
-                      <label className="font-semibold text-foreground/75">Company / Org Name</label>
+                      <label className="font-bold text-foreground/75">Company / Org Name</label>
                       <Input
                         placeholder="Acme Corp"
                         value={orgName}
@@ -380,7 +412,7 @@ export default function OnboardingPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="font-semibold text-foreground/75">HQ Slug Link</label>
+                      <label className="font-bold text-foreground/75">HQ Slug Link</label>
                       <Input
                         value={orgSlug}
                         disabled
@@ -389,43 +421,67 @@ export default function OnboardingPage() {
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label className="font-semibold text-foreground/75">Industry</label>
-                      <select
-                        value={industry}
-                        onChange={(e) => setIndustry(e.target.value)}
-                        className="w-full h-10 rounded-md border border-card-border bg-white dark:bg-[#0A0A0C] px-3 text-sm focus:outline-none focus:ring-1 focus:ring-hq-blue"
-                      >
-                        <option value="Technology">Technology & SaaS</option>
-                        <option value="Energy">Energy & Petroleum</option>
-                        <option value="Finance">Finance & Investing</option>
-                        <option value="Consulting">Consulting & Agency</option>
-                        <option value="Healthcare">Healthcare & Bio</option>
-                      </select>
+                  {/* Upgraded Industry Card Selector */}
+                  <div className="space-y-2 text-left">
+                    <label className="font-bold text-foreground/75">Select Industry</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {industriesList.map((ind) => {
+                        const Icon = ind.icon;
+                        const isSelected = industry === ind.name;
+                        return (
+                          <button
+                            key={ind.name}
+                            type="button"
+                            onClick={() => setIndustry(ind.name)}
+                            className="p-3.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1.5"
+                            style={{
+                              borderColor: isSelected ? brandColor : undefined,
+                              backgroundColor: isSelected ? brandColor + '0d' : undefined,
+                              color: isSelected ? brandColor : undefined,
+                            }}
+                          >
+                            <Icon className="h-5 w-5 shrink-0" />
+                            <span className="text-[10px] font-bold tracking-tight leading-none">
+                              {ind.label}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="font-semibold text-foreground/75">Company Size</label>
-                      <select
-                        value={companySize}
-                        onChange={(e) => setCompanySize(e.target.value)}
-                        className="w-full h-10 rounded-md border border-card-border bg-white dark:bg-[#0A0A0C] px-3 text-sm focus:outline-none focus:ring-1 focus:ring-hq-blue"
-                      >
-                        <option value="1-10">1 - 10 employees</option>
-                        <option value="11-50">11 - 50 employees</option>
-                        <option value="51-200">51 - 200 employees</option>
-                        <option value="200+">200+ employees</option>
-                      </select>
+                  </div>
+
+                  {/* Upgraded Company Size Selector */}
+                  <div className="space-y-2 text-left">
+                    <label className="font-bold text-foreground/75">Company Size</label>
+                    <div className="grid grid-cols-4 gap-3">
+                      {sizesList.map((sz) => {
+                        const isSelected = companySize === sz;
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => setCompanySize(sz)}
+                            className="h-10 rounded-xl border text-xs font-bold transition-all"
+                            style={{
+                              borderColor: isSelected ? brandColor : undefined,
+                              backgroundColor: isSelected ? brandColor + '0d' : undefined,
+                              color: isSelected ? brandColor : undefined,
+                            }}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="font-semibold text-foreground/75">Business Description</label>
+                    <label className="font-bold text-foreground/75">Business Description</label>
                     <textarea
                       placeholder="Describe what your organization sells, builds, or coordinates..."
                       value={businessDesc}
                       onChange={(e) => setBusinessDesc(e.target.value)}
-                      className="h-20 w-full rounded-md border border-card-border bg-white dark:bg-[#0A0A0C] px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-hq-blue"
+                      className="h-20 w-full rounded-xl border border-card-border bg-white dark:bg-[#0A0A0C] px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-hq-blue"
                     />
                   </div>
                 </CardContent>
@@ -433,14 +489,14 @@ export default function OnboardingPage() {
                   <Button
                     variant="outline"
                     onClick={handlePrevStep}
-                    className="border-card-border h-11 flex items-center gap-1"
+                    className="border-card-border h-11 flex items-center gap-1 font-semibold"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back
                   </Button>
                   <Button
                     onClick={handleNextStep}
-                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5"
+                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(10,132,255,0.2)] hover:scale-[1.01] transition-all"
                   >
                     Continue
                     <ArrowRight className="h-4 w-4" />
@@ -453,18 +509,18 @@ export default function OnboardingPage() {
             {step === 4 && (
               <>
                 <CardHeader className="text-left space-y-1">
-                  <CardTitle className="text-xl font-bold text-[#1A1A1E] dark:text-white flex items-center gap-1.5">
-                    <Globe className="h-5.5 w-5.5 text-hq-purple" />
+                  <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight flex items-center gap-2">
+                    <Globe className="h-6 w-6 text-hq-purple" />
                     Organization Profile
                   </CardTitle>
                   <CardDescription className="text-foreground/50 text-sm">
                     Configure localization preferences and target audience.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 text-left text-sm">
+                <CardContent className="space-y-5 text-left text-sm">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
-                      <label className="font-semibold text-foreground/75">Time Zone</label>
+                      <label className="font-bold text-foreground/75">Time Zone</label>
                       <Input
                         value={timezone}
                         onChange={(e) => setTimezone(e.target.value)}
@@ -472,7 +528,7 @@ export default function OnboardingPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="font-semibold text-foreground/75">Language</label>
+                      <label className="font-bold text-foreground/75">Language</label>
                       <Input
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
@@ -481,30 +537,38 @@ export default function OnboardingPage() {
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label className="font-semibold text-foreground/75">Website (Optional)</label>
-                      <Input
-                        placeholder="https://company.com"
-                        value={website}
-                        onChange={(e) => setWebsite(e.target.value)}
-                        className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="font-semibold text-foreground/75">
-                        Primary Customer Type
-                      </label>
-                      <select
-                        value={customerType}
-                        onChange={(e) => setCustomerType(e.target.value)}
-                        className="w-full h-10 rounded-md border border-card-border bg-white dark:bg-[#0A0A0C] px-3 text-sm focus:outline-none focus:ring-1 focus:ring-hq-blue"
-                      >
-                        <option value="B2B">B2B SaaS / Services</option>
-                        <option value="B2C">B2C Consumers</option>
-                        <option value="Developer">Developers & Tech</option>
-                        <option value="Enterprise">Enterprise Corporations</option>
-                      </select>
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-foreground/75">Website (Optional)</label>
+                    <Input
+                      placeholder="https://company.com"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                      className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground"
+                    />
+                  </div>
+
+                  {/* Upgraded Customer Type Selector */}
+                  <div className="space-y-2 text-left">
+                    <label className="font-bold text-foreground/75">Primary Customer Type</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {customerTypesList.map((cust) => {
+                        const isSelected = customerType === cust.type;
+                        return (
+                          <button
+                            key={cust.type}
+                            type="button"
+                            onClick={() => setCustomerType(cust.type)}
+                            className="p-3.5 rounded-xl border text-center transition-all flex flex-col justify-center items-center"
+                            style={{
+                              borderColor: isSelected ? brandColor : undefined,
+                              backgroundColor: isSelected ? brandColor + '0d' : undefined,
+                              color: isSelected ? brandColor : undefined,
+                            }}
+                          >
+                            <span className="text-xs font-bold">{cust.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </CardContent>
@@ -512,14 +576,14 @@ export default function OnboardingPage() {
                   <Button
                     variant="outline"
                     onClick={handlePrevStep}
-                    className="border-card-border h-11 flex items-center gap-1"
+                    className="border-card-border h-11 flex items-center gap-1 font-semibold"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back
                   </Button>
                   <Button
                     onClick={handleNextStep}
-                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5"
+                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(10,132,255,0.2)] hover:scale-[1.01] transition-all"
                   >
                     Continue
                     <ArrowRight className="h-4 w-4" />
@@ -532,8 +596,8 @@ export default function OnboardingPage() {
             {step === 5 && (
               <>
                 <CardHeader className="text-left space-y-1">
-                  <CardTitle className="text-xl font-bold text-[#1A1A1E] dark:text-white flex items-center gap-1.5">
-                    <Layers className="h-5.5 w-5.5 text-hq-cyan" />
+                  <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight flex items-center gap-2">
+                    <Layers className="h-6 w-6 text-hq-cyan" />
                     Business Goals
                   </CardTitle>
                   <CardDescription className="text-foreground/50 text-sm">
@@ -549,13 +613,22 @@ export default function OnboardingPage() {
                           key={goal}
                           type="button"
                           onClick={() => toggleGoal(goal)}
-                          className={`p-3.5 rounded-xl border text-xs font-semibold text-left transition-all ${
-                            isSelected
-                              ? 'border-hq-blue bg-hq-blue/5 text-hq-blue'
-                              : 'border-card-border bg-black/5 dark:bg-[#1E1E24]/30 hover:border-black/20 dark:hover:border-white/20'
-                          }`}
+                          className="p-3.5 rounded-xl border text-xs font-bold text-left transition-all flex items-center justify-between"
+                          style={{
+                            borderColor: isSelected ? brandColor : undefined,
+                            backgroundColor: isSelected ? brandColor + '0d' : undefined,
+                            color: isSelected ? brandColor : undefined,
+                          }}
                         >
-                          {goal}
+                          <span>{goal}</span>
+                          {isSelected && (
+                            <span
+                              className="h-4 w-4 rounded-full flex items-center justify-center text-white text-[9px] font-bold"
+                              style={{ backgroundColor: brandColor }}
+                            >
+                              ✓
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -565,7 +638,7 @@ export default function OnboardingPage() {
                   <Button
                     variant="outline"
                     onClick={handlePrevStep}
-                    className="border-card-border h-11 flex items-center gap-1"
+                    className="border-card-border h-11 flex items-center gap-1 font-semibold"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back
@@ -573,7 +646,7 @@ export default function OnboardingPage() {
                   <Button
                     onClick={handleNextStep}
                     disabled={goals.length === 0}
-                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-[0_4px_15px_rgba(10,132,255,0.2)]"
                   >
                     Continue
                     <ArrowRight className="h-4 w-4" />
@@ -586,17 +659,17 @@ export default function OnboardingPage() {
             {step === 6 && (
               <>
                 <CardHeader className="text-left space-y-1">
-                  <CardTitle className="text-xl font-bold text-[#1A1A1E] dark:text-white flex items-center gap-1.5">
-                    <Settings className="h-5.5 w-5.5 text-hq-blue" />
+                  <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight flex items-center gap-2">
+                    <Settings className="h-6 w-6 text-hq-blue" />
                     Headquarters Configuration
                   </CardTitle>
                   <CardDescription className="text-foreground/50 text-sm">
                     Set up your workspace name and visual identifiers (optional).
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 text-left text-sm">
+                <CardContent className="space-y-5 text-left text-sm">
                   <div className="space-y-1.5">
-                    <label className="font-semibold text-foreground/75">Headquarters Name</label>
+                    <label className="font-bold text-foreground/75">Headquarters Name</label>
                     <Input
                       value={hqName}
                       onChange={(e) => setHqName(e.target.value)}
@@ -605,18 +678,18 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="font-semibold text-foreground/75">Brand Theme Color</label>
-                    <div className="flex gap-3">
+                    <label className="font-bold text-foreground/75">Brand Theme Color</label>
+                    <div className="flex gap-4">
                       {['#0A84FF', '#BF5AF2', '#30D158', '#FF9F0A', '#FF453A'].map((color) => (
                         <button
                           key={color}
                           type="button"
                           onClick={() => setBrandColor(color)}
                           style={{ backgroundColor: color }}
-                          className={`h-9 w-9 rounded-full border-2 transition-all ${
+                          className={`h-10 w-10 rounded-full border-2 transition-all hover:scale-105 active:scale-95 shadow-[0_0_10px_rgba(0,0,0,0.15)] ${
                             brandColor === color
-                              ? 'border-foreground scale-110'
-                              : 'border-transparent'
+                              ? 'border-foreground scale-110 shadow-lg'
+                              : 'border-transparent opacity-85'
                           }`}
                         />
                       ))}
@@ -627,14 +700,14 @@ export default function OnboardingPage() {
                   <Button
                     variant="outline"
                     onClick={handlePrevStep}
-                    className="border-card-border h-11 flex items-center gap-1"
+                    className="border-card-border h-11 flex items-center gap-1 font-semibold"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back
                   </Button>
                   <Button
                     onClick={handleNextStep}
-                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5"
+                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(10,132,255,0.2)] hover:scale-[1.01] transition-all"
                   >
                     Assemble Team
                     <ArrowRight className="h-4 w-4" />
@@ -647,48 +720,61 @@ export default function OnboardingPage() {
             {step === 7 && (
               <>
                 <CardHeader className="text-left space-y-1">
-                  <CardTitle className="text-xl font-bold text-[#1A1A1E] dark:text-white flex items-center gap-1.5">
-                    <Users className="h-5.5 w-5.5 text-hq-purple" />
+                  <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight flex items-center gap-2">
+                    <Users className="h-6 w-6 text-hq-purple" />
                     Meet Your Executive Team
                   </CardTitle>
                   <CardDescription className="text-foreground/50 text-sm">
                     These pre-seeded AI specialized directors have been selected for your boardroom:
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 text-left max-h-[250px] overflow-y-auto pr-1">
-                  <div className="space-y-3">
-                    <div className="p-3 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-lg flex items-center justify-between">
-                      <div>
-                        <h4 className="font-bold text-xs text-[#1A1A1E] dark:text-white">
+                <CardContent className="space-y-4 text-left max-h-[300px] overflow-y-auto pr-1">
+                  <div className="grid gap-3">
+                    <div className="p-4.5 border border-card-border bg-gradient-to-r from-hq-blue/5 to-transparent rounded-2xl flex items-center justify-between shadow-[var(--card-shadow)]">
+                      <div className="space-y-0.5">
+                        <h4 className="font-bold text-sm text-[#1A1A1E] dark:text-white">
                           Elena Rostova
                         </h4>
-                        <p className="text-[10px] text-foreground/45">
+                        <p className="text-xs text-foreground/45">
                           CEO & Strategic Owner Alignment
                         </p>
                       </div>
-                      <Badge variant="ai">CEO</Badge>
+                      <Badge
+                        variant="ai"
+                        className="px-3.5 py-1 text-[10px] bg-hq-blue/15 border-hq-blue/30 text-hq-blue font-bold rounded-full"
+                      >
+                        CEO
+                      </Badge>
                     </div>
-                    <div className="p-3 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-lg flex items-center justify-between">
-                      <div>
-                        <h4 className="font-bold text-xs text-[#1A1A1E] dark:text-white">
+                    <div className="p-4.5 border border-card-border bg-gradient-to-r from-hq-purple/5 to-transparent rounded-2xl flex items-center justify-between shadow-[var(--card-shadow)]">
+                      <div className="space-y-0.5">
+                        <h4 className="font-bold text-sm text-[#1A1A1E] dark:text-white">
                           Arthur Steward
                         </h4>
-                        <p className="text-[10px] text-foreground/45">
+                        <p className="text-xs text-foreground/45">
                           COS — DAG Mission decomposition
                         </p>
                       </div>
-                      <Badge variant="ai">COS</Badge>
+                      <Badge
+                        variant="premium"
+                        className="px-3.5 py-1 text-[10px] bg-hq-purple/15 border-hq-purple/30 text-hq-purple font-bold rounded-full"
+                      >
+                        COS
+                      </Badge>
                     </div>
-                    <div className="p-3 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-lg flex items-center justify-between">
-                      <div>
-                        <h4 className="font-bold text-xs text-[#1A1A1E] dark:text-white">
+                    <div className="p-4.5 border border-card-border bg-gradient-to-r from-hq-cyan/5 to-transparent rounded-2xl flex items-center justify-between shadow-[var(--card-shadow)]">
+                      <div className="space-y-0.5">
+                        <h4 className="font-bold text-sm text-[#1A1A1E] dark:text-white">
                           Linus Kovacs
                         </h4>
-                        <p className="text-[10px] text-foreground/45">
-                          Eng Director — git validations
-                        </p>
+                        <p className="text-xs text-foreground/45">Eng Director — git validations</p>
                       </div>
-                      <Badge variant="ai">Eng</Badge>
+                      <Badge
+                        variant="ai"
+                        className="px-3.5 py-1 text-[10px] bg-hq-cyan/15 border-hq-cyan/30 text-hq-cyan font-bold rounded-full"
+                      >
+                        Eng
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -696,14 +782,14 @@ export default function OnboardingPage() {
                   <Button
                     variant="outline"
                     onClick={handlePrevStep}
-                    className="border-card-border h-11 flex items-center gap-1"
+                    className="border-card-border h-11 flex items-center gap-1 font-semibold"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back
                   </Button>
                   <Button
                     onClick={handleNextStep}
-                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5"
+                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(10,132,255,0.2)] hover:scale-[1.01] transition-all"
                   >
                     Review Setup
                     <ArrowRight className="h-4 w-4" />
@@ -716,62 +802,64 @@ export default function OnboardingPage() {
             {step === 8 && (
               <>
                 <CardHeader className="text-left space-y-1">
-                  <CardTitle className="text-xl font-bold text-[#1A1A1E] dark:text-white flex items-center gap-1.5">
-                    <Sliders className="h-5.5 w-5.5 text-hq-cyan" />
+                  <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight flex items-center gap-2">
+                    <Sliders className="h-6 w-6 text-hq-cyan" />
                     Review Your Headquarters
                   </CardTitle>
                   <CardDescription className="text-foreground/50 text-sm">
                     Confirm your details before activating your boardroom.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 text-left text-xs leading-relaxed max-h-[260px] overflow-y-auto pr-1">
-                  <div className="grid gap-3.5">
-                    <div className="flex justify-between items-start border-b border-card-border pb-2">
+                <CardContent className="space-y-4 text-left text-xs leading-relaxed max-h-[300px] overflow-y-auto pr-1">
+                  <div className="grid gap-4">
+                    <div className="p-4 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-2xl flex justify-between items-center">
                       <div>
-                        <span className="font-bold text-foreground/40 block">
+                        <span className="font-bold text-foreground/45 block text-[10px] uppercase tracking-wider">
                           Organization Name
                         </span>
-                        <span className="text-sm font-semibold text-[#1A1A1E] dark:text-white">
+                        <span className="text-sm font-bold text-[#1A1A1E] dark:text-white">
                           {orgName}
                         </span>
                       </div>
                       <button
                         onClick={() => setStep(3)}
-                        className="text-hq-blue flex items-center gap-1 hover:underline"
+                        className="text-hq-blue flex items-center gap-1 hover:underline text-xs font-semibold"
                       >
-                        <Edit2 className="h-3 w-3" /> Edit
+                        <Edit2 className="h-3.5 w-3.5" /> Edit
                       </button>
                     </div>
 
-                    <div className="flex justify-between items-start border-b border-card-border pb-2">
+                    <div className="p-4 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-2xl flex justify-between items-center">
                       <div>
-                        <span className="font-bold text-foreground/40 block">
+                        <span className="font-bold text-foreground/45 block text-[10px] uppercase tracking-wider">
                           Time Zone & Language
                         </span>
-                        <span className="text-sm font-semibold text-[#1A1A1E] dark:text-white">
+                        <span className="text-sm font-bold text-[#1A1A1E] dark:text-white">
                           {timezone} ({language})
                         </span>
                       </div>
                       <button
                         onClick={() => setStep(4)}
-                        className="text-hq-blue flex items-center gap-1 hover:underline"
+                        className="text-hq-blue flex items-center gap-1 hover:underline text-xs font-semibold"
                       >
-                        <Edit2 className="h-3 w-3" /> Edit
+                        <Edit2 className="h-3.5 w-3.5" /> Edit
                       </button>
                     </div>
 
-                    <div className="flex justify-between items-start border-b border-card-border pb-2">
+                    <div className="p-4 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-2xl flex justify-between items-center">
                       <div>
-                        <span className="font-bold text-foreground/40 block">Goals Selection</span>
-                        <span className="text-sm font-semibold text-[#1A1A1E] dark:text-white">
+                        <span className="font-bold text-foreground/45 block text-[10px] uppercase tracking-wider">
+                          Goals Selection
+                        </span>
+                        <span className="text-sm font-bold text-[#1A1A1E] dark:text-white">
                           {goals.join(', ')}
                         </span>
                       </div>
                       <button
                         onClick={() => setStep(5)}
-                        className="text-hq-blue flex items-center gap-1 hover:underline"
+                        className="text-hq-blue flex items-center gap-1 hover:underline text-xs font-semibold"
                       >
-                        <Edit2 className="h-3 w-3" /> Edit
+                        <Edit2 className="h-3.5 w-3.5" /> Edit
                       </button>
                     </div>
                   </div>
@@ -780,14 +868,14 @@ export default function OnboardingPage() {
                   <Button
                     variant="outline"
                     onClick={handlePrevStep}
-                    className="border-card-border h-11 flex items-center gap-1"
+                    className="border-card-border h-11 flex items-center gap-1 font-semibold"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Back
                   </Button>
                   <Button
                     onClick={handleNextStep}
-                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5"
+                    className="flex-1 h-11 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(10,132,255,0.2)] hover:scale-[1.01] transition-all"
                   >
                     Activate HQ
                     <ArrowRight className="h-4 w-4" />
@@ -800,8 +888,8 @@ export default function OnboardingPage() {
             {step === 9 && (
               <>
                 <CardHeader className="text-left space-y-1">
-                  <CardTitle className="text-xl font-bold text-[#1A1A1E] dark:text-white flex items-center gap-1.5">
-                    <Lock className="h-5.5 w-5.5 text-hq-blue" />
+                  <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight flex items-center gap-2">
+                    <Lock className="h-6 w-6 text-hq-blue" />
                     Activate Your Headquarters
                   </CardTitle>
                   <CardDescription className="text-foreground/50 text-sm">
@@ -811,8 +899,8 @@ export default function OnboardingPage() {
                 <CardContent className="space-y-4 text-left">
                   {otpSent ? (
                     <form onSubmit={handleVerifyOTP} className="space-y-4 text-xs">
-                      <div className="space-y-1.5">
-                        <label className="font-semibold text-foreground/75">
+                      <div className="space-y-1.5 text-center">
+                        <label className="font-bold text-foreground/75">
                           One-Time Password (OTP)
                         </label>
                         <Input
@@ -821,13 +909,16 @@ export default function OnboardingPage() {
                           onChange={(e) => setOtpCode(e.target.value)}
                           maxLength={6}
                           required
-                          className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground tracking-widest text-center text-lg font-black h-11"
+                          className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground tracking-widest text-center text-lg font-black h-11 focus-visible:ring-hq-blue"
                         />
+                        <p className="text-[10px] text-foreground/45 mt-2">
+                          Enter the 6-digit activation code sent to your inbox.
+                        </p>
                       </div>
                       <Button
                         type="submit"
                         disabled={authLoading}
-                        className="w-full h-11 bg-hq-purple hover:bg-hq-purple/90 text-white font-bold transition-all"
+                        className="w-full h-11 bg-hq-purple hover:bg-hq-purple/90 text-white font-bold transition-all shadow-[0_4px_15px_rgba(191,90,242,0.2)]"
                       >
                         {authLoading ? 'Verifying...' : 'Verify OTP & Activate'}
                       </Button>
@@ -836,7 +927,7 @@ export default function OnboardingPage() {
                     <div className="space-y-4 text-xs">
                       <form onSubmit={handleSendOTP} className="space-y-3.5">
                         <div className="space-y-1.5">
-                          <label className="font-semibold text-foreground/75">
+                          <label className="font-bold text-foreground/75">
                             Owner Email Address
                           </label>
                           <Input
@@ -845,7 +936,7 @@ export default function OnboardingPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground"
+                            className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground focus-visible:ring-hq-blue"
                           />
                         </div>
                         <Button
@@ -907,7 +998,9 @@ export default function OnboardingPage() {
                       style={{ width: `${initProgress}%` }}
                     />
                   </div>
-                  <span className="text-xs text-foreground/45">{initProgress}% Complete</span>
+                  <span className="text-xs text-foreground/45 font-bold">
+                    {initProgress}% Complete
+                  </span>
                 </CardContent>
               </>
             )}
@@ -919,7 +1012,7 @@ export default function OnboardingPage() {
                   <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-hq-blue via-[#8B5CF6] to-hq-purple flex items-center justify-center text-white border border-hq-cyan/20 shadow-[0_0_20px_rgba(10,132,255,0.3)] mx-auto animate-bounce">
                     <Sparkles className="h-7 w-7" />
                   </div>
-                  <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white">
+                  <CardTitle className="text-3xl font-black text-[#1A1A1E] dark:text-white tracking-tight">
                     Welcome to HQ
                   </CardTitle>
                   <CardDescription className="text-xs text-hq-cyan font-bold uppercase tracking-wider">
@@ -927,12 +1020,12 @@ export default function OnboardingPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 text-center">
-                  <div className="p-4.5 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-2xl max-w-sm mx-auto">
+                  <div className="p-5 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-2xl max-w-sm mx-auto shadow-[var(--card-shadow)]">
                     <p className="text-sm text-[#1A1A1E] dark:text-white leading-relaxed italic">
                       &ldquo;Welcome. Your Executive Team is online and ready to help you achieve
                       your goals.&rdquo;
                     </p>
-                    <span className="block mt-2.5 text-[10px] text-foreground/45 uppercase tracking-widest font-semibold">
+                    <span className="block mt-3 text-[10px] text-foreground/45 uppercase tracking-widest font-bold">
                       — Elena Rostova, CEO
                     </span>
                   </div>
@@ -940,7 +1033,7 @@ export default function OnboardingPage() {
                 <CardFooter>
                   <Button
                     onClick={handleLaunchFirstMission}
-                    className="w-full h-11 bg-gradient-to-r from-hq-blue to-hq-purple text-white font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(14,165,233,0.3)] hover:scale-[1.01] transition-all"
+                    className="w-full h-11 bg-gradient-to-r from-hq-blue to-hq-purple text-white font-bold flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(10,132,255,0.3)] hover:scale-[1.01] transition-all"
                   >
                     Launch My First Mission
                     <ArrowRight className="h-4.5 w-4.5 animate-pulse" />

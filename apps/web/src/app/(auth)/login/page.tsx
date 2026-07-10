@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '../../../contexts/auth-context';
 import {
   Card,
@@ -66,7 +67,6 @@ export default function LoginPage() {
     }
     setAuthLoading(true);
     try {
-      // Complete login under the hood using default security credentials
       await signUpWithEmail(email, 'SecurePass123!');
       setLoadingHq(true); // Proceed to loading page
     } catch (err) {
@@ -92,7 +92,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between font-sans relative overflow-hidden select-none">
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between font-sans relative overflow-hidden select-none animate-in fade-in duration-300">
       {/* Decorative Dot Grid Background */}
       <div className="absolute inset-0 bg-[radial-gradient(#1e1e24_1px,transparent_1px)] [background-size:16px_16px] opacity-10 dark:opacity-20 pointer-events-none"></div>
 
@@ -111,7 +111,7 @@ export default function LoginPage() {
       {/* Main Board Center Layout */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
         <div className="w-full max-w-md">
-          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition text-foreground">
+          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition text-foreground p-2">
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 m-6 mb-0 rounded-lg text-center font-semibold">
                 {error}
@@ -136,7 +136,9 @@ export default function LoginPage() {
                       style={{ width: `${loadProgress}%` }}
                     />
                   </div>
-                  <span className="text-xs text-foreground/45">{loadProgress}% Unlocked</span>
+                  <span className="text-xs text-foreground/45 font-bold">
+                    {loadProgress}% Unlocked
+                  </span>
                 </CardContent>
               </>
             ) : (
@@ -145,19 +147,19 @@ export default function LoginPage() {
                   <Badge variant="ai" className="w-fit text-[10px] tracking-widest font-bold">
                     SECURITY VERIFICATION
                   </Badge>
-                  <CardTitle className="text-xl font-bold text-[#1A1A1E] dark:text-white flex items-center gap-1.5">
-                    <Lock className="h-5.5 w-5.5 text-hq-blue" />
+                  <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight flex items-center gap-2">
+                    <Lock className="h-6 w-6 text-hq-blue" />
                     Enter Headquarters
                   </CardTitle>
-                  <CardDescription className="text-foreground/50 text-sm">
+                  <CardDescription className="text-foreground/50 text-sm leading-relaxed">
                     Verify your identity to claim ownership and unlock your dashboard channels.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 text-left">
                   {otpSent ? (
                     <form onSubmit={handleVerifyOTP} className="space-y-4 text-xs">
-                      <div className="space-y-1.5">
-                        <label className="font-semibold text-foreground/75">
+                      <div className="space-y-1.5 text-center">
+                        <label className="font-bold text-foreground/75">
                           One-Time Password (OTP)
                         </label>
                         <Input
@@ -166,13 +168,16 @@ export default function LoginPage() {
                           onChange={(e) => setOtpCode(e.target.value)}
                           maxLength={6}
                           required
-                          className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground tracking-widest text-center text-lg font-black h-11"
+                          className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground tracking-widest text-center text-lg font-black h-11 focus-visible:ring-hq-blue"
                         />
+                        <p className="text-[10px] text-foreground/45 mt-2">
+                          Enter the 6-digit activation code sent to your inbox.
+                        </p>
                       </div>
                       <Button
                         type="submit"
                         disabled={authLoading}
-                        className="w-full h-11 bg-hq-purple hover:bg-hq-purple/90 text-white font-bold transition-all"
+                        className="w-full h-11 bg-hq-purple hover:bg-hq-purple/90 text-white font-bold transition-all shadow-[0_4px_15px_rgba(191,90,242,0.2)]"
                       >
                         {authLoading ? 'Verifying...' : 'Verify OTP & Enter'}
                       </Button>
@@ -181,7 +186,7 @@ export default function LoginPage() {
                     <div className="space-y-4 text-xs">
                       <form onSubmit={handleSendOTP} className="space-y-3.5">
                         <div className="space-y-1.5">
-                          <label className="font-semibold text-foreground/75">
+                          <label className="font-bold text-foreground/75">
                             Owner Email Address
                           </label>
                           <Input
@@ -190,7 +195,7 @@ export default function LoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground"
+                            className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground focus-visible:ring-hq-blue"
                           />
                         </div>
                         <Button
@@ -221,7 +226,7 @@ export default function LoginPage() {
                     </div>
                   )}
                 </CardContent>
-                {otpSent && (
+                {otpSent ? (
                   <CardFooter>
                     <Button
                       variant="ghost"
@@ -230,6 +235,15 @@ export default function LoginPage() {
                     >
                       Back to Email Entry
                     </Button>
+                  </CardFooter>
+                ) : (
+                  <CardFooter className="flex justify-center border-t border-card-border pt-4 mt-2">
+                    <p className="text-xs text-foreground/50">
+                      Not yet a member?{' '}
+                      <Link href="/onboarding" className="text-hq-blue font-bold hover:underline">
+                        Try for free
+                      </Link>
+                    </p>
                   </CardFooter>
                 )}
               </>
