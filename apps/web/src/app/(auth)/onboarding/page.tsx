@@ -59,6 +59,7 @@ export default function OnboardingPage() {
   // Step 6: Configuration
   const [hqName, setHqName] = React.useState('');
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
+  const [ceoName, setCeoName] = React.useState('Elena Rostova');
 
   // Step 9: Authentication
   const [email, setEmail] = React.useState('');
@@ -216,16 +217,16 @@ export default function OnboardingPage() {
             <span className="text-foreground/45 text-xs font-normal">| Onboarding Workspace</span>
           </span>
         </div>
-        {step < 10 && (
+        {step <= 11 && (
           <div className="text-xs text-foreground/50 bg-black/5 dark:bg-[#1E1E24]/40 border border-card-border px-3 py-1 rounded-lg font-bold">
-            Step {step} of 9
+            Step {step} of 11
           </div>
         )}
       </header>
 
       {/* Main Board Center Layout */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
-        {step < 10 && (
+        {step <= 11 && (
           <div className="w-full max-w-xl mb-6 text-center space-y-2">
             <p className="text-xs text-hq-cyan font-bold tracking-widest uppercase flex items-center justify-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 animate-pulse" />
@@ -233,7 +234,7 @@ export default function OnboardingPage() {
             </p>
             {/* Upgraded Progress Stepper indicator */}
             <div className="flex justify-between items-center gap-2 mt-4">
-              {Array.from({ length: 9 }).map((_, idx) => (
+              {Array.from({ length: 11 }).map((_, idx) => (
                 <div
                   key={idx}
                   className="h-1.5 flex-1 rounded-full transition-all duration-300"
@@ -677,6 +678,16 @@ export default function OnboardingPage() {
                     />
                   </div>
 
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-foreground/75">AI CEO Name</label>
+                    <Input
+                      value={ceoName}
+                      onChange={(e) => setCeoName(e.target.value)}
+                      placeholder="e.g. Elena Rostova"
+                      className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground focus-visible:ring-hq-blue"
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <label className="font-bold text-foreground/75">Brand Theme Color</label>
                     <div className="flex gap-4">
@@ -733,7 +744,7 @@ export default function OnboardingPage() {
                     <div className="p-4.5 border border-card-border bg-gradient-to-r from-hq-blue/5 to-transparent rounded-2xl flex items-center justify-between shadow-[var(--card-shadow)]">
                       <div className="space-y-0.5">
                         <h4 className="font-bold text-sm text-[#1A1A1E] dark:text-white">
-                          Elena Rostova
+                          {ceoName}
                         </h4>
                         <p className="text-xs text-foreground/45">
                           CEO & Strategic Owner Alignment
@@ -840,6 +851,23 @@ export default function OnboardingPage() {
                       </div>
                       <button
                         onClick={() => setStep(4)}
+                        className="text-hq-blue flex items-center gap-1 hover:underline text-xs font-semibold"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" /> Edit
+                      </button>
+                    </div>
+
+                    <div className="p-4 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-2xl flex justify-between items-center">
+                      <div>
+                        <span className="font-bold text-foreground/45 block text-[10px] uppercase tracking-wider">
+                          AI CEO Name
+                        </span>
+                        <span className="text-sm font-bold text-[#1A1A1E] dark:text-white">
+                          {ceoName}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setStep(6)}
                         className="text-hq-blue flex items-center gap-1 hover:underline text-xs font-semibold"
                       >
                         <Edit2 className="h-3.5 w-3.5" /> Edit
@@ -1026,7 +1054,7 @@ export default function OnboardingPage() {
                       your goals.&rdquo;
                     </p>
                     <span className="block mt-3 text-[10px] text-foreground/45 uppercase tracking-widest font-bold">
-                      — Elena Rostova, CEO
+                      — {ceoName}, CEO
                     </span>
                   </div>
                 </CardContent>
