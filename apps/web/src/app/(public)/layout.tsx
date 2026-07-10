@@ -111,9 +111,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 <Link href="/login">
                   <Button
                     variant="ghost"
-                    className="text-xs font-semibold text-foreground/75 hover:text-white transition-colors"
+                    className="text-sm font-semibold text-foreground/75 hover:text-[#1A1A1E] dark:hover:text-white transition-colors"
                   >
-                    Login
+                    Enter Headquarters
                   </Button>
                 </Link>
                 <Link href="/onboarding">
@@ -145,9 +145,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <Link href="/login">
                 <Button
                   variant="ghost"
-                  className="text-xs font-semibold text-foreground/75 hover:text-white transition-colors px-2"
+                  className="text-sm font-semibold text-foreground/75 hover:text-[#1A1A1E] dark:hover:text-white transition-colors px-2.5"
                 >
-                  Login
+                  Enter Headquarters
                 </Button>
               </Link>
             )}
