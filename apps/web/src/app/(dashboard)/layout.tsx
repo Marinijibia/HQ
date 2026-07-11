@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Database,
   CloudLightning,
+  MessageSquare,
 } from 'lucide-react';
 
 interface SidebarNavItem {
@@ -31,6 +32,7 @@ interface SidebarNavItem {
 const navItems: SidebarNavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Boardroom', href: '/boardroom', icon: Users },
+  { name: 'Discussions', href: '/discussions', icon: MessageSquare },
   { name: 'Missions', href: '/missions', icon: Calendar },
   { name: 'Assets & Library', href: '/assets', icon: Database },
   { name: 'Settings', href: '/settings', icon: Settings },
