@@ -138,7 +138,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       {/* Top Banner / Navigation */}
-      <header className="flex h-14 items-center justify-between border-b border-hq-graphite/40 px-6 bg-hq-graphite/10 backdrop-blur-md">
+      <header className="relative z-50 flex h-14 items-center justify-between border-b border-hq-graphite/40 px-6 bg-hq-graphite/10 backdrop-blur-md">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <div className="h-6 w-6 rounded-md bg-gradient-to-tr from-hq-blue to-hq-purple flex items-center justify-center font-bold text-white text-xs select-none">
