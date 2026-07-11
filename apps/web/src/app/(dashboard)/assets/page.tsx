@@ -1,439 +1,664 @@
 'use client';
 
 import * as React from 'react';
+import { Card, Button, Badge } from '@hq/ui';
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-  Button,
-  Input,
-} from '@hq/ui';
-import {
-  Save,
-  Sliders,
-  Copy,
-  CheckCircle,
-  Sparkles,
-  Download,
-  Edit2,
-  Trash2,
   FolderOpen,
+  Search,
+  Download,
   History,
-  CornerUpLeft,
-  FileCheck,
+  ShieldAlert,
+  UploadCloud,
+  FileText,
+  FileImage,
+  Video,
+  Database,
+  AlertTriangle,
+  RotateCcw,
+  ArrowRight,
 } from 'lucide-react';
+import { useAuth } from '../../../contexts/auth-context';
 
-interface FileVersion {
-  version: number;
-  label: string;
-  body: string;
-  updatedAt: string;
-  author: string;
-}
-
-interface CopyDoc {
+interface AssetVersion {
   id: string;
-  title: string;
-  body: string;
-  tone: string;
-  updatedAt: string;
-  fileSize: string;
+  version: number;
+  filename: string;
+  fileSize: number;
   sha256: string;
-  versions: FileVersion[];
+  gcsPath: string;
+  changeSummary: string | null;
+  createdAt: string;
 }
 
-export default function ContentStudioPage() {
-  const [docs, setDocs] = React.useState<CopyDoc[]>([
-    {
-      id: 'doc-1',
-      title: 'Q3 Petroleum Strategic Proposal',
-      body: 'Dear Board of Directors, we present the strategic B2B trade logistics proposal covering petroleum shipping corridors across West African corridors, optimizing for low-risk regional compliance controls and maximum credit-spent yields...',
-      tone: 'Professional & Direct',
-      updatedAt: '2 hours ago',
-      fileSize: '14.2 KB',
-      sha256: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-      versions: [
-        {
-          version: 3,
-          label: 'Tone adjustments and corporate alignment',
-          body: 'Dear Board of Directors, we present the strategic B2B trade logistics proposal covering petroleum shipping corridors across West African corridors, optimizing for low-risk regional compliance controls and maximum credit-spent yields...',
-          updatedAt: '10 mins ago',
-          author: 'Alistair Thorne (Strategy Director)',
-        },
-        {
-          version: 2,
-          label: 'Legal review and regulatory additions',
-          body: 'Dear Board of Directors, we present the B2B logistics proposal covering petroleum shipping corridors. Verified under zero-trust regulatory constraints.',
-          updatedAt: '1 hour ago',
-          author: 'Fiona Gallagher (Legal Director)',
-        },
-        {
-          version: 1,
-          label: 'Initial strategic outline draft',
-          body: 'Petroleum shipping corridors proposal outline.',
-          updatedAt: '2 hours ago',
-          author: 'Elena Rostova (CEO)',
-        },
-      ],
-    },
-    {
-      id: 'doc-2',
-      title: 'HQ Enterprise Release Campaign',
-      body: 'Say hello to HQ, the first AI Executive Operating System designed to automate and orchestrate corporate growth. Let your board work! 🚀 Now with automated PGVector memory systems and multi-agent failovers.',
-      tone: 'Playful & Creative',
-      updatedAt: '1 day ago',
-      fileSize: '8.4 KB',
-      sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-      versions: [
-        {
-          version: 2,
-          label: 'Feature additions and emojis parameters',
-          body: 'Say hello to HQ, the first AI Executive Operating System designed to automate and orchestrate corporate growth. Let your board work! 🚀 Now with automated PGVector memory systems and multi-agent failovers.',
-          updatedAt: '12 hours ago',
-          author: 'Linus Kovacs (Creative Director)',
-        },
-        {
-          version: 1,
-          label: 'Initial PR copy release draft',
-          body: 'Say hello to HQ OS, the executive agent platform.',
-          updatedAt: '1 day ago',
-          author: 'Sophia Sterling (Marketing Director)',
-        },
-      ],
-    },
-  ]);
+interface Asset {
+  id: string;
+  filename: string;
+  description: string | null;
+  fileSize: number;
+  mimeType: string;
+  sha256: string;
+  gcsPath: string;
+  classification: 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED';
+  isLegalHold: boolean;
+  createdAt: string;
+  updatedAt: string;
+  versions?: AssetVersion[];
+}
 
-  const [selectedId, setSelectedId] = React.useState<string>('doc-1');
-  const [title, setTitle] = React.useState('');
-  const [body, setBody] = React.useState('');
-  const [tone, setTone] = React.useState('Professional & Direct');
+export default function AssetCenterPage() {
+  const { token } = useAuth();
 
-  const [isCopied, setIsCopied] = React.useState(false);
-  const [isSaved, setIsSaved] = React.useState(false);
-  const [rollbackAlert, setRollbackAlert] = React.useState<string | null>(null);
+  // Search & Filter state
+  const [activeCategory, setActiveCategory] = React.useState<string>('all');
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [selectedAssetId, setSelectedAssetId] = React.useState<string | null>(null);
 
-  // Sync editor fields with selected document
+  // Upload state
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState<number | null>(null);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
+
+  // Asset details state
+  const [assets, setAssets] = React.useState<Asset[]>([]);
+  const [selectedAsset, setSelectedAsset] = React.useState<Asset | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  // Custom onboarding data
+  const [brandColor, setBrandColor] = React.useState('#0A84FF');
+
   React.useEffect(() => {
-    const doc = docs.find((d) => d.id === selectedId);
-    if (doc) {
-      setTitle(doc.title);
-      setBody(doc.body);
-      setTone(doc.tone);
+    // Read brand color from onboarding draft
+    const draftStr = localStorage.getItem('hq_onboarding_draft');
+    if (draftStr) {
+      try {
+        const draft = JSON.parse(draftStr);
+        if (draft.brandColor) setBrandColor(draft.brandColor);
+      } catch (e) {
+        console.warn('Error reading onboarding draft:', e);
+      }
     }
-  }, [selectedId, docs]);
+  }, []);
 
-  const activeDoc = docs.find((d) => d.id === selectedId);
+  const fetchAssets = React.useCallback(async () => {
+    if (!token) return;
+    try {
+      let url = '/api/assets';
+      const params = [];
+      if (activeCategory !== 'all') {
+        params.push(`category=${activeCategory}`);
+      }
+      if (searchQuery) {
+        params.push(`search=${encodeURIComponent(searchQuery)}`);
+      }
+      if (params.length > 0) {
+        url += '?' + params.join('&');
+      }
 
-  const handleSave = () => {
-    setDocs((prev) =>
-      prev.map((d) => {
-        if (d.id === selectedId) {
-          const nextVersionNumber = d.versions.length + 1;
-          const newVersion: FileVersion = {
-            version: nextVersionNumber,
-            label: `Manual draft save: Version ${nextVersionNumber}`,
-            body,
-            updatedAt: 'Just now',
-            author: 'Corporate Administrator',
-          };
-          return {
-            ...d,
-            title,
-            body,
-            tone,
-            updatedAt: 'Just now',
-            versions: [newVersion, ...d.versions],
-          };
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAssets(data);
+
+        // Auto select first asset if none is selected
+        if (data.length > 0 && !selectedAssetId) {
+          setSelectedAssetId(data[0].id);
         }
-        return d;
-      }),
-    );
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
-  };
+      }
+    } catch (e) {
+      console.error('Failed retrieving assets list:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, activeCategory, searchQuery, selectedAssetId]);
 
-  const handleCreateNew = () => {
-    const newDoc: CopyDoc = {
-      id: `doc-${Date.now()}`,
-      title: 'Untitled Document',
-      body: '',
-      tone: 'Professional & Direct',
-      updatedAt: 'Just now',
-      fileSize: '0.1 KB',
-      sha256: 'da39a3ee5e6b4b0d3255bfef95601890afd80709',
-      versions: [
-        {
-          version: 1,
-          label: 'Blank canvas initial layout',
-          body: '',
-          updatedAt: 'Just now',
-          author: 'System',
-        },
-      ],
+  React.useEffect(() => {
+    if (token) {
+      fetchAssets();
+    }
+  }, [token, activeCategory, searchQuery, fetchAssets]);
+
+  // Fetch full details of selected asset (including versions)
+  React.useEffect(() => {
+    if (!token || !selectedAssetId) {
+      setSelectedAsset(null);
+      return;
+    }
+    const fetchSelectedAsset = async () => {
+      try {
+        const res = await fetch(`/api/assets/${selectedAssetId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSelectedAsset(data);
+        }
+      } catch (e) {
+        console.error('Failed retrieving asset details:', e);
+      }
     };
-    setDocs((prev) => [newDoc, ...prev]);
-    setSelectedId(newDoc.id);
+    fetchSelectedAsset();
+  }, [token, selectedAssetId]);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
   };
 
-  const handleDelete = (id: string) => {
-    setDocs((prev) => prev.filter((d) => d.id !== id));
-    if (selectedId === id) {
-      setSelectedId(docs[0]?.id || '');
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    setUploadError(null);
+
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      await uploadFile(file);
     }
   };
 
-  const handleCopyText = () => {
-    navigator.clipboard.writeText(body);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadError(null);
+    const file = e.target.files?.[0];
+    if (file) {
+      await uploadFile(file);
+    }
   };
 
-  const handleRollback = (ver: FileVersion) => {
-    setBody(ver.body);
-    setRollbackAlert(`Rolled back editor pane content to: Version ${ver.version}`);
-    setTimeout(() => setRollbackAlert(null), 3000);
+  const uploadFile = async (file: File) => {
+    if (!token) return;
+    setUploadProgress(10);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // 1. Upload to storage bucket
+      const uploadRes = await fetch('/api/storage/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errData = await uploadRes.json();
+        throw new Error(errData.message || 'Storage check failed');
+      }
+
+      setUploadProgress(50);
+      const uploadData = await uploadRes.json();
+
+      // 2. Register asset in DB Asset ledger
+      const registerRes = await fetch('/api/assets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          filename: file.name,
+          fileSize: file.size,
+          mimeType: file.type || 'text/plain',
+          sha256: uploadData.sha256,
+          gcsPath: uploadData.gcsPath,
+          classification: 'CONFIDENTIAL',
+          description: `Uploaded document: ${file.name}`,
+        }),
+      });
+
+      if (!registerRes.ok) {
+        throw new Error('Database registration failed');
+      }
+
+      setUploadProgress(100);
+      setTimeout(() => setUploadProgress(null), 1500);
+
+      const newAsset = await registerRes.json();
+      setSelectedAssetId(newAsset.id);
+      fetchAssets();
+    } catch (err) {
+      console.error('Upload failed:', err);
+      const errMsg = err instanceof Error ? err.message : 'Upload operation failed.';
+      setUploadError(errMsg);
+      setUploadProgress(null);
+    }
   };
+
+  const handleRollback = async (versionId: string) => {
+    if (!token || !selectedAssetId) return;
+    try {
+      const res = await fetch(`/api/assets/${selectedAssetId}/rollback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ versionId }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setSelectedAsset(updated);
+        fetchAssets();
+      }
+    } catch (e) {
+      console.error('Rollback failed:', e);
+    }
+  };
+
+  const handleToggleHold = async () => {
+    if (!token || !selectedAssetId) return;
+    try {
+      const res = await fetch(`/api/assets/${selectedAssetId}/toggle-hold`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setSelectedAsset(updated);
+        fetchAssets();
+      }
+    } catch (e) {
+      console.error('Toggle Legal Hold failed:', e);
+    }
+  };
+
+  const getMimeIcon = (mime: string) => {
+    if (mime.startsWith('image/')) return <FileImage className="h-5 w-5 text-hq-cyan shrink-0" />;
+    if (mime.startsWith('video/')) return <Video className="h-5 w-5 text-hq-purple shrink-0" />;
+    if (mime.includes('pdf') || mime.includes('document') || mime.includes('text')) {
+      return <FileText className="h-5 w-5 text-hq-blue shrink-0" />;
+    }
+    return <Database className="h-5 w-5 text-foreground/50 shrink-0" />;
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Calculate storage categories statistics
+  const totalStorageUsed = assets.reduce((sum, a) => sum + a.fileSize, 0);
+  const docStorage = assets
+    .filter(
+      (a) =>
+        a.mimeType.includes('pdf') ||
+        a.mimeType.includes('document') ||
+        a.mimeType.includes('text'),
+    )
+    .reduce((sum, a) => sum + a.fileSize, 0);
+  const imageStorage = assets
+    .filter((a) => a.mimeType.startsWith('image/'))
+    .reduce((sum, a) => sum + a.fileSize, 0);
+  const videoStorage = assets
+    .filter((a) => a.mimeType.startsWith('video/'))
+    .reduce((sum, a) => sum + a.fileSize, 0);
+  const otherStorage = totalStorageUsed - docStorage - imageStorage - videoStorage;
+
+  const docPercentage = totalStorageUsed ? (docStorage / totalStorageUsed) * 100 : 0;
+  const imagePercentage = totalStorageUsed ? (imageStorage / totalStorageUsed) * 100 : 0;
+  const videoPercentage = totalStorageUsed ? (videoStorage / totalStorageUsed) * 100 : 0;
+  const otherPercentage = totalStorageUsed ? (otherStorage / totalStorageUsed) * 100 : 0;
 
   return (
-    <div className="space-y-8 select-none text-white">
-      {/* Title */}
-      <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
+    <div className="space-y-8 select-none text-foreground pb-12">
+      {/* Page Header */}
+      <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
             <FolderOpen className="h-8 w-8 text-hq-blue" />
-            Asset Explorer & Version Control
+            Asset Center
           </h1>
           <p className="text-foreground/60 text-sm mt-1">
-            Navigate generated corporate artifacts, inspect cryptographical SHA-256 hashes, and
-            restore historical drafts.
+            Secure digital vault indexing copywriting drafts, design files, reports, and version
+            histories.
           </p>
         </div>
-        <Button
-          variant="accent"
-          className="flex items-center gap-1.5 text-xs h-9"
-          onClick={handleCreateNew}
-        >
-          <Sparkles className="h-4 w-4" />
-          Create Copy Template
-        </Button>
       </div>
 
-      {rollbackAlert && (
-        <div className="bg-hq-blue/20 border border-hq-blue/40 text-hq-cyan text-xs p-3 rounded-md flex items-center gap-2 animate-bounce">
-          <CornerUpLeft className="h-4 w-4" />
-          {rollbackAlert}
+      {/* Storage Breakdown Banner */}
+      <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] text-left space-y-3.5">
+        <div className="flex justify-between items-baseline">
+          <div>
+            <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider">
+              Total Storage Capacity
+            </span>
+            <h3 className="text-lg font-extrabold text-[#1A1A1E] dark:text-white mt-0.5">
+              {formatBytes(totalStorageUsed)} of 10.0 GB Used
+            </h3>
+          </div>
+          <span className="text-xs text-foreground/50 font-bold">
+            {((totalStorageUsed / (10 * 1024 * 1024 * 1024)) * 100).toFixed(2)}% used
+          </span>
         </div>
-      )}
 
-      <div className="grid gap-8 lg:grid-cols-4">
-        {/* Left Side: Documents Directory File Explorer */}
-        <div className="lg:col-span-1 space-y-4">
-          <Card className="border border-hq-graphite/40 bg-hq-graphite/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-foreground/50 flex items-center gap-1">
-                <FolderOpen className="h-3.5 w-3.5" />
-                Files Directory
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 space-y-2">
-              {docs.map((doc) => {
-                const isActive = doc.id === selectedId;
-                return (
-                  <div
-                    key={doc.id}
-                    onClick={() => setSelectedId(doc.id)}
-                    className={`flex items-start justify-between p-2.5 rounded-md cursor-pointer transition-all border ${
-                      isActive
-                        ? 'bg-hq-blue/10 border-hq-blue/30 text-white'
-                        : 'bg-transparent border-transparent hover:bg-hq-graphite/10 text-foreground/75'
-                    }`}
-                  >
-                    <div className="space-y-0.5 min-w-0 pr-2">
-                      <p className="text-xs font-bold truncate">{doc.title || 'Untitled'}</p>
-                      <div className="flex gap-1.5 items-center mt-0.5">
-                        <span className="text-[8px] bg-hq-graphite/40 px-1 rounded text-foreground/60">
-                          {doc.fileSize}
-                        </span>
-                        <span className="text-[9px] text-foreground/45">
-                          Saved: {doc.updatedAt}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(doc.id);
-                      }}
-                      className="text-foreground/40 hover:text-red-400 p-0.5 shrink-0"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
+        {/* Visual progress bar */}
+        <div className="h-2.5 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden flex">
+          <div
+            className="bg-hq-blue h-full transition-all"
+            style={{ width: `${docPercentage}%` }}
+          ></div>
+          <div
+            className="bg-hq-cyan h-full transition-all"
+            style={{ width: `${imagePercentage}%` }}
+          ></div>
+          <div
+            className="bg-hq-purple h-full transition-all"
+            style={{ width: `${videoPercentage}%` }}
+          ></div>
+          <div
+            className="bg-foreground/20 h-full transition-all"
+            style={{ width: `${otherPercentage}%` }}
+          ></div>
+        </div>
 
-          {/* SHA-256 metadata hash code verification widget */}
-          {activeDoc && (
-            <Card className="border border-hq-graphite/40 bg-hq-graphite/20 p-4 text-xs space-y-2">
-              <p className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider flex items-center gap-1">
-                <FileCheck className="h-3.5 w-3.5 text-hq-cyan" />
-                File Integrity Metadata
+        <div className="flex flex-wrap gap-4 text-[10px] font-bold text-foreground/60">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-hq-blue"></span>Documents (
+            {formatBytes(docStorage)})
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-hq-cyan"></span>Images (
+            {formatBytes(imageStorage)})
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-hq-purple"></span>Videos (
+            {formatBytes(videoStorage)})
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-foreground/20"></span>Other (
+            {formatBytes(otherStorage)})
+          </span>
+        </div>
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-4 items-start">
+        {/* Asset list browser */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* File Drag Drop Zone */}
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-2 ${
+              isDragging
+                ? 'border-hq-blue bg-hq-blue/5'
+                : 'border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] hover:bg-black/5 dark:hover:bg-white/5'
+            }`}
+          >
+            <UploadCloud className="h-8 w-8 text-foreground/45" />
+            <div className="space-y-1">
+              <p className="text-xs font-bold text-[#1A1A1E] dark:text-white">
+                Drag and drop files here to audit
               </p>
-              <div className="space-y-1 font-mono text-[9px] text-foreground/70 bg-[#0A0A0C] p-2 rounded border border-hq-graphite/15">
-                <p>
-                  <span className="text-foreground/40">Size:</span> {activeDoc.fileSize}
-                </p>
-                <p className="break-all">
-                  <span className="text-foreground/40">SHA-256 Checksum:</span>
-                </p>
-                <p className="text-hq-cyan break-all">{activeDoc.sha256}</p>
+              <p className="text-[10px] text-foreground/50">
+                Supports PDF, DOCX, JPEG, PNG, MP4 up to 50MB
+              </p>
+            </div>
+            <input type="file" id="file-selector" onChange={handleFileChange} className="hidden" />
+            <Button
+              onClick={() => document.getElementById('file-selector')?.click()}
+              size="sm"
+              className="text-[10px] font-bold h-7 text-white"
+              style={{ backgroundColor: brandColor }}
+            >
+              Browse Files
+            </Button>
+          </div>
+
+          {/* Upload Progress feedback */}
+          {uploadProgress !== null && (
+            <div className="bg-card-bg border border-card-border p-4 rounded-xl space-y-2 text-left">
+              <div className="flex justify-between items-baseline text-[10px] font-bold text-foreground/75">
+                <span>Encrypting & Scanning File...</span>
+                <span>{uploadProgress}%</span>
               </div>
+              <div className="h-1.5 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden">
+                <div
+                  className="bg-hq-blue h-full transition-all"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          {uploadError && (
+            <div className="border border-red-500/25 bg-red-500/5 text-red-500 text-[10px] font-bold p-3 rounded-xl flex items-center gap-1.5">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>{uploadError}</span>
+            </div>
+          )}
+
+          {/* Search bar & Category filters */}
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-card-bg border border-card-border p-3.5 rounded-2xl">
+            <div className="flex gap-1.5">
+              {[
+                { id: 'all', label: 'All Files' },
+                { id: 'document', label: 'Docs' },
+                { id: 'image', label: 'Images' },
+                { id: 'data', label: 'Data' },
+              ].map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveCategory(category.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                    activeCategory === category.id
+                      ? 'text-white border-transparent'
+                      : 'bg-[#F9F9FB] dark:bg-[#0A0A0C] border-card-border text-foreground/70 hover:bg-black/5 dark:hover:bg-white/5'
+                  }`}
+                  style={{
+                    backgroundColor: activeCategory === category.id ? brandColor : undefined,
+                  }}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full sm:w-48">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-foreground/45" />
+              <input
+                type="text"
+                placeholder="Search ledger..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 w-full rounded-md border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] pl-9 pr-4 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hq-blue"
+              />
+            </div>
+          </div>
+
+          {/* Directory Ledger Table */}
+          {loading ? (
+            <div className="py-20 flex flex-col items-center justify-center space-y-3">
+              <div className="h-8 w-8 rounded-full border-2 border-hq-blue border-t-transparent animate-spin"></div>
+              <p className="text-xs text-foreground/50">Retrieving digital ledger...</p>
+            </div>
+          ) : assets.length === 0 ? (
+            <Card className="border border-card-border bg-card-bg p-12 text-center">
+              <FolderOpen className="h-10 w-10 text-foreground/25 mx-auto mb-3" />
+              <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white">Directory Empty</h3>
+              <p className="text-xs text-foreground/50 mt-1">
+                Upload files above or launch missions to generate assets.
+              </p>
             </Card>
+          ) : (
+            <div className="space-y-2">
+              {assets.map((asset) => (
+                <div
+                  key={asset.id}
+                  onClick={() => setSelectedAssetId(asset.id)}
+                  className={`p-3.5 border rounded-xl flex items-center justify-between cursor-pointer transition-all ${
+                    selectedAssetId === asset.id
+                      ? 'border-hq-blue bg-hq-blue/5'
+                      : 'border-card-border bg-card-bg hover:bg-black/5 dark:hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3 text-left">
+                    {getMimeIcon(asset.mimeType)}
+                    <div>
+                      <h4 className="text-xs font-bold text-[#1A1A1E] dark:text-white leading-tight flex items-center gap-1.5">
+                        {asset.filename}
+                        {asset.isLegalHold && (
+                          <ShieldAlert className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                        )}
+                      </h4>
+                      <p className="text-[10px] text-foreground/50 mt-0.5 font-semibold">
+                        {formatBytes(asset.fileSize)} • {asset.classification}
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-foreground/45" />
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Center: Copywriting Editor & Document Previews */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border border-hq-graphite/40 bg-hq-graphite/20 flex flex-col h-[520px]">
-            <CardHeader className="border-b border-hq-graphite/20 pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-1.5">
-                  <Edit2 className="h-4 w-4 text-hq-blue" />
-                  Editor Pane
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-foreground/60"
-                    onClick={handleCopyText}
-                  >
-                    {isCopied ? (
-                      <CheckCircle className="h-4 w-4 text-hq-cyan animate-pulse" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <a
-                    href={`https://storage.googleapis.com/hq-assets-bucket/mockups/${selectedId}.pdf`}
-                    download
-                    className="h-8 w-8 flex items-center justify-center rounded hover:bg-hq-graphite/10 text-foreground/60"
-                  >
-                    <Download className="h-4 w-4" />
-                  </a>
+        {/* Detailed asset inspector panel */}
+        <div className="lg:col-span-2">
+          {selectedAsset ? (
+            <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] text-left space-y-6">
+              {/* Asset Header Info */}
+              <div className="border-b border-card-border pb-4 space-y-2.5">
+                <div className="flex justify-between items-start">
+                  <Badge variant="ai" className="text-[9px]">
+                    {selectedAsset.classification}
+                  </Badge>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={handleToggleHold}
+                      variant="outline"
+                      size="sm"
+                      className={`text-[9px] font-bold h-7 ${
+                        selectedAsset.isLegalHold
+                          ? 'border-red-500 bg-red-500/5 text-red-500 hover:bg-red-500/10'
+                          : 'border-card-border'
+                      }`}
+                    >
+                      <ShieldAlert className="h-3.5 w-3.5 mr-1" />
+                      {selectedAsset.isLegalHold ? 'Unlock Hold' : 'Legal Hold'}
+                    </Button>
+                    <a
+                      href={selectedAsset.gcsPath}
+                      download
+                      className="inline-flex items-center justify-center rounded-xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] px-3 py-1 text-[9px] font-bold text-foreground/75 hover:bg-black/5"
+                    >
+                      <Download className="h-3.5 w-3.5 mr-1" />
+                      Download
+                    </a>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-base font-extrabold text-[#1A1A1E] dark:text-white leading-tight">
+                    {selectedAsset.filename}
+                  </h3>
+                  <p className="text-[10px] text-foreground/50 mt-1 font-semibold leading-relaxed">
+                    Checksum SHA-256:{' '}
+                    <code className="bg-[#F9F9FB] dark:bg-[#0A0A0C] px-1 py-0.5 rounded text-hq-purple">
+                      {selectedAsset.sha256}
+                    </code>
+                  </p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="flex-1 p-6 flex flex-col space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">
-                  Document Title
-                </label>
-                <Input value={title} onChange={(e) => setTitle(e.target.value)} className="h-9" />
-              </div>
 
-              <div className="flex-1 flex flex-col space-y-1.5">
-                <label className="text-[10px] font-semibold text-foreground/50 uppercase tracking-wider">
-                  Body Text Content
-                </label>
-                <textarea
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  className="flex-1 w-full rounded-md border border-hq-graphite/40 bg-hq-graphite/30 p-3 text-xs focus:outline-none focus:ring-1 focus:ring-hq-blue text-foreground font-sans resize-none"
-                  placeholder="Enter copywriting text content..."
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="border-t border-hq-graphite/20 p-4 flex justify-between items-center bg-hq-graphite/10">
-              <span className="text-[10px] text-foreground/50 font-mono">
-                {body.length} characters | {body.split(/\s+/).filter(Boolean).length} words
-              </span>
-              <div className="flex items-center gap-2">
-                {isSaved && (
-                  <span className="text-[10px] text-hq-cyan font-semibold animate-pulse">
-                    ✓ Saved
-                  </span>
-                )}
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="h-8 text-xs flex items-center gap-1"
-                  onClick={handleSave}
-                >
-                  <Save className="h-3.5 w-3.5" />
-                  Save Draft
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        </div>
-
-        {/* Right Side: Version Ledger Control Panel */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Version ledger timeline control */}
-          {activeDoc && (
-            <Card className="border border-hq-graphite/40 bg-hq-graphite/20">
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-1.5">
-                  <History className="h-4 w-4 text-hq-purple" />
-                  Version Control
-                </CardTitle>
-                <CardDescription>Track revisions and rollback edits</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 max-h-[400px] overflow-y-auto">
-                {activeDoc.versions.map((ver, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 rounded border border-hq-graphite/30 bg-hq-graphite/10 text-[11px] space-y-1.5"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-white">Version {ver.version}</span>
-                      <span className="text-[9px] text-foreground/45">{ver.updatedAt}</span>
+              {/* Document Previewer */}
+              <div className="space-y-2.5 text-left">
+                <h4 className="text-[10px] font-bold text-foreground/50 uppercase tracking-widest">
+                  Secure Document Preview
+                </h4>
+                <div className="min-h-36 rounded-xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] p-4 text-[11px] leading-relaxed font-semibold overflow-y-auto text-foreground/80 max-h-56">
+                  {selectedAsset.mimeType.startsWith('image/') ? (
+                    <div className="flex flex-col items-center justify-center py-6 space-y-2">
+                      <FileImage className="h-10 w-10 text-hq-cyan" />
+                      <span className="text-[10px] text-foreground/45">
+                        Image content verified. Integrity hash match.
+                      </span>
                     </div>
-                    <p className="text-[10px] text-foreground/75 italic">"{ver.label}"</p>
-                    <p className="text-[9px] text-foreground/50">Author: {ver.author}</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRollback(ver)}
-                      className="w-full text-[10px] h-7 flex items-center justify-center gap-1 hover:text-hq-cyan hover:bg-hq-cyan/5 text-foreground/60 border border-hq-graphite/20 mt-1"
+                  ) : selectedAsset.mimeType.startsWith('video/') ? (
+                    <div className="flex flex-col items-center justify-center py-6 space-y-2">
+                      <Video className="h-10 w-10 text-hq-purple" />
+                      <span className="text-[10px] text-foreground/45">
+                        Video file format verified. Previews disabled on local fallbacks.
+                      </span>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="font-extrabold text-[#1A1A1E] dark:text-white mb-2">
+                        {selectedAsset.filename} Description
+                      </p>
+                      <p>
+                        {selectedAsset.description || 'No description provided for this index.'}
+                      </p>
+                      <div className="mt-4 border-t border-card-border/50 pt-2 text-[10px] text-foreground/40 font-bold uppercase">
+                        Ledger metadata index: {selectedAsset.gcsPath}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Version History ledger */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 text-foreground/50 uppercase tracking-widest text-[10px] font-bold border-b border-card-border pb-1.5">
+                  <History className="h-3.5 w-3.5" />
+                  <span>Version History Ledger</span>
+                </div>
+
+                <div className="space-y-3 max-h-52 overflow-y-auto">
+                  {selectedAsset.versions?.map((ver) => (
+                    <div
+                      key={ver.id}
+                      className="p-3 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-xl flex items-center justify-between text-left"
                     >
-                      <CornerUpLeft className="h-3 w-3" />
-                      Restore Draft
-                    </Button>
-                  </div>
-                ))}
-              </CardContent>
+                      <div className="space-y-1">
+                        <div className="flex items-baseline space-x-2">
+                          <span className="text-xs font-bold text-[#1A1A1E] dark:text-white">
+                            Version {ver.version}
+                          </span>
+                          <span className="text-[9px] text-foreground/45 font-semibold">
+                            {new Date(ver.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-foreground/60 font-semibold leading-tight">
+                          {ver.changeSummary || 'Manual index update'}
+                        </p>
+                      </div>
+
+                      <Button
+                        onClick={() => handleRollback(ver.id)}
+                        disabled={
+                          selectedAsset.isLegalHold ||
+                          ver.version === selectedAsset.versions?.[0]?.version
+                        }
+                        variant="ghost"
+                        size="sm"
+                        className="text-[10px] font-extrabold h-7 border border-card-border text-hq-blue hover:bg-hq-blue/5 disabled:opacity-50 shrink-0"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                        Rollback
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          ) : (
+            <Card className="border border-card-border bg-card-bg p-16 text-center">
+              <FolderOpen className="h-10 w-10 text-foreground/25 mx-auto mb-3" />
+              <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white">Select Asset</h3>
+              <p className="text-xs text-foreground/50 mt-1">
+                Select an asset from the ledger to inspect files and rollbacks.
+              </p>
             </Card>
           )}
-
-          {/* Tone preseting configurations */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-1.5">
-                <Sliders className="h-4 w-4 text-hq-blue" />
-                Tone Preset
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-xs">
-              <div className="space-y-1.5">
-                <select
-                  value={tone}
-                  onChange={(e) => setTone(e.target.value)}
-                  className="h-9 w-full rounded-md border border-hq-graphite/40 bg-hq-graphite/30 px-3 text-sm text-foreground focus:outline-none"
-                >
-                  <option value="Professional & Direct">Professional & Direct</option>
-                  <option value="Analytical & Technical">Analytical & Technical</option>
-                  <option value="Playful & Creative">Playful & Creative</option>
-                </select>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

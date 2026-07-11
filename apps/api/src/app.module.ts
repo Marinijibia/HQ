@@ -21,6 +21,7 @@ import { MemoryModule } from './modules/memory/memory.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { ConversationModule } from './modules/conversation/conversation.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { AssetModule } from './modules/asset/asset.module';
 
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
@@ -55,6 +56,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     BillingModule,
     ConversationModule,
     NotificationModule,
+    AssetModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

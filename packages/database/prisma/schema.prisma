@@ -352,6 +352,7 @@ model ChatMessage {
 model Asset {
   id             String             @id @default(uuid()) @db.Uuid
   filename       String
+  description    String?
   fileSize       Int                @map("file_size")
   mimeType       String             @map("mime_type")
   sha256         String             @map("sha256")
@@ -368,9 +369,28 @@ model Asset {
   missionId      String?            @db.Uuid @map("mission_id")
   mission        Mission?           @relation(fields: [missionId], references: [id], onDelete: SetNull)
 
+  versions       AssetVersion[]
+
   @@index([companyId])
   @@index([missionId])
   @@map("assets")
+}
+
+model AssetVersion {
+  id             String       @id @default(uuid()) @db.Uuid
+  version        Int
+  filename       String
+  fileSize       Int          @map("file_size")
+  sha256         String       @map("sha256")
+  gcsPath        String       @map("gcs_path")
+  changeSummary  String?      @map("change_summary")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  assetId        String       @db.Uuid @map("asset_id")
+  asset          Asset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@map("asset_versions")
 }
 
 enum DataClassification {
