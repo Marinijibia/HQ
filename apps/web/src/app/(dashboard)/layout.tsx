@@ -42,7 +42,7 @@ const navItems: SidebarNavItem[] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, token } = useAuth();
   const { isOpen: isSidebarOpen, toggle: toggleSidebar } = useSidebarStore();
 
   React.useEffect(() => {
@@ -58,6 +58,56 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [search, setSearch] = React.useState('');
   const isConnected = true;
   const [showNotifications, setShowNotifications] = React.useState(false);
+  interface NotificationItem {
+    id: string;
+    title: string;
+    message: string;
+    read: boolean;
+    createdAt: string;
+  }
+  const [notifications, setNotifications] = React.useState<NotificationItem[]>([]);
+
+  const fetchNotifications = React.useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/notifications?isArchived=false', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+      }
+    } catch (e) {
+      console.error('Error fetching notifications:', e);
+    }
+  }, [token]);
+
+  React.useEffect(() => {
+    if (token) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [token, fetchNotifications]);
+
+  const handleDismissAll = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        fetchNotifications();
+      }
+    } catch (e) {
+      console.error('Error marking all as read:', e);
+    }
+  };
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -69,27 +119,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [togglePalette]);
-
-  const notifications = [
-    {
-      id: '1',
-      title: 'Mission Approved',
-      text: 'CEO Elena approved Petroleum Outreach strategy.',
-      time: '5m ago',
-    },
-    {
-      id: '2',
-      title: 'System Security Audited',
-      text: 'Jack Bauer completed zero-trust endpoint checks.',
-      time: '20m ago',
-    },
-    {
-      id: '3',
-      title: 'Invoice Paid',
-      text: 'Growth tier renewal verified successfully.',
-      time: '1h ago',
-    },
-  ];
 
   if (loading) {
     return (
@@ -132,7 +161,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onClick={() => setShowNotifications(!showNotifications)}
           >
             <Bell className="h-4 w-4" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-hq-purple"></span>
+            {notifications.filter((n) => !n.read).length > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-hq-purple text-[9px] font-bold text-white flex items-center justify-center">
+                {notifications.filter((n) => !n.read).length}
+              </span>
+            )}
           </Button>
 
           {showNotifications && (
@@ -140,22 +173,43 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="flex items-center justify-between pb-2 border-b border-hq-graphite/40">
                 <span className="font-bold text-xs text-white">Notifications Feed</span>
                 <button
-                  onClick={() => setShowNotifications(false)}
-                  className="text-xs text-foreground/50 hover:text-foreground"
+                  onClick={handleDismissAll}
+                  className="text-xs text-foreground/50 hover:text-foreground font-semibold"
                 >
                   Dismiss All
                 </button>
               </div>
               <div className="mt-3 space-y-3">
-                {notifications.map((n) => (
-                  <div key={n.id} className="text-xs space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-foreground">{n.title}</span>
-                      <span className="text-[9px] text-foreground/45">{n.time}</span>
+                {notifications.length === 0 ? (
+                  <p className="text-xs text-foreground/50 py-4 text-center">No active alerts.</p>
+                ) : (
+                  notifications.slice(0, 4).map((n) => (
+                    <div
+                      key={n.id}
+                      className="text-xs space-y-1 py-1 border-b border-hq-graphite/20 last:border-0 text-left"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-white">{n.title}</span>
+                        <span className="text-[9px] text-foreground/45">
+                          {new Date(n.createdAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-foreground/75 leading-tight">{n.message}</p>
                     </div>
-                    <p className="text-foreground/60 leading-tight">{n.text}</p>
-                  </div>
-                ))}
+                  ))
+                )}
+              </div>
+              <div className="pt-2.5 mt-2 border-t border-hq-graphite/45 text-center">
+                <Link
+                  href="/notifications"
+                  onClick={() => setShowNotifications(false)}
+                  className="text-[10px] text-hq-cyan hover:text-hq-cyan/85 font-extrabold"
+                >
+                  Open Executive Inbox
+                </Link>
               </div>
             </Card>
           )}

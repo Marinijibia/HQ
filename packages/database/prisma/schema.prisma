@@ -537,6 +537,13 @@ model Notification {
   title          String
   message        String
   read           Boolean      @default(false)
+  priority       String       @default("MEDIUM")
+  category       String       @default("SYSTEM")
+  senderId       String?      @map("sender_id") @db.Uuid
+  senderType     String?      @map("sender_type")
+  actionUrl      String?      @map("action_url")
+  isPinned       Boolean      @default(false) @map("is_pinned")
+  isArchived     Boolean      @default(false) @map("is_archived")
   createdAt      DateTime     @default(now()) @map("created_at")
 
   companyId      String       @db.Uuid @map("company_id")
