@@ -62,6 +62,7 @@ export default function AssetCenterPage() {
   const [assets, setAssets] = React.useState<Asset[]>([]);
   const [selectedAsset, setSelectedAsset] = React.useState<Asset | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [planCode, setPlanCode] = React.useState<string>('free');
 
   // Custom onboarding data
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
@@ -99,11 +100,13 @@ export default function AssetCenterPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setAssets(data);
+        const assetList = data.assets || [];
+        setAssets(assetList);
+        setPlanCode(data.planCode || 'free');
 
         // Auto select first asset if none is selected
-        if (data.length > 0 && !selectedAssetId) {
-          setSelectedAssetId(data[0].id);
+        if (assetList.length > 0 && !selectedAssetId) {
+          setSelectedAssetId(assetList[0].id);
         }
       }
     } catch (e) {
@@ -301,6 +304,17 @@ export default function AssetCenterPage() {
     .reduce((sum, a) => sum + a.fileSize, 0);
   const otherStorage = totalStorageUsed - docStorage - imageStorage - videoStorage;
 
+  // Plan limits mapping
+  let limitBytes = 1 * 1024 * 1024 * 1024; // 1 GB
+  let limitStr = '1.0 GB';
+  if (planCode === 'growth' || planCode === 'team') {
+    limitBytes = 10 * 1024 * 1024 * 1024; // 10 GB
+    limitStr = '10.0 GB';
+  } else if (planCode === 'enterprise') {
+    limitBytes = 100 * 1024 * 1024 * 1024; // Visual limit
+    limitStr = 'Unlimited';
+  }
+
   const docPercentage = totalStorageUsed ? (docStorage / totalStorageUsed) * 100 : 0;
   const imagePercentage = totalStorageUsed ? (imageStorage / totalStorageUsed) * 100 : 0;
   const videoPercentage = totalStorageUsed ? (videoStorage / totalStorageUsed) * 100 : 0;
@@ -330,12 +344,18 @@ export default function AssetCenterPage() {
               Total Storage Capacity
             </span>
             <h3 className="text-lg font-extrabold text-[#1A1A1E] dark:text-white mt-0.5">
-              {formatBytes(totalStorageUsed)} of 10.0 GB Used
+              {formatBytes(totalStorageUsed)} of {limitStr} Used
             </h3>
           </div>
-          <span className="text-xs text-foreground/50 font-bold">
-            {((totalStorageUsed / (10 * 1024 * 1024 * 1024)) * 100).toFixed(2)}% used
-          </span>
+          {planCode !== 'enterprise' ? (
+            <span className="text-xs text-foreground/50 font-bold">
+              {((totalStorageUsed / limitBytes) * 100).toFixed(2)}% used
+            </span>
+          ) : (
+            <span className="text-xs text-foreground/50 font-bold">
+              Enterprise Tier (Unlimited)
+            </span>
+          )}
         </div>
 
         {/* Visual progress bar */}

@@ -12,6 +12,7 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AssetService } from './asset.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { PrismaService } from '../database/prisma.service';
 import * as types from '../../common/interfaces/request.interface';
 import {
   IsString,
@@ -87,7 +88,10 @@ export class RollbackDto {
 @UseGuards(AuthGuard)
 @Controller('assets')
 export class AssetController {
-  constructor(private readonly assetService: AssetService) {}
+  constructor(
+    private readonly assetService: AssetService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all organization assets' })
@@ -98,12 +102,23 @@ export class AssetController {
     @Query('category') category?: string,
     @Query('missionId') missionId?: string,
   ) {
-    return this.assetService.getAssets(req.user.companyId, {
+    const assets = await this.assetService.getAssets(req.user.companyId, {
       search,
       classification,
       category,
       missionId,
     });
+
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { companyId: req.user.companyId },
+      include: { plan: true },
+    });
+    const planCode = subscription?.plan?.code?.toLowerCase() || 'free';
+
+    return {
+      assets,
+      planCode,
+    };
   }
 
   @Get(':id')
