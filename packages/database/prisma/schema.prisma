@@ -53,6 +53,8 @@ model Company {
   usageRecords       UsageRecord[]
   auditLogs          AuditLog[]
   analytics          Analytics[]
+  orgSettings        OrgSettings?
+  apiKeys            ApiKey[]
 
   @@index([parentId])
   @@index([slug])
@@ -170,6 +172,7 @@ model User {
 
   // Auth/Audit relation
   auditLogs       AuditLog[]       @relation("ActorLogs")
+  apiKeys         ApiKey[]         @relation("ApiKeyCreator")
 
   @@index([companyId])
   @@index([teamId])
@@ -603,4 +606,55 @@ model Analytics {
 
   @@index([companyId])
   @@map("analytics")
+}
+
+// ==========================================
+// 10. SETTINGS & ADMINISTRATION
+// ==========================================
+
+model OrgSettings {
+  id                  String    @id @default(uuid()) @db.Uuid
+  hqName              String    @default("Headquarters") @map("hq_name")
+  timezone            String    @default("UTC") @map("timezone")
+  language            String    @default("en") @map("language")
+  currency            String    @default("USD") @map("currency")
+  businessHours       Json?     @map("business_hours")
+  legalName           String?   @map("legal_name")
+  businessAddress     String?   @map("business_address")
+  contactEmail        String?   @map("contact_email")
+  industry            String?   @map("industry")
+  aiTone              String    @default("Professional") @map("ai_tone")
+  aiFormality         String    @default("Formal") @map("ai_formality")
+  aiResponseLength    String    @default("Balanced") @map("ai_response_length")
+  notifyEmail         Boolean   @default(true) @map("notify_email")
+  notifyBrowser       Boolean   @default(true) @map("notify_browser")
+  notifyPush          Boolean   @default(false) @map("notify_push")
+  quietHoursStart     String?   @map("quiet_hours_start")
+  quietHoursEnd       String?   @map("quiet_hours_end")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  companyId           String    @unique @db.Uuid @map("company_id")
+  company             Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("org_settings")
+}
+
+model ApiKey {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  keyPrefix   String    @map("key_prefix")
+  keyHash     String    @map("key_hash")
+  lastUsedAt  DateTime? @map("last_used_at")
+  expiresAt   DateTime? @map("expires_at")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  companyId   String    @db.Uuid @map("company_id")
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdById String?   @db.Uuid @map("created_by_id")
+  createdBy   User?     @relation("ApiKeyCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@map("api_keys")
 }

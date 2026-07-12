@@ -21,6 +21,7 @@ import {
   Database,
   CloudLightning,
   MessageSquare,
+  BarChart3,
 } from 'lucide-react';
 
 interface SidebarNavItem {
@@ -35,6 +36,7 @@ const navItems: SidebarNavItem[] = [
   { name: 'Discussions', href: '/discussions', icon: MessageSquare },
   { name: 'Missions', href: '/missions', icon: Calendar },
   { name: 'Assets & Library', href: '/assets', icon: Database },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'Billing', href: '/billing', icon: CreditCard },
 ];
