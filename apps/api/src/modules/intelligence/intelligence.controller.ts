@@ -71,4 +71,39 @@ export class IntelligenceController {
       body.domain as Parameters<IntelligenceService['addLearningInsight']>[3],
     );
   }
+
+  @Get('health')
+  @ApiOperation({ summary: 'Get the Organization Health Score' })
+  getHealthScore(@Req() req: types.AuthenticatedRequest) {
+    return this.intelligenceService.getHealthScore(req.user.companyId);
+  }
+
+  @Patch('health/:dimension')
+  @ApiOperation({ summary: 'Update a health score dimension' })
+  updateHealthScore(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('dimension') dimension: string,
+    @Body() data: Record<string, unknown>,
+  ) {
+    return this.intelligenceService.updateHealthScore(
+      req.user.companyId,
+      dimension as Parameters<IntelligenceService['updateHealthScore']>[1],
+      data,
+    );
+  }
+
+  @Get('timeline')
+  @ApiOperation({ summary: 'Get the Organization Evolution Timeline' })
+  getTimeline(@Req() req: types.AuthenticatedRequest) {
+    return this.intelligenceService.getTimeline(req.user.companyId);
+  }
+
+  @Post('timeline')
+  @ApiOperation({ summary: 'Add an event to the Evolution Timeline' })
+  addTimelineEvent(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() body: { title: string; description?: string; type: string },
+  ) {
+    return this.intelligenceService.addTimelineEvent(req.user.companyId, body);
+  }
 }

@@ -21,9 +21,13 @@ import {
   Save,
   Sparkles,
   TrendingUp,
+  TrendingDown,
   Clock,
+  History,
   RefreshCw,
   Plus,
+  Minus,
+  Activity,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 
@@ -40,10 +44,16 @@ interface DomainStatus {
 interface Intelligence {
   id: string;
   overallConfidence: number;
+  maturityLevel: number;
+  maturityLabel: string;
+  maturityColor: string;
+  maturityThresholds: { level: number; label: string; min: number; color: string }[];
   lastLearnedAt: string | null;
   pendingSuggestions: { id: string; domain: string; title: string; description: string }[];
   domainStatuses: DomainStatus[];
   missingItems: string[];
+  healthScore: Record<string, { score: number; trend: string; strengths: string[]; risks: string[]; actions: string[] }> | null;
+  evolutionTimeline: { id: string; title: string; description?: string; type: string; date: string }[] | null;
 }
 
 const DOMAIN_CONFIG = [
@@ -424,6 +434,128 @@ export default function IntelligencePage() {
               })}
             </div>
           </div>
+
+          {/* ─── Intelligence Maturity Level ─────────────────────────────── */}
+          <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)]">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4" style={{ color: brandColor }} />
+                <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">Intelligence Maturity</p>
+              </div>
+              <Badge
+                variant={intelligence?.maturityLevel === 5 ? 'success' : intelligence?.maturityLevel === 4 ? 'info' : intelligence?.maturityLevel === 3 ? 'ai' : 'warning'}
+                className="text-[10px] font-extrabold"
+              >
+                Level {intelligence?.maturityLevel ?? 1} — {intelligence?.maturityLabel ?? 'Basic'}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              {(intelligence?.maturityThresholds ?? [{ level: 1, label: 'Basic', min: 0, color: '#EF4444' }, { level: 2, label: 'Aware', min: 25, color: '#F59E0B' }, { level: 3, label: 'Connected', min: 50, color: '#8B5CF6' }, { level: 4, label: 'Strategic', min: 70, color: '#0A84FF' }, { level: 5, label: 'Autonomous', min: 90, color: '#22C55E' }]).slice().reverse().map((tier) => {
+                const active = (intelligence?.maturityLevel ?? 1) >= tier.level;
+                return (
+                  <div key={tier.level} className="flex-1 text-center">
+                    <div
+                      className={`h-2 rounded-full mb-1.5 transition-all duration-700 ${active ? '' : 'opacity-20'}`}
+                      style={{ backgroundColor: tier.color }}
+                    />
+                    <p className={`text-[8px] font-extrabold ${active ? '' : 'text-foreground/30'}`} style={active ? { color: tier.color } : {}}>
+                      {tier.label}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-foreground/45 font-semibold mt-3">
+              {intelligence?.maturityLevel === 5
+                ? '🎯 HQ proactively identifies opportunities and risks before you ask.'
+                : intelligence?.maturityLevel === 4
+                ? '📊 HQ understands your strategic direction and long-term plans.'
+                : intelligence?.maturityLevel === 3
+                ? '🔗 HQ understands relationships, workflows, and team collaboration.'
+                : intelligence?.maturityLevel === 2
+                ? '👁 HQ understands your departments and goals. Keep filling domains to advance.'
+                : '📋 HQ knows your basic profile. Complete more intelligence domains to unlock deeper insights.'}
+            </p>
+          </Card>
+
+          {/* ─── Organization Health Score ────────────────────────────────── */}
+          <div>
+            <p className="text-xs font-extrabold text-foreground/40 uppercase tracking-widest mb-3">Organization Health Score</p>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+              {[
+                { key: 'strategy', label: 'Strategy', color: '#0A84FF' },
+                { key: 'operations', label: 'Operations', color: '#F59E0B' },
+                { key: 'finance', label: 'Finance', color: '#22C55E' },
+                { key: 'marketing', label: 'Marketing', color: '#EC4899' },
+                { key: 'sales', label: 'Sales', color: '#8B5CF6' },
+                { key: 'customerSuccess', label: 'Customer', color: '#14B8A6' },
+                { key: 'technology', label: 'Technology', color: '#6366F1' },
+                { key: 'hr', label: 'HR', color: '#F97316' },
+                { key: 'compliance', label: 'Compliance', color: '#EF4444' },
+                { key: 'innovation', label: 'Innovation', color: '#0EA5E9' },
+              ].map(dim => {
+                const dimData = intelligence?.healthScore?.[dim.key];
+                const score = dimData?.score ?? 0;
+                const trend = dimData?.trend ?? 'stable';
+                const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
+                return (
+                  <div
+                    key={dim.key}
+                    className="border border-card-border bg-card-bg rounded-xl p-3 space-y-2 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-[9px] font-extrabold text-foreground/50 uppercase tracking-widest">{dim.label}</p>
+                      <TrendIcon className="h-3 w-3" style={{ color: trend === 'up' ? '#22C55E' : trend === 'down' ? '#EF4444' : '#94A3B8' }} />
+                    </div>
+                    <div className="flex items-end justify-between">
+                      <p className="text-xl font-extrabold" style={{ color: dim.color }}>{score}</p>
+                      <p className="text-[9px] text-foreground/35 font-bold">/100</p>
+                    </div>
+                    <div className="h-1 rounded-full bg-foreground/10 overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-700" style={{ width: `${score}%`, backgroundColor: dim.color }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─── Organization Evolution Timeline ─────────────────────────── */}
+          <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <History className="h-4 w-4 text-foreground/50" />
+                <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">Organization Evolution Timeline</p>
+              </div>
+              <Badge variant="neutral" className="text-[9px]">Living History</Badge>
+            </div>
+            {(() => {
+              const timeline = intelligence?.evolutionTimeline ?? [];
+              if (timeline.length === 0) {
+                return (
+                  <div className="py-6 flex flex-col items-center space-y-2">
+                    <History className="h-6 w-6 text-foreground/20" />
+                    <p className="text-[11px] text-foreground/40 font-semibold text-center">
+                      Key milestones will appear here as your organization grows.<br />
+                      HQ automatically captures significant events.
+                    </p>
+                  </div>
+                );
+              }
+              return (
+                <div className="relative pl-4 border-l-2 border-card-border space-y-4">
+                  {timeline.slice(0, 8).map((event) => (
+                    <div key={event.id} className="relative">
+                      <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-card-bg border-2" style={{ borderColor: brandColor }} />
+                      <p className="text-[11px] font-extrabold text-[#1A1A1E] dark:text-white">{event.title}</p>
+                      {event.description && <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">{event.description}</p>}
+                      <p className="text-[9px] text-foreground/35 font-semibold mt-0.5">{new Date(event.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </Card>
 
           {/* What HQ is missing */}
           {(intelligence?.missingItems?.length ?? 0) > 0 && (
