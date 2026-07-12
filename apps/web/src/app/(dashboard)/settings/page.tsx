@@ -14,7 +14,6 @@ import {
   Plug2,
   CreditCard,
   Database,
-  Lock,
   Code2,
   FileText,
   HeadphonesIcon,
@@ -25,7 +24,6 @@ import {
   Sliders,
   Key,
   Globe,
-  Clock,
   Save,
   Plus,
   Trash2,
@@ -131,7 +129,7 @@ const INTEGRATIONS = [
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const [activeSection, setActiveSection] = React.useState('headquarters');
   const [settings, setSettings] = React.useState<OrgSettings>({
     hqName: 'Headquarters',
@@ -170,7 +168,8 @@ export default function SettingsPage() {
       try {
         const d = JSON.parse(draft);
         if (d.brandColor) setBrandColor(d.brandColor);
-      } catch {}
+      } catch { // ignore
+      }
     }
   }, []);
 

@@ -23,6 +23,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
+import { GlobalActivityFeed } from '../../../components/global-activity-feed';
 
 interface RecommendationCard {
   id: string;
@@ -473,6 +474,19 @@ export default function DashboardPage() {
                 </div>
                 <Badge variant="success">Active</Badge>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Global Activity Feed */}
+          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-md font-extrabold text-[#1A1A1E] dark:text-white">
+                Headquarters Activity
+              </CardTitle>
+              <CardDescription className="text-xs">Live operational timeline</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <GlobalActivityFeed maxItems={6} compact />
             </CardContent>
           </Card>
         </div>

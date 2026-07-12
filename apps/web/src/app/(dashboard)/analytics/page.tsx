@@ -3,17 +3,12 @@
 import * as React from 'react';
 import {
   Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
   Button,
   Badge,
 } from '@hq/ui';
 import {
   BarChart3,
   TrendingUp,
-  TrendingDown,
   Sparkles,
   ShieldAlert,
   Download,

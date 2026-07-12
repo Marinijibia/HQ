@@ -55,6 +55,7 @@ model Company {
   analytics          Analytics[]
   orgSettings        OrgSettings?
   apiKeys            ApiKey[]
+  orgIntelligence    OrgIntelligence?
 
   @@index([parentId])
   @@index([slug])
@@ -657,4 +658,64 @@ model ApiKey {
 
   @@index([companyId])
   @@map("api_keys")
+}
+
+// ==========================================
+// 11. ORGANIZATION INTELLIGENCE (Phase 3)
+// ==========================================
+
+model OrgIntelligence {
+  id                    String    @id @default(uuid()) @db.Uuid
+
+  // Domain 1 — Identity
+  identityData          Json?     @map("identity_data")
+  identityConfidence    Float     @default(0) @map("identity_confidence")
+
+  // Domain 2 — Business Model
+  businessModelData     Json?     @map("business_model_data")
+  businessModelConfidence Float   @default(0) @map("business_model_confidence")
+
+  // Domain 3 — Org Structure
+  structureData         Json?     @map("structure_data")
+  structureConfidence   Float     @default(0) @map("structure_confidence")
+
+  // Domain 4 — Strategic Direction
+  strategyData          Json?     @map("strategy_data")
+  strategyConfidence    Float     @default(0) @map("strategy_confidence")
+
+  // Domain 5 — Operations
+  operationsData        Json?     @map("operations_data")
+  operationsConfidence  Float     @default(0) @map("operations_confidence")
+
+  // Domain 6 — Brand Intelligence
+  brandData             Json?     @map("brand_data")
+  brandConfidence       Float     @default(0) @map("brand_confidence")
+
+  // Domain 7 — Customer Intelligence
+  customerData          Json?     @map("customer_data")
+  customerConfidence    Float     @default(0) @map("customer_confidence")
+
+  // Domain 8 — Market Intelligence
+  marketData            Json?     @map("market_data")
+  marketConfidence      Float     @default(0) @map("market_confidence")
+
+  // Domain 9 — Technology Intelligence
+  technologyData        Json?     @map("technology_data")
+  technologyConfidence  Float     @default(0) @map("technology_confidence")
+
+  // Domain 10 — Organizational Learning
+  learningData          Json?     @map("learning_data")
+  learningConfidence    Float     @default(0) @map("learning_confidence")
+
+  // Meta
+  lastLearnedAt         DateTime? @map("last_learned_at")
+  pendingSuggestions    Json?     @map("pending_suggestions")
+  overallConfidence     Float     @default(0) @map("overall_confidence")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  companyId             String    @unique @db.Uuid @map("company_id")
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("org_intelligence")
 }
