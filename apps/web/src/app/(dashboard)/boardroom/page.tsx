@@ -467,14 +467,27 @@ export default function BoardroomPage() {
                   <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                     <div className="flex items-center space-x-3">
                       <div className="relative">
+                        {/* Thinking ring — spins when exec is busy/researching */}
+                        {(exec.status === 'Busy' || exec.status === 'Researching') && (
+                          <>
+                            <div className="absolute -inset-1.5 rounded-full border-2 border-hq-purple/30 border-t-hq-purple animate-spin" />
+                            <div className="absolute -inset-3 rounded-full border border-hq-blue/10 border-t-hq-blue/30 animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }} />
+                          </>
+                        )}
+                        {/* Glow ring for collaborating execs */}
+                        {isCollaborating && (
+                          <div className="absolute -inset-1 rounded-full bg-hq-purple/20 animate-pulse" />
+                        )}
                         <Avatar fallback={exec.name} variant="executive" size="md" />
                         <span
                           className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white dark:border-[#0A0A0C] ${
                             exec.status === 'Available'
                               ? 'bg-emerald-500 animate-pulse'
                               : exec.status === 'Researching'
-                                ? 'bg-hq-purple'
-                                : 'bg-amber-500'
+                                ? 'bg-hq-purple animate-pulse'
+                                : exec.status === 'Busy'
+                                  ? 'bg-amber-500'
+                                  : 'bg-foreground/20'
                           }`}
                         />
                       </div>
@@ -507,8 +520,9 @@ export default function BoardroomPage() {
                         </p>
                       </div>
                     ) : (
-                      <div className="p-2.5 text-xs text-foreground/40 italic">
-                        Idle - Ready to delegate
+                      <div className="p-2.5 flex items-center gap-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Ready to receive instructions</p>
                       </div>
                     )}
                     <div className="flex items-center justify-between text-xs pt-1 border-t border-card-border/50">

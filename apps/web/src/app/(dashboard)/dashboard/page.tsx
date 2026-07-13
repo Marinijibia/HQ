@@ -502,7 +502,7 @@ export default function DashboardPage() {
               <CardDescription className="text-xs">Live operational timeline</CardDescription>
             </CardHeader>
             <CardContent>
-              <GlobalActivityFeed maxItems={6} compact />
+              <GlobalActivityFeed maxItems={6} compact token={token ?? undefined} />
             </CardContent>
           </Card>
         </div>

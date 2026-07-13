@@ -53,6 +53,12 @@ export default function DiscussionWorkspacePage() {
   const [content, setContent] = React.useState('');
   const [sending, setSending] = React.useState(false);
   const [isDeliberating, setIsDeliberating] = React.useState(false);
+  const [streamingMessageId, setStreamingMessageId] = React.useState<string | null>(null);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [conversation?.messages, isDeliberating]);
 
   // Custom onboarding data
   const [ceoName, setCeoName] = React.useState('Elena Rostova');
@@ -127,9 +133,11 @@ export default function DiscussionWorkspacePage() {
 
       if (res.ok) {
         setIsDeliberating(true);
-        // Deliberation typing simulation
-        await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 1800));
         await fetchDiscussionData();
+        // Mark the latest executive message for typewriter reveal
+        setStreamingMessageId('latest');
+        setTimeout(() => setStreamingMessageId(null), 4000);
       }
     } catch (err) {
       console.error('Failed sending chat message:', err);
@@ -275,14 +283,18 @@ export default function DiscussionWorkspacePage() {
 
           {/* Messages History */}
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
-            {conversation.messages.map((msg) => {
+            {conversation.messages.map((msg, idx) => {
               const sender = getSenderDetails(msg);
+              const isLatestExec =
+                streamingMessageId === 'latest' &&
+                msg.senderType === 'EXECUTIVE' &&
+                idx === conversation.messages.length - 1;
               return (
                 <div
                   key={msg.id}
                   className={`flex gap-3 text-left max-w-[85%] ${
                     sender.isUser ? 'ml-auto flex-row-reverse' : ''
-                  }`}
+                  } ${isLatestExec ? 'animate-in fade-in slide-in-from-bottom-2 duration-500' : ''}`}
                 >
                   <Avatar
                     fallback={sender.avatarFallback}
@@ -313,22 +325,30 @@ export default function DiscussionWorkspacePage() {
                 </div>
               );
             })}
+            {/* Typewriter scroll anchor */}
+            <div ref={messagesEndRef} />
 
             {isDeliberating && (
-              <div className="flex gap-3 text-left max-w-[85%] animate-pulse">
+              <div className="flex gap-3 text-left max-w-[85%]">
                 <Avatar fallback="CEO" variant="executive" size="md" />
                 <div className="space-y-1">
                   <div className="flex items-baseline gap-2">
                     <span className="text-[11px] font-extrabold text-[#1A1A1E] dark:text-white">
-                      Boardroom C-Suite
+                      {ceoName}
                     </span>
-                    <span className="text-[9px] text-foreground/45 font-semibold">
-                      Deliberating
+                    <span className="text-[9px] text-hq-purple font-semibold animate-pulse">
+                      thinking…
                     </span>
                   </div>
-                  <div className="p-3.5 rounded-2xl text-xs font-semibold text-hq-purple bg-black/5 dark:bg-[#1E1E24]/30 border border-card-border flex items-center gap-1.5">
-                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                    Elena is consulting Strategy and Operations...
+                  <div className="p-3.5 rounded-2xl bg-black/5 dark:bg-[#1E1E24]/30 border border-hq-purple/20 flex items-center gap-2">
+                    {[0, 150, 300].map((delay) => (
+                      <span
+                        key={delay}
+                        className="h-2 w-2 rounded-full bg-hq-purple animate-bounce"
+                        style={{ animationDelay: `${delay}ms` }}
+                      />
+                    ))}
+                    <span className="text-[10px] text-hq-purple/70 font-semibold ml-1">Consulting the boardroom…</span>
                   </div>
                 </div>
               </div>
