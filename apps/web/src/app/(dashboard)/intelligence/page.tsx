@@ -176,6 +176,7 @@ export default function IntelligencePage() {
   const [saving, setSaving] = React.useState(false);
   const [savedMsg, setSavedMsg] = React.useState('');
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
+  const [drafting, setDrafting] = React.useState(false);
 
   // Load brand color
   React.useEffect(() => {
@@ -202,6 +203,28 @@ export default function IntelligencePage() {
       setEditData(domainStatus.data as Record<string, string>);
     } else {
       setEditData({});
+    }
+  };
+
+  const handleDraftDomain = async () => {
+    if (!token || !activeDomain) return;
+    setDrafting(true);
+    try {
+      const res = await fetch(`/api/intelligence/domain/${activeDomain}/draft`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const draft = await res.json();
+        setEditData(draft || {});
+        toast.success('🪄 Fields drafted using AI intelligence');
+      } else {
+        toast.error('Failed to generate AI draft');
+      }
+    } catch {
+      toast.error('An error occurred while drafting domain');
+    } finally {
+      setDrafting(false);
     }
   };
 
@@ -292,6 +315,16 @@ export default function IntelligencePage() {
         <div className="flex items-center justify-between pt-4 border-t border-card-border">
           <p className="text-[10px] text-green-500 font-extrabold h-4">{savedMsg}</p>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs font-bold border-hq-purple/30 text-hq-purple bg-hq-purple/5 hover:bg-hq-purple/10 h-8 gap-1.5"
+              onClick={handleDraftDomain}
+              disabled={drafting}
+            >
+              <Sparkles className={`h-3.5 w-3.5 ${drafting ? 'animate-spin' : 'animate-pulse'}`} />
+              {drafting ? 'Drafting...' : 'Draft with AI'}
+            </Button>
             <Button variant="outline" size="sm" className="text-xs font-bold border-card-border h-8" onClick={() => setActiveDomain(null)}>Cancel</Button>
             <Button onClick={handleSaveDomain} disabled={saving} size="sm" className="text-white font-bold text-xs h-8" style={{ backgroundColor: cfg.color }}>
               <Save className="h-3.5 w-3.5 mr-1.5" />

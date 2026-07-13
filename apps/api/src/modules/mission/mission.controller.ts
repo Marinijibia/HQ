@@ -94,12 +94,23 @@ export class MissionController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update specific mission configuration details' })
-  async update(@Param('id') id: string, @Body() updateDto: UpdateMissionDto) {
+  async update(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() updateDto: UpdateMissionDto,
+  ) {
     const data: Record<string, unknown> = { ...updateDto };
     if (updateDto.deadline) {
       data.deadline = new Date(updateDto.deadline);
     }
-    return this.missionRepository.update(id, data);
+    if (updateDto.status) {
+      await this.moeService.transitionState(id, updateDto.status, req.user.uid);
+      delete data.status;
+    }
+    if (Object.keys(data).length > 0) {
+      return this.missionRepository.update(id, data);
+    }
+    return this.missionRepository.findById(id);
   }
 
   @Delete(':id')
@@ -119,35 +130,31 @@ export class MissionController {
   @Post(':id/start')
   @UseGuards(EntitlementGuard)
   @ApiOperation({ summary: 'Start executing mission objectives' })
-  async start(@Param('id') id: string) {
-    return this.missionRepository.update(id, {
-      status: MissionStatus.EXECUTING,
-    });
+  async start(@Req() req: types.AuthenticatedRequest, @Param('id') id: string) {
+    await this.moeService.transitionState(id, MissionStatus.EXECUTING, req.user.uid);
+    return this.missionRepository.findById(id);
   }
 
   @Post(':id/pause')
   @ApiOperation({ summary: 'Pause running mission' })
-  async pause(@Param('id') id: string) {
-    return this.missionRepository.update(id, {
-      status: MissionStatus.PLANNING,
-    });
+  async pause(@Req() req: types.AuthenticatedRequest, @Param('id') id: string) {
+    await this.moeService.transitionState(id, MissionStatus.PLANNING, req.user.uid);
+    return this.missionRepository.findById(id);
   }
 
   @Post(':id/resume')
   @UseGuards(EntitlementGuard)
   @ApiOperation({ summary: 'Resume paused mission' })
-  async resume(@Param('id') id: string) {
-    return this.missionRepository.update(id, {
-      status: MissionStatus.EXECUTING,
-    });
+  async resume(@Req() req: types.AuthenticatedRequest, @Param('id') id: string) {
+    await this.moeService.transitionState(id, MissionStatus.EXECUTING, req.user.uid);
+    return this.missionRepository.findById(id);
   }
 
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancel current mission run' })
-  async cancel(@Param('id') id: string) {
-    return this.missionRepository.update(id, {
-      status: MissionStatus.ARCHIVED,
-    });
+  async cancel(@Req() req: types.AuthenticatedRequest, @Param('id') id: string) {
+    await this.moeService.transitionState(id, MissionStatus.ARCHIVED, req.user.uid);
+    return this.missionRepository.findById(id);
   }
 
   @Post(':id/plan')

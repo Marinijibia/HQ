@@ -40,6 +40,18 @@ export class IntelligenceController {
     );
   }
 
+  @Post('domain/:domain/draft')
+  @ApiOperation({ summary: 'Draft data for a specific domain using AI' })
+  draftDomain(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('domain') domain: string,
+  ) {
+    return this.intelligenceService.generateDraft(
+      req.user.companyId,
+      domain as Parameters<IntelligenceService['generateDraft']>[1],
+    );
+  }
+
   @Post('suggestions/:id/approve')
   @ApiOperation({ summary: 'Approve a pending learning suggestion' })
   approveSuggestion(

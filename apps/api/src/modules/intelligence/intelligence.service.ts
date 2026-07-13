@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '../database/prisma.service';
 import { Prisma } from '@prisma/client';
+import { AiService } from '../ai/ai.service';
 
 const DOMAINS = [
   'identity',
@@ -50,7 +52,10 @@ function calculateMaturityLevel(overallConfidence: number): number {
 
 @Injectable()
 export class IntelligenceService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly aiService: AiService,
+  ) {}
 
   // ─── Get or create the org intelligence record ─────────────────────────────
   async getIntelligence(companyId: string) {
@@ -229,6 +234,75 @@ export class IntelligenceService {
       result[dim] = { score: 0, trend: 'stable', strengths: [], risks: [], actions: [] };
     }
     return result;
+  }
+
+  // ─── Event-driven Learning: Listen for Completed/Delivered Missions ───
+  @OnEvent('mission.delivered')
+  async handleMissionDelivered(payload: {
+    missionId: string;
+    status: string;
+    actorId?: string;
+  }) {
+    const mission = await this.prisma.mission.findUnique({
+      where: { id: payload.missionId },
+    });
+    if (!mission) return;
+
+    // 1. Add a learning insight
+    await this.addLearningInsight(
+      mission.companyId,
+      `Mission: ${mission.objective}`,
+      `Successfully executed and delivered the campaign: "${mission.objective}".`,
+      'strategy',
+    );
+
+    // 2. Add an event to the evolution timeline
+    await this.addTimelineEvent(mission.companyId, {
+      title: `Mission Delivered: ${mission.objective.substring(0, 50)}...`,
+      description: `The campaign objective was successfully executed and approved by the corporate C-Suite board.`,
+      type: 'milestone',
+    });
+
+    // 3. Dynamically increment corporate health score by 5 points for strategy or operations
+    try {
+      const dimensions: HealthDimension[] = ['strategy', 'operations', 'finance'];
+      const chosenDim = dimensions[Math.floor(Math.random() * dimensions.length)];
+      const health = await this.getHealthScore(mission.companyId);
+      const existingDim = (health[chosenDim] as Record<string, unknown>) || {};
+      const currentScore = (existingDim.score as number) || 0;
+      const newScore = Math.min(currentScore + 5, 100);
+      await this.updateHealthScore(mission.companyId, chosenDim, {
+        score: newScore,
+        trend: 'up',
+      });
+    } catch { /* ignore health score error */ }
+  }
+
+  // ─── AI Draft Generator for Domain Fields ────────────────────────────────────
+  async generateDraft(companyId: string, domain: Domain): Promise<Record<string, unknown>> {
+    const company = await this.prisma.company.findUnique({ where: { id: companyId } });
+    const companyName = company?.name || 'HQ Client Company';
+
+    const systemPrompt = `You are the Chief Executive Officer's strategic analysis assistant.
+Your goal is to draft realistic, professional organizational data fields for a company named "${companyName}".
+Ensure your response is valid JSON matching the keys of the requested domain. Do not include any markdown styling, backticks, or extra text.`;
+
+    const prompt = `Provide draft data for the following organizational intelligence domain: "${domain}".
+Response must be a single flat JSON object containing only keys and mock values appropriate for "${companyName}".`;
+
+    try {
+      const result = await this.aiService.executePrompt({
+        prompt,
+        systemPrompt,
+        provider: 'gemini',
+        temperature: 0.7,
+      });
+
+      return JSON.parse(result.text);
+    } catch (e) {
+      // Fallback if parsing fails
+      return {};
+    }
   }
 
   private domainLabel(domain: Domain): string {
