@@ -14,6 +14,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
+import { SmartEmptyState } from '../../../components/smart-empty-state';
 
 interface Conversation {
   id: string;
@@ -280,21 +281,18 @@ export default function DiscussionsPage() {
           <p className="text-xs text-foreground/50">Retrieving boardroom sessions...</p>
         </div>
       ) : conversations.length === 0 ? (
-        <Card className="border border-card-border bg-card-bg p-12 text-center">
-          <MessageSquare className="h-10 w-10 text-foreground/25 mx-auto mb-3" />
-          <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white">No discussions found</h3>
-          <p className="text-xs text-foreground/50 mt-1 max-w-sm mx-auto">
-            Spawn a boardroom discussion to direct executives and analyze goals.
-          </p>
-          <Button
-            onClick={() => setShowStartModal(true)}
-            size="sm"
-            className="mt-4 text-white font-bold text-xs"
-            style={{ backgroundColor: brandColor }}
-          >
-            Start First Discussion
-          </Button>
-        </Card>
+        <SmartEmptyState
+          icon={MessageSquare}
+          title="No discussions started yet"
+          description="Start a boardroom discussion to consult your AI executives on any topic — strategy, marketing, hiring, finance, and more."
+          cta="Start First Discussion"
+          onCta={() => setShowStartModal(true)}
+          hints={[
+            'Ask your executives: "What should our Q3 priorities be?"',
+            'Get a second opinion on a big decision before you commit',
+            'Use discussions to brief multiple executives simultaneously',
+          ]}
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {conversations.map((conv) => (

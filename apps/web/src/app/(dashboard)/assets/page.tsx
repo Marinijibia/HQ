@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
+import { SmartEmptyState } from '../../../components/smart-empty-state';
 
 interface AssetVersion {
   id: string;
@@ -500,13 +501,18 @@ export default function AssetCenterPage() {
               <p className="text-xs text-foreground/50">Retrieving digital ledger...</p>
             </div>
           ) : assets.length === 0 ? (
-            <Card className="border border-card-border bg-card-bg p-12 text-center">
-              <FolderOpen className="h-10 w-10 text-foreground/25 mx-auto mb-3" />
-              <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white">Directory Empty</h3>
-              <p className="text-xs text-foreground/50 mt-1">
-                Upload files above or launch missions to generate assets.
-              </p>
-            </Card>
+            <SmartEmptyState
+              icon={FolderOpen}
+              title="Your asset library is empty"
+              description="Upload brand guidelines, reports, handbooks and documents. HQ reads them to build a smarter understanding of your organization."
+              cta="Upload First File"
+              onCta={() => document.getElementById('file-upload-input')?.click()}
+              hints={[
+                'Upload your brand guidelines so HQ learns your tone and colors',
+                'Add your employee handbook to teach HQ your culture and policies',
+                'Share sales reports so your executives understand your business performance',
+              ]}
+            />
           ) : (
             <div className="space-y-2">
               {assets.map((asset) => (

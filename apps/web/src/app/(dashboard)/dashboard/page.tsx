@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { GlobalActivityFeed } from '../../../components/global-activity-feed';
+import { SetupProgressBar } from '../../../components/setup-progress-bar';
+import { MissionLaunchPanel } from '../../../components/mission-launch-panel';
 
 interface RecommendationCard {
   id: string;
@@ -38,7 +40,8 @@ interface RecommendationCard {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const [missionPanelOpen, setMissionPanelOpen] = React.useState(false);
 
   // Custom onboarding data sync states
   const [ceoName, setCeoName] = React.useState('Elena Rostova');
@@ -105,6 +108,18 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 select-none text-foreground pb-12">
+      {/* Setup Progress Bar — shown to new users */}
+      <SetupProgressBar brandColor={brandColor} />
+
+      {/* Mission Launch Panel */}
+      <MissionLaunchPanel
+        open={missionPanelOpen}
+        onClose={() => setMissionPanelOpen(false)}
+        onSubmit={() => setMissionPanelOpen(false)}
+        brandColor={brandColor}
+        token={token ?? undefined}
+      />
+
       {/* Welcome Banner */}
       <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div>
@@ -121,6 +136,7 @@ export default function DashboardPage() {
         </div>
 
         <Button
+          onClick={() => setMissionPanelOpen(true)}
           className="flex items-center gap-2 h-9 text-xs text-white"
           style={{ backgroundColor: brandColor }}
         >

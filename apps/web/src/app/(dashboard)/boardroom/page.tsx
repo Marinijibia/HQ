@@ -326,8 +326,47 @@ export default function BoardroomPage() {
     await handleExecutePill(query);
   };
 
+  const [showBoardroomTip, setShowBoardroomTip] = React.useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('hq_boardroom_tip_dismissed') !== 'true';
+  });
+
   return (
     <div className="space-y-8 select-none text-foreground pb-12">
+
+      {/* Boardroom Welcome Tip — first-visit only */}
+      {showBoardroomTip && (
+        <div className="rounded-2xl border border-hq-blue/20 bg-hq-blue/5 p-5 flex items-start gap-4 animate-in fade-in duration-500">
+          <div className="h-10 w-10 rounded-xl bg-hq-blue/15 flex items-center justify-center shrink-0">
+            <BrainCircuit className="h-5 w-5 text-hq-blue" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">Welcome to your Executive Boardroom</p>
+            <p className="text-[11px] text-foreground/60 font-semibold mt-1 leading-relaxed">
+              These are your AI executives — each one specialises in a different area of your business.
+              <strong className="text-foreground/80"> Click any executive card</strong> to brief them, ask a question, or request a report.
+              Use <strong className="text-foreground/80">"Ask the Boardroom"</strong> below to consult all executives at once.
+            </p>
+            <div className="flex items-center gap-3 mt-3">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                <span className="text-[10px] text-foreground/50 font-semibold">Available — ready to brief</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                <span className="text-[10px] text-foreground/50 font-semibold">Busy — working on a task</span>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => { localStorage.setItem('hq_boardroom_tip_dismissed', 'true'); setShowBoardroomTip(false); }}
+            className="text-foreground/30 hover:text-foreground/60 text-[10px] font-bold shrink-0 transition-colors"
+          >
+            Got it
+          </button>
+        </div>
+      )}
+
       {/* Header and Title */}
       <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div>

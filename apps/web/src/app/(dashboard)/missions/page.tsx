@@ -23,6 +23,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
+import { SmartEmptyState } from '../../../components/smart-empty-state';
+import { MissionLaunchPanel } from '../../../components/mission-launch-panel';
 
 interface Mission {
   id: string;
@@ -35,6 +37,7 @@ interface Mission {
 
 export default function MissionsPage() {
   const { token } = useAuth();
+  const [missionPanelOpen, setMissionPanelOpen] = React.useState(false);
 
   const seededMissions: Mission[] = [
     {
@@ -307,6 +310,26 @@ export default function MissionsPage() {
 
   return (
     <div className="space-y-8 select-none text-foreground pb-12">
+      {/* Mission Launch Panel */}
+      <MissionLaunchPanel
+        open={missionPanelOpen}
+        onClose={() => setMissionPanelOpen(false)}
+        onSubmit={({ objective, deadline, priority }) => {
+          const newM: Mission = {
+            id: `m${Date.now()}`,
+            objective,
+            deadline: deadline || '—',
+            priority,
+            status: 'Planning',
+            progress: 0,
+          };
+          setMissions(prev => [newM, ...prev]);
+          setMissionPanelOpen(false);
+        }}
+        brandColor={brandColor}
+        token={token ?? undefined}
+      />
+
       {/* Title */}
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
@@ -604,7 +627,20 @@ export default function MissionsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="py-4 space-y-4 text-left">
-              {missions.map((m) => (
+              {missions.length === 0 ? (
+                <SmartEmptyState
+                  icon={Compass}
+                  title="No active missions yet"
+                  description="Launch your first mission and your AI executive team will immediately begin working on it."
+                  cta="Launch First Mission"
+                  onCta={() => setMissionPanelOpen(true)}
+                  hints={[
+                    'Be specific — the more detail, the better the result',
+                    'Your CEO executive will analyse and plan execution automatically',
+                    'Track progress in real-time from this panel',
+                  ]}
+                />
+              ) : missions.map((m) => (
                 <div
                   key={m.id}
                   className="border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-xl p-3.5 space-y-3 shadow-sm"

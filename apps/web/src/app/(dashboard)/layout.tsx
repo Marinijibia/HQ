@@ -31,16 +31,36 @@ interface SidebarNavItem {
   icon: React.ElementType;
 }
 
-const navItems: SidebarNavItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Boardroom', href: '/boardroom', icon: Users },
-  { name: 'Discussions', href: '/discussions', icon: MessageSquare },
-  { name: 'Missions', href: '/missions', icon: Calendar },
-  { name: 'Assets & Library', href: '/assets', icon: Database },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Intelligence', href: '/intelligence', icon: Brain },
-  { name: 'Settings', href: '/settings', icon: Settings },
-  { name: 'Billing', href: '/billing', icon: CreditCard },
+interface SidebarNavGroup {
+  label: string;
+  items: SidebarNavItem[];
+}
+
+const navGroups: SidebarNavGroup[] = [
+  {
+    label: 'Workspace',
+    items: [
+      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { name: 'Boardroom', href: '/boardroom', icon: Users },
+      { name: 'Missions', href: '/missions', icon: Calendar },
+      { name: 'Discussions', href: '/discussions', icon: MessageSquare },
+      { name: 'Assets', href: '/assets', icon: Database },
+    ],
+  },
+  {
+    label: 'Intelligence',
+    items: [
+      { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+      { name: 'Intelligence', href: '/intelligence', icon: Brain },
+    ],
+  },
+  {
+    label: 'Administration',
+    items: [
+      { name: 'Settings', href: '/settings', icon: Settings },
+      { name: 'Billing', href: '/billing', icon: CreditCard },
+    ],
+  },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -249,25 +269,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             isSidebarOpen ? 'w-64' : 'w-16'
           }`}
         >
-          <div className="flex-1 space-y-1 py-4 px-3">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-hq-blue/10 border border-hq-blue/20 text-hq-blue'
-                      : 'border border-transparent hover:bg-hq-graphite/10 text-foreground/70 hover:text-foreground'
-                  } ${isSidebarOpen ? 'space-x-3' : 'justify-center'}`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {isSidebarOpen && <span>{item.name}</span>}
-                </Link>
-              );
-            })}
+          <div className="flex-1 py-4 px-3 overflow-y-auto space-y-4">
+            {navGroups.map((group) => (
+              <div key={group.label}>
+                {isSidebarOpen && (
+                  <p className="text-[9px] font-extrabold uppercase tracking-widest text-foreground/30 px-3 mb-1.5">
+                    {group.label}
+                  </p>
+                )}
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        title={!isSidebarOpen ? item.name : undefined}
+                        className={`flex items-center rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                          isActive
+                            ? 'bg-hq-blue/15 border border-hq-blue/25 text-hq-blue'
+                            : 'border border-transparent hover:bg-hq-graphite/15 text-foreground/60 hover:text-foreground'
+                        } ${isSidebarOpen ? 'space-x-3' : 'justify-center'}`}
+                      >
+                        <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-hq-blue' : ''}`} />
+                        {isSidebarOpen && <span>{item.name}</span>}
+                      </Link>
+                    );
+                  })}
+                </div>
+                {isSidebarOpen && <div className="mt-3 border-b border-hq-graphite/20" />}
+              </div>
+            ))}
           </div>
 
           <div className="p-3 border-t border-hq-graphite/40 flex items-center justify-center">
