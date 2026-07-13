@@ -64,6 +64,7 @@ const navGroups: SidebarNavGroup[] = [
     items: [
       { name: 'Settings', href: '/settings', icon: Settings },
       { name: 'Billing', href: '/billing', icon: CreditCard },
+      { name: 'Execution Log', href: '/admin/execution-log', icon: Terminal },
     ],
   },
 ];

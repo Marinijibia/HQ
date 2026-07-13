@@ -69,6 +69,96 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Live Stats Strip */}
+      <section className="border-t border-b border-card-border bg-card-bg/50 backdrop-blur-sm py-5 relative z-10">
+        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          {[
+            { value: '25', label: 'AI Executives', color: '#0A84FF' },
+            { value: '500K+', label: 'Decisions Processed', color: '#BF5AF2' },
+            { value: '99.9%', label: 'Uptime SLA', color: '#30D158' },
+            { value: '<2s', label: 'Avg. Response Time', color: '#F59E0B' },
+          ].map((stat) => (
+            <div key={stat.label} className="space-y-1">
+              <p className="text-2xl font-black" style={{ color: stat.color }}>{stat.value}</p>
+              <p className="text-[10px] text-foreground/50 font-semibold uppercase tracking-widest">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Executive Showcase */}
+      <section className="px-6 py-20 sm:px-12 relative z-10 overflow-hidden">
+        <div className="max-w-6xl mx-auto space-y-12">
+          <div className="text-center space-y-3">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-hq-purple/30 bg-hq-purple/5 text-hq-purple">
+              Your C-Suite Board
+            </span>
+            <h2 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-4xl">
+              Meet Your AI Executives
+            </h2>
+            <p className="text-foreground/50 text-sm max-w-md mx-auto leading-relaxed">
+              25 pre-configured AI directors — each with a distinct role, personality, and decision-making framework.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { initials: 'CE', name: 'CEO', fullName: 'Chief Executive', status: 'Researching', task: 'Analysing Q3 strategic pivot', color: '#0A84FF' },
+              { initials: 'CM', name: 'CMO', fullName: 'Chief Marketing', status: 'Available', task: 'Ready to receive brief', color: '#BF5AF2' },
+              { initials: 'CF', name: 'CFO', fullName: 'Chief Financial', status: 'Busy', task: 'Reviewing budget allocations', color: '#30D158' },
+              { initials: 'CT', name: 'CTO', fullName: 'Chief Technology', status: 'Researching', task: 'Evaluating API architecture', color: '#F59E0B' },
+            ].map((exec, i) => (
+              <div
+                key={exec.name}
+                className="relative group rounded-2xl border border-card-border bg-card-bg p-5 space-y-4 hover:border-hq-blue/40 hover:-translate-y-1 transition-all duration-300 shadow-[var(--card-shadow)] overflow-hidden"
+                style={{ animationDelay: `${i * 100}ms` }}
+              >
+                {/* Glow bg */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl" style={{ background: `radial-gradient(ellipse at top left, ${exec.color}08, transparent 70%)` }} />
+
+                <div className="flex items-center gap-3">
+                  {/* Avatar with spin ring if busy */}
+                  <div className="relative shrink-0">
+                    {(exec.status === 'Researching' || exec.status === 'Busy') && (
+                      <div className="absolute -inset-1.5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${exec.color}40`, borderTopColor: exec.color }} />
+                    )}
+                    <div className="h-10 w-10 rounded-full flex items-center justify-center font-black text-sm text-white shadow-lg" style={{ background: `linear-gradient(135deg, ${exec.color}, ${exec.color}80)` }}>
+                      {exec.initials}
+                    </div>
+                    <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-[#0A0A0C] ${exec.status === 'Available' ? 'bg-emerald-500 animate-pulse' : exec.status === 'Researching' ? 'bg-hq-purple animate-pulse' : 'bg-amber-500'}`} />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-bold text-[#1A1A1E] dark:text-white">{exec.name}</p>
+                    <p className="text-[10px] text-foreground/45 font-semibold">{exec.fullName}</p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-foreground/4 border border-card-border p-2.5">
+                  <p className="text-[9px] uppercase tracking-widest text-foreground/40 font-bold mb-1">Current Task</p>
+                  <p className="text-[11px] text-foreground/80 font-semibold leading-snug">{exec.task}</p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${exec.status === 'Available' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : exec.status === 'Researching' ? 'bg-hq-purple/10 border-hq-purple/20 text-hq-purple' : 'bg-amber-500/10 border-amber-500/20 text-amber-500'}`}>
+                    {exec.status}
+                  </span>
+                  <span className="text-[9px] text-foreground/30 font-semibold">Gemini 2.5 Pro</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link href="/boardroom">
+              <Button variant="outline" size="sm" className="text-xs font-bold border-card-border gap-2">
+                View All 25 Executives <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Premium Features Section */}
       <section className="px-6 py-20 sm:px-12 border-t border-card-border bg-gradient-to-b from-black/5 dark:from-[#0A0A0C]/50 to-transparent relative z-10">
         <div className="max-w-6xl mx-auto space-y-16">
