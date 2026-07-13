@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../../../contexts/auth-context';
 import { SmartEmptyState } from '../../../components/smart-empty-state';
 import { toast } from '../../../components/toast';
+import { ListSkeleton } from '../../../components/skeletons';
 
 interface Conversation {
   id: string;
@@ -278,9 +279,8 @@ export default function DiscussionsPage() {
 
       {/* Discussions Grid */}
       {loading ? (
-        <div className="py-20 flex flex-col items-center justify-center space-y-3">
-          <div className="h-8 w-8 rounded-full border-2 border-hq-blue border-t-transparent animate-spin"></div>
-          <p className="text-xs text-foreground/50">Retrieving boardroom sessions...</p>
+        <div className="space-y-4 py-4">
+          <ListSkeleton rows={5} />
         </div>
       ) : conversations.length === 0 ? (
         <SmartEmptyState

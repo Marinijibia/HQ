@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { toast } from '../../../components/toast';
+import { KpiRowSkeleton, CardSkeleton } from '../../../components/skeletons';
 
 // ─── Domain definitions ───────────────────────────────────────────────────────
 
@@ -329,8 +330,11 @@ export default function IntelligencePage() {
       </div>
 
       {loading ? (
-        <div className="py-20 flex items-center justify-center">
-          <div className="h-8 w-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: brandColor, borderTopColor: 'transparent' }} />
+        <div className="space-y-5 animate-in fade-in duration-300">
+          <KpiRowSkeleton count={4} />
+          <div className="grid gap-3 md:grid-cols-2">
+            {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} lines={2} />)}
+          </div>
         </div>
       ) : (
         <>

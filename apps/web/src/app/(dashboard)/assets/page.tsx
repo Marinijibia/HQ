@@ -20,6 +20,7 @@ import {
 import { useAuth } from '../../../contexts/auth-context';
 import { SmartEmptyState } from '../../../components/smart-empty-state';
 import { toast } from '../../../components/toast';
+import { ListSkeleton } from '../../../components/skeletons';
 
 interface AssetVersion {
   id: string;
@@ -500,9 +501,8 @@ export default function AssetCenterPage() {
 
           {/* Directory Ledger Table */}
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center space-y-3">
-              <div className="h-8 w-8 rounded-full border-2 border-hq-blue border-t-transparent animate-spin"></div>
-              <p className="text-xs text-foreground/50">Retrieving digital ledger...</p>
+            <div className="space-y-3 py-4">
+              <ListSkeleton rows={6} />
             </div>
           ) : assets.length === 0 ? (
             <SmartEmptyState

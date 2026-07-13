@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
+import { ListSkeleton } from '../../../components/skeletons';
 
 interface Notification {
   id: string;
@@ -335,9 +336,8 @@ export default function NotificationsInboxPage() {
 
           {/* Messages Stream list */}
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center space-y-3">
-              <div className="h-8 w-8 rounded-full border-2 border-hq-blue border-t-transparent animate-spin"></div>
-              <p className="text-xs text-foreground/50">Retrieving strategic briefings...</p>
+            <div className="space-y-3 py-4">
+              <ListSkeleton rows={6} />
             </div>
           ) : notifications.length === 0 ? (
             <Card className="border border-card-border bg-card-bg p-16 text-center">

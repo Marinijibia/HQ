@@ -22,6 +22,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
+import { KpiRowSkeleton, CardSkeleton } from '../../../components/skeletons';
 import Link from 'next/link';
 
 interface ExecutiveUtilization {
@@ -392,9 +393,12 @@ export default function AnalyticsPage() {
 
       {/* Tab Content */}
       {loading ? (
-        <div className="py-20 flex flex-col items-center justify-center space-y-3">
-          <div className="h-8 w-8 rounded-full border-2 border-hq-blue border-t-transparent animate-spin"></div>
-          <p className="text-xs text-foreground/50">Loading executive intelligence...</p>
+        <div className="space-y-5 animate-in fade-in duration-300">
+          <KpiRowSkeleton count={4} />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <CardSkeleton lines={5} />
+            <CardSkeleton lines={5} />
+          </div>
         </div>
       ) : metrics && (
         <div className="space-y-6">
