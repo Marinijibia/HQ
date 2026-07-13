@@ -30,6 +30,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
+import { toast } from '../../../components/toast';
 
 // ─── Domain definitions ───────────────────────────────────────────────────────
 
@@ -215,8 +216,8 @@ export default function IntelligencePage() {
       if (res.ok) {
         const updated = await res.json();
         setIntelligence(updated);
-        setSavedMsg('Domain updated');
-        setTimeout(() => setSavedMsg(''), 3000);
+        localStorage.setItem('hq_org_profile_done', 'true');
+        toast.success('✨ Intelligence domain saved — HQ knows you better now');
         setActiveDomain(null);
       }
     } finally {
@@ -228,12 +229,14 @@ export default function IntelligencePage() {
     if (!token) return;
     await fetch(`/api/intelligence/suggestions/${id}/approve`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     setIntelligence(prev => prev ? { ...prev, pendingSuggestions: prev.pendingSuggestions.filter(s => s.id !== id) } : prev);
+    toast.success('✅ Suggestion approved — intelligence updated');
   };
 
   const handleDismissSuggestion = async (id: string) => {
     if (!token) return;
     await fetch(`/api/intelligence/suggestions/${id}/dismiss`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     setIntelligence(prev => prev ? { ...prev, pendingSuggestions: prev.pendingSuggestions.filter(s => s.id !== id) } : prev);
+    toast.info('🗑️ Suggestion dismissed');
   };
 
   const overallConfidence = intelligence?.overallConfidence ?? 0;

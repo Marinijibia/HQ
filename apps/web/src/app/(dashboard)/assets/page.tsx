@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { SmartEmptyState } from '../../../components/smart-empty-state';
+import { toast } from '../../../components/toast';
 
 interface AssetVersion {
   id: string;
@@ -224,11 +225,13 @@ export default function AssetCenterPage() {
       const newAsset = await registerRes.json();
       setSelectedAssetId(newAsset.id);
       fetchAssets();
+      toast.success(`📂 "${file.name}" uploaded successfully`);
     } catch (err) {
       console.error('Upload failed:', err);
       const errMsg = err instanceof Error ? err.message : 'Upload operation failed.';
       setUploadError(errMsg);
       setUploadProgress(null);
+      toast.error(`Upload failed: ${errMsg}`);
     }
   };
 
@@ -247,6 +250,7 @@ export default function AssetCenterPage() {
         const updated = await res.json();
         setSelectedAsset(updated);
         fetchAssets();
+        toast.success('↩ Version restored successfully');
       }
     } catch (e) {
       console.error('Rollback failed:', e);

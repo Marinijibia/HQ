@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Button } from '@hq/ui';
 import { X, Rocket, Calendar, AlignLeft, Flag, Sparkles } from 'lucide-react';
+import { toast } from './toast';
 
 interface MissionLaunchPanelProps {
   open: boolean;
@@ -63,6 +64,7 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
       }
       localStorage.setItem('hq_first_mission_done', 'true');
       onSubmit({ objective: objective.trim(), deadline, priority });
+      toast.success('🚀 Mission launched — your executive team is briefing now');
       onClose();
     } finally {
       setSubmitting(false);

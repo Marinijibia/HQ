@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { SmartEmptyState } from '../../../components/smart-empty-state';
+import { toast } from '../../../components/toast';
 
 interface Conversation {
   id: string;
@@ -126,6 +127,7 @@ export default function DiscussionsPage() {
         setShowStartModal(false);
         setObjective('');
         setSelectedExecs(['ceo']);
+        toast.success('💬 Discussion started — your executives are gathering now');
         router.push(`/discussions/${data.id}`);
       }
     } catch (err) {

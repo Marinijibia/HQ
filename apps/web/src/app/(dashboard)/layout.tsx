@@ -23,7 +23,12 @@ import {
   MessageSquare,
   BarChart3,
   Brain,
+  Rocket,
+  UploadCloud,
+  BrainCircuit,
 } from 'lucide-react';
+import { ToastContainer } from '../../components/toast';
+import { MobileBottomNav } from '../../components/mobile-bottom-nav';
 
 interface SidebarNavItem {
   name: string;
@@ -82,6 +87,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [search, setSearch] = React.useState('');
   const isConnected = true;
   const [showNotifications, setShowNotifications] = React.useState(false);
+
+  // Read real user display info from onboarding draft + auth
+  const [displayName, setDisplayName] = React.useState('');
+  const [orgName, setOrgName] = React.useState('Your Organization');
+
+  React.useEffect(() => {
+    try {
+      const draft = JSON.parse(localStorage.getItem('hq_onboarding_draft') || '{}');
+      if (draft.ownerName) setDisplayName(draft.ownerName);
+      else if (user?.email) setDisplayName(user.email.split('@')[0]);
+      if (draft.hqName || draft.orgName) setOrgName(draft.hqName || draft.orgName);
+    } catch { /* ignore */ }
+  }, [user]);
   interface NotificationItem {
     id: string;
     title: string;
@@ -173,7 +191,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span className="text-foreground/40 font-light select-none">|</span>
           <div className="flex items-center space-x-2 text-sm bg-hq-graphite/50 border border-hq-graphite/30 rounded-md px-2 py-0.5 select-none text-foreground/80">
             <span className="h-2 w-2 rounded-full bg-hq-cyan animate-pulse"></span>
-            <span>HQ Corporation</span>
+            <span>{orgName}</span>
           </div>
         </div>
 
@@ -240,11 +258,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center space-x-3 select-none">
             <div className="flex items-center space-x-2">
               <div className="h-8 w-8 rounded-full bg-hq-blue/20 border border-hq-blue/40 flex items-center justify-center font-bold text-hq-blue text-xs uppercase">
-                ED
+                {displayName ? displayName.slice(0, 2).toUpperCase() : (user?.email?.slice(0, 2).toUpperCase() ?? 'HQ')}
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-xs font-semibold leading-tight">Elena Rostova</p>
-                <p className="text-[10px] text-foreground/55 leading-none">CEO & Owner</p>
+                <p className="text-xs font-semibold leading-tight">{displayName || user?.email || 'Account'}</p>
+                <p className="text-[10px] text-foreground/55 leading-none">Owner</p>
               </div>
             </div>
             <Button
@@ -320,7 +338,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* Content Workspace Panel */}
-        <main className="flex-1 overflow-y-auto p-8 relative animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <main className="flex-1 overflow-y-auto p-8 pb-24 md:pb-8 relative animate-in fade-in slide-in-from-bottom-2 duration-300">
           {children}
         </main>
       </div>
@@ -379,64 +397,75 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {[
                 {
                   name: 'Go to Dashboard',
-                  action: () => {
-                    router.push('/dashboard');
-                    setPaletteOpen(false);
-                  },
+                  icon: LayoutDashboard,
+                  action: () => { router.push('/dashboard'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Go to Boardroom',
-                  action: () => {
-                    router.push('/boardroom');
-                    setPaletteOpen(false);
-                  },
+                  icon: Users,
+                  action: () => { router.push('/boardroom'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Go to Missions',
-                  action: () => {
-                    router.push('/missions');
-                    setPaletteOpen(false);
-                  },
+                  icon: Calendar,
+                  action: () => { router.push('/missions'); setPaletteOpen(false); },
+                },
+                {
+                  name: 'Go to Intelligence',
+                  icon: Brain,
+                  action: () => { router.push('/intelligence'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Go to Settings',
-                  action: () => {
-                    router.push('/settings');
-                    setPaletteOpen(false);
-                  },
+                  icon: Settings,
+                  action: () => { router.push('/settings'); setPaletteOpen(false); },
                 },
                 {
-                  name: 'Go to Billing',
-                  action: () => {
-                    router.push('/billing');
-                    setPaletteOpen(false);
-                  },
+                  name: 'Launch New Mission',
+                  icon: Rocket,
+                  action: () => { router.push('/missions'); setPaletteOpen(false); },
+                },
+                {
+                  name: 'Open Asset Library',
+                  icon: UploadCloud,
+                  action: () => { router.push('/assets'); setPaletteOpen(false); },
+                },
+                {
+                  name: 'Brief the Boardroom',
+                  icon: BrainCircuit,
+                  action: () => { router.push('/discussions'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Toggle Sidebar',
-                  action: () => {
-                    toggleSidebar();
-                    setPaletteOpen(false);
-                  },
+                  icon: ChevronLeft,
+                  action: () => { toggleSidebar(); setPaletteOpen(false); },
                 },
               ]
-                .filter((cmd) => cmd.name.toLowerCase().includes(search.toLowerCase()))
-                .map((cmd, idx) => (
-                  <button
-                    key={idx}
-                    onClick={cmd.action}
-                    className="w-full text-left rounded-md px-3 py-2.5 text-xs text-foreground/80 hover:bg-hq-blue/10 hover:text-white hover:border border border-transparent hover:border-hq-blue/20 transition-all font-medium flex items-center justify-between"
-                  >
-                    <span>{cmd.name}</span>
-                    <span className="text-[9px] text-foreground/45 bg-hq-graphite/40 px-1.5 py-0.5 rounded">
-                      Action
-                    </span>
-                  </button>
-                ))}
+                  .filter((cmd) => cmd.name.toLowerCase().includes(search.toLowerCase()))
+                  .map((cmd, idx) => {
+                    const CmdIcon = cmd.icon;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={cmd.action}
+                        className="w-full text-left rounded-lg px-3 py-2.5 text-xs text-foreground/80 hover:bg-hq-blue/10 hover:text-white border border-transparent hover:border-hq-blue/20 transition-all font-medium flex items-center gap-3"
+                      >
+                        <CmdIcon className="h-3.5 w-3.5 shrink-0 text-foreground/40" />
+                        <span className="flex-1">{cmd.name}</span>
+                        <span className="text-[9px] text-foreground/45 bg-hq-graphite/40 px-1.5 py-0.5 rounded">↵</span>
+                      </button>
+                    );
+                  })}
             </div>
           </Card>
         </div>
       )}
+
+      {/* Toast Notifications */}
+      <ToastContainer />
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }
