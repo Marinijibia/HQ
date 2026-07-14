@@ -76,7 +76,7 @@ const navGroups: SidebarNavGroup[] = [
       { name: 'Governance & Compliance', href: '/admin/compliance', icon: Shield },
       { name: 'Trust Center', href: '/trust-center', icon: Lock },
       { name: 'White-labeling', href: '/admin/white-label', icon: Palette },
-      { name: 'Execution Log', href: '/admin/execution-log', icon: Terminal },
+      { name: 'Kernel Console', href: '/admin/execution-log', icon: Terminal },
     ],
   },
 ];
