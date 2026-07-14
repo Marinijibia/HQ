@@ -32,10 +32,21 @@ export class CollaborationService {
       `[Agent Collaboration] Dispatching message from ${payload.sender} to ${payload.receiver} for mission ${payload.missionId}`,
     );
 
+    // Fetch dynamic companyId from the mission
+    let companyId = '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba'; // default fallback
+    try {
+      const mission = await this.prisma.mission.findUnique({
+        where: { id: payload.missionId },
+      });
+      if (mission) {
+        companyId = mission.companyId;
+      }
+    } catch { /* ignore and use fallback */ }
+
     // Save message trail to audit log/database
     await this.prisma.auditLog.create({
       data: {
-        companyId: '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba', // stub companyId
+        companyId,
         eventType: 'agent.message',
         metadata: {
           sender: payload.sender,
@@ -105,10 +116,21 @@ export class CollaborationService {
         `[Conflict Resolution Engine] Conflict detected. Low confidence score on recommendations. Escalating to CEO Elena Rostova...`,
       );
 
+      // Fetch dynamic companyId from the mission
+      let companyId = '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba'; // default fallback
+      try {
+        const mission = await this.prisma.mission.findUnique({
+          where: { id: missionId },
+        });
+        if (mission) {
+          companyId = mission.companyId;
+        }
+      } catch { /* ignore and use fallback */ }
+
       // Log escalation audit trail
       await this.prisma.auditLog.create({
         data: {
-          companyId: '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba',
+          companyId,
           eventType: 'agent.conflict.escalated',
           metadata: {
             missionId,
