@@ -1,10 +1,10 @@
-# Task Tracker — Phase 4 — Integration Platform Architecture
+# Task Tracker — Phase 4 — Marketplace & Ecosystem Architecture
 
 ## 1. Next.js Frontend Updates
-- [x] Create the Integration Hub page at `integration-hub/page.tsx`
-- [x] Implement the connected apps health metrics dashboard
-- [x] Add the multi-step Connection Wizard modal
-- [x] Add the granular role/executive permission authorization panel
-- [x] Add trigger automation recipes checklists
-- [x] Align sidebar navigation layout entries to route to `/integration-hub`
+- [x] Create the Marketplace dashboard page at `marketplace/page.tsx`
+- [x] Implement category filter toggles (AI Executives, Workflows, Knowledge packs)
+- [x] Add search natural language input placeholder
+- [x] Add listing detail modal showing publishers, ratings, and permissions clearance requirements
+- [x] Add installed extensions registry with rollback and auto-update configurations
+- [x] Add developer portal for publishing private customized workspace templates
 - [x] Verify the full workspace compiles cleanly and push changes

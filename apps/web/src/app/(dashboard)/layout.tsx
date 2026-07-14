@@ -54,6 +54,7 @@ const navGroups: SidebarNavGroup[] = [
       { name: 'Missions', href: '/missions', icon: Calendar },
       { name: 'Discussions', href: '/discussions', icon: MessageSquare },
       { name: 'Assets', href: '/assets', icon: Database },
+      { name: 'Marketplace', href: '/marketplace', icon: Rocket },
     ],
   },
   {
