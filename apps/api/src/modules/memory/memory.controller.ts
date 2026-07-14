@@ -8,10 +8,15 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { MemoryService } from './memory.service';
 import { MemoryLayer } from '@prisma/client';
 import { IsString, IsNotEmpty, IsEnum, IsOptional, IsNumber } from 'class-validator';
+import { AuthGuard } from '../auth/auth.guard';
+import * as types from '../../common/interfaces/request.interface';
 
 export class SaveMemoryDto {
   @IsEnum(MemoryLayer)
@@ -65,22 +70,28 @@ export class QueryMemoryDto {
   missionId?: string;
 }
 
+@ApiTags('Memory')
+@ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('memory')
 export class MemoryController {
   constructor(private readonly memoryService: MemoryService) {}
 
   @Get()
-  async list() {
-    const companyId = '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba';
-    return this.memoryService.listMemories(companyId);
+  @ApiOperation({ summary: 'List all organization memory nodes' })
+  async list(@Req() req: types.AuthenticatedRequest) {
+    return this.memoryService.listMemories(req.user.companyId);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async save(@Body() dto: SaveMemoryDto) {
-    const companyId = '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba';
+  @ApiOperation({ summary: 'Save a new memory node' })
+  async save(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() dto: SaveMemoryDto,
+  ) {
     return this.memoryService.saveMemory({
-      companyId,
+      companyId: req.user.companyId,
       layer: dto.layer,
       key: dto.key,
       value: dto.value,
@@ -91,9 +102,12 @@ export class MemoryController {
 
   @Post('query')
   @HttpCode(HttpStatus.OK)
-  async query(@Body() dto: QueryMemoryDto) {
-    const companyId = '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba';
-    return this.memoryService.retrieveContext(companyId, dto.query, {
+  @ApiOperation({ summary: 'Query semantic memories for context retrieval' })
+  async query(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() dto: QueryMemoryDto,
+  ) {
+    return this.memoryService.retrieveContext(req.user.companyId, dto.query, {
       executiveId: dto.executiveId,
       missionId: dto.missionId,
     });
@@ -101,13 +115,14 @@ export class MemoryController {
 
   @Post('review-cycle')
   @HttpCode(HttpStatus.OK)
-  async reviewCycle() {
-    const companyId = '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba';
-    return this.memoryService.runReviewCycle(companyId);
+  @ApiOperation({ summary: 'Trigger a Memory Review Cycle optimization run' })
+  async reviewCycle(@Req() req: types.AuthenticatedRequest) {
+    return this.memoryService.runReviewCycle(req.user.companyId);
   }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update a specific memory node content/metadata' })
   async update(@Param('id') id: string, @Body() dto: UpdateMemoryDto) {
     await this.memoryService.updateMemory(id, dto);
     return { success: true };
@@ -115,6 +130,7 @@ export class MemoryController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Archive/delete a memory node' })
   async delete(@Param('id') id: string) {
     await this.memoryService.deleteMemory(id);
     return { success: true };
@@ -122,6 +138,7 @@ export class MemoryController {
 
   @Post(':id/promote')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Promote a working memory to another layer' })
   async promote(
     @Param('id') id: string,
     @Body('targetLayer') targetLayer: MemoryLayer,
