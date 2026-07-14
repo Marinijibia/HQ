@@ -27,9 +27,10 @@ const HEALTH_DIMENSIONS = [
   'sales',
   'customerSuccess',
   'technology',
-  'hr',
+  'security',
   'compliance',
   'innovation',
+  'teamCollaboration',
 ] as const;
 
 type HealthDimension = (typeof HEALTH_DIMENSIONS)[number];
