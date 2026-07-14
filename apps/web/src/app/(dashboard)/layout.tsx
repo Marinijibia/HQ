@@ -47,7 +47,8 @@ const navGroups: SidebarNavGroup[] = [
     label: 'Workspace',
     items: [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { name: 'Boardroom', href: '/boardroom', icon: Users },
+      { name: 'Boardroom', href: '/boardroom', icon: BrainCircuit },
+      { name: 'Teams & Clearance', href: '/teams', icon: Users },
       { name: 'Organization', href: '/organization', icon: Building2 },
       { name: 'Missions', href: '/missions', icon: Calendar },
       { name: 'Discussions', href: '/discussions', icon: MessageSquare },
