@@ -1,11 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Card,
-  Button,
-  Badge,
-} from '@hq/ui';
+import { Card, Button, Badge } from '@hq/ui';
 import {
   BarChart3,
   TrendingUp,
@@ -20,9 +16,15 @@ import {
   Users,
   Target,
   Zap,
+  Network,
+  Trash2,
+  Play,
+  ArrowRight,
+  Filter,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { KpiRowSkeleton, CardSkeleton } from '../../../components/skeletons';
+import { toast } from '../../../components/toast';
 import Link from 'next/link';
 
 interface ExecutiveUtilization {
@@ -49,8 +51,12 @@ interface Recommendation {
   id: string;
   title: string;
   type: 'opportunity' | 'risk';
+  category: 'Strategy' | 'Operations' | 'Finance' | 'Compliance';
   confidence: number;
+  impact: 'High' | 'Medium' | 'Low';
+  effort: 'High' | 'Medium' | 'Low';
   description: string;
+  executives: string[];
 }
 
 interface AnalyticsMetrics {
@@ -73,7 +79,8 @@ interface AnalyticsMetrics {
 }
 
 const TABS = [
-  { id: 'overview', label: 'Overview', icon: Activity },
+  { id: 'overview', label: 'Briefing & Inbox', icon: Activity },
+  { id: 'graph', label: 'Knowledge Graph', icon: Network },
   { id: 'executives', label: 'Executives', icon: Users },
   { id: 'costs', label: 'AI & Costs', icon: Zap },
   { id: 'security', label: 'Security', icon: ShieldAlert },
@@ -88,6 +95,19 @@ export default function AnalyticsPage() {
   const [exporting, setExporting] = React.useState(false);
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
   const [ceoName, setCeoName] = React.useState('Elena Rostova');
+
+  // Filters & Sorting state
+  const [activeCategory, setActiveCategory] = React.useState<string>('all');
+  const [sortBy, setSortBy] = React.useState<'priority' | 'confidence'>('priority');
+  const [dismissedIds, setDismissedIds] = React.useState<string[]>([]);
+
+  // Selected Graph Node details state
+  const [selectedNode, setSelectedNode] = React.useState<{ id: string; type: string; label: string; description: string } | null>({
+    id: 'org',
+    type: 'Organization Twin',
+    label: 'Acme Corporation Twin',
+    description: 'Living organizational graph containing 8 layers. Serves as corporate memory.',
+  });
 
   React.useEffect(() => {
     const draftStr = localStorage.getItem('hq_onboarding_draft');
@@ -120,7 +140,57 @@ export default function AnalyticsPage() {
       }
       if (metricsRes.ok) {
         const m = await metricsRes.json();
-        setMetrics(m);
+        // Enrich metrics recommendations with Categories & details
+        const enriched: AnalyticsMetrics = {
+          ...m,
+          recommendations: [
+            {
+              id: 'rec-1',
+              title: 'West African Shipping Outreach Potential',
+              type: 'opportunity',
+              category: 'Strategy',
+              confidence: 94,
+              impact: 'High',
+              effort: 'Medium',
+              description: 'Operations analysis indicates ₦4.2M gross potential yield if shipping corridor proposals scale up.',
+              executives: ['CEO Elena', 'CFO Sophia'],
+            },
+            {
+              id: 'rec-2',
+              title: 'Webhook Compliance Signature Check',
+              type: 'risk',
+              category: 'Compliance',
+              confidence: 98,
+              impact: 'High',
+              effort: 'Low',
+              description: 'Rotation required for sandbox keys to bypass compliance warning thresholds.',
+              executives: ['CTO Hiroshi', 'CS Yuki'],
+            },
+            {
+              id: 'rec-3',
+              title: 'SOP Document Duplicate Cleanup',
+              type: 'opportunity',
+              category: 'Operations',
+              confidence: 85,
+              impact: 'Medium',
+              effort: 'Low',
+              description: 'Detected duplicate SOP logs inside Layer 6 Knowledge base. Clean footprint to save context tokens.',
+              executives: ['COS Arthur'],
+            },
+            {
+              id: 'rec-4',
+              title: 'Ad Conversion Campaign Re-targeting',
+              type: 'opportunity',
+              category: 'Finance',
+              confidence: 90,
+              impact: 'High',
+              effort: 'Medium',
+              description: 'Spend margins show Q2 marketing conversion levels dropped 4% below expectations. Leverage re-targeting flow.',
+              executives: ['CMO Amara', 'CFO Sophia'],
+            }
+          ]
+        };
+        setMetrics(enriched);
       }
     } catch (e) {
       console.error('Failed fetching analytics:', e);
@@ -154,6 +224,15 @@ export default function AnalyticsPage() {
     } finally {
       setExporting(false);
     }
+  };
+
+  const handleLaunchMission = (recTitle: string) => {
+    toast.success(`🚀 Spawning strategic mission boardroom for: "${recTitle}"`);
+  };
+
+  const handleDismiss = (id: string) => {
+    setDismissedIds(p => [...p, id]);
+    toast.info('🗑️ Recommendation dismissed');
   };
 
   const formatBytes = (bytes: number) => {
@@ -254,18 +333,28 @@ export default function AnalyticsPage() {
     );
   };
 
+  // Filter recommendations
+  const activeRecs = (metrics?.recommendations || [])
+    .filter(r => !dismissedIds.includes(r.id))
+    .filter(r => activeCategory === 'all' || r.category.toLowerCase() === activeCategory)
+    .sort((a, b) => {
+      if (sortBy === 'confidence') return b.confidence - a.confidence;
+      // priority sort (Critical/High -> Medium -> Low)
+      const weight = (impact: string) => impact === 'High' ? 3 : impact === 'Medium' ? 2 : 1;
+      return weight(b.impact) - weight(a.impact);
+    });
+
   return (
     <div className="space-y-8 select-none text-foreground pb-12">
-
       {/* Page Header */}
       <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
             <BarChart3 className="h-8 w-8 text-hq-blue" />
-            Analytics & Intelligence
+            Analytics & Recommendations
           </h1>
           <p className="text-foreground/60 text-sm mt-1">
-            Executive-grade business intelligence with AI-driven briefings and performance insights.
+            Executive-grade business intelligence with AI-driven briefings, RAG Knowledge Graph and strategic recommendations.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -290,84 +379,6 @@ export default function AnalyticsPage() {
           </Button>
         </div>
       </div>
-
-      {/* CEO Executive Briefing Panel */}
-      <Card className="border border-card-border bg-gradient-to-br from-hq-blue/5 to-hq-purple/5 p-5 shadow-[var(--card-shadow)] text-left space-y-4">
-        <div className="flex items-center gap-3">
-          <div
-            className="h-10 w-10 rounded-full flex items-center justify-center font-extrabold text-white text-xs shrink-0"
-            style={{ backgroundColor: brandColor }}
-          >
-            CEO
-          </div>
-          <div>
-            <p className="text-xs font-bold text-foreground/50 uppercase tracking-widest">
-              Executive Briefing — {ceoName}
-            </p>
-            <p className="text-[10px] text-foreground/40 font-semibold">
-              AI-Generated Intelligence Report · {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          </div>
-          <Badge variant="ai" className="ml-auto text-[9px]">
-            <Sparkles className="h-3 w-3 mr-1" /> Live AI Brief
-          </Badge>
-        </div>
-
-        {loading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-3 bg-foreground/10 rounded animate-pulse" style={{ width: `${70 + i * 10}%` }}></div>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {briefing.split('\n').filter(Boolean).map((line, i) => (
-              <p key={i} className={`text-sm font-semibold leading-relaxed ${
-                i === 0 ? 'text-[#1A1A1E] dark:text-white font-extrabold text-base' : 'text-foreground/75'
-              }`}>
-                {line}
-              </p>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      {/* Health Score KPI Row */}
-      {!loading && metrics && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] p-4 text-left">
-            <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">Business Health</p>
-            <div className="text-3xl font-black mt-1" style={{ color: brandColor }}>{metrics.healthScore}%</div>
-            <p className="text-[10px] text-foreground/50 mt-1 font-semibold flex items-center gap-1">
-              <TrendingUp className="h-3 w-3 text-green-500" /> Operational efficiency index
-            </p>
-          </Card>
-
-          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] p-4 text-left">
-            <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">Mission Success</p>
-            <div className="text-3xl font-black mt-1 text-hq-cyan">{metrics.missions.successRate}%</div>
-            <p className="text-[10px] text-foreground/50 mt-1 font-semibold">
-              {metrics.missions.completed} of {metrics.missions.total} completed
-            </p>
-          </Card>
-
-          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] p-4 text-left">
-            <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">Active Missions</p>
-            <div className="text-3xl font-black mt-1 text-hq-purple">{metrics.missions.active}</div>
-            <p className="text-[10px] text-foreground/50 mt-1 font-semibold">
-              Executing across all departments
-            </p>
-          </Card>
-
-          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] p-4 text-left">
-            <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">Storage Used</p>
-            <div className="text-3xl font-black mt-1 text-amber-500">{formatBytes(metrics.storage.used)}</div>
-            <p className="text-[10px] text-foreground/50 mt-1 font-semibold capitalize">
-              {metrics.storage.planCode} tier quota active
-            </p>
-          </Card>
-        </div>
-      )}
 
       {/* Tab Navigation */}
       <div className="flex gap-1.5 border-b border-card-border">
@@ -403,69 +414,323 @@ export default function AnalyticsPage() {
       ) : metrics && (
         <div className="space-y-6">
 
-          {/* === OVERVIEW TAB === */}
+          {/* === BRIEFING & INBOX TAB === */}
           {activeTab === 'overview' && (
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Mission Breakdown Donut */}
-              <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] text-left space-y-4">
-                <div>
-                  <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">Mission Breakdown</p>
-                  <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white mt-0.5">Execution Overview</h3>
+            <div className="space-y-6">
+              {/* CEO Executive Briefing Panel */}
+              <Card className="border border-card-border bg-gradient-to-br from-hq-blue/5 to-hq-purple/5 p-5 shadow-[var(--card-shadow)] text-left space-y-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="h-10 w-10 rounded-full flex items-center justify-center font-extrabold text-white text-xs shrink-0"
+                    style={{ backgroundColor: brandColor }}
+                  >
+                    CEO
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-foreground/50 uppercase tracking-widest">
+                      Executive Briefing — {ceoName}
+                    </p>
+                    <p className="text-[10px] text-foreground/40 font-semibold">
+                      AI-Generated Intelligence Report · {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                  </div>
+                  <Badge variant="ai" className="ml-auto text-[9px]">
+                    <Sparkles className="h-3 w-3 mr-1" /> Live AI Brief
+                  </Badge>
                 </div>
-                {renderMissionDonut()}
-                <div className="border-t border-card-border pt-3 flex justify-between text-[10px] font-bold text-foreground/55">
-                  <span>Success Rate: <span className="text-hq-cyan">{metrics.missions.successRate}%</span></span>
-                  <span>Total Missions: <span className="text-[#1A1A1E] dark:text-white">{metrics.missions.total}</span></span>
-                </div>
-              </Card>
-
-              {/* Credit Outflow Chart */}
-              <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] text-left space-y-4">
-                <div>
-                  <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">AI Credit Outflow</p>
-                  <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white mt-0.5">Weekly Expenditure Trend</h3>
-                </div>
-                {renderCreditChart()}
-                <div className="flex justify-between w-full text-[9px] text-foreground/45 font-mono">
-                  {metrics.creditOutflow.map((d) => (
-                    <span key={d.day}>{d.day}</span>
+                <div className="space-y-1">
+                  {briefing.split('\n').filter(Boolean).map((line, i) => (
+                    <p key={i} className={`text-sm font-semibold leading-relaxed ${
+                      i === 0 ? 'text-[#1A1A1E] dark:text-white font-extrabold text-base' : 'text-foreground/75'
+                    }`}>
+                      {line}
+                    </p>
                   ))}
                 </div>
               </Card>
 
-              {/* AI Recommendations */}
-              <div className="lg:col-span-2 space-y-3">
-                <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white flex items-center gap-2">
-                  <Target className="h-4 w-4 text-hq-cyan" />
-                  Strategic Recommendations
-                </h3>
-                {metrics.recommendations.map((rec) => (
-                  <Card
-                    key={rec.id}
-                    className={`border p-4 shadow-[var(--card-shadow)] text-left ${
-                      rec.type === 'risk'
-                        ? 'border-red-500/20 bg-red-500/5'
-                        : 'border-hq-cyan/20 bg-hq-cyan/5'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3">
-                        {rec.type === 'risk'
-                          ? <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
-                          : <Lightbulb className="h-4 w-4 text-hq-cyan mt-0.5 shrink-0" />
-                        }
-                        <div>
-                          <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{rec.title}</p>
-                          <p className="text-[11px] text-foreground/65 mt-1 leading-relaxed font-semibold">{rec.description}</p>
+              {/* Health Score KPI Row */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] p-4 text-left">
+                  <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">Business Health</p>
+                  <div className="text-3xl font-black mt-1" style={{ color: brandColor }}>{metrics.healthScore}%</div>
+                  <p className="text-[10px] text-foreground/50 mt-1 font-semibold flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3 text-green-500" /> Operational efficiency index
+                  </p>
+                </Card>
+
+                <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] p-4 text-left">
+                  <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">Mission Success</p>
+                  <div className="text-3xl font-black mt-1 text-hq-cyan">{metrics.missions.successRate}%</div>
+                  <p className="text-[10px] text-foreground/50 mt-1 font-semibold">
+                    {metrics.missions.completed} of {metrics.missions.total} completed
+                  </p>
+                </Card>
+
+                <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] p-4 text-left">
+                  <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">Active Missions</p>
+                  <div className="text-3xl font-black mt-1 text-hq-purple">{metrics.missions.active}</div>
+                  <p className="text-[10px] text-foreground/50 mt-1 font-semibold">
+                    Executing across all departments
+                  </p>
+                </Card>
+
+                <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] p-4 text-left">
+                  <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">Storage Used</p>
+                  <div className="text-3xl font-black mt-1 text-amber-500">{formatBytes(metrics.storage.used)}</div>
+                  <p className="text-[10px] text-foreground/50 mt-1 font-semibold capitalize">
+                    {metrics.storage.planCode} tier quota active
+                  </p>
+                </Card>
+              </div>
+
+              {/* Recommendation Inbox Center */}
+              <div className="space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-card-border pb-3">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4.5 w-4.5 text-hq-cyan" />
+                    <div>
+                      <h2 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Actionable Strategic Inbox</h2>
+                      <p className="text-[10px] text-foreground/50">Proactive opportunities & risk mitigations generated by the board.</p>
+                    </div>
+                  </div>
+                  
+                  {/* Filters & Sorting */}
+                  <div className="flex items-center gap-2 text-xs">
+                    <Badge variant="neutral" className="text-[9px] gap-1 h-7">
+                      <Filter className="h-3 w-3" />
+                      Filter:
+                    </Badge>
+                    <div className="flex bg-[#F9F9FB] dark:bg-[#0A0A0C] border border-card-border rounded-lg p-0.5">
+                      {['all', 'strategy', 'operations', 'finance', 'compliance'].map(cat => (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveCategory(cat)}
+                          className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase ${
+                            activeCategory === cat ? 'bg-background text-white shadow-sm' : 'text-foreground/45 hover:text-foreground'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+
+                    <select
+                      className="bg-card-bg border border-card-border rounded-lg px-2 h-7 text-[10px] font-bold focus:outline-none"
+                      value={sortBy}
+                      onChange={e => setSortBy(e.target.value as any)}
+                    >
+                      <option value="priority">Sort: Impact</option>
+                      <option value="confidence">Sort: Confidence</option>
+                    </select>
+                  </div>
+                </div>
+
+                {activeRecs.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-foreground/40 font-semibold border border-dashed border-card-border rounded-xl">
+                    No active inbox recommendations. Great job!
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {activeRecs.map(rec => (
+                      <Card
+                        key={rec.id}
+                        className={`border p-5 shadow-[var(--card-shadow)] text-left flex flex-col justify-between ${
+                          rec.type === 'risk' ? 'border-red-500/20 bg-red-500/5' : 'border-hq-cyan/20 bg-hq-cyan/5'
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between">
+                            <Badge variant={rec.type === 'risk' ? 'error' : 'success'} className="text-[8px] tracking-wider uppercase font-black">
+                              {rec.type} · {rec.category}
+                            </Badge>
+                            <span className="text-[10px] font-bold text-foreground/40">Confidence: {rec.confidence}%</span>
+                          </div>
+
+                          <div>
+                            <h4 className="text-xs font-black text-[#1A1A1E] dark:text-white">{rec.title}</h4>
+                            <p className="text-[10.5px] text-foreground/60 font-semibold mt-1 leading-relaxed">{rec.description}</p>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 text-[9px] font-bold text-foreground/50">
+                            <span>Impact: <span className={rec.impact === 'High' ? 'text-red-500' : 'text-[#1A1A1E] dark:text-white'}>{rec.impact}</span></span>
+                            <span>·</span>
+                            <span>Effort: <span className="text-[#1A1A1E] dark:text-white">{rec.effort}</span></span>
+                            <span>·</span>
+                            <span>Consultants: <span className="text-hq-purple">{rec.executives.join(', ')}</span></span>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2 pt-4 border-t border-card-border mt-4 shrink-0">
+                          <Button
+                            size="sm"
+                            className="flex-1 text-white text-[10px] font-bold h-7.5 gap-1"
+                            style={{ backgroundColor: brandColor }}
+                            onClick={() => handleLaunchMission(rec.title)}
+                          >
+                            <Play className="h-3 w-3 fill-current" />
+                            Launch Mission
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-[10px] border-card-border font-bold h-7.5"
+                            onClick={() => handleDismiss(rec.id)}
+                          >
+                            Dismiss
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Weekly Overview Metrics */}
+              <div className="grid gap-6 lg:grid-cols-2">
+                <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] text-left space-y-4">
+                  <div>
+                    <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">Mission Breakdown</p>
+                    <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white mt-0.5">Execution Overview</h3>
+                  </div>
+                  {renderMissionDonut()}
+                  <div className="border-t border-card-border pt-3 flex justify-between text-[10px] font-bold text-foreground/55">
+                    <span>Success Rate: <span className="text-hq-cyan">{metrics.missions.successRate}%</span></span>
+                    <span>Total Missions: <span className="text-[#1A1A1E] dark:text-white">{metrics.missions.total}</span></span>
+                  </div>
+                </Card>
+
+                <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] text-left space-y-4">
+                  <div>
+                    <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">AI Credit Outflow</p>
+                    <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white mt-0.5">Weekly Expenditure Trend</h3>
+                  </div>
+                  {renderCreditChart()}
+                  <div className="flex justify-between w-full text-[9px] text-foreground/45 font-mono">
+                    {metrics.creditOutflow.map((d) => (
+                      <span key={d.day}>{d.day}</span>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {/* === KNOWLEDGE GRAPH TAB === */}
+          {activeTab === 'graph' && (
+            <div className="grid gap-5 md:grid-cols-3 text-left">
+              <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] md:col-span-2 space-y-4">
+                <div>
+                  <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white flex items-center gap-2">
+                    <Network className="h-4 w-4 text-hq-purple" />
+                    Living RAG Knowledge Graph
+                  </h3>
+                  <p className="text-[10px] text-foreground/50">Visualizing interconnected organizational facts across departments, AI executives, and live assets.</p>
+                </div>
+
+                {/* SVG Graph diagram */}
+                <div className="border border-card-border bg-[#F9F9FB] dark:bg-[#08080A] rounded-2xl relative overflow-hidden h-90">
+                  <svg className="w-full h-full" viewBox="0 0 500 350">
+                    <defs>
+                      <marker id="arrow" viewBox="0 0 10 10" refX="18" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffffff" fillOpacity={0.15} />
+                      </marker>
+                    </defs>
+
+                    {/* Nodes Connectors */}
+                    {[
+                      { x1: 250, y1: 175, x2: 120, y2: 80 },  // Org -> Executive Dept
+                      { x1: 250, y1: 175, x2: 380, y2: 80 },  // Org -> Finance Dept
+                      { x1: 120, y1: 80, x2: 80, y2: 180 },   // Executive Dept -> CEO Elena
+                      { x1: 380, y1: 80, x2: 420, y2: 180 },  // Finance Dept -> CFO Sophia
+                      { x1: 80, y1: 180, x2: 160, y2: 280 },  // CEO -> Strategy Mission
+                      { x1: 420, y1: 180, x2: 340, y2: 280 }, // CFO -> Financial Audit
+                      { x1: 160, y1: 280, x2: 250, y2: 175 }, // Mission -> Org Twin (Save)
+                    ].map((line, i) => (
+                      <line
+                        key={i}
+                        x1={line.x1} y1={line.y1}
+                        x2={line.x2} y2={line.y2}
+                        stroke="#ffffff" strokeOpacity={0.12}
+                        strokeWidth={1.5}
+                        strokeDasharray="4 4"
+                        markerEnd="url(#arrow)"
+                      />
+                    ))}
+
+                    {/* Node points */}
+                    {[
+                      { id: 'org', label: 'Org Twin', x: 250, y: 175, color: brandColor, desc: 'Central organization brain and memory layers.' },
+                      { id: 'dept-exec', label: 'Exec Dept', x: 120, y: 80, color: '#8B5CF6', desc: 'Executive department orchestrating operations.' },
+                      { id: 'dept-fin', label: 'Finance Dept', x: 380, y: 80, color: '#30D158', desc: 'Finance & margins appraisal bounds.' },
+                      { id: 'ceo', label: 'CEO Elena', x: 80, y: 180, color: brandColor, desc: 'CEO Director. Manages final reviews.' },
+                      { id: 'cfo', label: 'CFO Sophia', x: 420, y: 180, color: '#30D158', desc: 'Finance Director. Analyzes credit outflow budgets.' },
+                      { id: 'mission-strat', label: 'Strategy Mission', x: 160, y: 280, color: '#0EA5E9', desc: 'Active shipping outreach strategy campaign WBS.' },
+                      { id: 'asset-policy', label: 'SOP Policy', x: 340, y: 280, color: '#EC4899', desc: 'GDP compliance SOP document in Knowledge Layer.' },
+                    ].map(node => (
+                      <g
+                        key={node.id}
+                        className="cursor-pointer group"
+                        onClick={() => setSelectedNode({ id: node.id, type: 'Knowledge Node', label: node.label, description: node.desc })}
+                      >
+                        <circle
+                          cx={node.x} cy={node.y} r={22}
+                          fill="#0A0A0C"
+                          stroke={selectedNode?.id === node.id ? '#white' : node.color}
+                          strokeWidth={selectedNode?.id === node.id ? 3 : 2}
+                          className="transition-all duration-300 hover:scale-110"
+                        />
+                        <text
+                          x={node.x} y={node.y + 4}
+                          fill="#ffffff"
+                          fontSize="7"
+                          fontWeight="black"
+                          textAnchor="middle"
+                          className="pointer-events-none"
+                        >
+                          {node.label.slice(0, 8)}
+                        </text>
+                      </g>
+                    ))}
+                  </svg>
+                </div>
+              </Card>
+
+              {/* Node detail side card */}
+              <div className="space-y-4">
+                <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] h-full">
+                  {selectedNode ? (
+                    <div className="space-y-4">
+                      <div>
+                        <Badge variant="ai" className="text-[8px] font-black uppercase tracking-wider">{selectedNode.type}</Badge>
+                        <h4 className="text-sm font-black text-[#1A1A1E] dark:text-white mt-1.5">{selectedNode.label}</h4>
+                      </div>
+                      <p className="text-[11px] text-foreground/50 font-semibold leading-relaxed">{selectedNode.description}</p>
+                      
+                      <div className="border-t border-card-border pt-4 space-y-3 text-[10px] font-bold">
+                        <p className="uppercase tracking-widest text-foreground/45 text-[8.5px]">Graph Relations</p>
+                        <div className="flex justify-between">
+                          <span className="text-foreground/40">Inbound Connections</span>
+                          <span className="text-white">2 edges</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-foreground/40">Outbound Connections</span>
+                          <span className="text-white">3 edges</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-foreground/40">Verification Confidence</span>
+                          <span className="text-[#30D158]">98% (High)</span>
                         </div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-[10px] text-foreground/45 font-bold uppercase">Confidence</p>
-                        <p className="text-sm font-extrabold text-hq-cyan">{rec.confidence}%</p>
-                      </div>
                     </div>
-                  </Card>
-                ))}
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center py-12 text-center text-foreground/40 text-xs">
+                      <Network className="h-8 w-8 text-foreground/20 mb-2" />
+                      <span>Select a graph node to inspect relationships</span>
+                    </div>
+                  )}
+                </Card>
               </div>
             </div>
           )}
