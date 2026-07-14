@@ -27,6 +27,8 @@ import {
   Lock,
   Eye,
   Check,
+  Trash2,
+  Database,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { toast } from '../../../components/toast';
@@ -234,11 +236,13 @@ function ConfidenceRing({ value, size = 72, color = '#0A84FF' }: { value: number
 export default function IntelligencePage() {
   const { token } = useAuth();
   const [intelligence, setIntelligence] = React.useState<Intelligence | null>(null);
+  const [memories, setMemories] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [activeLayerIndex, setActiveLayerIndex] = React.useState<number | null>(null);
   const [editData, setEditData] = React.useState<Record<string, string>>({});
   const [saving, setSaving] = React.useState(false);
   const [drafting, setDrafting] = React.useState(false);
+  const [runningReview, setRunningReview] = React.useState(false);
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
 
   // Load brand color
@@ -255,7 +259,6 @@ export default function IntelligencePage() {
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) {
-          // Enrich suggestions with random specs validation stage for demo simulation
           const suggestions = (data.pendingSuggestions || []).map((s: any, idx: number) => ({
             ...s,
             stage: idx === 0 ? 'VALIDATED' : idx === 1 ? 'PROPOSED' : 'APPROVED',
@@ -266,8 +269,16 @@ export default function IntelligencePage() {
       .finally(() => setLoading(false));
   };
 
+  const fetchMemories = () => {
+    if (!token) return;
+    fetch('/api/memory', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setMemories(data));
+  };
+
   React.useEffect(() => {
     fetchIntelligence();
+    fetchMemories();
   }, [token]);
 
   const openLayer = (layerIndex: number) => {
@@ -295,6 +306,7 @@ export default function IntelligencePage() {
         toast.success(`✨ Layer ${layerConfig.layer} (${layerConfig.name}) saved successfully`);
         setActiveLayerIndex(null);
         fetchIntelligence();
+        fetchMemories();
       }
     } finally {
       setSaving(false);
@@ -326,6 +338,7 @@ export default function IntelligencePage() {
     setIntelligence(prev => prev ? { ...prev, pendingSuggestions: prev.pendingSuggestions.filter(s => s.id !== id) } : prev);
     toast.success('✅ Twin suggestion published to live memory');
     fetchIntelligence();
+    fetchMemories();
   };
 
   const handleDismissSuggestion = async (id: string) => {
@@ -333,6 +346,36 @@ export default function IntelligencePage() {
     await fetch(`/api/intelligence/suggestions/${id}/dismiss`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     setIntelligence(prev => prev ? { ...prev, pendingSuggestions: prev.pendingSuggestions.filter(s => s.id !== id) } : prev);
     toast.info('🗑️ Suggestion discarded');
+  };
+
+  const handleRunReviewCycle = async () => {
+    if (!token) return;
+    setRunningReview(true);
+    try {
+      const res = await fetch('/api/memory/review-cycle', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const stats = await res.json();
+        toast.success(`✨ Memory optimized: Merged ${stats.duplicatesRemoved} duplicates, flagged ${stats.conflictsFlagged} conflicts, decayed ${stats.decayedItems} stale nodes.`);
+        fetchMemories();
+      }
+    } finally {
+      setRunningReview(false);
+    }
+  };
+
+  const handleDeleteMemory = async (id: string) => {
+    if (!token) return;
+    const res = await fetch(`/api/memory/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      toast.success('🗑️ Memory node archived');
+      fetchMemories();
+    }
   };
 
   const overallConfidence = intelligence?.overallConfidence ?? 0;
@@ -676,6 +719,82 @@ export default function IntelligencePage() {
                 </div>
               );
             })()}
+          </Card>
+
+          {/* ➔ Memory Health & Governance */}
+          <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-5">
+            <div className="flex items-start justify-between pb-3 border-b border-card-border">
+              <div className="flex items-center gap-2.5">
+                <Database className="h-4.5 w-4.5 text-hq-purple" />
+                <div>
+                  <h3 className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">Memory Governance & Quality Review</h3>
+                  <p className="text-[10px] text-foreground/50 font-semibold">Perform scheduled review cycle audits, remove duplicates, and index long-term context nodes.</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRunReviewCycle}
+                disabled={runningReview}
+                className="text-xs font-bold border-hq-purple/30 text-hq-purple bg-hq-purple/5 hover:bg-hq-purple/10 gap-1.5 h-8"
+              >
+                <RefreshCw className={`h-3 w-3 ${runningReview ? 'animate-spin' : ''}`} />
+                {runningReview ? 'Optimizing...' : 'Run Review Cycle'}
+              </Button>
+            </div>
+
+            {/* Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { label: 'Total Memories', value: memories.length, color: brandColor },
+                { label: 'Conflicts Flagged', value: memories.filter(m => m.isConflicted).length, color: '#EF4444' },
+                { label: 'Working Memories', value: memories.filter(m => m.layer === 'WORKING').length, color: '#F59E0B' },
+                { label: 'Long-term Nodes', value: memories.filter(m => m.layer === 'ORGANIZATION' || m.layer === 'EXECUTIVE').length, color: '#22C55E' },
+              ].map((stat, idx) => (
+                <div key={idx} className="border border-card-border rounded-xl p-3 bg-[#F9F9FB] dark:bg-[#0A0A0C]/30 text-center">
+                  <p className="text-[8px] font-bold text-foreground/45 uppercase tracking-wider">{stat.label}</p>
+                  <p className="text-lg font-black mt-1" style={{ color: stat.color }}>{stat.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Memory List Table */}
+            <div className="space-y-2">
+              <p className="text-[9px] font-extrabold text-foreground/45 uppercase tracking-wider">Living Memory Nodes Ledger</p>
+              {memories.length === 0 ? (
+                <div className="py-8 text-center text-[10px] text-foreground/40 font-semibold border border-dashed border-card-border rounded-xl">
+                  No active memory nodes found in the database tenancy.
+                </div>
+              ) : (
+                <div className="max-h-60 overflow-y-auto space-y-2 pr-1 border border-card-border/50 rounded-xl p-2 bg-[#F9F9FB] dark:bg-[#0A0A0C]/10">
+                  {memories.map(m => (
+                    <div key={m.id} className="flex items-center justify-between gap-4 p-3 rounded-lg border border-card-border bg-card-bg hover:border-hq-blue/20 transition-all">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-black text-[#1A1A1E] dark:text-white truncate">{m.key}</span>
+                          <Badge variant="neutral" className="text-[7px] font-black tracking-widest">{m.layer}</Badge>
+                          {m.isConflicted && <Badge variant="error" className="text-[7px] font-black animate-pulse">Conflict</Badge>}
+                        </div>
+                        <p className="text-[9.5px] text-foreground/50 font-semibold mt-0.5 truncate">{m.content}</p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="text-right">
+                          <span className="text-[9px] font-black text-[#1A1A1E] dark:text-white">{m.confidence}%</span>
+                          <p className="text-[7px] text-foreground/40 font-bold uppercase tracking-wider">Conf</p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteMemory(m.id)}
+                          className="p-1.5 rounded-lg hover:bg-red-500/10 text-foreground/40 hover:text-red-500 transition-colors"
+                          title="Archive memory node"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </Card>
         </>
       )}
