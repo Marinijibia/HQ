@@ -26,6 +26,7 @@ import {
   Rocket,
   UploadCloud,
   BrainCircuit,
+  Building2,
 } from 'lucide-react';
 import { ToastContainer } from '../../components/toast';
 import { MobileBottomNav } from '../../components/mobile-bottom-nav';
@@ -47,6 +48,7 @@ const navGroups: SidebarNavGroup[] = [
     items: [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Boardroom', href: '/boardroom', icon: Users },
+      { name: 'Organization', href: '/organization', icon: Building2 },
       { name: 'Missions', href: '/missions', icon: Calendar },
       { name: 'Discussions', href: '/discussions', icon: MessageSquare },
       { name: 'Assets', href: '/assets', icon: Database },
