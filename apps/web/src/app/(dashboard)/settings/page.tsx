@@ -302,15 +302,27 @@ export default function SettingsPage() {
               desc="Legal information, business registration, and address details."
               icon={<Globe className="h-5 w-5" style={{ color: brandColor }} />}
             />
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Legal Name" hint="Registered business name">
-                <input className={inputCls} value={settings.legalName} onChange={e => setSettings(p => ({ ...p, legalName: e.target.value }))} placeholder="Acme Corporation Ltd." />
-              </Field>
-              <Field label="Business Address">
-                <input className={inputCls} value={settings.businessAddress} onChange={e => setSettings(p => ({ ...p, businessAddress: e.target.value }))} placeholder="123 Business Ave, City, Country" />
-              </Field>
-            </div>
-            <SaveBar onSave={handleSave} saving={saving} savedMsg={savedMsg} brandColor={brandColor} />
+            <Card className="border border-card-border bg-card-bg p-6 shadow-[var(--card-shadow)] flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center shrink-0" style={{ backgroundColor: `${brandColor}15` }}>
+                  <Globe className="h-5 w-5" style={{ color: brandColor }} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Upgraded to Organization Workspace</h4>
+                  <p className="text-[10px] text-foreground/50 font-semibold mt-1 leading-relaxed">
+                    This section has been promoted to a top-level workspace containing regional branches, department selectors, and evolutionary stage checkouts.
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="text-white text-xs font-bold h-8.5 shrink-0"
+                style={{ backgroundColor: brandColor }}
+                onClick={() => window.location.href = '/organization'}
+              >
+                Go to Organization Workspace
+              </Button>
+            </Card>
           </div>
         );
 
@@ -323,33 +335,26 @@ export default function SettingsPage() {
               desc="Manage users, roles, and access control across your Headquarters."
               icon={<Users className="h-5 w-5" style={{ color: brandColor }} />}
             />
-            <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)]">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">Team Members ({teamMembers.length})</p>
-                <Button size="sm" className="text-[10px] h-7 text-white font-bold" style={{ backgroundColor: brandColor }}>
-                  <Plus className="h-3 w-3 mr-1" /> Invite Member
-                </Button>
+            <Card className="border border-card-border bg-card-bg p-6 shadow-[var(--card-shadow)] flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-full bg-hq-cyan/15 text-hq-cyan flex items-center justify-center shrink-0" style={{ backgroundColor: `${brandColor}15` }}>
+                  <Users className="h-5 w-5" style={{ color: brandColor }} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Upgraded to Teams & Clearance</h4>
+                  <p className="text-[10px] text-foreground/50 font-semibold mt-1 leading-relaxed">
+                    This section has been promoted to a top-level workspace containing reporting org charts, clearance sliders, and invitations gatekeepers.
+                  </p>
+                </div>
               </div>
-              <div className="space-y-2">
-                {teamMembers.length === 0 ? (
-                  <EmptyState text="No team members yet. Invite your first member to get started." />
-                ) : (
-                  teamMembers.map(member => (
-                    <div key={member.id} className="flex items-center justify-between p-3 rounded-xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full flex items-center justify-center font-extrabold text-white text-[10px] shrink-0" style={{ backgroundColor: brandColor }}>
-                          {(member.name || member.email).charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{member.name || 'Unnamed'}</p>
-                          <p className="text-[10px] text-foreground/50 font-semibold">{member.email}</p>
-                        </div>
-                      </div>
-                      <Badge variant="neutral" className="text-[9px] font-extrabold capitalize">{member.role.toLowerCase()}</Badge>
-                    </div>
-                  ))
-                )}
-              </div>
+              <Button
+                size="sm"
+                className="text-white text-xs font-bold h-8.5 shrink-0"
+                style={{ backgroundColor: brandColor }}
+                onClick={() => window.location.href = '/teams'}
+              >
+                Go to Teams Directory
+              </Button>
             </Card>
           </div>
         );
@@ -487,32 +492,27 @@ export default function SettingsPage() {
               desc="Manage your plan, payment methods, and usage."
               icon={<CreditCard className="h-5 w-5" style={{ color: brandColor }} />}
             />
-            <Card className="border border-card-border p-5 shadow-[var(--card-shadow)] bg-gradient-to-br from-hq-blue/5 to-hq-purple/5 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-bold text-foreground/45 uppercase tracking-widest">Current Plan</p>
-                  <p className="text-xl font-extrabold text-[#1A1A1E] dark:text-white mt-0.5">Growth Plan</p>
-                  <p className="text-xs text-foreground/60 font-semibold mt-1">10 GB storage · Unlimited missions · 5 executives</p>
+            <Card className="border border-card-border bg-card-bg p-6 shadow-[var(--card-shadow)] flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center shrink-0" style={{ backgroundColor: `${brandColor}15` }}>
+                  <CreditCard className="h-5 w-5" style={{ color: brandColor }} />
                 </div>
-                <Badge className="text-white font-extrabold text-[9px]" style={{ backgroundColor: brandColor }}>Active</Badge>
+                <div>
+                  <h4 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Upgraded to Billing Portal</h4>
+                  <p className="text-[10px] text-foreground/50 font-semibold mt-1 leading-relaxed">
+                    This section has been promoted to a top-level workspace containing credit usage breakdown, cost optimizations, and Stripe/Paystack paygates.
+                  </p>
+                </div>
               </div>
-              <div className="pt-2 flex gap-2">
-                <Button size="sm" className="text-white text-[10px] font-bold" style={{ backgroundColor: brandColor }}>Upgrade to Enterprise</Button>
-                <Button size="sm" variant="outline" className="text-[10px] font-bold border-card-border">Manage Billing</Button>
-              </div>
+              <Button
+                size="sm"
+                className="text-white text-xs font-bold h-8.5 shrink-0"
+                style={{ backgroundColor: brandColor }}
+                onClick={() => window.location.href = '/billing'}
+              >
+                Go to Billing Portal
+              </Button>
             </Card>
-            <div className="grid gap-4 md:grid-cols-3">
-              {[
-                { label: 'Next Renewal', value: 'Aug 12, 2026', color: brandColor },
-                { label: 'AI Credits Remaining', value: '4,200', color: '#0EA5E9' },
-                { label: 'Storage Used', value: '2.1 GB / 10 GB', color: '#8B5CF6' },
-              ].map((s, i) => (
-                <Card key={i} className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] text-left">
-                  <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">{s.label}</p>
-                  <p className="text-lg font-extrabold mt-1" style={{ color: s.color }}>{s.value}</p>
-                </Card>
-              ))}
-            </div>
           </div>
         );
 
@@ -576,28 +576,27 @@ export default function SettingsPage() {
               desc="Connect your Headquarters with the tools your organization depends on."
               icon={<Plug2 className="h-5 w-5" style={{ color: brandColor }} />}
             />
-            <div className="grid gap-3 md:grid-cols-2">
-              {INTEGRATIONS.map(intg => (
-                <Card key={intg.id} className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-[#F9F9FB] dark:bg-[#0A0A0C] border border-card-border flex items-center justify-center text-xl shrink-0">
-                    {intg.logo}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{intg.name}</p>
-                    <p className="text-[10px] text-foreground/50 font-semibold">{intg.desc}</p>
-                    <Badge variant="neutral" className="text-[8px] mt-1">{intg.category}</Badge>
-                  </div>
-                  <Button
-                    size="sm"
-                    className={`text-[10px] h-7 font-bold shrink-0 ${intg.connected ? 'border-card-border text-foreground/70' : 'text-white'}`}
-                    variant={intg.connected ? 'outline' : 'primary'}
-                    style={!intg.connected ? { backgroundColor: brandColor } : {}}
-                  >
-                    {intg.connected ? 'Disconnect' : 'Connect'}
-                  </Button>
-                </Card>
-              ))}
-            </div>
+            <Card className="border border-card-border bg-card-bg p-6 shadow-[var(--card-shadow)] flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-full bg-hq-cyan/15 text-hq-cyan flex items-center justify-center shrink-0" style={{ backgroundColor: `${brandColor}15` }}>
+                  <Plug2 className="h-5 w-5" style={{ color: brandColor }} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Upgraded to Integrations Hub</h4>
+                  <p className="text-[10px] text-foreground/50 font-semibold mt-1 leading-relaxed">
+                    This section has been promoted to a top-level workspace containing OAuth connection wizards, permissions toggles, and event-driven automation recipes.
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="text-white text-xs font-bold h-8.5 shrink-0"
+                style={{ backgroundColor: brandColor }}
+                onClick={() => window.location.href = '/integration-hub'}
+              >
+                Go to Integrations Hub
+              </Button>
+            </Card>
           </div>
         );
 
