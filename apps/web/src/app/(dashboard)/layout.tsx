@@ -29,6 +29,7 @@ import {
   Building2,
   Plug2,
   Shield,
+  Lock,
 } from 'lucide-react';
 import { ToastContainer } from '../../components/toast';
 import { MobileBottomNav } from '../../components/mobile-bottom-nav';
@@ -72,6 +73,7 @@ const navGroups: SidebarNavGroup[] = [
       { name: 'Billing', href: '/billing', icon: CreditCard },
       { name: 'Integrations', href: '/integration-hub', icon: Plug2 },
       { name: 'Governance & Compliance', href: '/admin/compliance', icon: Shield },
+      { name: 'Trust Center', href: '/trust-center', icon: Lock },
       { name: 'Execution Log', href: '/admin/execution-log', icon: Terminal },
     ],
   },
