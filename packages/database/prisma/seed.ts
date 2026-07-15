@@ -390,8 +390,133 @@ async function main() {
       create: exec,
     });
   }
-
   console.log('Seeded all 25 core C-Suite AI Executives successfully.');
+
+  // 6. Create Seeded Missions
+  const mission1 = await prisma.mission.create({
+    data: {
+      companyId: company.id,
+      objective: 'Launch Q3 Global Marketing Campaign and expand social reach',
+      status: 'EXECUTING',
+      healthScore: 'Excellent',
+    },
+  });
+
+  const mission2 = await prisma.mission.create({
+    data: {
+      companyId: company.id,
+      objective: 'Financial Auditing and compliance preparation for EMEA regional expansion',
+      status: 'PLANNING',
+      healthScore: 'Good',
+    },
+  });
+
+  const mission3 = await prisma.mission.create({
+    data: {
+      companyId: company.id,
+      objective: 'Implement SOC2 Trust Center Guardrails and MFA enforcement controls',
+      status: 'APPROVED',
+      healthScore: 'Excellent',
+    },
+  });
+  console.log('Seeded active database missions.');
+
+  // 7. Retrieve seeded executives to map message senders
+  const ceo = await prisma.executive.findFirst({ where: { roleKey: 'ceo' } });
+  const cmo = await prisma.executive.findFirst({ where: { roleKey: 'marketing_director' } });
+  const cfo = await prisma.executive.findFirst({ where: { roleKey: 'finance_director' } });
+
+  if (ceo && cmo && cfo) {
+    // Seeded Conversations
+    const conv1 = await prisma.conversation.create({
+      data: {
+        title: 'Weekly Strategic Alignment',
+        companyId: company.id,
+        missionId: mission1.id,
+        isPinned: true,
+      },
+    });
+
+    const conv2 = await prisma.conversation.create({
+      data: {
+        title: 'Brand Identity Launch discussion',
+        companyId: company.id,
+        isPinned: false,
+      },
+    });
+
+    // Seeded Chat Messages
+    await prisma.chatMessage.createMany({
+      data: [
+        {
+          conversationId: conv1.id,
+          senderId: ceo.id,
+          senderType: 'EXECUTIVE',
+          content: 'Team, welcome to the weekly briefing. Let\'s coordinate on the social launch.',
+        },
+        {
+          conversationId: conv1.id,
+          senderId: cmo.id,
+          senderType: 'EXECUTIVE',
+          content: 'I have finalized the layout assets for the social campaigns. Direct ads are ready.',
+        },
+        {
+          conversationId: conv2.id,
+          senderId: cmo.id,
+          senderType: 'EXECUTIVE',
+          content: 'Owner, we need to approve the final primary color styling choices before deploy.',
+        },
+        {
+          conversationId: conv2.id,
+          senderId: ceo.id,
+          senderType: 'EXECUTIVE',
+          content: 'I have compiled the strategic summary and it matches the brand design guidelines.',
+        },
+      ],
+    });
+    console.log('Seeded discussions and chat messages.');
+  }
+
+  // 8. Seeded Assets
+  await prisma.asset.createMany({
+    data: [
+      {
+        companyId: company.id,
+        filename: 'Q3_Marketing_Strategy_Brief.pdf',
+        description: 'Comprehensive marketing briefs and demographic analysis.',
+        fileSize: 1548576,
+        mimeType: 'application/pdf',
+        sha256: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+        gcsPath: 'organizations/hq-corp/assets/Q3_Marketing_Strategy_Brief.pdf',
+        classification: 'CONFIDENTIAL',
+        missionId: mission1.id,
+      },
+      {
+        companyId: company.id,
+        filename: 'EMEA_Financial_Audit_Model.xlsx',
+        description: 'Tax and accounting forecasts for EMEA expansion.',
+        fileSize: 421890,
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        sha256: 'ec0e358b584c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00c12',
+        gcsPath: 'organizations/hq-corp/assets/EMEA_Financial_Audit_Model.xlsx',
+        classification: 'CONFIDENTIAL',
+        missionId: mission2.id,
+      },
+      {
+        companyId: company.id,
+        filename: 'SOC2_Security_Policy_Draft.docx',
+        description: 'Access control policy drafts and key rotation guidelines.',
+        fileSize: 184560,
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        sha256: 'ac1e358b584c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00f45',
+        gcsPath: 'organizations/hq-corp/assets/SOC2_Security_Policy_Draft.docx',
+        classification: 'RESTRICTED',
+        missionId: mission3.id,
+      },
+    ],
+  });
+  console.log('Seeded database assets.');
+
   console.log('Database seeding complete!');
 }
 
