@@ -30,9 +30,21 @@ export class UserController {
   @Get('me')
   @ApiOperation({ summary: 'Get current authenticated user profile details' })
   async findMe(@Req() req: types.AuthenticatedRequest) {
-    const user = await this.userRepository.findById(req.user.uid);
+    let user = await this.userRepository.findById(req.user.uid);
     if (!user) {
-      throw new NotFoundException('User profile not found');
+      const defaultCompany = await this.userRepository.findDefaultCompany();
+      if (!defaultCompany) {
+        throw new NotFoundException(
+          'Default company context not found. Please run seed script first.',
+        );
+      }
+      user = await this.userRepository.create({
+        id: req.user.uid,
+        email: req.user.email,
+        name: req.user.email ? req.user.email.split('@')[0] : 'Member',
+        companyId: defaultCompany.id,
+        role: req.user.role || 'MEMBER',
+      });
     }
     return user;
   }

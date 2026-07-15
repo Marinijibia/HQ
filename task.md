@@ -1,10 +1,9 @@
-# Task Tracker — Phase 5 — Enterprise Operations Center
+# Task Tracker — Frontend-Backend Integration (Stage 1)
 
-## 1. Next.js Frontend Updates
-- [x] Add `Activity` icon and `Operations Center` link in layout.tsx sidebar
-- [x] Create `/admin/operations/page.tsx` with dual-ops command center (Organization Ops vs Platform Ops)
-- [x] Implement AI Executive status cards and Pause/Resume triggers
-- [x] Add Mission status progress tracking console
-- [x] Add central Alert Center logs categorized by severity
-- [x] Add AI Provider API latency load graphs
-- [x] Verify the full workspace compiles cleanly and push changes
+## 1. Backend Verification & Updates
+- [x] Inspect user controller / service files on the backend to verify `/users/me` profile sync
+- [x] Modify `apps/api/src/modules/user` if needed to automatically bootstrap user company records on registration
+
+## 2. Frontend Updates
+- [x] Update `apps/web/src/contexts/auth-context.tsx` to call backend profile sync on state changes
+- [x] Verify the full workspace builds and runs dev server cleanly

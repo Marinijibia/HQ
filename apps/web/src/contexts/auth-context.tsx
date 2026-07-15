@@ -34,6 +34,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (currentUser) {
         const idToken = await currentUser.getIdToken();
         setToken(idToken);
+        try {
+          const res = await fetch('/api/users/me', {
+            headers: {
+              'Authorization': `Bearer ${idToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          if (res.ok) {
+            const dbUser = await res.json();
+            console.log('PostgreSQL User Profile Synced:', dbUser);
+            const settingsRes = await fetch('/api/settings/org', {
+              headers: { 'Authorization': `Bearer ${idToken}` }
+            });
+            if (settingsRes.ok) {
+              const orgData = await settingsRes.json();
+              if (orgData && orgData.brandColor) {
+                localStorage.setItem('hq_onboarding_draft', JSON.stringify({
+                  brandColor: orgData.brandColor,
+                  ownerName: orgData.name || 'Acme Corporation'
+                }));
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Error lazy-syncing user profile with postgres backend:', err);
+        }
       } else {
         setToken(null);
       }

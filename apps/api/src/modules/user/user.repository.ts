@@ -12,6 +12,30 @@ export class UserRepository {
     });
   }
 
+  async findDefaultCompany() {
+    return this.prisma.company.findFirst({
+      where: { deletedAt: null },
+    });
+  }
+
+  async create(data: {
+    id: string;
+    email: string;
+    name?: string;
+    companyId: string;
+    role: any;
+  }): Promise<User> {
+    return this.prisma.user.create({
+      data: {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        companyId: data.companyId,
+        role: data.role,
+      },
+    });
+  }
+
   async update(id: string, data: Partial<User>): Promise<User> {
     return this.prisma.user.update({
       where: { id },
