@@ -6,13 +6,17 @@ import {
   Logger,
 } from '@nestjs/common';
 import { FirebaseService } from './firebase.service';
+import { UserRepository } from '../user/user.repository';
 import { AuthenticatedRequest } from '../../common/interfaces/request.interface';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   private readonly logger = new Logger(AuthGuard.name);
 
-  constructor(private readonly firebaseService: FirebaseService) {}
+  constructor(
+    private readonly firebaseService: FirebaseService,
+    private readonly userRepository: UserRepository,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
@@ -27,6 +31,16 @@ export class AuthGuard implements CanActivate {
 
     try {
       const payload = await this.firebaseService.verifyIdToken(token);
+      
+      // If claims do not have companyId or role, resolve them from PostgreSQL
+      if (!payload.companyId || !payload.role) {
+        const user = await this.userRepository.findById(payload.uid);
+        if (user) {
+          payload.companyId = user.companyId || payload.companyId;
+          payload.role = user.role || payload.role;
+        }
+      }
+
       request.user = payload;
       return true;
     } catch (error) {

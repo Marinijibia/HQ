@@ -1,9 +1,8 @@
-# Task Tracker — Frontend-Backend Integration (Stage 1)
+# Task Tracker — Frontend-Backend Integration (Stage 2 & 3)
 
 ## 1. Backend Verification & Updates
-- [x] Inspect user controller / service files on the backend to verify `/users/me` profile sync
-- [x] Modify `apps/api/src/modules/user` if needed to automatically bootstrap user company records on registration
+- [x] Include department relation in ExecutiveRepository queries (findAll, findById)
+- [x] Patch companyId and role custom claims from PostgreSQL inside AuthGuard if missing in Firebase claims
 
-## 2. Frontend Updates
-- [x] Update `apps/web/src/contexts/auth-context.tsx` to call backend profile sync on state changes
-- [x] Verify the full workspace builds and runs dev server cleanly
+## 2. Frontend & Verification
+- [x] Rebuild NestJS API workspace and Next.js frontend to verify clean compilations
