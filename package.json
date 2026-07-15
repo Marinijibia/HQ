@@ -7,6 +7,10 @@
     "apps/*",
     "packages/*"
   ],
+  "resolutions": {
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/common": "^11.0.1"
+  },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
