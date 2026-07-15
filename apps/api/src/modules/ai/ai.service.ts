@@ -44,12 +44,22 @@ export class AiService {
             );
           }
 
-          // Mock responses for standard sandbox environments
-          responseText = this.mockCompletion(
-            activeProvider,
-            dto.prompt,
-            dto.systemPrompt,
-          );
+          // If real key exists, call real LLM API; otherwise call mock
+          if (activeProvider === 'gemini' && process.env.GEMINI_API_KEY && !dto.simulateFailure) {
+            responseText = await this.callGemini(dto.prompt, dto.systemPrompt);
+          } else if (activeProvider === 'openai' && process.env.OPENAI_API_KEY) {
+            responseText = await this.callOpenAI(dto.prompt, dto.systemPrompt);
+          } else if (activeProvider === 'anthropic' && process.env.ANTHROPIC_API_KEY) {
+            responseText = await this.callAnthropic(dto.prompt, dto.systemPrompt);
+          } else {
+            // Mock responses for standard sandbox environments
+            responseText = this.mockCompletion(
+              activeProvider,
+              dto.prompt,
+              dto.systemPrompt,
+            );
+          }
+
           success = true;
           failoverTrace.push(
             `${activeProvider} (succeeded on attempt ${attempt})`,
@@ -101,6 +111,112 @@ export class AiService {
         'AI Gateway exhausted all dynamic providers and failed to resolve prompt completion.',
       failoverTrace,
     });
+  }
+
+  private async callGemini(prompt: string, systemPrompt?: string): Promise<string> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const payload: any = {
+      contents: [
+        {
+          parts: [{ text: prompt }]
+        }
+      ]
+    };
+    if (systemPrompt) {
+      payload.systemInstruction = {
+        parts: [{ text: systemPrompt }]
+      };
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Gemini API error status ${res.status}: ${errText}`);
+    }
+
+    const data: any = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      throw new Error('Gemini API returned empty completion contents');
+    }
+    return text;
+  }
+
+  private async callOpenAI(prompt: string, systemPrompt?: string): Promise<string> {
+    const apiKey = process.env.OPENAI_API_KEY;
+    const url = 'https://api.openai.com/v1/chat/completions';
+    const messages: any[] = [];
+    if (systemPrompt) {
+      messages.push({ role: 'system', content: systemPrompt });
+    }
+    messages.push({ role: 'user', content: prompt });
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`OpenAI API error status ${res.status}: ${errText}`);
+    }
+
+    const data: any = await res.json();
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) {
+      throw new Error('OpenAI API returned empty completion contents');
+    }
+    return text;
+  }
+
+  private async callAnthropic(prompt: string, systemPrompt?: string): Promise<string> {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const url = 'https://api.anthropic.com/v1/messages';
+    const payload: any = {
+      model: 'claude-3-5-haiku-20241022',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: prompt }],
+    };
+    if (systemPrompt) {
+      payload.system = systemPrompt;
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey!,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Anthropic API error status ${res.status}: ${errText}`);
+    }
+
+    const data: any = await res.json();
+    const text = data.content?.[0]?.text;
+    if (!text) {
+      throw new Error('Anthropic API returned empty completion contents');
+    }
+    return text;
   }
 
   private mockCompletion(

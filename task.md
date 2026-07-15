@@ -1,6 +1,6 @@
-# Task Tracker — Frontend-Backend Integration (Stage 5 - Complete Model Connection)
+# Task Tracker — Frontend-Backend Integration (LLM APIs)
 
-## 1. Database Model Populating
-- [x] Integrate mock transactional data (Missions, Conversations, Messages, Assets) into the database seed script
-- [x] Reset and re-seed the PostgreSQL database successfully
-- [x] Verify that all models are successfully connected and populated
+## 1. LLM API Integration
+- [x] Implement live call wrapper functions for Google Gemini, OpenAI, and Anthropic in `AiService`
+- [x] Configure fallback structure to dynamic `mockCompletion` if keys are missing
+- [x] Rebuild NestJS API workspace to verify clean compilations
