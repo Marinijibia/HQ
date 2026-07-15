@@ -15,14 +15,40 @@ export class SettingsService {
         data: { companyId },
       });
     }
-    return settings;
+    const company = await this.prisma.company.findUnique({
+      where: { id: companyId },
+      select: { name: true, logoUrl: true, primaryColor: true, secondaryColor: true },
+    });
+    return {
+      ...settings,
+      companyName: company?.name || 'HQ Corporation',
+      brandColor: company?.primaryColor || '#0A84FF',
+      secondaryColor: company?.secondaryColor || '#8B5CF6',
+      logoUrl: company?.logoUrl || null,
+    };
   }
 
   async updateOrgSettings(companyId: string, dto: any) {
+    const { companyName, brandColor, secondaryColor, logoUrl, primaryColor, name, ...settingsDto } = dto;
+    
+    // Update company brand elements if provided
+    const companyUpdate: any = {};
+    if (companyName || name) companyUpdate.name = companyName || name;
+    if (brandColor || primaryColor) companyUpdate.primaryColor = brandColor || primaryColor;
+    if (secondaryColor) companyUpdate.secondaryColor = secondaryColor;
+    if (logoUrl !== undefined) companyUpdate.logoUrl = logoUrl;
+
+    if (Object.keys(companyUpdate).length > 0) {
+      await this.prisma.company.update({
+        where: { id: companyId },
+        data: companyUpdate,
+      });
+    }
+
     return this.prisma.orgSettings.upsert({
       where: { companyId },
-      create: { companyId, ...dto },
-      update: dto,
+      create: { companyId, ...settingsDto },
+      update: settingsDto,
     });
   }
 

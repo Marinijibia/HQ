@@ -1,8 +1,8 @@
-# Task Tracker — Frontend-Backend Integration (Stage 2 & 3)
+# Task Tracker — Frontend-Backend Integration (Stage 4)
 
 ## 1. Backend Verification & Updates
-- [x] Include department relation in ExecutiveRepository queries (findAll, findById)
-- [x] Patch companyId and role custom claims from PostgreSQL inside AuthGuard if missing in Firebase claims
+- [x] Integrate settings service schema fallback with Company brand color parameters
+- [x] Rebuild NestJS API workspace to verify clean compilations
 
-## 2. Frontend & Verification
-- [x] Rebuild NestJS API workspace and Next.js frontend to verify clean compilations
+## 2. Next Stages
+- [ ] Connect settings/billing actions and run live end-to-end tests
