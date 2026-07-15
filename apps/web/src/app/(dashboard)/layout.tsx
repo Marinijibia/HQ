@@ -6,6 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/auth-context';
 import { useSidebarStore } from '@/stores/sidebarStore';
 import { useCommandPaletteStore } from '@/stores/commandPaletteStore';
+import { GuideModeProvider, useGuideMode } from '../../contexts/guide-mode-context';
+import { GuideModeBanner } from '../../components/guide-mode-banner';
 import { Button, Card, Input } from '@hq/ui';
 import {
   LayoutDashboard,
@@ -83,7 +85,7 @@ const navGroups: SidebarNavGroup[] = [
   },
 ];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading, logout, token } = useAuth();
@@ -476,11 +478,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       )}
 
+      {/* Guide Banner */}
+      <GuideModeBanner />
+
       {/* Toast Notifications */}
       <ToastContainer />
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
     </div>
+  );
+}
+
+export default function DashboardLayoutWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <GuideModeProvider>
+      <DashboardLayout>{children}</DashboardLayout>
+    </GuideModeProvider>
   );
 }

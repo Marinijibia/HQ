@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardHeader,
@@ -17,12 +18,14 @@ import {
   Calendar,
   CreditCard,
   ChevronRight,
+  ArrowRight,
   Activity,
   Sparkles,
   Lightbulb,
   ShieldAlert,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
+import { useGuideMode } from '../../../contexts/guide-mode-context';
 import { GlobalActivityFeed } from '../../../components/global-activity-feed';
 import { SetupProgressBar } from '../../../components/setup-progress-bar';
 import { MissionLaunchPanel } from '../../../components/mission-launch-panel';
@@ -41,6 +44,7 @@ interface RecommendationCard {
 
 export default function DashboardPage() {
   const { user, token } = useAuth();
+  const router = useRouter();
   const [missionPanelOpen, setMissionPanelOpen] = React.useState(false);
 
   // Custom onboarding data sync states
@@ -48,8 +52,118 @@ export default function DashboardPage() {
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
   const [hqName, setHqName] = React.useState('HQ Corporation');
 
+  const {
+    guideModeEnabled,
+    ftxStep,
+    setFtxStep,
+    startMission,
+    completeMission,
+    objectiveText,
+    resetProgress,
+  } = useGuideMode();
+
+  const [promptInput, setPromptInput] = React.useState('');
+
+  // 1. Setup step reasoning checklist triggers
+  const [checklist, setChecklist] = React.useState<boolean[]>([false, false, false, false, false, false]);
   React.useEffect(() => {
-    // Read from onboarding draft if available
+    if (ftxStep === 'reasoning') {
+      setChecklist([false, false, false, false, false, false]);
+      const timers = [
+        setTimeout(() => setChecklist([true, false, false, false, false, false]), 400),
+        setTimeout(() => setChecklist([true, true, false, false, false, false]), 800),
+        setTimeout(() => setChecklist([true, true, true, false, false, false]), 1200),
+        setTimeout(() => setChecklist([true, true, true, true, false, false]), 1600),
+        setTimeout(() => setChecklist([true, true, true, true, true, false]), 2000),
+        setTimeout(() => setChecklist([true, true, true, true, true, true]), 2400),
+        setTimeout(() => setFtxStep('assigned'), 2800),
+      ];
+      return () => timers.forEach(clearTimeout);
+    }
+  }, [ftxStep, setFtxStep]);
+
+  // 2. Setup step executing progress triggers
+  const [executionProgress, setExecutionProgress] = React.useState(0);
+  const [execStatus, setExecStatus] = React.useState<Record<string, string>>({
+    ceo: 'Planning',
+    marketing: 'Pending...',
+    finance: 'Pending...',
+    legal: 'Pending...',
+    strategy: 'Pending...',
+  });
+
+  React.useEffect(() => {
+    if (ftxStep === 'executing') {
+      setExecutionProgress(0);
+      setExecStatus({
+        ceo: 'Planning',
+        marketing: 'Researching...',
+        finance: 'Pending...',
+        legal: 'Pending...',
+        strategy: 'Pending...',
+      });
+
+      const timer = setInterval(() => {
+        setExecutionProgress((old) => {
+          if (old >= 100) {
+            clearInterval(timer);
+
+            // Register backend mock deliverable
+            fetch('/api/missions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                objective: objectiveText,
+                status: 'APPROVED',
+              }),
+            })
+              .then(async (res) => {
+                if (res.ok) {
+                  const data = await res.json();
+                  completeMission(data.id || 'mission-ftx');
+                } else {
+                  completeMission('mission-ftx');
+                }
+              })
+              .catch(() => {
+                completeMission('mission-ftx');
+              });
+            return 100;
+          }
+
+          const next = old + 5;
+
+          // Smoothly update statuses based on progress thresholds
+          setExecStatus((status) => {
+            const nextStatus = { ...status };
+            if (next >= 100) {
+              nextStatus.strategy = 'Completed';
+            } else if (next >= 75) {
+              nextStatus.legal = 'Completed';
+              nextStatus.strategy = 'Writing...';
+            } else if (next >= 50) {
+              nextStatus.finance = 'Completed';
+              nextStatus.legal = 'Reviewing...';
+            } else if (next >= 25) {
+              nextStatus.marketing = 'Completed';
+              nextStatus.finance = 'Calculating...';
+            }
+            return nextStatus;
+          });
+
+          return next;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [ftxStep, objectiveText, token, completeMission]);
+
+  // Read onboarding cached setup parameters
+  React.useEffect(() => {
     const draftStr = localStorage.getItem('hq_onboarding_draft');
     if (draftStr) {
       try {
@@ -106,6 +220,340 @@ export default function DashboardPage() {
     },
   ];
 
+  // ==========================================
+  // GUIDE MODE ACTIVE FTX RENDER ENGINE
+  // ==========================================
+  if (guideModeEnabled) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4 sm:p-8 select-none text-foreground">
+        <div className="w-full max-w-3xl border border-hq-blue/20 bg-[#0B0B0E]/80 backdrop-blur-md rounded-2xl p-6 sm:p-10 shadow-2xl relative overflow-hidden animate-in fade-in duration-300">
+          
+          {/* Arrival step view */}
+          {ftxStep === 'arrival' && (
+            <div className="text-center space-y-6 max-w-md mx-auto py-8">
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-hq-blue to-hq-purple flex items-center justify-center font-bold text-white text-xl mx-auto shadow-lg animate-bounce">
+                HQ
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Welcome to HQ</h1>
+                <p className="text-sm text-foreground/60 leading-relaxed">
+                  Your Executive Board is online. Describe what you'd like to achieve, and watch our C-Suite
+                  coordinate tasks automatically.
+                </p>
+              </div>
+              <Button
+                onClick={() => setFtxStep('input')}
+                className="w-full bg-hq-blue hover:bg-hq-blue/90 text-white font-bold h-11 text-sm shadow-lg shadow-hq-blue/20 flex items-center justify-center gap-2"
+              >
+                Start First Mission
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+          {/* Input step view */}
+          {ftxStep === 'input' && (
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Start your first Mission</h2>
+                <p className="text-xs sm:text-sm text-foreground/60">
+                  Provide a business objective below. Our CEO will analyze and assemble the team.
+                </p>
+              </div>
+
+              {/* Central Large Input field */}
+              <div className="relative">
+                <textarea
+                  value={promptInput}
+                  onChange={(e) => setPromptInput(e.target.value)}
+                  placeholder="Describe a goal (e.g. Build a comprehensive brand identity and marketing strategy for a B2B AI software company)..."
+                  className="w-full min-h-[120px] rounded-xl border border-hq-graphite/40 bg-black/40 p-4 text-sm text-white placeholder-foreground/40 focus:outline-none focus:border-hq-blue/60 transition-all font-medium leading-relaxed resize-none"
+                />
+                <Button
+                  onClick={() => {
+                    if (promptInput.trim()) {
+                      startMission(promptInput);
+                    }
+                  }}
+                  disabled={!promptInput.trim()}
+                  className="absolute bottom-4 right-4 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold px-3.5 py-1.5 h-8 text-xs shadow-md"
+                >
+                  Plan Strategy
+                </Button>
+              </div>
+
+              {/* Starter suggestions */}
+              <div className="space-y-3">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-foreground/45 text-left">
+                  Suggested starters
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {[
+                    'Launch a new business',
+                    'Build a marketing strategy',
+                    'Write an investor pitch',
+                    'Create a business plan',
+                    'Improve customer support',
+                    'Analyze a document',
+                  ].map((starter) => (
+                    <button
+                      key={starter}
+                      onClick={() => startMission(starter)}
+                      className="text-left rounded-xl border border-hq-graphite/40 bg-hq-graphite/10 px-4 py-3 text-foreground/80 hover:bg-hq-blue/10 hover:text-white hover:border-hq-blue/20 transition-all font-medium"
+                    >
+                      {starter}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Reasoning checkmarks loader animation */}
+          {ftxStep === 'reasoning' && (
+            <div className="space-y-8 py-6">
+              <div className="text-center space-y-2">
+                <div className="h-10 w-10 rounded-full border-2 border-t-hq-blue border-hq-graphite/30 animate-spin mx-auto mb-4" />
+                <h2 className="text-xl font-bold tracking-tight text-white">CEO Analyzing objective...</h2>
+                <p className="text-xs text-foreground/50">
+                  Elena is building structural components and mapping dependencies.
+                </p>
+              </div>
+
+              <div className="w-full max-w-md mx-auto bg-hq-graphite/10 border border-hq-graphite/40 rounded-xl p-6 grid grid-cols-2 gap-4 text-xs font-semibold">
+                {[
+                  { label: 'Business Type', checked: checklist[0] },
+                  { label: 'Goal Alignment', checked: checklist[1] },
+                  { label: 'Timeline Estimator', checked: checklist[2] },
+                  { label: 'Required Departments', checked: checklist[3] },
+                  { label: 'Risks Matrix', checked: checklist[4] },
+                  { label: 'Deliverables Plan', checked: checklist[5] },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center space-x-2">
+                    <span
+                      className={`h-4 w-4 rounded-full border flex items-center justify-center transition-all ${item.checked ? 'border-hq-blue bg-hq-blue/10 text-hq-blue scale-105' : 'border-foreground/20 text-transparent'}`}
+                    >
+                      ✓
+                    </span>
+                    <span className={item.checked ? 'text-white' : 'text-foreground/40'}>
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Team Assigned dashboard cards */}
+          {ftxStep === 'assigned' && (
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-bold tracking-tight text-white">Assembled Executive Board</h2>
+                <p className="text-xs text-foreground/60 max-w-md mx-auto">
+                  CEO {ceoName} has mapped your objective and assigned the following specialist team:
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5 text-left">
+                {[
+                  { name: 'Alistair Thorne', role: 'Strategy Director', reason: 'Competitor positioning & roadmaps' },
+                  { name: 'Sophia Sterling', role: 'Finance Director', reason: 'Budget limits & margin forecasts' },
+                  { name: 'Amara Okafor', role: 'Marketing Director', reason: 'Brand brief creatives & outreach' },
+                  { name: 'Marcus Brody', role: 'Product Director', reason: 'Target demographic fit' },
+                  { name: 'Fiona Gallagher', role: 'Legal Director', reason: 'Regulatory SOC2 compliance' },
+                ].map((exec, idx) => (
+                  <div
+                    key={idx}
+                    className="border border-hq-graphite/40 bg-hq-graphite/10 rounded-xl p-3.5 space-y-2 relative overflow-hidden group hover:border-hq-blue/30 transition-all"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-hq-blue/10 text-hq-blue font-black flex items-center justify-center text-xs">
+                      {exec.name.split(' ')[0][0]}{exec.name.split(' ')[1]?.[0] || ''}
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-bold text-white tracking-tight">{exec.name}</p>
+                      <p className="text-[9px] uppercase tracking-wider font-semibold text-hq-blue">{exec.role}</p>
+                    </div>
+                    <p className="text-[10px] text-foreground/50 leading-normal">{exec.reason}</p>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                onClick={() => setFtxStep('executing')}
+                className="w-full bg-hq-blue hover:bg-hq-blue/90 text-white font-bold h-11 text-sm shadow-lg shadow-hq-blue/20"
+              >
+                Launch Mission
+              </Button>
+            </div>
+          )}
+
+          {/* Executing mission status screen */}
+          {ftxStep === 'executing' && (
+            <div className="space-y-8">
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-bold tracking-tight text-white">Launching Boardroom Mission...</h2>
+                <p className="text-xs text-foreground/60 max-w-sm mx-auto">
+                  Our specialists are working synchronously on your deliverables.
+                </p>
+              </div>
+
+              {/* Progress bar */}
+              <div className="space-y-2 w-full max-w-md mx-auto">
+                <div className="flex justify-between text-xs font-mono font-bold text-hq-blue">
+                  <span>Progress</span>
+                  <span>{executionProgress}%</span>
+                </div>
+                <div className="w-full h-3 bg-hq-graphite/30 rounded-full overflow-hidden border border-hq-graphite/40">
+                  <div
+                    className="h-full bg-hq-blue rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${executionProgress}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Activity panel */}
+              <div className="w-full max-w-md mx-auto bg-hq-graphite/10 border border-hq-graphite/40 rounded-xl p-5 text-xs text-left space-y-3 font-medium">
+                <p className="text-[10px] uppercase font-bold text-foreground/45 tracking-wider mb-2">
+                  Specialist Collaboration Activity
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-white">CEO (Planning)</span>
+                  <Badge variant="success">✓ Completed</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className={executionProgress >= 25 ? 'text-white' : 'text-foreground/40'}>
+                    Marketing ({execStatus.marketing})
+                  </span>
+                  <Badge variant={executionProgress >= 25 ? 'success' : 'neutral'}>
+                    {executionProgress >= 25 ? '✓ Completed' : 'Pending'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className={executionProgress >= 50 ? 'text-white' : 'text-foreground/40'}>
+                    Finance ({execStatus.finance})
+                  </span>
+                  <Badge variant={executionProgress >= 50 ? 'success' : 'neutral'}>
+                    {executionProgress >= 50 ? '✓ Completed' : 'Pending'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className={executionProgress >= 75 ? 'text-white' : 'text-foreground/40'}>
+                    Legal ({execStatus.legal})
+                  </span>
+                  <Badge variant={executionProgress >= 75 ? 'success' : 'neutral'}>
+                    {executionProgress >= 75 ? '✓ Completed' : 'Pending'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className={executionProgress >= 100 ? 'text-white' : 'text-foreground/40'}>
+                    Strategy ({execStatus.strategy})
+                  </span>
+                  <Badge variant={executionProgress >= 100 ? 'success' : 'neutral'}>
+                    {executionProgress >= 100 ? '✓ Completed' : 'Pending'}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Discovery recommended buttons */}
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
+                <Button
+                  onClick={() => router.push('/boardroom')}
+                  disabled={executionProgress < 25}
+                  className="w-full sm:w-auto bg-hq-graphite/40 border border-hq-graphite/40 text-foreground/80 hover:text-white"
+                >
+                  Open Executive Boardroom
+                </Button>
+                <Button
+                  onClick={() => router.push('/assets')}
+                  disabled={executionProgress < 50}
+                  className="w-full sm:w-auto bg-hq-graphite/40 border border-hq-graphite/40 text-foreground/80 hover:text-white"
+                >
+                  Open Asset Center
+                </Button>
+                <Button
+                  onClick={() => router.push('/missions')}
+                  disabled={executionProgress < 75}
+                  className="w-full sm:w-auto bg-hq-graphite/40 border border-hq-graphite/40 text-foreground/80 hover:text-white"
+                >
+                  Open Mission Control
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Summary Completed onboarding view */}
+          {ftxStep === 'completed' && (
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <div className="h-12 w-12 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center mx-auto text-xl">
+                  ✓
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Mission Resolved Successfully!</h2>
+                <p className="text-xs text-foreground/60 max-w-sm mx-auto">
+                  CEO {ceoName} has compiled the executive briefs and deliverables.
+                </p>
+              </div>
+
+              {/* Strategy document details summary */}
+              <div className="border border-hq-graphite/40 bg-hq-graphite/10 rounded-xl p-5 text-left text-xs leading-relaxed space-y-4">
+                <div>
+                  <span className="font-bold text-white block">Objective</span>
+                  <span className="text-foreground/75">{objectiveText || 'Compose launch creatives'}</span>
+                </div>
+                <div>
+                  <span className="font-bold text-white block">Specialists Engaged</span>
+                  <span className="text-foreground/75">CEO, CMO, CFO, Strategy Director, Legal Director</span>
+                </div>
+                <div>
+                  <span className="font-bold text-white block">Resolutions & Deliverables</span>
+                  <ul className="list-disc pl-4 space-y-1 mt-1 text-foreground/70">
+                    <li>Seeded brand design guidelines and primary styling settings values.</li>
+                    <li>Completed competitive analysis model draft and regional compliance validation checks.</li>
+                    <li>Created PDF brief report saved inside the Asset Center directory.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-foreground/45 text-center">
+                  Continue exploring HQ
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                  {[
+                    { name: 'Boardroom', path: '/boardroom' },
+                    { name: 'Missions', path: '/missions' },
+                    { name: 'Assets', path: '/assets' },
+                    { name: 'Analytics', path: '/analytics' },
+                    { name: 'Settings', path: '/settings' },
+                  ].map((mod) => (
+                    <button
+                      key={mod.name}
+                      onClick={() => router.push(mod.path)}
+                      className="rounded-xl border border-hq-graphite/40 bg-hq-graphite/20 px-3 py-2 text-center text-foreground hover:bg-hq-blue/10 hover:border-hq-blue/20 transition-all font-semibold"
+                    >
+                      {mod.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                onClick={() => resetProgress()}
+                className="w-full bg-hq-blue hover:bg-hq-blue/90 text-white font-bold h-11 text-sm shadow-lg"
+              >
+                Reset and Try Mission 2
+              </Button>
+            </div>
+          )}
+
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // STANDARD ENTERPRISE DASHBOARD RENDER ENGINE
+  // ==========================================
   return (
     <div className="space-y-8 select-none text-foreground pb-12">
       {/* Setup Progress Bar — shown to new users */}
@@ -171,23 +619,8 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-hq-cyan">+24.5%</div>
-            <p className="text-[10px] text-foreground/45 mt-1 font-semibold font-semibold">
-              Compared to previous week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">
-              Tasks Resolved
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-hq-purple" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-[#1A1A1E] dark:text-white">1,894</div>
             <p className="text-[10px] text-foreground/45 mt-1 font-semibold">
-              Cumulative lifecycle actions
+              Compared to previous week
             </p>
           </CardContent>
         </Card>

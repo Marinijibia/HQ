@@ -82,8 +82,12 @@ export class CeoService {
         temperature: 0.2,
       });
 
-      // Parse JSON from completion
-      const parsed: CeoStrategicSummary = JSON.parse(response.text);
+      // Clean and parse JSON from completion
+      let cleanedText = response.text.trim();
+      if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '');
+      }
+      const parsed: CeoStrategicSummary = JSON.parse(cleanedText.trim());
       this.logger.log(`[CEO Agent] Strategic summary compiled successfully.`);
       return parsed;
     } catch (error) {

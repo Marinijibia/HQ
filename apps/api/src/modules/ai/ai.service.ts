@@ -115,7 +115,7 @@ export class AiService {
 
   private async callGemini(prompt: string, systemPrompt?: string): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
     const payload: any = {
       contents: [
         {

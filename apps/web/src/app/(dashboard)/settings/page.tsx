@@ -35,6 +35,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
+import { useGuideMode } from '../../../contexts/guide-mode-context';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -130,6 +131,13 @@ const INTEGRATIONS = [
 
 export default function SettingsPage() {
   const { token } = useAuth();
+  const {
+    guideModeEnabled,
+    setGuideModeEnabled,
+    missionsCompleted,
+    visitedWorkspaces,
+    resetProgress,
+  } = useGuideMode();
   const [activeSection, setActiveSection] = React.useState('headquarters');
   const [settings, setSettings] = React.useState<OrgSettings>({
     hqName: 'Headquarters',
@@ -707,7 +715,7 @@ export default function SettingsPage() {
       // ── PREFERENCES ───────────────────────────────────────────────────
       case 'preferences':
         return (
-          <div className="space-y-5">
+          <div className="space-y-5 text-left">
             <SectionHeader
               title="Preferences"
               desc="Personal display and interface preferences for your account."
@@ -725,6 +733,55 @@ export default function SettingsPage() {
                   </select>
                 </Field>
               ))}
+            </Card>
+
+            <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
+              <div className="flex items-center justify-between border-b border-card-border pb-3">
+                <div>
+                  <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">HQ Guide Mode</p>
+                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">
+                    Interactive walkthrough guide to learn how HQ workspaces fit together.
+                  </p>
+                </div>
+                <Badge variant={missionsCompleted >= 2 ? 'success' : 'ai'}>
+                  {missionsCompleted >= 2 ? '✓ Completed' : `Active (Mission ${Math.min(missionsCompleted + 1, 2)} of 2)`}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-b border-card-border/40">
+                <div>
+                  <p className="text-xs font-bold text-[#1A1A1E] dark:text-white">Status</p>
+                  <p className="text-[10px] text-foreground/45">Enable or disable guidance layer globally</p>
+                </div>
+                <div
+                  onClick={() => setGuideModeEnabled(!guideModeEnabled)}
+                  className={`h-5 w-9 rounded-full shrink-0 cursor-pointer transition-colors relative flex items-center ${guideModeEnabled ? 'bg-green-500 justify-end' : 'bg-foreground/20 justify-start'}`}
+                >
+                  <div className="h-4.5 w-4.5 rounded-full bg-white shadow-md mx-0.5" />
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-wrap gap-2.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => resetProgress()}
+                  className="text-xs text-foreground/75 hover:text-white font-semibold"
+                >
+                  Reset Guide Progress
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    resetProgress();
+                    window.location.href = '/dashboard';
+                  }}
+                  className="text-xs text-foreground/75 hover:text-white font-semibold"
+                >
+                  Replay First Mission Experience
+                </Button>
+              </div>
             </Card>
           </div>
         );

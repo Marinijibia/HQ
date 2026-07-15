@@ -11,6 +11,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ExecutiveRepository } from './executive.repository';
 import { CeoService } from './ceo.service';
 import { QaService } from './qa.service';
+import { AiService } from '../ai/ai.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
@@ -49,6 +50,7 @@ export class ExecutiveController {
     private readonly executiveRepository: ExecutiveRepository,
     private readonly ceoService: CeoService,
     private readonly qaService: QaService,
+    private readonly aiService: AiService,
   ) {}
 
   @Get()
@@ -100,10 +102,32 @@ export class ExecutiveController {
     if (!exec) {
       throw new NotFoundException('Executive not found');
     }
-    // Stub AI agent handler response
-    return {
-      executiveId: id,
-      response: `Hello! I am ${exec.name}, your ${exec.title}. I received your message: "${chatDto.message}". The intelligence handler is booting up.`,
-    };
+
+    const systemPrompt = `
+      You are ${exec.name}, the ${exec.title} at HQ Corporation.
+      Department: ${exec.department?.name || 'Executive Office'}
+      Biography/Context: ${exec.biography || ''}
+      Role Guidelines: ${exec.systemPrompt || ''}
+
+      Respond to the user's message as this persona. Keep the tone professional, authoritative, in-character, and aligned with your role.
+    `;
+
+    try {
+      const result = await this.aiService.executePrompt({
+        prompt: chatDto.message,
+        systemPrompt,
+        provider: 'gemini',
+      });
+      return {
+        executiveId: id,
+        response: result.text,
+      };
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : String(e);
+      return {
+        executiveId: id,
+        response: `Hello. I am ${exec.name}, your ${exec.title}. I encountered an operational error deliberating your request: ${errorMsg}`,
+      };
+    }
   }
 }

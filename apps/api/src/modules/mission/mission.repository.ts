@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { Mission, MissionStatus } from '@prisma/client';
+import { Mission, MissionStatus, TaskStatus } from '@prisma/client';
 
 @Injectable()
 export class MissionRepository {
@@ -9,7 +9,15 @@ export class MissionRepository {
   async findById(id: string): Promise<Mission | null> {
     return this.prisma.mission.findUnique({
       where: { id, deletedAt: null },
-      include: { tasks: true },
+      include: {
+        tasks: {
+          include: {
+            executive: {
+              include: { department: true }
+            }
+          }
+        }
+      },
     });
   }
 
@@ -78,6 +86,38 @@ export class MissionRepository {
           deletedBy,
         },
       });
+    });
+  }
+
+  async createTasks(missionId: string, tasks: any[]): Promise<void> {
+    const execs = await this.prisma.executive.findMany();
+
+    await this.prisma.$transaction(async (tx) => {
+      // Loop over tasks and create them
+      for (const t of tasks) {
+        let status: TaskStatus = TaskStatus.PENDING;
+        if (t.status === 'Running') status = TaskStatus.RUNNING;
+        else if (t.status === 'Completed') status = TaskStatus.COMPLETED;
+        else if (t.status === 'Error') status = TaskStatus.FAILED;
+
+        // Try to match assignedDirector to an executive
+        const match = execs.find(
+          (e) =>
+            e.roleKey.toLowerCase() === t.assignedDirector.toLowerCase() ||
+            e.title.toLowerCase().includes(t.assignedDirector.toLowerCase()) ||
+            e.name.toLowerCase().includes(t.assignedDirector.toLowerCase()),
+        );
+
+        await tx.missionTask.create({
+          data: {
+            name: t.title,
+            description: t.description || '',
+            status,
+            missionId,
+            executiveId: match ? match.id : null,
+          },
+        });
+      }
     });
   }
 }

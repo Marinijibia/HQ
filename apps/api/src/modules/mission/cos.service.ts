@@ -65,7 +65,11 @@ export class CosService {
         temperature: 0.2,
       });
 
-      const parsed: MissionWbsDag = JSON.parse(response.text);
+      let cleanedText = response.text.trim();
+      if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '');
+      }
+      const parsed: MissionWbsDag = JSON.parse(cleanedText.trim());
       this.logger.log(
         `[COS Agent] Task DAG generated with ${parsed.tasks.length} tasks.`,
       );

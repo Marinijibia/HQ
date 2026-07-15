@@ -131,7 +131,25 @@ export class MissionController {
   @UseGuards(EntitlementGuard)
   @ApiOperation({ summary: 'Start executing mission objectives' })
   async start(@Req() req: types.AuthenticatedRequest, @Param('id') id: string) {
+    const mission = (await this.missionRepository.findById(id)) as any;
+    if (!mission) {
+      throw new NotFoundException('Mission not found');
+    }
+
     await this.moeService.transitionState(id, MissionStatus.EXECUTING, req.user.uid);
+
+    // Auto-generate WBS tasks via AI Chief of Staff (COS) if none exist yet
+    if (!mission.tasks || mission.tasks.length === 0) {
+      try {
+        const wbs = await this.cosService.generateTaskDAG(mission.objective);
+        if (wbs && wbs.tasks && wbs.tasks.length > 0) {
+          await this.missionRepository.createTasks(id, wbs.tasks);
+        }
+      } catch (e) {
+        // Fallback resilient log output
+      }
+    }
+
     return this.missionRepository.findById(id);
   }
 

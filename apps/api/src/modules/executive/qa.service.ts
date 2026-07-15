@@ -94,7 +94,11 @@ export class QaService {
         temperature: 0.1,
       });
 
-      const parsed: QaEvaluationReport = JSON.parse(response.text);
+      let cleanedText = response.text.trim();
+      if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '');
+      }
+      const parsed: QaEvaluationReport = JSON.parse(cleanedText.trim());
       this.logger.log(
         `[QA Validation Gate] Deliverable evaluation finished. Status: ${parsed.passed ? 'PASSED' : 'FAILED'} (Score: ${parsed.score})`,
       );

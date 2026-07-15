@@ -6,11 +6,13 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { IsString, IsNotEmpty } from 'class-validator';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import * as types from '../../common/interfaces/request.interface';
 
 export class CheckoutDto {
   @IsString()
@@ -28,10 +30,12 @@ export class BillingController {
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Create Stripe checkout redirect session' })
-  async checkout(@Body() dto: CheckoutDto) {
-    const companyId = '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba'; // stub default
+  async checkout(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() dto: CheckoutDto,
+  ) {
     const url = await this.billingService.createCheckoutSession(
-      companyId,
+      req.user.companyId,
       dto.planCode,
     );
     return { url };
@@ -55,8 +59,7 @@ export class BillingController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'Retrieve invoice billing history ledger logs' })
-  async history() {
-    const companyId = '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba';
-    return this.billingService.getBillingHistory(companyId);
+  async history(@Req() req: types.AuthenticatedRequest) {
+    return this.billingService.getBillingHistory(req.user.companyId);
   }
 }
