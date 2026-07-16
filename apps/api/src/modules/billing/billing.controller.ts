@@ -7,6 +7,7 @@ import {
   HttpStatus,
   UseGuards,
   Req,
+  Headers,
 } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { AuthGuard } from '../auth/auth.guard';
@@ -20,6 +21,12 @@ export class CheckoutDto {
   planCode!: string;
 }
 
+export class VerifyDto {
+  @IsString()
+  @IsNotEmpty()
+  reference!: string;
+}
+
 @ApiTags('Billing')
 @Controller('billing')
 export class BillingController {
@@ -29,29 +36,54 @@ export class BillingController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Create Stripe checkout redirect session' })
+  @ApiOperation({ summary: 'Create Paystack checkout redirect session' })
   async checkout(
     @Req() req: types.AuthenticatedRequest,
     @Body() dto: CheckoutDto,
   ) {
-    const url = await this.billingService.createCheckoutSession(
-      req.user.companyId,
+    const data = await this.billingService.createCheckoutSession(
+      req.user.email,
       dto.planCode,
+      req.user.companyId,
     );
-    return { url };
+    return data;
+  }
+
+  @Post('verify')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify Paystack transaction reference' })
+  async verify(@Body() dto: VerifyDto) {
+    const success = await this.billingService.verifyPaystackPayment(
+      dto.reference,
+    );
+    return { success };
   }
 
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Stripe Webhooks callback event receiver' })
-  async webhook(@Body() event: Record<string, unknown>) {
-    const eventType =
-      (event?.type as string) || 'customer.subscription.updated';
-    const dataObj = (event?.data as Record<string, unknown>)?.object || {};
-    await this.billingService.handleWebhookEvent(
-      eventType,
-      dataObj as Record<string, unknown>,
+  @ApiOperation({ summary: 'Paystack Webhooks callback event receiver' })
+  async webhook(
+    @Body() event: Record<string, unknown>,
+    @Headers('x-paystack-signature') signature: string,
+    @Req() req: any,
+  ) {
+    // stringify the body to match raw signature validation
+    const rawBody = JSON.stringify(req.body);
+    const isValid = this.billingService.verifyPaystackSignature(
+      rawBody,
+      signature,
     );
+
+    if (!isValid) {
+      return { success: false, error: 'Invalid Signature Verification' };
+    }
+
+    const eventType = (event?.event as string) || 'charge.success';
+    const dataObj = event?.data || {};
+
+    await this.billingService.handleWebhookEvent(eventType, dataObj);
     return { success: true };
   }
 

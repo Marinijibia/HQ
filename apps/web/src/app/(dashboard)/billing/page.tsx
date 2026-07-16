@@ -72,28 +72,87 @@ export default function BillingPage() {
     }
   }, []);
 
+  const loadPaystackScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).PaystackPop) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://js.paystack.co/v1/inline.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleUpgrade = async (gateway: 'stripe' | 'paystack') => {
     setLoading(true);
-    toast.success(`💳 Launching secure ${gateway === 'stripe' ? 'Stripe' : 'Paystack'} billing gateway session...`);
+    toast.success(`💳 Initializing Paystack Checkout overlay session...`);
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       const response = await fetch('/api/billing/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planCode: 'professional', gateway }),
+        headers,
+        body: JSON.stringify({ planCode: 'growth' }),
       });
       const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        window.location.href = gateway === 'stripe'
-          ? 'https://checkout.stripe.com/pay/cs_test_mock'
-          : 'https://checkout.paystack.com/pay/cs_test_mock';
+
+      if (data.reference?.startsWith('pay_mock_')) {
+        toast.info('🧪 Simulating Paystack inline card checkout popup...');
+        setTimeout(async () => {
+          const verifyRes = await fetch('/api/billing/verify', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ reference: data.reference }),
+          });
+          if (verifyRes.ok) {
+            toast.success('🎉 Subscription active! Growth plan entitlement verified.');
+          }
+          setLoading(false);
+        }, 1500);
+        return;
       }
+
+      const scriptLoaded = await loadPaystackScript();
+      if (!scriptLoaded) {
+        toast.error('❌ Failed to load Paystack payment script.');
+        setLoading(false);
+        return;
+      }
+
+      const paystackPop = (window as any).PaystackPop;
+      const handler = paystackPop.setup({
+        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_mock_keys',
+        email: 'billing@hq-corp.com',
+        amount: 2500000,
+        ref: data.reference,
+        onClose: () => {
+          toast.warning('⚠️ Checkout closed.');
+          setLoading(false);
+        },
+        callback: async (response: any) => {
+          toast.success('💳 Payment successful! Verifying reference...');
+          const verifyRes = await fetch('/api/billing/verify', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ reference: response.reference }),
+          });
+          if (verifyRes.ok) {
+            toast.success('🎉 Subscription active! Growth plan entitlement verified.');
+          }
+          setLoading(false);
+        },
+      });
+      handler.openIframe();
     } catch (error) {
-      window.location.href = gateway === 'stripe'
-        ? 'https://checkout.stripe.com/pay/cs_test_mock'
-        : 'https://checkout.paystack.com/pay/cs_test_mock';
-    } finally {
+      toast.error('❌ Payment initialization failed.');
       setLoading(false);
     }
   };
