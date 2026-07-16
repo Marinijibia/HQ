@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/auth-context';
+import { useGuideMode } from '../../../../contexts/guide-mode-context';
 
 interface Message {
   id: string;
@@ -44,6 +45,10 @@ export default function DiscussionWorkspacePage() {
   const { id } = useParams();
   const { token } = useAuth();
   const router = useRouter();
+
+  const { guideModeEnabled, ftxStep, setFtxStep } = useGuideMode();
+  const [showReasonerModal, setShowReasonerModal] = React.useState(false);
+  const [checklist, setChecklist] = React.useState<boolean[]>([false, false, false, false, false, false]);
 
   const [conversation, setConversation] = React.useState<Conversation | null>(null);
   const [executives, setExecutives] = React.useState<Executive[]>([]);
@@ -153,6 +158,49 @@ export default function DiscussionWorkspacePage() {
 
   const handleConvertToMission = async () => {
     if (!token || !id) return;
+
+    if (guideModeEnabled && ftxStep === 'input') {
+      setShowReasonerModal(true);
+      setChecklist([false, false, false, false, false, false]);
+
+      let currentIdx = 0;
+      const interval = setInterval(() => {
+        setChecklist((prev) => {
+          const next = [...prev];
+          next[currentIdx] = true;
+          return next;
+        });
+        currentIdx += 1;
+
+        if (currentIdx >= 6) {
+          clearInterval(interval);
+          setTimeout(async () => {
+            try {
+              const headers: Record<string, string> = {
+                Authorization: `Bearer ${token}`,
+              };
+              const res = await fetch(`/api/conversations/${id}/convert-mission`, {
+                method: 'POST',
+                headers,
+              });
+              if (res.ok) {
+                const data = await res.json();
+                setFtxStep('executing');
+                setShowReasonerModal(false);
+                router.push(`/missions/${data.id}`);
+              } else {
+                setShowReasonerModal(false);
+              }
+            } catch (err) {
+              console.error('FTX Mission conversion failed:', err);
+              setShowReasonerModal(false);
+            }
+          }, 600);
+        }
+      }, 450);
+      return;
+    }
+
     try {
       const headers: Record<string, string> = {
         Authorization: `Bearer ${token}`,
@@ -484,6 +532,41 @@ export default function DiscussionWorkspacePage() {
           </Card>
         </div>
       </div>
+      {showReasonerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl border border-hq-blue/30 bg-[#0B0B0E] p-8 text-center shadow-2xl relative space-y-6">
+            <div className="space-y-2">
+              <div className="h-10 w-10 rounded-full border-2 border-t-hq-blue border-hq-graphite/30 animate-spin mx-auto mb-4" />
+              <h2 className="text-xl font-bold tracking-tight text-white text-center">CEO Analyzing boardroom outcome...</h2>
+              <p className="text-xs text-foreground/50 text-center">
+                Elena is mapping structural components and compiling mission guidelines.
+              </p>
+            </div>
+
+            <div className="w-full bg-hq-graphite/10 border border-hq-graphite/40 rounded-xl p-5 grid grid-cols-2 gap-4 text-xs font-semibold text-left">
+              {[
+                { label: 'Business Type', checked: checklist[0] },
+                { label: 'Goal Alignment', checked: checklist[1] },
+                { label: 'Timeline Estimator', checked: checklist[2] },
+                { label: 'Required Departments', checked: checklist[3] },
+                { label: 'Risks Matrix', checked: checklist[4] },
+                { label: 'Deliverables Plan', checked: checklist[5] },
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center space-x-2">
+                  <span
+                    className={`h-4 w-4 rounded-full border flex items-center justify-center transition-all ${item.checked ? 'border-hq-blue bg-hq-blue/10 text-hq-blue scale-105' : 'border-foreground/20 text-transparent'}`}
+                  >
+                    ✓
+                  </span>
+                  <span className={item.checked ? 'text-white' : 'text-foreground/40'}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

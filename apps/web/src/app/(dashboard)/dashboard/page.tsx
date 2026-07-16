@@ -226,9 +226,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 select-none text-foreground pb-12">
       {/* Setup Progress Bar — shown to new users */}
-      {(!guideModeEnabled || ftxStep === 'completed') && (
-        <SetupProgressBar brandColor={brandColor} />
-      )}
+      <SetupProgressBar brandColor={brandColor} />
 
       {/* Mission Launch Panel */}
       <MissionLaunchPanel
@@ -239,347 +237,93 @@ export default function DashboardPage() {
         token={token ?? undefined}
       />
 
-      {/* Onboarding Wizard Cards when active */}
-      {guideModeEnabled && ftxStep !== 'completed' ? (
-        <Card className="border border-hq-blue/20 bg-[#0B0B0E]/80 backdrop-blur-md p-6 sm:p-10 shadow-2xl relative overflow-hidden animate-in fade-in duration-300 w-full text-left">
-          {ftxStep === 'arrival' && (
-            <div className="text-center space-y-6 max-w-md mx-auto py-8">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-tr from-hq-blue to-hq-purple flex items-center justify-center font-bold text-white text-xl mx-auto shadow-lg animate-bounce">
-                HQ
-              </div>
-              <div className="space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white animate-pulse">Welcome to HQ</h1>
-                <p className="text-sm text-foreground/60 leading-relaxed">
-                  Your Executive Board is online. Describe what you'd like to achieve, and watch our C-Suite
-                  coordinate tasks automatically.
-                </p>
-              </div>
-              <Button
-                onClick={() => setFtxStep('input')}
-                className="w-full bg-hq-blue hover:bg-hq-blue/90 text-white font-bold h-11 text-sm shadow-lg shadow-hq-blue/20 flex items-center justify-center gap-2"
-              >
-                Start First Mission
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+      {/* Mission Summary Card when completed */}
+      {guideModeEnabled && ftxStep === 'completed' && (
+        <Card className="border border-hq-blue/20 bg-[#0B0B0E]/80 backdrop-blur-md p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-in fade-in duration-300 w-full text-left">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="h-10 w-10 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center text-lg font-bold">
+              ✓
             </div>
-          )}
-
-          {ftxStep === 'input' && (
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Start your first Mission</h2>
-                <p className="text-xs sm:text-sm text-foreground/60">
-                  Provide a business objective below. Our CEO will analyze and assemble the team.
-                </p>
-              </div>
-
-              <div className="relative">
-                <textarea
-                  value={promptInput}
-                  onChange={(e) => setPromptInput(e.target.value)}
-                  placeholder="Describe a goal (e.g. Build a comprehensive brand identity and marketing strategy for a B2B AI software company)..."
-                  className="w-full min-h-[120px] rounded-xl border border-hq-graphite/40 bg-black/40 p-4 text-sm text-white placeholder-foreground/40 focus:outline-none focus:border-hq-blue/60 transition-all font-medium leading-relaxed resize-none"
-                />
-                <Button
-                  onClick={() => {
-                    if (promptInput.trim()) {
-                      startMission(promptInput);
-                    }
-                  }}
-                  disabled={!promptInput.trim()}
-                  className="absolute bottom-4 right-4 bg-hq-blue hover:bg-hq-blue/90 text-white font-bold px-3.5 py-1.5 h-8 text-xs shadow-md"
-                >
-                  Plan Strategy
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-foreground/45">
-                  Suggested starters
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                  {[
-                    'Launch a new business',
-                    'Build a marketing strategy',
-                    'Write an investor pitch',
-                    'Create a business plan',
-                    'Improve customer support',
-                    'Analyze a document',
-                  ].map((starter) => (
-                    <button
-                      key={starter}
-                      onClick={() => startMission(starter)}
-                      className="text-left rounded-xl border border-hq-graphite/40 bg-hq-graphite/10 px-4 py-3 text-foreground/80 hover:bg-hq-blue/10 hover:text-white hover:border-hq-blue/20 transition-all font-medium"
-                    >
-                      {starter}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {ftxStep === 'reasoning' && (
-            <div className="space-y-8 py-6">
-              <div className="text-center space-y-2">
-                <div className="h-10 w-10 rounded-full border-2 border-t-hq-blue border-hq-graphite/30 animate-spin mx-auto mb-4" />
-                <h2 className="text-xl font-bold tracking-tight text-white">CEO Analyzing objective...</h2>
-                <p className="text-xs text-foreground/50">
-                  Elena is building structural components and mapping dependencies.
-                </p>
-              </div>
-
-              <div className="w-full max-w-md mx-auto bg-hq-graphite/10 border border-hq-graphite/40 rounded-xl p-6 grid grid-cols-2 gap-4 text-xs font-semibold">
-                {[
-                  { label: 'Business Type', checked: checklist[0] },
-                  { label: 'Goal Alignment', checked: checklist[1] },
-                  { label: 'Timeline Estimator', checked: checklist[2] },
-                  { label: 'Required Departments', checked: checklist[3] },
-                  { label: 'Risks Matrix', checked: checklist[4] },
-                  { label: 'Deliverables Plan', checked: checklist[5] },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center space-x-2">
-                    <span
-                      className={`h-4 w-4 rounded-full border flex items-center justify-center transition-all ${item.checked ? 'border-hq-blue bg-hq-blue/10 text-hq-blue scale-105' : 'border-foreground/20 text-transparent'}`}
-                    >
-                      ✓
-                    </span>
-                    <span className={item.checked ? 'text-white' : 'text-foreground/40'}>
-                      {item.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {ftxStep === 'assigned' && (
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold tracking-tight text-white">Assembled Executive Board</h2>
-                <p className="text-xs text-foreground/60 max-w-md">
-                  CEO {ceoName} has mapped your objective and assigned the following specialist team:
-                </p>
-              </div>
-
-              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 text-left">
-                {[
-                  { name: 'Alistair Thorne', role: 'Strategy Director', reason: 'Competitor positioning & roadmaps' },
-                  { name: 'Sophia Sterling', role: 'Finance Director', reason: 'Budget limits & margin forecasts' },
-                  { name: 'Amara Okafor', role: 'Marketing Director', reason: 'Brand brief creatives & outreach' },
-                  { name: 'Marcus Brody', role: 'Product Director', reason: 'Target demographic fit' },
-                  { name: 'Fiona Gallagher', role: 'Legal Director', reason: 'Regulatory SOC2 compliance' },
-                ].map((exec, idx) => (
-                  <div
-                    key={idx}
-                    className="border border-hq-graphite/40 bg-hq-graphite/10 rounded-xl p-3.5 space-y-2 relative overflow-hidden group hover:border-hq-blue/30 transition-all"
-                  >
-                    <div className="h-8 w-8 rounded-full bg-hq-blue/10 text-hq-blue font-black flex items-center justify-center text-xs">
-                      {exec.name.split(' ')[0][0]}{exec.name.split(' ')[1]?.[0] || ''}
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-xs font-bold text-white tracking-tight">{exec.name}</p>
-                      <p className="text-[9px] uppercase tracking-wider font-semibold text-hq-blue">{exec.role}</p>
-                    </div>
-                    <p className="text-[10px] text-foreground/50 leading-normal">{exec.reason}</p>
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                onClick={() => setFtxStep('executing')}
-                className="w-full bg-hq-blue hover:bg-hq-blue/90 text-white font-bold h-11 text-sm shadow-lg shadow-hq-blue/20"
-              >
-                Launch Mission
-              </Button>
-            </div>
-          )}
-
-          {ftxStep === 'executing' && (
-            <div className="space-y-8">
-              <div className="text-center space-y-2">
-                <h2 className="text-xl font-bold tracking-tight text-white animate-pulse">Launching Boardroom Mission...</h2>
-                <p className="text-xs text-foreground/60 max-w-sm mx-auto">
-                  Our specialists are working synchronously on your deliverables.
-                </p>
-              </div>
-
-              {/* Progress bar */}
-              <div className="space-y-2 w-full max-w-md mx-auto">
-                <div className="flex justify-between text-xs font-mono font-bold text-hq-blue">
-                  <span>Progress</span>
-                  <span>{executionProgress}%</span>
-                </div>
-                <div className="w-full h-3 bg-hq-graphite/30 rounded-full overflow-hidden border border-hq-graphite/40">
-                  <div
-                    className="h-full bg-hq-blue rounded-full transition-all duration-500 ease-out"
-                    style={{ width: `${executionProgress}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Activity panel */}
-              <div className="w-full max-w-md mx-auto bg-hq-graphite/10 border border-hq-graphite/40 rounded-xl p-5 text-xs text-left space-y-3 font-medium">
-                <p className="text-[10px] uppercase font-bold text-foreground/45 tracking-wider mb-2">
-                  Specialist Collaboration Activity
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-white">CEO (Planning)</span>
-                  <Badge variant="success">✓ Completed</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={executionProgress >= 25 ? 'text-white' : 'text-foreground/40'}>
-                    Marketing ({execStatus.marketing})
-                  </span>
-                  <Badge variant={executionProgress >= 25 ? 'success' : 'neutral'}>
-                    {executionProgress >= 25 ? '✓ Completed' : 'Pending'}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={executionProgress >= 50 ? 'text-white' : 'text-foreground/40'}>
-                    Finance ({execStatus.finance})
-                  </span>
-                  <Badge variant={executionProgress >= 50 ? 'success' : 'neutral'}>
-                    {executionProgress >= 50 ? '✓ Completed' : 'Pending'}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={executionProgress >= 75 ? 'text-white' : 'text-foreground/40'}>
-                    Legal ({execStatus.legal})
-                  </span>
-                  <Badge variant={executionProgress >= 75 ? 'success' : 'neutral'}>
-                    {executionProgress >= 75 ? '✓ Completed' : 'Pending'}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={executionProgress >= 100 ? 'text-white' : 'text-foreground/40'}>
-                    Strategy ({execStatus.strategy})
-                  </span>
-                  <Badge variant={executionProgress >= 100 ? 'success' : 'neutral'}>
-                    {executionProgress >= 100 ? '✓ Completed' : 'Pending'}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Discovery recommended buttons */}
-              <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
-                <Button
-                  onClick={() => router.push('/boardroom')}
-                  disabled={executionProgress < 25}
-                  className="w-full sm:w-auto bg-hq-graphite/40 border border-hq-graphite/40 text-foreground/80 hover:text-white"
-                >
-                  Open Executive Boardroom
-                </Button>
-                <Button
-                  onClick={() => router.push('/assets')}
-                  disabled={executionProgress < 50}
-                  className="w-full sm:w-auto bg-hq-graphite/40 border border-hq-graphite/40 text-foreground/80 hover:text-white"
-                >
-                  Open Asset Center
-                </Button>
-                <Button
-                  onClick={() => router.push('/missions')}
-                  disabled={executionProgress < 75}
-                  className="w-full sm:w-auto bg-hq-graphite/40 border border-hq-graphite/40 text-foreground/80 hover:text-white"
-                >
-                  Open Mission Control
-                </Button>
-              </div>
-            </div>
-          )}
-        </Card>
-      ) : (
-        /* Welcome Banner & Summary Card inside standard flow */
-        <div className="space-y-6">
-          {/* Mission Summary Card when completed */}
-          {guideModeEnabled && ftxStep === 'completed' && (
-            <Card className="border border-hq-blue/20 bg-[#0B0B0E]/80 backdrop-blur-md p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-in fade-in duration-300 w-full text-left">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="h-10 w-10 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center text-lg font-bold">
-                  ✓
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold tracking-tight text-white">First Mission Resolved!</h2>
-                  <p className="text-xs text-foreground/60 mt-0.5">
-                    CEO {ceoName} has compiled the executive briefs and deliverables.
-                  </p>
-                </div>
-              </div>
-
-              <div className="border border-hq-graphite/40 bg-hq-graphite/10 rounded-xl p-5 text-left text-xs leading-relaxed space-y-4">
-                <div>
-                  <span className="font-bold text-white block">Objective</span>
-                  <span className="text-foreground/75">{objectiveText || 'Compose launch creatives'}</span>
-                </div>
-                <div>
-                  <span className="font-bold text-white block">Specialists Engaged</span>
-                  <span className="text-foreground/75">CEO, CMO, CFO, Strategy Director, Legal Director</span>
-                </div>
-                <div>
-                  <span className="font-bold text-white block">Resolutions & Deliverables</span>
-                  <ul className="list-disc pl-4 space-y-1 mt-1 text-foreground/70">
-                    <li>Seeded brand design guidelines and primary styling settings values.</li>
-                    <li>Completed competitive analysis model draft and regional compliance validation checks.</li>
-                    <li>Created PDF brief report saved inside the Asset Center directory.</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
-                <Button
-                  onClick={() => resetProgress()}
-                  className="w-full sm:w-auto bg-hq-blue hover:bg-hq-blue/90 text-white font-bold h-10 text-xs shadow-lg"
-                >
-                  Reset and Try Mission 2
-                </Button>
-                <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
-                  {[
-                    { name: 'Boardroom', path: '/boardroom' },
-                    { name: 'Missions', path: '/missions' },
-                    { name: 'Assets', path: '/assets' },
-                    { name: 'Analytics', path: '/analytics' },
-                  ].map((mod) => (
-                    <Button
-                      key={mod.name}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push(mod.path)}
-                      className="text-xs text-foreground/75 hover:text-white font-semibold"
-                    >
-                      {mod.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* Standard Welcome Banner */}
-          <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 text-left">
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
-                Welcome back, {ownerName}
-              </h1>
-              <p className="text-foreground/60 text-sm mt-1">
-                Your Headquarters is online. CEO{' '}
-                <span className="font-bold" style={{ color: brandColor }}>
-                  {ceoName}
-                </span>{' '}
-                is coordinating tasks for {hqName}.
+              <h2 className="text-xl font-bold tracking-tight text-white">First Mission Resolved!</h2>
+              <p className="text-xs text-foreground/60 mt-0.5">
+                CEO {ceoName} has compiled the executive briefs and deliverables.
               </p>
             </div>
-
-            <Button
-              onClick={() => setMissionPanelOpen(true)}
-              className="flex items-center gap-2 h-9 text-xs text-white"
-              style={{ backgroundColor: brandColor }}
-            >
-              <Play className="h-4 w-4" />
-              Launch New Mission
-            </Button>
           </div>
-        </div>
+
+          <div className="border border-hq-graphite/40 bg-hq-graphite/10 rounded-xl p-5 text-left text-xs leading-relaxed space-y-4">
+            <div>
+              <span className="font-bold text-white block">Objective</span>
+              <span className="text-foreground/75">{objectiveText || 'Compose launch creatives'}</span>
+            </div>
+            <div>
+              <span className="font-bold text-white block">Specialists Engaged</span>
+              <span className="text-foreground/75">CEO, CMO, CFO, Strategy Director, Legal Director</span>
+            </div>
+            <div>
+              <span className="font-bold text-white block">Resolutions & Deliverables</span>
+              <ul className="list-disc pl-4 space-y-1 mt-1 text-foreground/70">
+                <li>Seeded brand design guidelines and primary styling settings values.</li>
+                <li>Completed competitive analysis model draft and regional compliance validation checks.</li>
+                <li>Created PDF brief report saved inside the Asset Center directory.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
+            <Button
+              onClick={() => resetProgress()}
+              className="w-full sm:w-auto bg-hq-blue hover:bg-hq-blue/90 text-white font-bold h-10 text-xs shadow-lg"
+            >
+              Reset and Try Mission 2
+            </Button>
+            <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
+              {[
+                { name: 'Boardroom', path: '/boardroom' },
+                { name: 'Missions', path: '/missions' },
+                { name: 'Assets', path: '/assets' },
+                { name: 'Analytics', path: '/analytics' },
+              ].map((mod) => (
+                <Button
+                  key={mod.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push(mod.path)}
+                  className="text-xs text-foreground/75 hover:text-white font-semibold"
+                >
+                  {mod.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </Card>
       )}
+
+      {/* Standard Welcome Banner */}
+      <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 text-left">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
+            Welcome back, {ownerName}
+          </h1>
+          <p className="text-foreground/60 text-sm mt-1">
+            Your Headquarters is online. CEO{' '}
+            <span className="font-bold" style={{ color: brandColor }}>
+              {ceoName}
+            </span>{' '}
+            is coordinating tasks for {hqName}.
+          </p>
+        </div>
+
+        <Button
+          onClick={() => setMissionPanelOpen(true)}
+          className="flex items-center gap-2 h-9 text-xs text-white"
+          style={{ backgroundColor: brandColor }}
+        >
+          <Play className="h-4 w-4" />
+          Launch New Mission
+        </Button>
+      </div>
 
       {/* Statistics Row */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

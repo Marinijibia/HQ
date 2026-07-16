@@ -34,35 +34,41 @@ export function GuideModeBanner() {
 
   // Determine active guide tip text based on pathname and FTX step
   let tipText = 'Describe a business goal to get started.';
-  if (pathname === '/dashboard') {
+  if (pathname === '/discussions') {
     if (ftxStep === 'arrival') {
-      tipText = "Welcome! Click 'Start First Mission' to begin your strategic journey.";
-    } else if (ftxStep === 'input') {
-      tipText = 'Describe what you would like to achieve (e.g. Launch a new product).';
-    } else if (ftxStep === 'reasoning') {
-      tipText = 'The CEO is analyzing your goals, timeline, and dependencies...';
-    } else if (ftxStep === 'assigned') {
-      tipText = 'Review your assigned AI Board of Directors, then click Launch.';
-    } else if (ftxStep === 'executing') {
-      tipText = "Click 'Watch Collaboration' to open the boardroom console.";
-    } else if (ftxStep === 'completed') {
-      tipText = 'First mission complete! Explore the rest of the workspace modules.';
+      tipText = "Welcome to HQ! Let's start our first boardroom discussion. Type an objective or click a prompt template card below to consult your executive board.";
+    } else {
+      tipText = "Click on your active discussion session from the list below to continue chatting with your executives.";
     }
-  } else if (pathname === '/boardroom') {
-    tipText = 'Watch your AI Board of Directors debate task objectives in real-time.';
+  } else if (pathname.startsWith('/discussions/')) {
+    if (ftxStep === 'input') {
+      tipText = "I've assembled your Executive Board! Review their debate and direct them in chat. When you're ready, click 'Approve & Launch Mission' in the right panel.";
+    } else {
+      tipText = "Review the boardroom logs. Click the back arrow to return to discussions.";
+    }
+  } else if (pathname.startsWith('/missions') || pathname.startsWith('/missions/')) {
+    if (ftxStep === 'executing') {
+      tipText = "This is Mission Control. Watch Elena and the C-Suite execute your objective. Once the tasks finish, click 'Open Asset Center' to retrieve your deliverables.";
+    } else {
+      tipText = "Track campaign execution status, task timelines, and boardroom checkpoints.";
+    }
   } else if (pathname === '/assets') {
-    tipText = 'Here is the Asset Center. Open your new generated strategic brief document.';
-  } else if (pathname === '/missions') {
-    tipText = 'Welcome to Mission Control. Track task execution status and board health.';
+    tipText = "Your deliverables are saved in the Asset Center! Click the brief report to review it. Once done, visit the Dashboard to review the final summary.";
+  } else if (pathname === '/dashboard') {
+    if (ftxStep === 'completed') {
+      tipText = "Onboarding completed! Review the CEO briefing summary card below. You can now explore the full dashboard widgets or toggle Guide Mode in Settings.";
+    } else {
+      tipText = "Access key insights, opportunities risk alerts, and C-Suite metrics on your dashboard.";
+    }
   } else {
-    tipText = 'Explore this workspace module to understand your strategic capabilities.';
+    tipText = "Explore this workspace module to understand your strategic capabilities.";
   }
 
   // Checkmark progression checks
   const isStarted = ftxStep !== 'arrival';
-  const isPlanned = ftxStep === 'assigned' || ftxStep === 'executing' || ftxStep === 'completed';
-  const isCollaboration = visitedWorkspaces.includes('boardroom');
-  const isDeliverable = visitedWorkspaces.includes('assets');
+  const isPlanned = ftxStep === 'executing' || ftxStep === 'completed';
+  const isCollaboration = visitedWorkspaces.includes('boardroom') || ftxStep === 'input' || ftxStep === 'executing' || ftxStep === 'completed';
+  const isDeliverable = visitedWorkspaces.includes('assets') || ftxStep === 'completed';
   const isCompleted = missionsCompleted >= 1;
 
   const currentMissionNumber = Math.min(missionsCompleted + 1, 2);

@@ -39,7 +39,7 @@ export default function LoginPage() {
           const next = prev + 15;
           if (next >= 100) {
             clearInterval(interval);
-            router.push('/dashboard');
+            router.push('/discussions');
             return 100;
           }
           return next;

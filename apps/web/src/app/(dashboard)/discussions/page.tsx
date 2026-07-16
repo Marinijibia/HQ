@@ -14,6 +14,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
+import { useGuideMode } from '../../../contexts/guide-mode-context';
 import { SmartEmptyState } from '../../../components/smart-empty-state';
 import { toast } from '../../../components/toast';
 import { ListSkeleton } from '../../../components/skeletons';
@@ -30,6 +31,7 @@ interface Conversation {
 export default function DiscussionsPage() {
   const { token } = useAuth();
   const router = useRouter();
+  const { guideModeEnabled, ftxStep, setFtxStep, startMission } = useGuideMode();
 
   // Tab & search states
   const [activeTab, setActiveTab] = React.useState<'recent' | 'pinned' | 'archived'>('recent');
@@ -129,6 +131,12 @@ export default function DiscussionsPage() {
         setObjective('');
         setSelectedExecs(['ceo']);
         toast.success('💬 Discussion started — your executives are gathering now');
+        
+        if (guideModeEnabled && ftxStep === 'arrival') {
+          startMission(objective);
+          setFtxStep('input');
+        }
+
         router.push(`/discussions/${data.id}`);
       }
     } catch (err) {
@@ -175,28 +183,46 @@ export default function DiscussionsPage() {
 
   return (
     <div className="space-y-8 select-none text-foreground pb-12">
-      {/* Title Header */}
-      <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
-            <MessageSquare className="h-8 w-8 text-hq-blue" />
-            Boardroom Discussions
-          </h1>
-          <p className="text-foreground/60 text-sm mt-1">
-            Debate operational models, review assets, and direct specialists prior to launching
-            campaigns.
+      {/* Title Header / Clean welcome for Guide Mode */}
+      {guideModeEnabled && ftxStep === 'arrival' ? (
+        <Card className="border border-hq-blue/20 bg-[#0B0B0E]/80 backdrop-blur-md p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-in fade-in duration-300 w-full text-left mb-6">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="h-10 w-10 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center text-lg font-black animate-pulse">
+              HQ
+            </div>
+            <div>
+              <h1 className="text-xl font-extrabold tracking-tight text-white">Welcome to HQ</h1>
+              <p className="text-xs text-foreground/60 mt-0.5">Your Executive Board is online.</p>
+            </div>
+          </div>
+          <p className="text-sm text-foreground/80 leading-relaxed font-semibold">
+            I'm your Chief Executive Officer. Let's start our first boardroom discussion. Type a business objective or choose a prompt template card below to consult your executive board.
           </p>
-        </div>
+        </Card>
+      ) : (
+        /* Standard Header */
+        <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
+              <MessageSquare className="h-8 w-8 text-hq-blue" />
+              Boardroom Discussions
+            </h1>
+            <p className="text-foreground/60 text-sm mt-1">
+              Debate operational models, review assets, and direct specialists prior to launching
+              campaigns.
+            </p>
+          </div>
 
-        <Button
-          onClick={() => setShowStartModal(true)}
-          className="flex items-center gap-2 h-9 text-xs text-white"
-          style={{ backgroundColor: brandColor }}
-        >
-          <PlusCircle className="h-4 w-4" />
-          New Discussion
-        </Button>
-      </div>
+          <Button
+            onClick={() => setShowStartModal(true)}
+            className="flex items-center gap-2 h-9 text-xs text-white"
+            style={{ backgroundColor: brandColor }}
+          >
+            <PlusCircle className="h-4 w-4" />
+            New Discussion
+          </Button>
+        </div>
+      )}
 
       {/* Suggested prompts cards */}
       <div className="grid gap-4 md:grid-cols-3">
@@ -236,106 +262,110 @@ export default function DiscussionsPage() {
       </div>
 
       {/* Toolbar filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
-        <div className="flex gap-2">
-          {[
-            { id: 'recent', label: 'All Discussions', icon: Clock },
-            { id: 'pinned', label: 'Pinned Only', icon: Pin },
-            { id: 'archived', label: 'Archived discussions', icon: Archive },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as 'recent' | 'pinned' | 'archived')}
-                className={`rounded-xl px-4 py-2 text-xs font-bold flex items-center gap-1.5 border transition-all ${
-                  activeTab === tab.id
-                    ? 'text-white border-transparent'
-                    : 'bg-card-bg border-card-border hover:bg-black/5 dark:hover:bg-white/5 text-foreground/75'
-                }`}
-                style={{
-                  backgroundColor: activeTab === tab.id ? brandColor : undefined,
-                  boxShadow: activeTab === tab.id ? `0 4px 15px ${brandColor}2b` : undefined,
-                }}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+      {(!guideModeEnabled || ftxStep !== 'arrival') && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+          <div className="flex gap-2">
+            {[
+              { id: 'recent', label: 'All Discussions', icon: Clock },
+              { id: 'pinned', label: 'Pinned Only', icon: Pin },
+              { id: 'archived', label: 'Archived discussions', icon: Archive },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as 'recent' | 'pinned' | 'archived')}
+                  className={`rounded-xl px-4 py-2 text-xs font-bold flex items-center gap-1.5 border transition-all ${
+                    activeTab === tab.id
+                      ? 'text-white border-transparent'
+                      : 'bg-card-bg border-card-border hover:bg-black/5 dark:hover:bg-white/5 text-foreground/75'
+                  }`}
+                  style={{
+                    backgroundColor: activeTab === tab.id ? brandColor : undefined,
+                    boxShadow: activeTab === tab.id ? `0 4px 15px ${brandColor}2b` : undefined,
+                  }}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
 
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-foreground/45" />
-          <input
-            type="text"
-            placeholder="Search discussions..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 w-60 rounded-md border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] pl-9 pr-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hq-blue"
-          />
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-foreground/45" />
+            <input
+              type="text"
+              placeholder="Search discussions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-9 w-60 rounded-md border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] pl-9 pr-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hq-blue"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Discussions Grid */}
-      {loading ? (
-        <div className="space-y-4 py-4">
-          <ListSkeleton rows={5} />
-        </div>
-      ) : conversations.length === 0 ? (
-        <SmartEmptyState
-          icon={MessageSquare}
-          title="No discussions started yet"
-          description="Start a boardroom discussion to consult your AI executives on any topic — strategy, marketing, hiring, finance, and more."
-          cta="Start First Discussion"
-          onCta={() => setShowStartModal(true)}
-          hints={[
-            'Ask your executives: "What should our Q3 priorities be?"',
-            'Get a second opinion on a big decision before you commit',
-            'Use discussions to brief multiple executives simultaneously',
-          ]}
-        />
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {conversations.map((conv) => (
-            <Card
-              key={conv.id}
-              onClick={() => router.push(`/discussions/${conv.id}`)}
-              className="hover:border-hq-blue/50 transition-all cursor-pointer bg-card-bg border border-card-border text-left hover:shadow-lg flex flex-col justify-between"
-            >
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <Badge variant={conv.missionId ? 'success' : 'ai'} className="text-[9px]">
-                    {conv.missionId ? 'Orchestrated' : 'Active Discussion'}
-                  </Badge>
-                  <div className="flex gap-1.5">
-                    <button
-                      onClick={(e) => handleTogglePin(conv.id, e)}
-                      className={`p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 ${
-                        conv.isPinned ? 'text-hq-cyan' : 'text-foreground/45'
-                      }`}
-                    >
-                      <Pin className="h-3.5 w-3.5 fill-current" />
-                    </button>
-                    <button
-                      onClick={(e) => handleToggleArchive(conv.id, e)}
-                      className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 text-foreground/45 hover:text-red-400"
-                    >
-                      <Archive className="h-3.5 w-3.5" />
-                    </button>
+      {(!guideModeEnabled || ftxStep !== 'arrival') && (
+        loading ? (
+          <div className="space-y-4 py-4">
+            <ListSkeleton rows={5} />
+          </div>
+        ) : conversations.length === 0 ? (
+          <SmartEmptyState
+            icon={MessageSquare}
+            title="No discussions started yet"
+            description="Start a boardroom discussion to consult your AI executives on any topic — strategy, marketing, hiring, finance, and more."
+            cta="Start First Discussion"
+            onCta={() => setShowStartModal(true)}
+            hints={[
+              'Ask your executives: "What should our Q3 priorities be?"',
+              'Get a second opinion on a big decision before you commit',
+              'Use discussions to brief multiple executives simultaneously',
+            ]}
+          />
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {conversations.map((conv) => (
+              <Card
+                key={conv.id}
+                onClick={() => router.push(`/discussions/${conv.id}`)}
+                className="hover:border-hq-blue/50 transition-all cursor-pointer bg-card-bg border border-card-border text-left hover:shadow-lg flex flex-col justify-between"
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <Badge variant={conv.missionId ? 'success' : 'ai'} className="text-[9px]">
+                      {conv.missionId ? 'Orchestrated' : 'Active Discussion'}
+                    </Badge>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={(e) => handleTogglePin(conv.id, e)}
+                        className={`p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 ${
+                          conv.isPinned ? 'text-hq-cyan' : 'text-foreground/45'
+                        }`}
+                      >
+                        <Pin className="h-3.5 w-3.5 fill-current" />
+                      </button>
+                      <button
+                        onClick={(e) => handleToggleArchive(conv.id, e)}
+                        className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 text-foreground/45 hover:text-red-400"
+                      >
+                        <Archive className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <CardTitle className="text-sm font-extrabold text-[#1A1A1E] dark:text-white mt-2 line-clamp-2">
-                  {conv.title || 'Untitled Boardroom Session'}
-                </CardTitle>
-              </CardHeader>
-              <CardFooter className="pt-2 text-[10px] text-foreground/45 font-semibold border-t border-card-border/50 bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-b-xl flex justify-between">
-                <span>Created: {new Date(conv.createdAt).toLocaleDateString()}</span>
-                <span>Active</span>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+                  <CardTitle className="text-sm font-extrabold text-[#1A1A1E] dark:text-white mt-2 line-clamp-2">
+                    {conv.title || 'Untitled Boardroom Session'}
+                  </CardTitle>
+                </CardHeader>
+                <CardFooter className="pt-2 text-[10px] text-foreground/45 font-semibold border-t border-card-border/50 bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-b-xl flex justify-between">
+                  <span>Created: {new Date(conv.createdAt).toLocaleDateString()}</span>
+                  <span>Active</span>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )
       )}
 
       {/* Start Discussion Dialog Overlay */}

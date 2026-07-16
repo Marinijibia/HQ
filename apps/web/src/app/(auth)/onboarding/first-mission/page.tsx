@@ -219,7 +219,7 @@ export default function FirstMissionPage() {
             </CardContent>
             <CardFooter className="flex justify-end border-t border-hq-graphite/20 pt-4">
               <Link
-                href="/dashboard"
+                href="/discussions"
                 className={progress === 100 ? '' : 'pointer-events-none opacity-50'}
               >
                 <Button

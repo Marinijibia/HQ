@@ -48,6 +48,12 @@ export class SettingsController {
     return this.settingsService.getAuditLogs(req.user.companyId);
   }
 
+  @Get('platform-stats')
+  @ApiOperation({ summary: 'Get platform metrics and telemetry' })
+  getPlatformStats() {
+    return this.settingsService.getPlatformStats();
+  }
+
   @Get('api-keys')
   @ApiOperation({ summary: 'List API keys' })
   listApiKeys(@Req() req: types.AuthenticatedRequest) {

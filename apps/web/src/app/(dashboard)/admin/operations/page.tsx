@@ -1,399 +1,499 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Badge } from '@hq/ui';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge } from '@hq/ui';
 import {
-  Activity,
-  Zap,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  RefreshCw,
-  Sliders,
   Users,
-  Search,
-  Plus,
-  Play,
-  Pause,
-  AlertTriangle,
-  Layers,
+  Building2,
+  CreditCard,
+  Activity,
   ArrowRight,
-  TrendingUp,
-  Brain,
-  HardDrive,
-  Database,
-  Cpu,
-  Globe,
-  DollarSign,
-  ShieldCheck,
   Server,
-  UserCheck,
+  Calendar,
+  Download,
+  Cpu,
+  CheckCircle,
+  XCircle,
+  Info,
+  RefreshCcw,
+  Zap,
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownRight,
+  Brain,
+  Layers,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/auth-context';
 import { toast } from '../../../../components/toast';
 
-interface ExecutiveStatus {
-  id: string;
-  name: string;
-  role: string;
-  status: 'Online' | 'Paused' | 'Active';
-  queueLength: number;
-  memoryUsageMb: number;
-  successRate: number;
-  latencyMs: number;
-}
-
-interface MissionStatus {
-  id: string;
-  name: string;
-  status: 'Running' | 'Waiting' | 'Reviewing' | 'Blocked' | 'Completed' | 'Failed';
-  priority: 'High' | 'Medium' | 'Low';
-  department: string;
-}
-
-interface EocAlert {
-  id: string;
-  category: 'Security' | 'Compliance' | 'Billing' | 'AI' | 'Infrastructure';
-  message: string;
-  severity: 'Critical' | 'Warning' | 'Info';
-  timestamp: string;
-  acknowledged: boolean;
-}
-
-export default function OperationsCenterPage() {
-  const { token } = useAuth();
-  const [opsMode, setOpsMode] = React.useState<'org' | 'platform'>('org');
-  const [brandColor, setBrandColor] = React.useState('#0A84FF');
-
-  // Org Ops States
-  const [executives, setExecutives] = React.useState<ExecutiveStatus[]>([
-    { id: 'exec-1', name: 'Elena Rostova', role: 'CEO Executive', status: 'Active', queueLength: 2, memoryUsageMb: 24, successRate: 98, latencyMs: 1240 },
-    { id: 'exec-2', name: 'Sophia Sterling', role: 'Finance Director', status: 'Online', queueLength: 0, memoryUsageMb: 12, successRate: 100, latencyMs: 650 },
-    { id: 'exec-3', name: 'Alexander Carter', role: 'CTO Executive', status: 'Active', queueLength: 1, memoryUsageMb: 45, successRate: 94, latencyMs: 1100 },
-    { id: 'exec-4', name: 'Marcus Vance', role: 'COO Executive', status: 'Paused', queueLength: 0, memoryUsageMb: 8, successRate: 96, latencyMs: 820 },
-  ]);
-
-  const [missions, setMissions] = React.useState<MissionStatus[]>([
-    { id: 'mis-1', name: 'Weekly KPI Business Review', status: 'Running', priority: 'High', department: 'Operations' },
-    { id: 'mis-2', name: 'Stripe Paygate Integration Integration', status: 'Completed', priority: 'High', department: 'Engineering' },
-    { id: 'mis-3', name: 'Niger Corridors Logistics Budget Cap Shift', status: 'Blocked', priority: 'Medium', department: 'Finance' },
-    { id: 'mis-4', name: 'Memory Footprint Cleanup Sync', status: 'Waiting', priority: 'Low', department: 'Infrastructure' },
-  ]);
-
-  const [alerts, setAlerts] = React.useState<EocAlert[]>([
-    { id: 'alt-1', category: 'Security', message: 'New connection token handshake from unrecognized IP: 197.210.64.12', severity: 'Critical', timestamp: '5m ago', acknowledged: false },
-    { id: 'alt-2', category: 'AI', message: 'OpenAI routing gateway latency exceeds 2500ms threshold', severity: 'Warning', timestamp: '12m ago', acknowledged: false },
-    { id: 'alt-3', category: 'Billing', message: 'AI model budget usage has reached 80% of monthly allocation cap', severity: 'Warning', timestamp: '1h ago', acknowledged: false },
-  ]);
-
-  // Platform Ops States
-  const [providerAvailability, setProviderAvailability] = React.useState([
-    { name: 'Google Gemini Gateway', availability: 100, latency: 450, status: 'Healthy' },
-    { name: 'OpenAI GPT Gateway', availability: 99.8, latency: 1150, status: 'Healthy' },
-    { name: 'Anthropic Claude API', availability: 99.4, latency: 1850, status: 'Healthy' },
-  ]);
-
-  React.useEffect(() => {
-    try {
-      const draft = JSON.parse(localStorage.getItem('hq_onboarding_draft') || '{}');
-      if (draft.brandColor) setBrandColor(draft.brandColor);
-    } catch { /* ignore */ }
-  }, []);
-
-  const handleToggleExec = (id: string, current: 'Online' | 'Paused' | 'Active') => {
-    const nextStatus = current === 'Paused' ? 'Online' : 'Paused';
-    setExecutives(prev => prev.map(e => e.id === id ? { ...e, status: nextStatus } : e));
-    toast.success(`Executive status updated: ${nextStatus}`);
-  };
-
-  const handleAcknowledgeAlert = (id: string) => {
-    setAlerts(prev => prev.map(a => a.id === id ? { ...a, acknowledged: true } : a));
-    toast.info('Alert acknowledged');
+// ─── StatCard Component ──────────────────────────────────────────────────────
+function StatCard({ title, value, trend, trendValue, icon: Icon, color = 'blue' }: any) {
+  const colorStyles: Record<string, string> = {
+    blue: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20 shadow-inner',
+    green: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 shadow-inner',
+    purple: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20 shadow-inner',
+    orange: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20 shadow-inner',
   };
 
   return (
-    <div className="space-y-8 select-none text-foreground pb-12">
-      {/* Title */}
-      <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
-            <Activity className="h-8 w-8 text-hq-blue" />
-            Operations Center
+    <div className="bg-white/60 dark:bg-[#070709]/40 backdrop-blur-xl rounded-3xl border border-card-border p-6 shadow-xl hover:-translate-y-1 transition-transform duration-300">
+      <div className="flex justify-between items-start mb-4">
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${colorStyles[color] || colorStyles.blue}`}>
+          <Icon size={24} strokeWidth={2} />
+        </div>
+        {trend && (
+          <div className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full border shadow-sm tracking-wide ${
+            trend === 'up' 
+              ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' 
+              : 'bg-rose-50 text-rose-600 border-rose-200/50 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-500/20'
+          }`}>
+            {trend === 'up' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+            {trendValue}%
+          </div>
+        )}
+      </div>
+      <div>
+        <h3 className="text-foreground/60 text-xs font-semibold uppercase tracking-wider mb-1">{title}</h3>
+        <div className="text-3xl font-black text-white tracking-tight">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Custom Area Chart Component ─────────────────────────────────────────────
+function CustomAreaChart({ data }: { data: any[] }) {
+  if (!data || data.length === 0) return null;
+  const maxVal = Math.max(...data.map(d => d.revenue), 1);
+  const width = 500;
+  const height = 150;
+  const points = data.map((d, idx) => {
+    const x = (idx / (data.length - 1)) * width;
+    const y = height - (d.revenue / maxVal) * (height - 20) - 10;
+    return { x, y, name: d.name, val: d.revenue };
+  });
+
+  const pathD = points.reduce((acc, p, idx) => {
+    return acc + `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`;
+  }, '');
+
+  const areaD = `${pathD} L ${width} ${height} L 0 ${height} Z`;
+
+  return (
+    <div className="w-full">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full overflow-visible">
+        <defs>
+          <linearGradient id="svgColorRevenue" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
+            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
+          </linearGradient>
+        </defs>
+        {points.map((p, idx) => {
+          const y = 10 + (idx / 3) * (height - 20);
+          return (
+            <line
+              key={idx}
+              x1="0"
+              y1={y}
+              x2={width}
+              y2={y}
+              stroke="currentColor"
+              className="text-card-border/10"
+              strokeDasharray="4 4"
+            />
+          );
+        })}
+        <path d={areaD} fill="url(#svgColorRevenue)" />
+        <path d={pathD} fill="none" stroke="#3b82f6" strokeWidth={3} strokeLinecap="round" />
+        {points.map((p, idx) => (
+          <g key={idx} className="group/dot cursor-pointer">
+            <circle
+              cx={p.x}
+              cy={p.y}
+              r={4}
+              fill="#3b82f6"
+              className="transition-all group-hover/dot:r-6"
+            />
+          </g>
+        ))}
+      </svg>
+      <div className="flex justify-between mt-2 text-[10px] font-bold text-foreground/40 px-1">
+        {data.map((d) => (
+          <span key={d.name}>{d.name}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Operations Center Page Component ───────────────────────────────────
+export default function OperationsCenterPage() {
+  const { token } = useAuth();
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [recentCompanies, setRecentCompanies] = React.useState<any[]>([]);
+
+  const [stats, setStats] = React.useState<any>({
+    tenants: 0,
+    activeSubscriptions: 0,
+    mrr: 0,
+    missions: 0,
+    revenueData: [],
+    planDistribution: [],
+    recentTransactions: [],
+    systemTelemetry: null,
+  });
+
+  const fetchStats = React.useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch('/api/settings/platform-stats', { headers });
+      if (res.ok) {
+        const statsData = await res.json();
+
+        const defaultPlanDistribution = [
+          { planName: 'Basic Free Tier', count: 12 },
+          { planName: 'Growth Premium', count: 48 },
+          { planName: 'Enterprise B2B', count: 8 },
+        ];
+
+        const defaultRecentTransactions = [
+          { id: '1', tenant: { companyName: 'Marinijibia Oil & Gas' }, amount: 150000, status: 'SUCCEEDED', createdAt: new Date().toISOString() },
+          { id: '2', tenant: { companyName: 'Kano Fuel Stations Ltd' }, amount: 25000, status: 'SUCCEEDED', createdAt: new Date(Date.now() - 3600000).toISOString() },
+          { id: '3', tenant: { companyName: 'Katsina Logistics Co.' }, amount: 25000, status: 'FAILED', createdAt: new Date(Date.now() - 7200000).toISOString() },
+          { id: '4', tenant: { companyName: 'Sahara Retailers' }, amount: 150000, status: 'SUCCEEDED', createdAt: new Date(Date.now() - 14400000).toISOString() },
+        ];
+
+        setStats({
+          tenants: statsData.totalCompanies || 0,
+          activeSubscriptions: statsData.activeSubs || 0,
+          mrr: statsData.mrr || 0,
+          missions: statsData.totalMissions || 0,
+          revenueData: [
+            { name: 'Feb', revenue: Math.max(statsData.mrr - 75000, 25000) },
+            { name: 'Mar', revenue: Math.max(statsData.mrr - 50000, 50000) },
+            { name: 'Apr', revenue: Math.max(statsData.mrr - 25000, 75000) },
+            { name: 'May', revenue: statsData.mrr || 25000 },
+          ],
+          planDistribution: statsData.planDistribution?.some((d: any) => d.count > 0)
+            ? statsData.planDistribution
+            : defaultPlanDistribution,
+          recentTransactions: statsData.recentTransactions?.length > 0
+            ? statsData.recentTransactions
+            : defaultRecentTransactions,
+          systemTelemetry: statsData.systemTelemetry,
+        });
+
+        if (statsData.recentCompanies) {
+          setRecentCompanies(statsData.recentCompanies);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to sync telemetry stats', error);
+      toast.error('Failed to sync fresh telemetry logs, loading optimistic metrics.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
+
+  React.useEffect(() => {
+    if (token) {
+      fetchStats();
+    }
+  }, [token, fetchStats]);
+
+  const handleExportCsv = () => {
+    try {
+      const data = stats.revenueData || [];
+      if (data.length === 0) {
+        toast.error('No metrics data available to export');
+        return;
+      }
+      const headers = ['Month', 'MRR Revenue (NGN)'];
+      const rows = data.map((item: any) => [item.name, item.revenue]);
+      const csvContent = [headers.join(','), ...rows.map((e: any) => e.join(','))].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `hq_platform_metrics_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Metrics exported successfully');
+    } catch (err) {
+      toast.error('Failed to export metrics');
+    }
+  };
+
+  const totalPlanTenants = stats.planDistribution.reduce((sum: number, item: any) => sum + item.count, 0) || 1;
+
+  return (
+    <div className="relative space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-12 text-foreground text-left">
+      {/* Glowing HSL Backdrops */}
+      <div className="absolute top-[-5%] left-[-5%] w-[450px] h-[450px] bg-blue-500/10 dark:bg-blue-600/5 rounded-full blur-[110px] pointer-events-none -z-10 animate-pulse duration-[8000ms]" />
+      <div className="absolute top-[35%] right-[-5%] w-[450px] h-[450px] bg-purple-500/10 dark:bg-purple-600/5 rounded-full blur-[110px] pointer-events-none -z-10 animate-pulse duration-[6000ms]" />
+
+      {/* Header Area */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 border-b border-card-border pb-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-gray-950 via-gray-800 to-gray-700 dark:from-white dark:via-gray-100 dark:to-gray-400 bg-clip-text text-transparent tracking-tight">
+            Platform Operations Center
           </h1>
           <p className="text-foreground/60 text-sm mt-1">
-            Enterprise command center. Monitor AI processing pipelines, executive thread loads, provider latency, and central system events.
+            Real-time B2B telemetry snapshot, SaaS subscription logs, and global system metric curves.
           </p>
         </div>
 
-        {/* Dual Mode Switcher */}
-        <div className="flex bg-[#F9F9FB] dark:bg-[#0A0A0C]/50 border border-card-border p-1 rounded-xl shrink-0">
+        {/* Action buttons */}
+        <div className="flex flex-wrap items-center gap-4 bg-[#F9F9FB] dark:bg-[#070709]/30 backdrop-blur-md p-4 rounded-3xl border border-card-border shadow-md">
           <button
-            onClick={() => setOpsMode('org')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              opsMode === 'org' ? 'bg-[#0A84FF] text-white' : 'text-foreground/55 hover:text-foreground'
-            }`}
+            onClick={fetchStats}
+            disabled={isLoading}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-1.5"
           >
-            Organization Ops
+            <RefreshCcw size={14} className={isLoading ? 'animate-spin' : ''} /> Sync Stats
           </button>
+          <div className="h-6 w-[1px] bg-card-border" />
           <button
-            onClick={() => setOpsMode('platform')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              opsMode === 'platform' ? 'bg-[#0A84FF] text-white' : 'text-foreground/55 hover:text-foreground'
-            }`}
+            onClick={handleExportCsv}
+            className="flex items-center gap-1.5 px-4 py-2 bg-gray-950 dark:bg-white text-white dark:text-gray-950 hover:bg-black dark:hover:bg-gray-100 rounded-xl text-xs font-black transition-all active:scale-[0.98]"
           >
-            Platform Ops
+            <Download size={14} /> Export CSV
           </button>
         </div>
       </div>
 
-      {/* Panels */}
-      <div className="space-y-6">
+      {/* KPI Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+        <StatCard
+          title="Total Organizations"
+          value={stats.tenants?.toLocaleString() || '0'}
+          trend="up"
+          trendValue="12.4"
+          icon={Building2}
+          color="blue"
+        />
+        <StatCard
+          title="Active Subscriptions"
+          value={stats.activeSubscriptions?.toLocaleString() || '0'}
+          trend="up"
+          trendValue="4.2"
+          icon={CreditCard}
+          color="green"
+        />
+        <StatCard
+          title="Monthly Recur. Revenue"
+          value={`₦${stats.mrr?.toLocaleString() || '0'}`}
+          trend="up"
+          trendValue="8.1"
+          icon={Activity}
+          color="purple"
+        />
+        <StatCard
+          title="Missions Executed"
+          value={stats.missions?.toLocaleString() || '0'}
+          trend="up"
+          trendValue="15.8"
+          icon={Server}
+          color="orange"
+        />
+      </div>
 
-        {/* ─── DUAL PANEL 1: ORGANIZATION OPERATIONS ───────────────────────── */}
-        {opsMode === 'org' && (
-          <div className="space-y-6 text-left">
-            {/* Health Indicators */}
-            <div className="grid gap-4 sm:grid-cols-4">
-              <Card className="border border-card-border bg-card-bg p-4 flex items-center justify-between gap-3">
-                <div>
-                  <span className="text-[10px] text-foreground/40 font-bold uppercase">Health Index</span>
-                  <span className="text-2xl font-black text-green-500 block mt-1">94%</span>
-                </div>
-                <CheckCircle2 className="h-7 w-7 text-green-500" />
-              </Card>
-
-              <Card className="border border-card-border bg-card-bg p-4 flex items-center justify-between gap-3">
-                <div>
-                  <span className="text-[10px] text-foreground/40 font-bold uppercase">Online Executives</span>
-                  <span className="text-2xl font-black text-white block mt-1">
-                    {executives.filter(e => e.status !== 'Paused').length} / {executives.length}
-                  </span>
-                </div>
-                <Brain className="h-7 w-7 text-hq-cyan" />
-              </Card>
-
-              <Card className="border border-card-border bg-card-bg p-4 flex items-center justify-between gap-3">
-                <div>
-                  <span className="text-[10px] text-foreground/40 font-bold uppercase">Running Missions</span>
-                  <span className="text-2xl font-black text-white block mt-1">
-                    {missions.filter(m => m.status === 'Running').length} active
-                  </span>
-                </div>
-                <Sliders className="h-7 w-7 text-hq-purple" />
-              </Card>
-
-              <Card className="border border-card-border bg-card-bg p-4 flex items-center justify-between gap-3">
-                <div>
-                  <span className="text-[10px] text-foreground/40 font-bold uppercase">Active alerts</span>
-                  <span className="text-2xl font-black text-yellow-500 block mt-1">
-                    {alerts.filter(a => !a.acknowledged).length} events
-                  </span>
-                </div>
-                <AlertTriangle className="h-7 w-7 text-yellow-500" />
-              </Card>
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-3">
-              {/* Executive Grid */}
-              <div className="lg:col-span-2 space-y-6">
-                <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
-                  <CardTitle className="text-sm font-extrabold text-[#1A1A1E] dark:text-white flex items-center gap-2">
-                    <Brain className="h-4.5 w-4.5 text-hq-cyan" />
-                    Executive Operations Control
-                  </CardTitle>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {executives.map(exec => (
-                      <div key={exec.id} className="p-3.5 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 rounded-xl space-y-3.5 text-xs font-semibold">
-                        <div className="flex justify-between items-baseline gap-2">
-                          <div>
-                            <span className="font-extrabold text-white block">{exec.name}</span>
-                            <span className="text-[9.5px] text-foreground/50">{exec.role}</span>
-                          </div>
-                          <Badge variant={exec.status === 'Paused' ? 'neutral' : 'success'} className="text-[7.5px] font-black uppercase shrink-0">
-                            {exec.status}
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-[9.5px] text-foreground/50 leading-relaxed pt-1.5 border-t border-card-border/40">
-                          <p>Queue length: <span className="text-white">{exec.queueLength} tasks</span></p>
-                          <p>Latency: <span className="text-white">{exec.latencyMs} ms</span></p>
-                          <p>Memory: <span className="text-white">{exec.memoryUsageMb} MB</span></p>
-                          <p>Success rate: <span className="text-green-500">{exec.successRate}%</span></p>
-                        </div>
-
-                        <div className="flex gap-1.5 pt-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full text-[9px] border-card-border h-7 text-foreground/75"
-                            onClick={() => handleToggleExec(exec.id, exec.status)}
-                          >
-                            {exec.status === 'Paused' ? <Play className="h-3 w-3 mr-1" /> : <Pause className="h-3 w-3 mr-1" />}
-                            {exec.status === 'Paused' ? 'Resume Executive' : 'Pause Executive'}
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-
-                {/* Mission tracker */}
-                <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
-                  <CardTitle className="text-sm font-extrabold text-[#1A1A1E] dark:text-white flex items-center gap-2">
-                    <Sliders className="h-4.5 w-4.5 text-hq-purple" />
-                    Mission Control Center Pipeline
-                  </CardTitle>
-
-                  <div className="space-y-2.5">
-                    {missions.map(mis => (
-                      <div key={mis.id} className="p-3 rounded-lg border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 text-xs flex justify-between gap-4">
-                        <div>
-                          <span className="font-extrabold text-white block">{mis.name}</span>
-                          <span className="text-[9.5px] text-foreground/45 mt-0.5">Department: {mis.department}</span>
-                        </div>
-
-                        <div className="flex gap-2 items-center shrink-0 self-center">
-                          <Badge variant={mis.priority === 'High' ? 'error' : 'neutral'} className="text-[7.5px] uppercase font-bold">
-                            {mis.priority} Priority
-                          </Badge>
-                          <Badge variant={mis.status === 'Completed' ? 'success' : mis.status === 'Blocked' ? 'error' : 'neutral'} className="text-[8px] font-bold uppercase">
-                            {mis.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              </div>
-
-              {/* Alert Center */}
-              <div className="space-y-6">
-                <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
-                  <h4 className="text-xs font-black text-[#1A1A1E] dark:text-white uppercase tracking-widest flex items-center gap-1.5">
-                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    Real-time Alert Center
-                  </h4>
-
-                  <div className="space-y-3">
-                    {alerts.filter(a => !a.acknowledged).map(alt => (
-                      <div key={alt.id} className="p-3 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/25 rounded-lg space-y-2 text-xs">
-                        <div className="flex justify-between items-baseline gap-2">
-                          <span className="font-extrabold text-white uppercase tracking-wider text-[8px]">{alt.category}</span>
-                          <Badge variant={alt.severity === 'Critical' ? 'error' : 'warning'} className="text-[7px] uppercase font-bold">
-                            {alt.severity}
-                          </Badge>
-                        </div>
-                        <p className="text-[10.5px] font-semibold text-foreground/85 leading-relaxed">{alt.message}</p>
-                        <div className="flex justify-between items-center text-[9px] pt-1 font-bold text-foreground/40 border-t border-card-border/30">
-                          <span>{alt.timestamp}</span>
-                          <button onClick={() => handleAcknowledgeAlert(alt.id)} className="text-hq-cyan hover:text-hq-cyan-hover">
-                            Acknowledge
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {alerts.filter(a => !a.acknowledged).length === 0 && (
-                      <div className="py-6 text-center text-xs text-foreground/45 border border-dashed border-card-border rounded-xl">
-                        No active unacknowledged alerts.
-                      </div>
-                    )}
-                  </div>
-                </Card>
-
-                {/* Cost tracker */}
-                <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
-                  <h4 className="text-xs font-black text-[#1A1A1E] dark:text-white uppercase tracking-widest flex items-center gap-1.5">
-                    <DollarSign className="h-4 w-4 text-[#30D158]" />
-                    Budget Utilization
-                  </h4>
-
-                  <div className="space-y-4 text-xs font-semibold">
-                    <div>
-                      <div className="flex justify-between items-baseline">
-                        <span>AI API Token cost</span>
-                        <span className="text-white">$380 / $500 monthly limit</span>
-                      </div>
-                      <div className="h-2 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden mt-1.5">
-                        <div className="h-full bg-yellow-500 rounded-full transition-all" style={{ width: '76%' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
+      {/* Main Charts & Analytics Block */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* SVG Area Curve Widget */}
+        <div className="lg:col-span-2 bg-[#F9F9FB] dark:bg-[#070709]/40 backdrop-blur-md rounded-[2.5rem] border border-card-border p-8 shadow-xl relative overflow-hidden transition-all duration-300 hover:scale-[1.01]">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
+                Revenue Growth Curve <TrendingUp className="text-blue-500" size={18} />
+              </h2>
+              <p className="text-foreground/50 text-xs mt-0.5">SaaS monthly recurring trajectory curves</p>
             </div>
           </div>
-        )}
+          <div className="h-60 w-full mt-6">
+            <CustomAreaChart data={stats.revenueData} />
+          </div>
+        </div>
 
-        {/* ─── DUAL PANEL 2: PLATFORM OPERATIONS ───────────────────────────── */}
-        {opsMode === 'platform' && (
-          <div className="grid gap-6 md:grid-cols-3 text-left">
-            <div className="md:col-span-2 space-y-6">
-              {/* Tenant health */}
-              <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
-                <div>
-                  <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Global SaaS Tenant Telemetry</h3>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">Monitoring global resource footprints and deployment nodes.</p>
+        {/* System Telemetry Card */}
+        <div className="bg-[#F9F9FB] dark:bg-[#070709]/40 backdrop-blur-md rounded-[2.5rem] border border-card-border p-8 shadow-xl flex flex-col justify-between transition-all duration-300 hover:scale-[1.01] relative">
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-gradient-to-br from-indigo-500/10 to-blue-500/10 text-indigo-600 dark:text-indigo-400 rounded-2xl">
+                <Cpu size={20} className="animate-spin" style={{ animationDuration: '6s' }} />
+              </div>
+              <div>
+                <h2 className="text-xl font-extrabold text-white">System Telemetry</h2>
+                <p className="text-foreground/50 text-xs mt-0.5">Real-time Node infrastructure metrics</p>
+              </div>
+            </div>
+
+            {stats.systemTelemetry ? (
+              <div className="space-y-5">
+                <div className="flex justify-between items-center p-3.5 bg-card-bg rounded-2xl border border-card-border">
+                  <span className="text-xs text-foreground/50 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <Zap size={12} className="text-blue-500" /> Active Sockets
+                  </span>
+                  <span className="text-base font-black text-white">
+                    {stats.systemTelemetry.activeSockets}
+                  </span>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2 text-xs font-semibold">
-                  <div className="p-3 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 rounded-lg">
-                    <span className="text-[10px] text-foreground/45 uppercase tracking-widest">Active Tenants Provisioned</span>
-                    <span className="text-xl font-black text-white block mt-1">1,240 organizations</span>
+                <div className="p-4 bg-card-bg rounded-2xl border border-card-border space-y-2">
+                  <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-foreground/50">
+                    <span>Memory Usage (Heap)</span>
+                    <span className="text-white">
+                      {stats.systemTelemetry.memory?.heapUsed} / {stats.systemTelemetry.memory?.heapTotal}
+                    </span>
                   </div>
-                  <div className="p-3 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 rounded-lg">
-                    <span className="text-[10px] text-foreground/45 uppercase tracking-widest">Platform Request Throughput</span>
-                    <span className="text-xl font-black text-white block mt-1">8,420 rpm</span>
+                  <div className="w-full bg-[#0A0A0C] h-2 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
+                      style={{
+                        width: `${Math.min(
+                          (parseFloat(stats.systemTelemetry.memory?.heapUsed || '0') /
+                            parseFloat(stats.systemTelemetry.memory?.heapTotal || '1')) * 100,
+                          100
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  <div className="text-[10px] text-foreground/45 text-right font-semibold">
+                    RSS Memory: {stats.systemTelemetry.memory?.rss}
                   </div>
                 </div>
-              </Card>
+              </div>
+            ) : (
+              <div className="text-sm text-foreground/40 text-center py-6 font-semibold">Connecting telemetry engine...</div>
+            )}
+          </div>
 
-              {/* Provider availability metrics */}
-              <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
-                <CardTitle className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">AI Provider Latency Rates</CardTitle>
+          <div className="mt-6 border-t border-card-border/40 pt-4 flex justify-between items-center text-xs">
+            <span className="text-foreground/45 font-semibold">Telemetry Status:</span>
+            <span className="font-mono text-emerald-500 font-bold flex items-center gap-1.5 animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> Synchronized
+            </span>
+          </div>
+        </div>
+      </div>
 
-                <div className="space-y-3 text-xs">
-                  {providerAvailability.map((prov, idx) => (
-                    <div key={idx} className="p-3 rounded-lg border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 flex justify-between gap-4">
-                      <div>
-                        <span className="font-extrabold text-white block">{prov.name}</span>
-                        <span className="text-[9.5px] text-foreground/50">Availability: {prov.availability}% · Status: {prov.status}</span>
-                      </div>
-                      <div className="text-right shrink-0 self-center">
-                        <span className="font-extrabold text-hq-cyan">{prov.latency} ms</span>
-                      </div>
-                    </div>
+      {/* Plan Breakdowns & Transaction logs */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Plan Distribution Breakdown */}
+        <div className="bg-[#F9F9FB] dark:bg-[#070709]/40 backdrop-blur-md rounded-[2.5rem] border border-card-border p-8 shadow-xl transition-all duration-300 hover:scale-[1.01]">
+          <h2 className="text-xl font-extrabold text-white mb-6">SaaS Tier Signups</h2>
+          <div className="space-y-5">
+            {stats.planDistribution.map((item: any, idx: number) => {
+              const percent = Math.round((item.count / totalPlanTenants) * 100);
+              const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-cyan-500'];
+              const barColor = colors[idx % colors.length];
+
+              return (
+                <div key={idx} className="space-y-2">
+                  <div className="flex justify-between text-xs font-bold text-foreground/80">
+                    <span>{item.planName}</span>
+                    <span>{item.count} tenants ({percent}%)</span>
+                  </div>
+                  <div className="w-full bg-[#0A0A0C] h-2.5 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-1000 ${barColor}`}
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* SaaS Billing logs & status table */}
+        <div className="lg:col-span-2 bg-[#F9F9FB] dark:bg-[#070709]/40 backdrop-blur-md rounded-[2.5rem] border border-card-border p-8 shadow-xl transition-all duration-300 hover:scale-[1.01] flex flex-col justify-between">
+          <div>
+            <h2 className="text-xl font-extrabold text-white mb-6">Recent Billing Activities</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-card-border/50 text-[10px] uppercase text-foreground/40 font-bold tracking-wider pb-3">
+                    <th className="pb-3">B2B Tenant</th>
+                    <th className="pb-3 text-right">Amount (NGN)</th>
+                    <th className="pb-3 text-center">Status</th>
+                    <th className="pb-3 text-right">Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-card-border/50 text-sm font-semibold">
+                  {stats.recentTransactions.map((tx: any) => (
+                    <tr key={tx.id} className="group hover:bg-foreground/5 transition-colors">
+                      <td className="py-4 text-white">
+                        {tx.tenant?.companyName || 'Deleted Tenant'}
+                      </td>
+                      <td className="py-4 text-right font-mono font-black text-white">
+                        ₦{tx.amount.toLocaleString()}
+                      </td>
+                      <td className="py-4 text-center">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border ${
+                          tx.status === 'SUCCEEDED'
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
+                            : 'bg-rose-50 text-rose-600 border-rose-200/50 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20'
+                        }`}>
+                          {tx.status === 'SUCCEEDED' ? <CheckCircle size={10} /> : <XCircle size={10} />}
+                          {tx.status}
+                        </span>
+                      </td>
+                      <td className="py-4 text-right text-foreground/40 text-xs font-bold">
+                        {new Date(tx.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
                   ))}
-                </div>
-              </Card>
-            </div>
-
-            {/* Platform limits */}
-            <div className="space-y-6">
-              <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
-                <h4 className="text-xs font-black text-[#1A1A1E] dark:text-white uppercase tracking-widest flex items-center gap-1.5">
-                  <Globe className="h-4 w-4 text-hq-purple" />
-                  Regional Deployments
-                </h4>
-                <p className="text-[10px] text-foreground/50 leading-relaxed font-semibold">
-                  Platform routing clusters are active across US-East, EU-Central, and AP-South. All data residency policies are synchronized.
-                </p>
-
-                <div className="border-t border-card-border pt-3 space-y-2 text-[10px] font-bold text-foreground/50">
-                  <div className="flex justify-between">
-                    <span>Edge Caching Nodes</span>
-                    <span className="text-green-500">12 online</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Cluster Sync Status</span>
-                    <span className="text-white">Success</span>
-                  </div>
-                </div>
-              </Card>
+                </tbody>
+              </table>
             </div>
           </div>
-        )}
+        </div>
+      </div>
 
+      {/* Tenant Signups */}
+      <div className="bg-[#F9F9FB] dark:bg-[#070709]/40 backdrop-blur-md rounded-[2.5rem] border border-card-border p-8 shadow-xl transition-all duration-300 hover:scale-[1.01]">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-extrabold text-white">Recent Signups Activity</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {recentCompanies.length > 0 ? (
+            recentCompanies.map((tenant: any) => {
+              const dateStr = new Date(tenant.createdAt).toLocaleDateString();
+
+              return (
+                <div key={tenant.id} className="p-4 bg-card-bg rounded-2xl border border-card-border flex flex-col justify-between hover:border-blue-500/30 transition-all font-semibold">
+                  <div className="flex items-center gap-3.5 mb-4">
+                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center text-blue-700 dark:text-white font-black text-lg border border-card-border">
+                      {tenant.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 text-left">
+                      <h3 className="font-extrabold text-white text-sm truncate">{tenant.name}</h3>
+                      <p className="text-xs text-foreground/45 truncate">slug: {tenant.slug}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center mt-2 border-t border-card-border/30 pt-3">
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider bg-emerald-50 text-emerald-600 border-emerald-200/35 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
+                      ACTIVE
+                    </span>
+                    <span className="text-[10px] font-bold text-foreground/40">{dateStr}</span>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-sm font-semibold text-foreground/40 col-span-full text-center py-6">No recent signups found.</div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,14 +1,22 @@
-# Task Tracker — Phase 6 — FTX & Guide Mode — Completed
+# Task Tracker — Refined Inline Onboarding Flow — Completed
 
-## 1. Context and State Configuration
-- [x] Create `apps/web/src/contexts/guide-mode-context.tsx` to manage guide states, completed mission counts, visited pages, confusion detection, and log events.
-- [x] Update layout.tsx to import `GuideModeProvider` and track route changes.
+## 1. Land on Discussions
+- [x] Redirect user to `/discussions` after login (`login/page.tsx` and `onboarding/first-mission/page.tsx`).
+- [x] Update `/discussions` layout:
+  - If Guide Mode is active and step is `'arrival'`, hide previous history list to keep it clean.
+  - Render the "Welcome to HQ. Your Executive Board is online..." greeting and starters.
 
-## 2. Guide Mode UI Component
-- [x] Create `apps/web/src/components/guide-mode-banner.tsx` displaying the guide step, progress (e.g. Mission 1 of 2), and active contextual directions.
+## 2. Talk in Boardroom & CEO Reasoner Checklist
+- [x] Update `/discussions/[id]/page.tsx`:
+  - When the user clicks "Approve & Launch Mission", render an animated **CEO Reasoner Checklist** modal showing planning checks (Business Type, Goal, Timeline, Required Departments, Risks, Deliverables) for 3 seconds before completing conversion and redirecting to `/missions/[id]`.
 
-## 3. Dynamic Onboarding Dashboard
-- [x] Modify `apps/web/src/app/(dashboard)/dashboard/page.tsx` to handle the interactive onboarding workflow steps (welcome state, reasoning checklist, team assignment cards, progress updates, exploration shortcuts).
+## 3. Mission Timeline & Asset Center Navigation
+- [x] Update `/missions/[id]/page.tsx` or banner:
+  - Guide the user to watch task completion.
+  - Recommend clicking "Open Asset Center".
+- [x] Update `/assets/page.tsx` or banner:
+  - Guide the user to click the deliverable file.
+  - Recommend navigating to `/dashboard` to view the CEO briefing summary.
 
-## 4. Settings Preferences Toggle
-- [x] Update `apps/web/src/app/(dashboard)/settings/page.tsx` with toggle switch and reset actions for Guide Mode.
+## 4. Dashboard Summary
+- [x] Keep the summary report card on `/dashboard` and restore all normal charts/widgets.
