@@ -13,6 +13,7 @@ import { auth, googleProvider } from '../lib/firebase';
 
 interface AuthContextType {
   user: User | null;
+  dbUser: any | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
@@ -25,6 +26,7 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
+  const [dbUser, setDbUser] = React.useState<any | null>(null);
   const [token, setToken] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -42,8 +44,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             },
           });
           if (res.ok) {
-            const dbUser = await res.json();
-            console.log('PostgreSQL User Profile Synced:', dbUser);
+            const dbUserData = await res.json();
+            setDbUser(dbUserData);
+            console.log('PostgreSQL User Profile Synced:', dbUserData);
             const settingsRes = await fetch('/api/settings/org', {
               headers: { 'Authorization': `Bearer ${idToken}` }
             });
@@ -62,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         setToken(null);
+        setDbUser(null);
       }
       setLoading(false);
     });
@@ -120,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        dbUser,
         loading,
         signInWithGoogle,
         signInWithEmail,

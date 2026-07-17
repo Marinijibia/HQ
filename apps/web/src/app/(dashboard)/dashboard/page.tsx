@@ -64,103 +64,57 @@ export default function DashboardPage() {
 
   const [promptInput, setPromptInput] = React.useState('');
 
-  // 1. Setup step reasoning checklist triggers
-  const [checklist, setChecklist] = React.useState<boolean[]>([false, false, false, false, false, false]);
-  React.useEffect(() => {
-    if (ftxStep === 'reasoning') {
-      setChecklist([false, false, false, false, false, false]);
-      const timers = [
-        setTimeout(() => setChecklist([true, false, false, false, false, false]), 400),
-        setTimeout(() => setChecklist([true, true, false, false, false, false]), 800),
-        setTimeout(() => setChecklist([true, true, true, false, false, false]), 1200),
-        setTimeout(() => setChecklist([true, true, true, true, false, false]), 1600),
-        setTimeout(() => setChecklist([true, true, true, true, true, false]), 2000),
-        setTimeout(() => setChecklist([true, true, true, true, true, true]), 2400),
-        setTimeout(() => setFtxStep('assigned'), 2800),
-      ];
-      return () => timers.forEach(clearTimeout);
-    }
-  }, [ftxStep, setFtxStep]);
-
-  // 2. Setup step executing progress triggers
-  const [executionProgress, setExecutionProgress] = React.useState(0);
-  const [execStatus, setExecStatus] = React.useState<Record<string, string>>({
-    ceo: 'Planning',
-    marketing: 'Pending...',
-    finance: 'Pending...',
-    legal: 'Pending...',
-    strategy: 'Pending...',
-  });
+  // 1. Fetch real dashboard data (conversations & missions)
+  const [conversations, setConversations] = React.useState<any[]>([]);
+  const [missions, setMissions] = React.useState<any[]>([]);
+  const [loadingRealData, setLoadingRealData] = React.useState(true);
 
   React.useEffect(() => {
-    if (ftxStep === 'executing') {
-      setExecutionProgress(0);
-      setExecStatus({
-        ceo: 'Planning',
-        marketing: 'Researching...',
-        finance: 'Pending...',
-        legal: 'Pending...',
-        strategy: 'Pending...',
-      });
+    if (!token) return;
+    setLoadingRealData(true);
 
-      const timer = setInterval(() => {
-        setExecutionProgress((old) => {
-          if (old >= 100) {
-            clearInterval(timer);
-
-            // Register backend mock deliverable
-            fetch('/api/missions', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                objective: objectiveText,
-                status: 'APPROVED',
-              }),
-            })
-              .then(async (res) => {
-                if (res.ok) {
-                  const data = await res.json();
-                  completeMission(data.id || 'mission-ftx');
-                } else {
-                  completeMission('mission-ftx');
-                }
-              })
-              .catch(() => {
-                completeMission('mission-ftx');
-              });
-            return 100;
+    const fetchDashboardData = async () => {
+      try {
+        const headers = { Authorization: `Bearer ${token}` };
+        
+        // Fetch conversations
+        const convRes = await fetch('/api/conversations', { headers });
+        if (convRes.ok) {
+          const convData = await convRes.json();
+          if (Array.isArray(convData)) {
+            setConversations(convData.slice(0, 4));
           }
+        }
 
-          const next = old + 5;
+        // Fetch missions
+        const missRes = await fetch('/api/missions', { headers });
+        if (missRes.ok) {
+          const missData = await missRes.json();
+          if (Array.isArray(missData)) {
+            setMissions(missData);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard database connections:', err);
+      } finally {
+        setLoadingRealData(false);
+      }
+    };
 
-          // Smoothly update statuses based on progress thresholds
-          setExecStatus((status) => {
-            const nextStatus = { ...status };
-            if (next >= 100) {
-              nextStatus.strategy = 'Completed';
-            } else if (next >= 75) {
-              nextStatus.legal = 'Completed';
-              nextStatus.strategy = 'Writing...';
-            } else if (next >= 50) {
-              nextStatus.finance = 'Completed';
-              nextStatus.legal = 'Reviewing...';
-            } else if (next >= 25) {
-              nextStatus.marketing = 'Completed';
-              nextStatus.finance = 'Calculating...';
-            }
-            return nextStatus;
-          });
+    fetchDashboardData();
+  }, [token]);
 
-          return next;
-        });
-      }, 1000);
+  // Find the single active/running mission
+  const activeMission = missions.find(
+    (m: any) => m.status === 'PLANNING' || m.status === 'IN_PROGRESS' || m.status === 'RUNNING'
+  ) || (missions.length > 0 ? missions[0] : null);
 
-      return () => clearInterval(timer);
-    }
-  }, [ftxStep, objectiveText, token, completeMission]);
+  const getBadgeVariant = (status: string) => {
+    if (status === 'APPROVED' || status === 'DELIVERED') return 'success';
+    if (status === 'PLANNING') return 'ai';
+    if (status === 'ARCHIVED') return 'neutral';
+    return 'warning';
+  };
 
   // Read onboarding cached setup parameters
   React.useEffect(() => {
@@ -335,7 +289,9 @@ export default function DashboardPage() {
             <Activity className="h-4 w-4 text-hq-blue" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-[#1A1A1E] dark:text-white">1 / 1</div>
+            <div className="text-2xl font-black text-[#1A1A1E] dark:text-white">
+              {missions.filter(m => m.status === 'PLANNING' || m.status === 'IN_PROGRESS' || m.status === 'RUNNING').length} / 1
+            </div>
             <p className="text-[10px] text-foreground/45 mt-1 font-semibold">
               Free Tier Limit: Max 1 active
             </p>
@@ -386,46 +342,80 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-xl p-4.5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
+              {activeMission ? (
+                <div className="border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-xl p-4.5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold text-[#1A1A1E] dark:text-white line-clamp-1 max-w-[280px] sm:max-w-[400px]">
+                        {activeMission.objective}
+                      </h4>
+                      <p className="text-xs text-foreground/60 mt-0.5 font-medium">
+                        Status: {activeMission.status}
+                      </p>
+                    </div>
+                    <Badge variant={getBadgeVariant(activeMission.status)}>
+                      {activeMission.status}
+                    </Badge>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs text-foreground/60">
+                      <span>Task Execution</span>
+                      <span>{activeMission.status === 'DELIVERED' || activeMission.status === 'APPROVED' ? 100 : 45}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-black/5 dark:bg-[#1E1E24] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-hq-blue rounded-full transition-all duration-500"
+                        style={{ width: `${activeMission.status === 'DELIVERED' || activeMission.status === 'APPROVED' ? 100 : 45}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between text-xs pt-1">
+                    <span className="text-foreground/45 font-medium">Platform Coordinator</span>
+                    <span className="font-bold text-hq-purple">{ceoName} (CEO)</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 border border-dashed border-card-border bg-[#F9F9FB]/50 dark:bg-[#0A0A0C]/50 rounded-xl text-center space-y-4">
+                  <div className="h-10 w-10 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center text-md font-bold">
+                    ⚡
+                  </div>
+                  <div className="space-y-1">
                     <h4 className="text-sm font-bold text-[#1A1A1E] dark:text-white">
-                      Q3 Petroleum Logistics Outreach
+                      No Active Missions Started
                     </h4>
-                    <p className="text-xs text-foreground/60 mt-0.5 font-medium">
-                      Objective: Compose B2B trade partnerships proposal
+                    <p className="text-xs text-foreground/60 max-w-xs leading-normal">
+                      Start a boardroom discussion with your AI executive board to design, plan, and execute strategic campaigns.
                     </p>
                   </div>
-                  <Badge variant="ai">Running</Badge>
+                  <Button
+                    onClick={() => router.push('/discussions')}
+                    className="bg-hq-blue hover:bg-hq-blue/90 text-white font-bold h-8 text-xs px-4"
+                  >
+                    Consult Executive Board
+                  </Button>
                 </div>
-
-                {/* Progress Bar */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs text-foreground/60">
-                    <span>Task Breakdown (4/5 complete)</span>
-                    <span>80%</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-black/5 dark:bg-[#1E1E24] rounded-full overflow-hidden">
-                    <div className="h-full bg-hq-blue w-[80%] rounded-full transition-all duration-500"></div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between text-xs pt-1">
-                  <span className="text-foreground/45 font-medium">Assigned Director</span>
-                  <span className="font-bold text-hq-purple">Arthur Steward (COS)</span>
-                </div>
-              </div>
+              )}
             </CardContent>
-            <CardFooter className="flex justify-end border-t border-card-border/50 pt-4 bg-black/5 dark:bg-[#1E1E24]/10 rounded-b-xl">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center gap-1 text-xs font-semibold"
-              >
-                Open Timeline
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </CardFooter>
+            {activeMission ? (
+              <CardFooter className="flex justify-end border-t border-card-border/50 pt-4 bg-black/5 dark:bg-[#1E1E24]/10 rounded-b-xl">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push(`/missions/${activeMission.id}`)}
+                  className="flex items-center gap-1 text-xs font-semibold"
+                >
+                  Open Timeline
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </CardFooter>
+            ) : (
+              <CardFooter className="flex justify-center border-t border-card-border/50 pt-4 bg-black/5 dark:bg-[#1E1E24]/10 rounded-b-xl text-[10px] text-foreground/45 font-medium">
+                Orchestrate objectives automatically from your debates.
+              </CardFooter>
+            )}
           </Card>
 
           {/* Autonomous Intelligence Feed UI */}
@@ -625,36 +615,45 @@ export default function DashboardPage() {
           <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
             <CardHeader>
               <CardTitle className="text-md font-extrabold text-[#1A1A1E] dark:text-white">
-                Boardroom Contacts
+                Active Discussions
               </CardTitle>
-              <CardDescription className="text-xs">Instant direct channels</CardDescription>
+              <CardDescription className="text-xs">Your operational boardroom debates</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-2 rounded-xl hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 cursor-pointer">
-                <div className="flex items-center space-x-2">
-                  <div className="h-7 w-7 rounded-full bg-hq-blue/20 flex items-center justify-center font-bold text-hq-blue text-xs">
-                    CEO
+              {conversations.length > 0 ? (
+                conversations.map((conv: any) => (
+                  <div
+                    key={conv.id}
+                    onClick={() => router.push(`/discussions/${conv.id}`)}
+                    className="flex items-center justify-between p-2 rounded-xl hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 cursor-pointer transition-all border border-transparent hover:border-hq-blue/20"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <div className="h-7 w-7 rounded-full bg-hq-blue/10 text-hq-blue flex items-center justify-center font-bold text-[10px] uppercase">
+                        {conv.title ? conv.title.substring(0, 2) : 'BD'}
+                      </div>
+                      <div className="text-xs text-left">
+                        <p className="font-bold text-[#1A1A1E] dark:text-white line-clamp-1 max-w-[150px]">
+                          {conv.title || 'Untitled Boardroom Session'}
+                        </p>
+                        <p className="text-[10px] text-foreground/45">Active boardroom</p>
+                      </div>
+                    </div>
+                    <Badge variant={conv.missionId ? 'success' : 'ai'} className="text-[9px]">
+                      {conv.missionId ? 'Orchestrated' : 'Active'}
+                    </Badge>
                   </div>
-                  <div className="text-xs text-left">
-                    <p className="font-bold text-[#1A1A1E] dark:text-white">{ceoName}</p>
-                    <p className="text-[10px] text-foreground/45">CEO</p>
-                  </div>
+                ))
+              ) : (
+                <div
+                  onClick={() => router.push('/discussions')}
+                  className="flex items-center justify-center p-3 rounded-xl border border-dashed border-card-border bg-[#F9F9FB]/50 dark:bg-[#0A0A0C]/50 hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 cursor-pointer text-center flex-col py-6 space-y-2"
+                >
+                  <span className="text-xs font-semibold text-foreground/60">No debates started yet</span>
+                  <Button size="sm" className="text-[10px] h-7 bg-hq-blue text-white hover:bg-hq-blue/90 font-bold px-3">
+                    Open Boardroom
+                  </Button>
                 </div>
-                <Badge variant="success">Active</Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-2 rounded-xl hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 cursor-pointer">
-                <div className="flex items-center space-x-2">
-                  <div className="h-7 w-7 rounded-full bg-hq-purple/20 flex items-center justify-center font-bold text-hq-purple text-xs">
-                    COS
-                  </div>
-                  <div className="text-xs text-left">
-                    <p className="font-bold text-[#1A1A1E] dark:text-white">Arthur Steward</p>
-                    <p className="text-[10px] text-foreground/45">Chief of Staff</p>
-                  </div>
-                </div>
-                <Badge variant="success">Active</Badge>
-              </div>
+              )}
             </CardContent>
           </Card>
 

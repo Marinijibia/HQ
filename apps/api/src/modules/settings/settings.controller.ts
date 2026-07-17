@@ -12,6 +12,8 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { SettingsService } from './settings.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { Roles, UserRole } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 import * as types from '../../common/interfaces/request.interface';
 
 @ApiTags('Settings')
@@ -42,13 +44,31 @@ export class SettingsController {
     return this.settingsService.getTeamMembers(req.user.companyId);
   }
 
+  @Post('team')
+  @ApiOperation({ summary: 'Invite or add a new admin staff member' })
+  addTeamMember(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() body: { email: string; name: string; role: string },
+  ) {
+    return this.settingsService.addTeamMember(
+      req.user.companyId,
+      body.email,
+      body.name,
+      body.role,
+    );
+  }
+
   @Get('audit-logs')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
   @ApiOperation({ summary: 'Get organization audit logs' })
   getAuditLogs(@Req() req: types.AuthenticatedRequest) {
     return this.settingsService.getAuditLogs(req.user.companyId);
   }
 
   @Get('platform-stats')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR)
   @ApiOperation({ summary: 'Get platform metrics and telemetry' })
   getPlatformStats() {
     return this.settingsService.getPlatformStats();

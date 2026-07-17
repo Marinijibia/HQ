@@ -209,4 +209,22 @@ export class SettingsService {
       orderBy: { createdAt: 'asc' },
     });
   }
+
+  async addTeamMember(
+    companyId: string,
+    email: string,
+    name: string,
+    role: string,
+  ) {
+    const tempId = crypto.randomUUID();
+    return this.prisma.user.create({
+      data: {
+        id: tempId,
+        email,
+        name,
+        companyId,
+        role: role as any,
+      },
+    });
+  }
 }
