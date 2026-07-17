@@ -200,72 +200,80 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       {/* Top Banner / Navigation */}
-      <header className="relative z-50 flex h-14 items-center justify-between border-b border-card-border px-6 bg-black/[0.02] dark:bg-white/[0.02] backdrop-blur-md">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <div className="h-6 w-6 rounded-md bg-gradient-to-tr from-hq-blue to-hq-purple flex items-center justify-center font-bold text-white text-xs select-none">
-              HQ
+      <header className="relative z-50 flex h-16 items-center justify-between border-b border-card-border px-8 bg-white/70 dark:bg-[#070709]/75 backdrop-blur-xl transition-all duration-300 shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+        <div className="flex items-center space-x-5">
+          <Link href="/dashboard" className="flex items-center space-x-3 group transition-transform hover:scale-[1.02]">
+            <div className="p-[1.5px] bg-gradient-to-tr from-hq-blue via-[#bf5af2] to-hq-purple rounded-xl shadow-[0_0_15px_rgba(10,132,255,0.2)]">
+              <div className="h-7 w-7 rounded-[10px] bg-black flex items-center justify-center font-extrabold text-white text-xs select-none">
+                HQ
+              </div>
             </div>
-            <span className="font-bold tracking-tight text-foreground select-none">HQ</span>
-          </div>
-          <span className="text-foreground/40 font-light select-none">|</span>
-          <div className="flex items-center space-x-2 text-sm bg-black/[0.05] dark:bg-white/[0.05] border border-card-border rounded-md px-2 py-0.5 select-none text-foreground/80">
-            <span className="h-2 w-2 rounded-full bg-hq-cyan animate-pulse"></span>
+            <span className="font-extrabold tracking-tight text-foreground text-lg select-none">
+              HQ<span className="text-hq-cyan font-black animate-pulse">.</span>
+            </span>
+          </Link>
+          <span className="text-foreground/20 font-light select-none text-lg">|</span>
+          <div className="flex items-center space-x-2 text-[10px] uppercase tracking-wider font-extrabold bg-black/[0.04] dark:bg-white/[0.04] border border-card-border rounded-full px-3 py-1 text-foreground/80 select-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-none">
+            <span className="h-1.5 w-1.5 rounded-full bg-hq-cyan animate-pulse shadow-[0_0_8px_#30D158]"></span>
             <span>{orgName}</span>
           </div>
         </div>
 
-        <div className="flex items-center space-x-4 relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="text-foreground/75 hover:text-foreground transition-all"
-            aria-label="Toggle Theme"
-          >
-            {isDarkMode ? (
-              <Sun className="h-4 w-4 text-amber-400" />
-            ) : (
-              <Moon className="h-4 w-4 text-indigo-400" />
-            )}
-          </Button>
+        <div className="flex items-center space-x-5 relative">
+          {/* Theme Toggle Capsule */}
+          <div className="p-[1px] bg-black/[0.05] dark:bg-white/[0.05] rounded-full border border-card-border flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="h-7 w-7 rounded-full text-foreground/60 hover:text-foreground hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-all duration-200"
+              aria-label="Toggle Theme"
+            >
+              {isDarkMode ? (
+                <Sun className="h-3.5 w-3.5 text-amber-400" />
+              ) : (
+                <Moon className="h-3.5 w-3.5 text-indigo-400" />
+              )}
+            </Button>
+          </div>
 
           <Button
             variant="ghost"
             size="icon"
-            className="relative"
+            className="h-8 w-8 rounded-full text-foreground/70 hover:text-foreground hover:bg-black/[0.05] dark:hover:bg-white/[0.05] relative transition-all duration-200"
             onClick={() => setShowNotifications(!showNotifications)}
           >
             <Bell className="h-4 w-4" />
             {Array.isArray(notifications) && notifications.filter((n) => !n.read).length > 0 && (
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-hq-purple text-[9px] font-bold text-white flex items-center justify-center">
-                {notifications.filter((n) => !n.read).length}
-              </span>
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#bf5af2] animate-ping" />
+            )}
+            {Array.isArray(notifications) && notifications.filter((n) => !n.read).length > 0 && (
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#bf5af2] shadow-[0_0_6px_#bf5af2]" />
             )}
           </Button>
 
           {showNotifications && (
-            <Card className="absolute right-0 top-12 z-50 w-80 p-4 border border-card-border bg-card-bg shadow-level-4 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between pb-2 border-b border-card-border">
-                <span className="font-bold text-xs text-foreground">Notifications Feed</span>
+            <Card className="absolute right-0 top-12 z-50 w-80 p-5 border border-card-border bg-white/90 dark:bg-black/90 backdrop-blur-xl shadow-level-4 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center justify-between pb-3 border-b border-card-border/80">
+                <span className="font-extrabold text-[10px] uppercase tracking-wider text-foreground">Notifications Feed</span>
                 <button
                   onClick={handleDismissAll}
-                  className="text-xs text-foreground/50 hover:text-foreground font-semibold"
+                  className="text-[10px] text-hq-cyan hover:underline font-bold"
                 >
                   Dismiss All
                 </button>
               </div>
-              <div className="mt-3 space-y-3">
+              <div className="mt-3 space-y-3.5">
                 {!Array.isArray(notifications) || notifications.length === 0 ? (
-                  <p className="text-xs text-foreground/50 py-4 text-center">No active alerts.</p>
+                  <p className="text-xs text-foreground/50 py-6 text-center">No active alerts.</p>
                 ) : (
                   notifications.slice(0, 4).map((n) => (
                     <div
                       key={n.id}
-                      className="text-xs space-y-1 py-1 border-b border-card-border last:border-0 text-left"
+                      className="text-xs space-y-1.5 py-1.5 border-b border-card-border/50 last:border-0 text-left"
                     >
                       <div className="flex justify-between items-center">
-                        <span className="font-semibold text-foreground">{n.title}</span>
+                        <span className="font-bold text-foreground/90">{n.title}</span>
                         <span className="text-[9px] text-foreground/45">
                           {new Date(n.createdAt).toLocaleTimeString([], {
                             hour: '2-digit',
@@ -273,35 +281,37 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                           })}
                         </span>
                       </div>
-                      <p className="text-foreground/75 leading-tight">{n.message}</p>
+                      <p className="text-foreground/60 text-[11px] leading-relaxed">{n.message}</p>
                     </div>
                   ))
                 )}
               </div>
-              <div className="pt-2.5 mt-2 border-t border-card-border text-center">
+              <div className="pt-3.5 mt-2 border-t border-card-border/80 text-center">
                 <Link
                   href="/notifications"
                   onClick={() => setShowNotifications(false)}
-                  className="text-[10px] text-hq-cyan hover:text-hq-cyan/85 font-extrabold"
+                  className="text-[10px] text-hq-cyan hover:text-hq-cyan/85 font-extrabold uppercase tracking-wider"
                 >
                   Open Executive Inbox
                 </Link>
               </div>
             </Card>
           )}
-          <div className="flex items-center space-x-3 select-none">
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-hq-blue/20 border border-hq-blue/40 flex items-center justify-center font-bold text-hq-blue text-xs uppercase">
-                {displayName ? displayName.slice(0, 2).toUpperCase() : (user?.email?.slice(0, 2).toUpperCase() ?? 'HQ')}
+          <div className="flex items-center space-x-4 select-none pl-2 border-l border-card-border">
+            <div className="flex items-center space-x-2.5">
+              <div className="p-[1.5px] bg-gradient-to-tr from-hq-blue via-[#bf5af2] to-hq-cyan rounded-full shadow-[0_0_10px_rgba(10,132,255,0.15)] transition-transform hover:scale-105">
+                <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center font-bold text-white text-[11px] uppercase tracking-wider">
+                  {displayName ? displayName.slice(0, 2).toUpperCase() : (user?.email?.slice(0, 2).toUpperCase() ?? 'HQ')}
+                </div>
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-xs font-semibold leading-tight">{displayName || user?.email || 'Account'}</p>
-                <p className="text-[10px] text-foreground/55 leading-none">Owner</p>
+                <p className="text-xs font-bold leading-tight text-foreground">{displayName || user?.email?.split('@')[0] || 'Account'}</p>
+                <p className="text-[9px] text-foreground/45 uppercase tracking-widest font-extrabold mt-0.5">Owner</p>
               </div>
             </div>
             <Button
               variant="ghost"
-              className="text-red-400 hover:text-red-500 text-[10px] px-2.5 h-8 font-bold border border-red-500/10 hover:border-red-500/30 transition-all bg-red-500/5 hover:bg-red-500/10 rounded-md"
+              className="text-foreground/45 hover:text-red-400 text-[9px] uppercase tracking-widest px-2.5 h-8 font-black border border-card-border hover:border-red-500/20 transition-all duration-200 hover:bg-red-500/5 rounded-full"
               onClick={async () => {
                 await logout();
                 router.push('/login');
