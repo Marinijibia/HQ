@@ -249,7 +249,7 @@ export default function SettingsPage() {
   const Field = ({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) => (
     <div className="space-y-1.5">
       <label className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{label}</label>
-      {hint && <p className="text-[10px] text-foreground/45 font-semibold">{hint}</p>}
+      {hint && <p className="text-xs text-foreground/45 font-semibold">{hint}</p>}
       {children}
     </div>
   );
@@ -317,7 +317,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Upgraded to Organization Workspace</h4>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-1 leading-relaxed">
+                  <p className="text-xs text-foreground/50 font-semibold mt-1 leading-relaxed">
                     This section has been promoted to a top-level workspace containing regional branches, department selectors, and evolutionary stage checkouts.
                   </p>
                 </div>
@@ -350,7 +350,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Upgraded to Teams & Clearance</h4>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-1 leading-relaxed">
+                  <p className="text-xs text-foreground/50 font-semibold mt-1 leading-relaxed">
                     This section has been promoted to a top-level workspace containing reporting org charts, clearance sliders, and invitations gatekeepers.
                   </p>
                 </div>
@@ -385,14 +385,14 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <p className="text-xs font-extrabold" style={{ color: brandColor }}>{brandColor.toUpperCase()}</p>
-                    <p className="text-[10px] text-foreground/50 font-semibold">Click swatch to change</p>
+                    <p className="text-xs text-foreground/50 font-semibold">Click swatch to change</p>
                   </div>
                 </div>
               </Card>
               <Card className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] space-y-3">
                 <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">Organization Logo</p>
                 <div className="h-20 border-2 border-dashed border-card-border rounded-xl flex items-center justify-center cursor-pointer hover:border-hq-blue/50 transition-colors">
-                  <p className="text-[10px] text-foreground/40 font-semibold">Click or drag to upload logo</p>
+                  <p className="text-xs text-foreground/40 font-semibold">Click or drag to upload logo</p>
                 </div>
               </Card>
             </div>
@@ -402,9 +402,9 @@ export default function SettingsPage() {
                 <div className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-extrabold text-xs" style={{ backgroundColor: brandColor }}>HQ</div>
                 <div>
                   <p className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">{settings.hqName}</p>
-                  <p className="text-[10px] text-foreground/50 font-semibold">Executive Operating System</p>
+                  <p className="text-xs text-foreground/50 font-semibold">Executive Operating System</p>
                 </div>
-                <Button size="sm" className="ml-auto text-white text-[10px] font-bold" style={{ backgroundColor: brandColor }}>Sample CTA</Button>
+                <Button size="sm" className="ml-auto text-white text-xs font-bold" style={{ backgroundColor: brandColor }}>Sample CTA</Button>
               </div>
             </Card>
           </div>
@@ -426,7 +426,7 @@ export default function SettingsPage() {
                 { label: 'Login Failures (24h)', value: '0', color: '#0EA5E9' },
               ].map((stat, i) => (
                 <Card key={i} className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] text-left">
-                  <p className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest">{stat.label}</p>
+                  <p className="text-xs text-foreground/45 font-bold uppercase tracking-widest">{stat.label}</p>
                   <p className="text-2xl font-extrabold mt-1" style={{ color: stat.color }}>{stat.value}</p>
                 </Card>
               ))}
@@ -442,7 +442,7 @@ export default function SettingsPage() {
                 <div key={i} className="flex items-start justify-between gap-4 py-2 border-b border-card-border last:border-0">
                   <div>
                     <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{policy.label}</p>
-                    <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">{policy.desc}</p>
+                    <p className="text-xs text-foreground/50 font-semibold mt-0.5">{policy.desc}</p>
                   </div>
                   <div className={`h-5 w-9 rounded-full shrink-0 cursor-pointer transition-colors ${policy.enabled ? 'bg-green-500' : 'bg-foreground/20'}`}></div>
                 </div>
@@ -470,7 +470,7 @@ export default function SettingsPage() {
                 <div key={item.key} className="flex items-start justify-between gap-4 py-2 border-b border-card-border last:border-0">
                   <div>
                     <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{item.label}</p>
-                    <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">{item.desc}</p>
+                    <p className="text-xs text-foreground/50 font-semibold mt-0.5">{item.desc}</p>
                   </div>
                   <button
                     onClick={() => setSettings(p => ({ ...p, [item.key]: !p[item.key as keyof OrgSettings] }))}
@@ -507,7 +507,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Upgraded to Billing Portal</h4>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-1 leading-relaxed">
+                  <p className="text-xs text-foreground/50 font-semibold mt-1 leading-relaxed">
                     This section has been promoted to a top-level workspace containing credit usage breakdown, cost optimizations, and Stripe/Paystack paygates.
                   </p>
                 </div>
@@ -535,7 +535,7 @@ export default function SettingsPage() {
             />
             <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
               <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">AI Personality Settings</p>
-              <p className="text-[10px] text-foreground/50 font-semibold">These settings affect how all AI executives communicate with your organization.</p>
+              <p className="text-xs text-foreground/50 font-semibold">These settings affect how all AI executives communicate with your organization.</p>
               <div className="grid gap-4 md:grid-cols-3">
                 <Field label="Communication Tone">
                   <select className={selectCls} value={settings.aiTone} onChange={e => setSettings(p => ({ ...p, aiTone: e.target.value }))}>
@@ -559,12 +559,12 @@ export default function SettingsPage() {
                 const colors = ['#0A84FF', '#8B5CF6', '#0EA5E9', '#F59E0B', '#EC4899', '#EF4444'];
                 return (
                   <Card key={role} className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full flex items-center justify-center font-extrabold text-white text-[10px] shrink-0" style={{ backgroundColor: colors[i % colors.length] }}>
+                    <div className="h-9 w-9 rounded-full flex items-center justify-center font-extrabold text-white text-xs shrink-0" style={{ backgroundColor: colors[i % colors.length] }}>
                       {role}
                     </div>
                     <div className="flex-1 min-w-0">
                       <input className="text-xs font-extrabold text-[#1A1A1E] dark:text-white bg-transparent border-0 outline-none w-full" defaultValue={role} />
-                      <p className="text-[10px] text-foreground/45 font-semibold">{role} · Active</p>
+                      <p className="text-xs text-foreground/45 font-semibold">{role} · Active</p>
                     </div>
                     <div className="h-4 w-8 rounded-full bg-green-500 shrink-0"></div>
                   </Card>
@@ -591,7 +591,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Upgraded to Integrations Hub</h4>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-1 leading-relaxed">
+                  <p className="text-xs text-foreground/50 font-semibold mt-1 leading-relaxed">
                     This section has been promoted to a top-level workspace containing OAuth connection wizards, permissions toggles, and event-driven automation recipes.
                   </p>
                 </div>
@@ -637,10 +637,10 @@ export default function SettingsPage() {
                 <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-2">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                    <p className="text-[10px] font-extrabold text-amber-500">Copy this key now — it will not be shown again.</p>
+                    <p className="text-xs font-extrabold text-amber-500">Copy this key now — it will not be shown again.</p>
                   </div>
                   <div className="flex items-center gap-2 bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-lg p-2 border border-card-border">
-                    <code className="text-[10px] font-mono text-hq-cyan flex-1 break-all">
+                    <code className="text-xs font-mono text-hq-cyan flex-1 break-all">
                       {newKeyVisible ? newKeyResult : newKeyResult.replace(/./g, '•')}
                     </code>
                     <button onClick={() => setNewKeyVisible(v => !v)} className="text-foreground/40 hover:text-foreground">
@@ -662,11 +662,11 @@ export default function SettingsPage() {
                         <Key className="h-4 w-4 text-hq-cyan shrink-0" />
                         <div>
                           <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{k.name}</p>
-                          <p className="text-[10px] text-foreground/45 font-mono">{k.keyPrefix}•••••••••••••••••••••</p>
+                          <p className="text-xs text-foreground/45 font-mono">{k.keyPrefix}•••••••••••••••••••••</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <p className="text-[10px] text-foreground/40 font-semibold">
+                        <p className="text-xs text-foreground/40 font-semibold">
                           {k.lastUsedAt ? `Used ${new Date(k.lastUsedAt).toLocaleDateString()}` : 'Never used'}
                         </p>
                         <button onClick={() => handleRevokeKey(k.id)} className="text-red-400 hover:text-red-500">
@@ -699,8 +699,8 @@ export default function SettingsPage() {
                     <div className="flex items-start gap-3">
                       <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
                       <div>
-                        <p className="text-[11px] font-extrabold text-[#1A1A1E] dark:text-white capitalize">{log.eventType.replace(/_/g, ' ')}</p>
-                        <p className="text-[10px] text-foreground/45 font-semibold">
+                        <p className="text-sm font-extrabold text-[#1A1A1E] dark:text-white capitalize">{log.eventType.replace(/_/g, ' ')}</p>
+                        <p className="text-xs text-foreground/45 font-semibold">
                           {log.actor ? `${log.actor.name || log.actor.email}` : 'System'} · {new Date(log.createdAt).toLocaleString()}
                         </p>
                       </div>
@@ -739,7 +739,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between border-b border-card-border pb-3">
                 <div>
                   <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">HQ Guide Mode</p>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">
+                  <p className="text-xs text-foreground/50 font-semibold mt-0.5">
                     Interactive walkthrough guide to learn how HQ workspaces fit together.
                   </p>
                 </div>
@@ -751,7 +751,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between py-2 border-b border-card-border/40">
                 <div>
                   <p className="text-xs font-bold text-[#1A1A1E] dark:text-white">Status</p>
-                  <p className="text-[10px] text-foreground/45">Enable or disable guidance layer globally</p>
+                  <p className="text-xs text-foreground/45">Enable or disable guidance layer globally</p>
                 </div>
                 <div
                   onClick={() => setGuideModeEnabled(!guideModeEnabled)}
@@ -806,7 +806,7 @@ export default function SettingsPage() {
                   <span className="text-2xl">{item.icon}</span>
                   <div className="flex-1">
                     <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{item.label}</p>
-                    <p className="text-[10px] text-foreground/50 font-semibold">{item.desc}</p>
+                    <p className="text-xs text-foreground/50 font-semibold">{item.desc}</p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-foreground/30 group-hover:text-foreground transition-colors" />
                 </Card>
@@ -830,7 +830,7 @@ export default function SettingsPage() {
 
       {/* ─── Left sidebar nav ─────────────────────────────────────────── */}
       <aside className="w-52 shrink-0 space-y-1">
-        <p className="text-[9px] font-extrabold text-foreground/35 uppercase tracking-widest px-2 pb-1">Essential</p>
+        <p className="text-xs font-extrabold text-foreground/35 uppercase tracking-widest px-2 pb-1">Essential</p>
         {ESSENTIAL_SECTIONS.map(s => {
           const Icon = s.icon;
           const active = activeSection === s.id;
@@ -849,7 +849,7 @@ export default function SettingsPage() {
           );
         })}
 
-        <p className="text-[9px] font-extrabold text-foreground/35 uppercase tracking-widest px-2 pb-1 pt-4">Advanced</p>
+        <p className="text-xs font-extrabold text-foreground/35 uppercase tracking-widest px-2 pb-1 pt-4">Advanced</p>
         {ADVANCED_SECTIONS.map(s => {
           const Icon = s.icon;
           const active = activeSection === s.id;
@@ -901,7 +901,7 @@ function SectionHeader({ title, desc, icon }: { title: string; desc: string; ico
 function SaveBar({ onSave, saving, savedMsg, brandColor }: { onSave: () => void; saving: boolean; savedMsg: string; brandColor: string }) {
   return (
     <div className="flex items-center justify-between pt-4 border-t border-card-border mt-2">
-      <p className="text-[10px] text-green-500 font-extrabold h-4">{savedMsg}</p>
+      <p className="text-xs text-green-500 font-extrabold h-4">{savedMsg}</p>
       <Button onClick={onSave} disabled={saving} size="sm" className="text-white font-bold text-xs h-8" style={{ backgroundColor: brandColor }}>
         <Save className="h-3.5 w-3.5 mr-1.5" />
         {saving ? 'Saving...' : 'Save Changes'}
@@ -913,7 +913,7 @@ function SaveBar({ onSave, saving, savedMsg, brandColor }: { onSave: () => void;
 function EmptyState({ text }: { text: string }) {
   return (
     <div className="py-10 flex flex-col items-center justify-center space-y-2">
-      <p className="text-[11px] text-foreground/40 font-semibold text-center max-w-xs">{text}</p>
+      <p className="text-sm text-foreground/40 font-semibold text-center max-w-xs">{text}</p>
     </div>
   );
 }

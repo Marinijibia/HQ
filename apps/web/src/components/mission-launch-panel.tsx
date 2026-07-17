@@ -91,7 +91,7 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
             </div>
             <div>
               <h2 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Launch a Mission</h2>
-              <p className="text-[10px] text-foreground/50 font-semibold">Your AI executives will take it from here</p>
+              <p className="text-xs text-foreground/50 font-semibold">Your AI executives will take it from here</p>
             </div>
           </div>
           <button onClick={onClose} className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-foreground/8 transition-colors">
@@ -103,7 +103,7 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Objective */}
           <div className="space-y-2">
-            <label className="text-[10px] font-extrabold text-[#1A1A1E] dark:text-white uppercase tracking-widest flex items-center gap-1.5">
+            <label className="text-xs font-extrabold text-[#1A1A1E] dark:text-white uppercase tracking-widest flex items-center gap-1.5">
               <AlignLeft className="h-3 w-3" style={{ color: brandColor }} />
               Mission Objective *
             </label>
@@ -115,12 +115,12 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
               value={objective}
               onChange={e => setObjective(e.target.value)}
             />
-            <p className="text-[10px] text-foreground/40 font-semibold">Be specific — the clearer the objective, the better the result</p>
+            <p className="text-xs text-foreground/40 font-semibold">Be specific — the clearer the objective, the better the result</p>
           </div>
 
           {/* Suggestions */}
           <div className="space-y-2">
-            <p className="text-[10px] font-extrabold text-foreground/40 uppercase tracking-widest flex items-center gap-1.5">
+            <p className="text-xs font-extrabold text-foreground/40 uppercase tracking-widest flex items-center gap-1.5">
               <Sparkles className="h-3 w-3" />
               Quick start — tap to use
             </p>
@@ -129,7 +129,7 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
                 <button
                   key={s}
                   onClick={() => setObjective(s)}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-bold border border-card-border text-foreground/60 bg-foreground/4 hover:bg-foreground/8 hover:text-foreground transition-colors"
+                  className="px-2.5 py-1 rounded-full text-xs font-bold border border-card-border text-foreground/60 bg-foreground/4 hover:bg-foreground/8 hover:text-foreground transition-colors"
                 >
                   {s}
                 </button>
@@ -139,7 +139,7 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
 
           {/* Deadline */}
           <div className="space-y-2">
-            <label className="text-[10px] font-extrabold text-[#1A1A1E] dark:text-white uppercase tracking-widest flex items-center gap-1.5">
+            <label className="text-xs font-extrabold text-[#1A1A1E] dark:text-white uppercase tracking-widest flex items-center gap-1.5">
               <Calendar className="h-3 w-3" style={{ color: brandColor }} />
               Target Deadline <span className="text-foreground/30 font-semibold normal-case tracking-normal">(optional)</span>
             </label>
@@ -155,7 +155,7 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
 
           {/* Priority */}
           <div className="space-y-2">
-            <label className="text-[10px] font-extrabold text-[#1A1A1E] dark:text-white uppercase tracking-widest flex items-center gap-1.5">
+            <label className="text-xs font-extrabold text-[#1A1A1E] dark:text-white uppercase tracking-widest flex items-center gap-1.5">
               <Flag className="h-3 w-3" style={{ color: brandColor }} />
               Priority Level
             </label>
@@ -173,8 +173,8 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
                 >
                   <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: opt.color }} />
                   <div className="flex-1">
-                    <p className="text-[11px] font-extrabold text-[#1A1A1E] dark:text-white">{opt.label}</p>
-                    <p className="text-[9px] text-foreground/45 font-semibold">{opt.description}</p>
+                    <p className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">{opt.label}</p>
+                    <p className="text-xs text-foreground/45 font-semibold">{opt.description}</p>
                   </div>
                   {priority === opt.value && (
                     <div className="h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: opt.color }}>
@@ -198,7 +198,7 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
             <Rocket className="h-4 w-4 mr-2" />
             {submitting ? 'Briefing your executives...' : 'Launch Mission'}
           </Button>
-          <p className="text-center text-[10px] text-foreground/35 font-semibold">
+          <p className="text-center text-xs text-foreground/35 font-semibold">
             Your AI executive team will analyse and begin within seconds
           </p>
         </div>

@@ -273,7 +273,7 @@ export default function OrganizationPage() {
                   Hierarchy Health Score
                 </h4>
 
-                <div className="space-y-3.5 text-[11px] font-bold">
+                <div className="space-y-3.5 text-sm font-bold">
                   {[
                     { label: 'Strategic Alignment', score: 94, color: 'text-hq-cyan' },
                     { label: 'Department Collaboration', score: 88, color: 'text-hq-purple' },
@@ -312,7 +312,7 @@ export default function OrganizationPage() {
                   <Layers className="h-4.5 w-4.5 text-hq-purple" />
                   Active Departments & C-Suite Owners
                 </h3>
-                <Badge variant="neutral" className="text-[9px]">Editable Hierarchy</Badge>
+                <Badge variant="neutral" className="text-xs">Editable Hierarchy</Badge>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -328,7 +328,7 @@ export default function OrganizationPage() {
                           <Archive className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      <div className="text-[10px] text-foreground/50 font-semibold space-y-1">
+                      <div className="text-xs text-foreground/50 font-semibold space-y-1">
                         <p className="flex items-center gap-1">
                           <UserCheck className="h-3.5 w-3.5 text-hq-cyan" />
                           Owner: <span className="text-[#1A1A1E] dark:text-white">{dept.executive}</span>
@@ -399,10 +399,10 @@ export default function OrganizationPage() {
                 {branches.map(br => (
                   <Card key={br.id} className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] space-y-3">
                     <div>
-                      <Badge variant="neutral" className="text-[8px] uppercase tracking-wider font-bold">{br.region}</Badge>
+                      <Badge variant="neutral" className="text-sm uppercase tracking-wider font-bold">{br.region}</Badge>
                       <h4 className="text-xs font-black text-[#1A1A1E] dark:text-white mt-1.5">{br.name}</h4>
                     </div>
-                    <div className="text-[10px] text-foreground/50 font-semibold space-y-1">
+                    <div className="text-xs text-foreground/50 font-semibold space-y-1">
                       <p>Regional Manager: <span className="text-white">{br.manager}</span></p>
                       <p>Members on site: <span className="text-white">{br.memberCount}</span></p>
                     </div>
@@ -481,7 +481,7 @@ export default function OrganizationPage() {
 
                 {/* Progress bar */}
                 <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-bold text-foreground/50">
+                  <div className="flex justify-between text-xs font-bold text-foreground/50">
                     <span>Startup Milestone Completion</span>
                     <span>75% (3 of 4 met)</span>
                   </div>
@@ -495,7 +495,7 @@ export default function OrganizationPage() {
 
                 {/* Growth Stage Criteria Checklist */}
                 <div className="border-t border-card-border pt-4 space-y-3 text-xs font-semibold">
-                  <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest">Startup Exit Requirements</p>
+                  <p className="text-xs text-foreground/40 font-bold uppercase tracking-widest">Startup Exit Requirements</p>
                   
                   {[
                     { label: 'Register 3 distinct operational branches (Completed)', met: true },
@@ -526,15 +526,15 @@ export default function OrganizationPage() {
 
                 <div className="space-y-3.5 text-xs font-semibold">
                   <div className="p-3 rounded-lg border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 space-y-2">
-                    <p className="text-[10px] font-black text-[#1A1A1E] dark:text-white">Suggest: Expand HR Division</p>
-                    <p className="text-[9px] text-foreground/50 leading-relaxed font-semibold">
+                    <p className="text-xs font-black text-[#1A1A1E] dark:text-white">Suggest: Expand HR Division</p>
+                    <p className="text-xs text-foreground/50 leading-relaxed font-semibold">
                       Your C-Suite team size is approaching 15. Standard governance suggestions suggest spawning a human resources department node to handle permissions.
                     </p>
                   </div>
 
                   <div className="p-3 rounded-lg border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 space-y-2">
-                    <p className="text-[10px] font-black text-[#1A1A1E] dark:text-white">Suggest: Enforce Enterprise MFA</p>
-                    <p className="text-[9px] text-foreground/50 leading-relaxed font-semibold">
+                    <p className="text-xs font-black text-[#1A1A1E] dark:text-white">Suggest: Enforce Enterprise MFA</p>
+                    <p className="text-xs text-foreground/50 leading-relaxed font-semibold">
                       As your operational footprint expands, strict governance policies mandate transitioning MFA controls from "Optional" to "Enforced" on the compliance console.
                     </p>
                   </div>

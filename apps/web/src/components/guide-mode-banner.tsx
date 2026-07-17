@@ -81,7 +81,7 @@ export function GuideModeBanner() {
         <div className="flex items-center justify-between pb-2 border-b border-card-border">
           <div className="flex items-center space-x-2 text-hq-blue">
             <Sparkles className="h-4.5 w-4.5 animate-pulse" />
-            <span className="font-bold tracking-wide uppercase text-[10px]">
+            <span className="font-bold tracking-wide uppercase text-xs">
               HQ Guide Mode — Mission {currentMissionNumber} of 2
             </span>
           </div>
@@ -105,7 +105,7 @@ export function GuideModeBanner() {
         {!minimized && (
           <div className="mt-3 space-y-3">
             {/* Step Progress Checklist */}
-            <div className="flex items-center justify-between text-[10px] text-foreground/60 font-medium">
+            <div className="flex items-center justify-between text-xs text-foreground/60 font-medium">
               <div className="flex items-center space-x-1">
                 <div
                   className={`h-3 w-3 rounded-full flex items-center justify-center border ${isStarted ? 'border-hq-blue bg-hq-blue/10 text-hq-blue' : 'border-foreground/30'}`}
@@ -163,7 +163,7 @@ export function GuideModeBanner() {
               variant="outline"
               size="sm"
               onClick={() => setShowHelpModal(true)}
-              className="w-full text-[11px] font-medium tracking-tight text-foreground/75 hover:text-white"
+              className="w-full text-sm font-medium tracking-tight text-foreground/75 hover:text-white"
             >
               <HelpCircle className="h-3.5 w-3.5 mr-1" />
               Ask CEO for platform overview
@@ -198,7 +198,7 @@ export function GuideModeBanner() {
 
             <div className="space-y-3 mb-6 text-xs text-foreground/90">
               <div className="flex items-start space-x-2.5">
-                <span className="h-4 w-4 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center font-bold text-[10px]">
+                <span className="h-4 w-4 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center font-bold text-xs">
                   1
                 </span>
                 <div>
@@ -207,7 +207,7 @@ export function GuideModeBanner() {
                 </div>
               </div>
               <div className="flex items-start space-x-2.5">
-                <span className="h-4 w-4 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center font-bold text-[10px]">
+                <span className="h-4 w-4 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center font-bold text-xs">
                   2
                 </span>
                 <div>
@@ -216,7 +216,7 @@ export function GuideModeBanner() {
                 </div>
               </div>
               <div className="flex items-start space-x-2.5">
-                <span className="h-4 w-4 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center font-bold text-[10px]">
+                <span className="h-4 w-4 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center font-bold text-xs">
                   3
                 </span>
                 <div>

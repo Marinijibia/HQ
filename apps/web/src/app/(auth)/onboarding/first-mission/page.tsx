@@ -135,7 +135,7 @@ export default function FirstMissionPage() {
                   }`}
                 >
                   <p className="font-semibold">Step 1: Strategic Plan</p>
-                  <p className="text-[10px] text-foreground/60 mt-0.5">
+                  <p className="text-xs text-foreground/60 mt-0.5">
                     Strategy Director verified targets
                   </p>
                 </div>
@@ -149,7 +149,7 @@ export default function FirstMissionPage() {
                   }`}
                 >
                   <p className="font-semibold">Step 2: Copy Drafts</p>
-                  <p className="text-[10px] text-foreground/60 mt-0.5">
+                  <p className="text-xs text-foreground/60 mt-0.5">
                     Copywriting Director compiling texts
                   </p>
                 </div>
@@ -163,7 +163,7 @@ export default function FirstMissionPage() {
                   }`}
                 >
                   <p className="font-semibold">Step 3: Legal Check</p>
-                  <p className="text-[10px] text-foreground/60 mt-0.5">
+                  <p className="text-xs text-foreground/60 mt-0.5">
                     Legal Director reviewing claims
                   </p>
                 </div>

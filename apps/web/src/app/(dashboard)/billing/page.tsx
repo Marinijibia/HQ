@@ -218,14 +218,14 @@ export default function BillingPage() {
               <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest block">AI Credit Balance</span>
+                    <span className="text-xs text-foreground/45 font-bold uppercase tracking-widest block">AI Credit Balance</span>
                     <span className="text-3xl font-black text-[#1A1A1E] dark:text-white mt-1 block">9,420 credits</span>
                   </div>
-                  <Badge variant="ai" className="text-[9px]">Active Billing Cycle</Badge>
+                  <Badge variant="ai" className="text-xs">Active Billing Cycle</Badge>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-bold text-foreground/50">
+                  <div className="flex justify-between text-xs font-bold text-foreground/50">
                     <span>Current usage tier: 94.2% remaining</span>
                     <span>10,000 total quota</span>
                   </div>
@@ -242,7 +242,7 @@ export default function BillingPage() {
               <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
                 <div>
                   <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Monthly Credit Usage Analytics</h3>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">Details on credits consumed across operational modules.</p>
+                  <p className="text-xs text-foreground/50 font-semibold mt-0.5">Details on credits consumed across operational modules.</p>
                 </div>
 
                 <div className="space-y-3">
@@ -271,11 +271,11 @@ export default function BillingPage() {
                   <TrendingUp className="h-4 w-4 text-hq-cyan" />
                   AI Cost Optimization
                 </h4>
-                <p className="text-[10px] text-foreground/50 leading-relaxed font-semibold">
+                <p className="text-xs text-foreground/50 leading-relaxed font-semibold">
                   HQ automatically routes simple queries to standard models and caches repeats to minimize credit depletion.
                 </p>
 
-                <div className="border-t border-card-border pt-3 space-y-2.5 text-[10px] font-bold">
+                <div className="border-t border-card-border pt-3 space-y-2.5 text-xs font-bold">
                   <div className="flex justify-between">
                     <span className="text-foreground/40">Cache Hit Rate</span>
                     <span className="text-white">32.4%</span>
@@ -303,7 +303,7 @@ export default function BillingPage() {
                 <div className="flex items-start gap-3">
                   <ShieldAlert className="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-[10px] text-yellow-500 font-bold uppercase tracking-wider block">Contextual Upgrade Alert</span>
+                    <span className="text-xs text-yellow-500 font-bold uppercase tracking-wider block">Contextual Upgrade Alert</span>
                     <p className="text-xs text-white font-semibold leading-relaxed mt-1">
                       Elena (CEO): &ldquo;Your Technology team has reached today&apos;s mission capacity on the Starter plan. Upgrading to Professional unlocks unlimited parallel executions.&rdquo;
                     </p>
@@ -318,7 +318,7 @@ export default function BillingPage() {
                 <div className="grid gap-4 sm:grid-cols-2 text-xs">
                   <div className="p-4 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 rounded-xl space-y-3">
                     <div>
-                      <Badge variant="neutral" className="text-[8px] font-bold">CURRENT PLAN</Badge>
+                      <Badge variant="neutral" className="text-sm font-bold">CURRENT PLAN</Badge>
                       <h4 className="text-sm font-black text-white mt-1.5">Free Starter Tier</h4>
                     </div>
                     <ul className="space-y-1.5 font-semibold text-foreground/60 leading-tight">
@@ -330,9 +330,9 @@ export default function BillingPage() {
 
                   <div className="p-4 border border-hq-cyan/40 bg-hq-cyan/5 rounded-xl space-y-3">
                     <div>
-                      <Badge variant="premium" className="text-[8px] font-bold">RECOMMENDED</Badge>
+                      <Badge variant="premium" className="text-sm font-bold">RECOMMENDED</Badge>
                       <h4 className="text-sm font-black text-white mt-1.5">Professional Scale</h4>
-                      <p className="text-[10px] text-hq-cyan font-black mt-0.5">$150.00/month</p>
+                      <p className="text-xs text-hq-cyan font-black mt-0.5">$150.00/month</p>
                     </div>
                     <ul className="space-y-1.5 font-semibold text-white/80 leading-tight">
                       <li>· Unlimited active missions</li>
@@ -385,7 +385,7 @@ export default function BillingPage() {
               <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
                 <div>
                   <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Tenant Budget Ceilings</h3>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">Enforce spending bounds on API credits.</p>
+                  <p className="text-xs text-foreground/50 font-semibold mt-0.5">Enforce spending bounds on API credits.</p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 text-xs">
@@ -436,7 +436,7 @@ export default function BillingPage() {
                   <Info className="h-4 w-4 text-hq-cyan" />
                   Budget Safeguards
                 </h4>
-                <p className="text-[10px] text-foreground/50 leading-relaxed font-semibold">
+                <p className="text-xs text-foreground/50 leading-relaxed font-semibold">
                   Missions exceeding the cost threshold are placed on automatic administrative hold. This stops loops or expensive context updates without owner consent.
                 </p>
               </Card>
@@ -457,12 +457,12 @@ export default function BillingPage() {
                   <Card key={inv.id} className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] flex items-center justify-between gap-4">
                     <div>
                       <p className="text-xs font-black text-[#1A1A1E] dark:text-white">{inv.id}</p>
-                      <p className="text-[9px] text-foreground/45 mt-0.5 font-semibold">{inv.type} · {inv.date}</p>
+                      <p className="text-xs text-foreground/45 mt-0.5 font-semibold">{inv.type} · {inv.date}</p>
                     </div>
 
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-black text-white">{inv.amount}</span>
-                      <Badge variant="success" className="text-[8px] font-bold">
+                      <Badge variant="success" className="text-sm font-bold">
                         {inv.status}
                       </Badge>
                       <button

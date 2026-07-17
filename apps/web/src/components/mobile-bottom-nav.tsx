@@ -43,7 +43,7 @@ export function MobileBottomNav() {
               }`}>
                 <Icon className="h-4 w-4" />
               </div>
-              <span className={`text-[9px] font-bold tracking-wide ${
+              <span className={`text-xs font-bold tracking-wide ${
                 isActive ? 'text-hq-blue' : 'text-foreground/40'
               }`}>
                 {item.name}

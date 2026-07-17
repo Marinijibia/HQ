@@ -395,7 +395,7 @@ export default function IntelligencePage() {
           </div>
           <div>
             <h2 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Layer {cfg.layer} — {cfg.name}</h2>
-            <p className="text-[10px] text-foreground/50 font-semibold">{cfg.description}</p>
+            <p className="text-xs text-foreground/50 font-semibold">{cfg.description}</p>
           </div>
         </div>
 
@@ -403,7 +403,7 @@ export default function IntelligencePage() {
         <div className="grid gap-4 md:grid-cols-2">
           {cfg.fields.map(field => (
             <div key={field.key} className={`space-y-1.5 ${field.type === 'textarea' ? 'md:col-span-2' : ''}`}>
-              <label className="text-[10px] font-extrabold text-[#1A1A1E] dark:text-white uppercase tracking-widest">{field.label}</label>
+              <label className="text-xs font-extrabold text-[#1A1A1E] dark:text-white uppercase tracking-widest">{field.label}</label>
               {field.type === 'textarea' ? (
                 <textarea
                   className="w-full min-h-20 rounded-xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] px-3 py-2 text-xs font-semibold text-[#1A1A1E] dark:text-white focus:outline-none focus:ring-2 resize-none"
@@ -458,7 +458,7 @@ export default function IntelligencePage() {
           <div>
             <h1 className="text-xl font-extrabold text-[#1A1A1E] dark:text-white flex items-center gap-2">
               Digital Organization Twin
-              <Badge variant="ai" className="text-[9px]">LIVING GRAPH</Badge>
+              <Badge variant="ai" className="text-xs">LIVING GRAPH</Badge>
             </h1>
             <p className="text-xs text-foreground/55 font-semibold mt-0.5">
               Continuously evolving understanding of the organization consulted before every AI mission.
@@ -468,7 +468,7 @@ export default function IntelligencePage() {
         {intelligence?.lastLearnedAt && (
           <div className="flex items-center gap-1.5 text-foreground/45 bg-[#F9F9FB] dark:bg-[#0A0A0C] border border-card-border px-3 py-1 rounded-xl">
             <RefreshCw className="h-3 w-3 text-hq-blue" />
-            <span className="text-[9px] font-bold uppercase tracking-wider">Sync: Live</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Sync: Live</span>
           </div>
         )}
       </div>
@@ -491,7 +491,7 @@ export default function IntelligencePage() {
                   <span className="text-sm font-black" style={{ color: brandColor }}>{overallConfidence}%</span>
                 </div>
               </div>
-              <p className="text-[9px] font-bold text-foreground/50 uppercase tracking-widest text-center">Twin Confidence</p>
+              <p className="text-xs font-bold text-foreground/50 uppercase tracking-widest text-center">Twin Confidence</p>
             </Card>
 
             <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] md:col-span-3 space-y-3">
@@ -502,7 +502,7 @@ export default function IntelligencePage() {
                 </div>
                 <Badge
                   variant={intelligence?.maturityLevel === 5 ? 'success' : intelligence?.maturityLevel === 4 ? 'info' : intelligence?.maturityLevel === 3 ? 'ai' : 'warning'}
-                  className="text-[10px] font-bold"
+                  className="text-xs font-bold"
                 >
                   Level {intelligence?.maturityLevel ?? 1} — {intelligence?.maturityLabel ?? 'Basic'}
                 </Badge>
@@ -516,14 +516,14 @@ export default function IntelligencePage() {
                         className={`h-1.5 rounded-full mb-1 transition-all duration-700 ${active ? '' : 'opacity-20'}`}
                         style={{ backgroundColor: tier.color }}
                       />
-                      <p className={`text-[8px] font-extrabold ${active ? '' : 'text-foreground/30'}`} style={active ? { color: tier.color } : {}}>
+                      <p className={`text-sm font-extrabold ${active ? '' : 'text-foreground/30'}`} style={active ? { color: tier.color } : {}}>
                         {tier.label}
                       </p>
                     </div>
                   );
                 })}
               </div>
-              <p className="text-[10px] text-foreground/45 font-semibold">
+              <p className="text-xs text-foreground/45 font-semibold">
                 {intelligence?.maturityLevel === 5
                   ? '🎯 Level 5: Autonomous. Twin verifies facts and updates executive behaviors in real-time.'
                   : '📋 Profile incomplete. Fill in missing details across the layers to advance maturity.'}
@@ -544,11 +544,11 @@ export default function IntelligencePage() {
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{s.title}</p>
-                        <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">{s.description}</p>
+                        <p className="text-xs text-foreground/50 font-semibold mt-0.5">{s.description}</p>
                       </div>
                       <div className="flex gap-2 shrink-0">
-                        <Button size="sm" className="text-white text-[10px] font-bold h-7" style={{ backgroundColor: brandColor }} onClick={() => handleApproveSuggestion(s.id)}>Approve & Publish</Button>
-                        <Button size="sm" variant="outline" className="text-[10px] font-bold h-7 border-card-border" onClick={() => handleDismissSuggestion(s.id)}>Dismiss</Button>
+                        <Button size="sm" className="text-white text-xs font-bold h-7" style={{ backgroundColor: brandColor }} onClick={() => handleApproveSuggestion(s.id)}>Approve & Publish</Button>
+                        <Button size="sm" variant="outline" className="text-xs font-bold h-7 border-card-border" onClick={() => handleDismissSuggestion(s.id)}>Dismiss</Button>
                       </div>
                     </div>
 
@@ -562,7 +562,7 @@ export default function IntelligencePage() {
                       ].map((step, idx) => (
                         <div key={idx} className="space-y-1">
                           <div className={`h-1.5 rounded-full ${step.active ? '' : 'bg-foreground/10'}`} style={step.active ? { backgroundColor: step.color } : {}} />
-                          <p className={`text-[8px] font-bold uppercase tracking-wider ${step.active ? 'text-[#1A1A1E] dark:text-white' : 'text-foreground/30'}`}>{step.label}</p>
+                          <p className={`text-sm font-bold uppercase tracking-wider ${step.active ? 'text-[#1A1A1E] dark:text-white' : 'text-foreground/30'}`}>{step.label}</p>
                         </div>
                       ))}
                     </div>
@@ -574,7 +574,7 @@ export default function IntelligencePage() {
 
           {/* 8 Twin Layers Accordion */}
           <div className="space-y-3">
-            <p className="text-[10px] font-extrabold text-foreground/45 uppercase tracking-widest">Twin Layers</p>
+            <p className="text-xs font-extrabold text-foreground/45 uppercase tracking-widest">Twin Layers</p>
             <div className="grid gap-3 md:grid-cols-2">
               {TWIN_LAYERS_CONFIG.map((cfg, idx) => {
                 const Icon = cfg.icon;
@@ -595,14 +595,14 @@ export default function IntelligencePage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-xs font-black text-[#1A1A1E] dark:text-white">Layer {cfg.layer} — {cfg.name}</p>
-                        {!hasData && <Badge variant="warning" className="text-[8px] shrink-0 font-bold">Empty</Badge>}
+                        {!hasData && <Badge variant="warning" className="text-sm shrink-0 font-bold">Empty</Badge>}
                       </div>
-                      <p className="text-[10px] text-foreground/45 font-semibold mt-0.5 truncate">{cfg.description}</p>
+                      <p className="text-xs text-foreground/45 font-semibold mt-0.5 truncate">{cfg.description}</p>
                       <div className="mt-2 flex items-center gap-2">
                         <div className="flex-1 h-1 rounded-full bg-foreground/10 overflow-hidden">
                           <div className="h-full rounded-full transition-all duration-700" style={{ width: `${confidence}%`, backgroundColor: confColor }} />
                         </div>
-                        <span className="text-[9px] font-extrabold shrink-0" style={{ color: confColor }}>{confidence}%</span>
+                        <span className="text-xs font-extrabold shrink-0" style={{ color: confColor }}>{confidence}%</span>
                       </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-foreground/30 group-hover:text-foreground transition-colors shrink-0" />
@@ -618,7 +618,7 @@ export default function IntelligencePage() {
               <Lock className="h-4 w-4 text-hq-purple" />
               <div>
                 <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">Executive Access & Least Privilege</p>
-                <p className="text-[10px] text-foreground/50 mt-0.5">Specialized directors access only their authorized layer data bounds.</p>
+                <p className="text-xs text-foreground/50 mt-0.5">Specialized directors access only their authorized layer data bounds.</p>
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -630,11 +630,11 @@ export default function IntelligencePage() {
                 { role: 'Success (Yuki)', desc: 'Feedback & support', layers: [1, 2, 7], color: '#F59E0B' },
               ].map(exec => (
                 <div key={exec.role} className="border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/50 rounded-xl p-3 space-y-2">
-                  <p className="text-[10px] font-extrabold text-[#1A1A1E] dark:text-white">{exec.role}</p>
-                  <p className="text-[8px] text-foreground/45 font-bold uppercase tracking-wider">{exec.desc}</p>
+                  <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{exec.role}</p>
+                  <p className="text-sm text-foreground/45 font-bold uppercase tracking-wider">{exec.desc}</p>
                   <div className="flex flex-wrap gap-1">
                     {exec.layers.map(l => (
-                      <span key={l} className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-foreground/5 border border-card-border" style={{ borderColor: `${exec.color}30`, color: exec.color }}>
+                      <span key={l} className="text-sm font-bold px-1.5 py-0.5 rounded bg-foreground/5 border border-card-border" style={{ borderColor: `${exec.color}30`, color: exec.color }}>
                         L{l}
                       </span>
                     ))}
@@ -668,12 +668,12 @@ export default function IntelligencePage() {
                 return (
                   <div key={dim.key} className="border border-card-border bg-card-bg rounded-xl p-3 space-y-2 hover:shadow-sm">
                     <div className="flex items-center justify-between">
-                      <p className="text-[9px] font-extrabold text-foreground/50 uppercase tracking-wider">{dim.label}</p>
+                      <p className="text-xs font-extrabold text-foreground/50 uppercase tracking-wider">{dim.label}</p>
                       <TrendIcon className="h-3 w-3" style={{ color: trend === 'up' ? '#22C55E' : trend === 'down' ? '#EF4444' : '#94A3B8' }} />
                     </div>
                     <div className="flex items-end justify-between">
                       <p className="text-lg font-black" style={{ color: dim.color }}>{score}</p>
-                      <p className="text-[8px] text-foreground/35 font-bold">/100</p>
+                      <p className="text-sm text-foreground/35 font-bold">/100</p>
                     </div>
                     <div className="h-1 rounded-full bg-foreground/10 overflow-hidden">
                       <div className="h-full rounded-full transition-all duration-700" style={{ width: `${score}%`, backgroundColor: dim.color }} />
@@ -691,7 +691,7 @@ export default function IntelligencePage() {
                 <History className="h-4 w-4 text-foreground/50" />
                 <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">Organization Evolution Timeline</p>
               </div>
-              <Badge variant="neutral" className="text-[9px]">Living History</Badge>
+              <Badge variant="neutral" className="text-xs">Living History</Badge>
             </div>
             {(() => {
               const timeline = intelligence?.evolutionTimeline ?? [];
@@ -699,7 +699,7 @@ export default function IntelligencePage() {
                 return (
                   <div className="py-6 flex flex-col items-center space-y-2">
                     <History className="h-6 w-6 text-foreground/20" />
-                    <p className="text-[11px] text-foreground/40 font-semibold text-center">
+                    <p className="text-sm text-foreground/40 font-semibold text-center">
                       Key milestones will appear here as your organization grows.<br />
                       HQ automatically captures significant events.
                     </p>
@@ -711,9 +711,9 @@ export default function IntelligencePage() {
                   {timeline.slice(0, 8).map((event) => (
                     <div key={event.id} className="relative">
                       <div className="absolute -left-[20.5px] top-1.5 h-2 w-2 rounded-full bg-card-bg border" style={{ borderColor: brandColor }} />
-                      <p className="text-[11px] font-extrabold text-[#1A1A1E] dark:text-white">{event.title}</p>
-                      {event.description && <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">{event.description}</p>}
-                      <p className="text-[9px] text-foreground/35 font-semibold mt-0.5">{new Date(event.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                      <p className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">{event.title}</p>
+                      {event.description && <p className="text-xs text-foreground/50 font-semibold mt-0.5">{event.description}</p>}
+                      <p className="text-xs text-foreground/35 font-semibold mt-0.5">{new Date(event.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                     </div>
                   ))}
                 </div>
@@ -728,7 +728,7 @@ export default function IntelligencePage() {
                 <Database className="h-4.5 w-4.5 text-hq-purple" />
                 <div>
                   <h3 className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">Memory Governance & Quality Review</h3>
-                  <p className="text-[10px] text-foreground/50 font-semibold">Perform scheduled review cycle audits, remove duplicates, and index long-term context nodes.</p>
+                  <p className="text-xs text-foreground/50 font-semibold">Perform scheduled review cycle audits, remove duplicates, and index long-term context nodes.</p>
                 </div>
               </div>
               <Button
@@ -752,7 +752,7 @@ export default function IntelligencePage() {
                 { label: 'Long-term Nodes', value: memories.filter(m => m.layer === 'ORGANIZATION' || m.layer === 'EXECUTIVE').length, color: '#22C55E' },
               ].map((stat, idx) => (
                 <div key={idx} className="border border-card-border rounded-xl p-3 bg-[#F9F9FB] dark:bg-[#0A0A0C]/30 text-center">
-                  <p className="text-[8px] font-bold text-foreground/45 uppercase tracking-wider">{stat.label}</p>
+                  <p className="text-sm font-bold text-foreground/45 uppercase tracking-wider">{stat.label}</p>
                   <p className="text-lg font-black mt-1" style={{ color: stat.color }}>{stat.value}</p>
                 </div>
               ))}
@@ -760,9 +760,9 @@ export default function IntelligencePage() {
 
             {/* Memory List Table */}
             <div className="space-y-2">
-              <p className="text-[9px] font-extrabold text-foreground/45 uppercase tracking-wider">Living Memory Nodes Ledger</p>
+              <p className="text-xs font-extrabold text-foreground/45 uppercase tracking-wider">Living Memory Nodes Ledger</p>
               {memories.length === 0 ? (
-                <div className="py-8 text-center text-[10px] text-foreground/40 font-semibold border border-dashed border-card-border rounded-xl">
+                <div className="py-8 text-center text-xs text-foreground/40 font-semibold border border-dashed border-card-border rounded-xl">
                   No active memory nodes found in the database tenancy.
                 </div>
               ) : (
@@ -771,7 +771,7 @@ export default function IntelligencePage() {
                     <div key={m.id} className="flex items-center justify-between gap-4 p-3 rounded-lg border border-card-border bg-card-bg hover:border-hq-blue/20 transition-all">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-black text-[#1A1A1E] dark:text-white truncate">{m.key}</span>
+                          <span className="text-xs font-black text-[#1A1A1E] dark:text-white truncate">{m.key}</span>
                           <Badge variant="neutral" className="text-[7px] font-black tracking-widest">{m.layer}</Badge>
                           {m.isConflicted && <Badge variant="error" className="text-[7px] font-black animate-pulse">Conflict</Badge>}
                         </div>
@@ -779,7 +779,7 @@ export default function IntelligencePage() {
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <div className="text-right">
-                          <span className="text-[9px] font-black text-[#1A1A1E] dark:text-white">{m.confidence}%</span>
+                          <span className="text-xs font-black text-[#1A1A1E] dark:text-white">{m.confidence}%</span>
                           <p className="text-[7px] text-foreground/40 font-bold uppercase tracking-wider">Conf</p>
                         </div>
                         <button

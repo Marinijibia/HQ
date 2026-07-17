@@ -213,7 +213,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
           <span className="text-foreground/20 font-light select-none text-lg">|</span>
-          <div className="flex items-center space-x-2 text-[10px] uppercase tracking-wider font-extrabold bg-black/[0.04] dark:bg-white/[0.04] border border-card-border rounded-full px-3 py-1 text-foreground/80 select-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-none">
+          <div className="flex items-center space-x-2 text-xs uppercase tracking-wider font-extrabold bg-black/[0.04] dark:bg-white/[0.04] border border-card-border rounded-full px-3 py-1 text-foreground/80 select-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-none">
             <span className="h-1.5 w-1.5 rounded-full bg-hq-cyan animate-pulse shadow-[0_0_8px_#30D158]"></span>
             <span>{orgName}</span>
           </div>
@@ -255,10 +255,10 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
           {showNotifications && (
             <Card className="absolute right-0 top-12 z-50 w-80 p-5 border border-card-border bg-white/90 dark:bg-black/90 backdrop-blur-xl shadow-level-4 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex items-center justify-between pb-3 border-b border-card-border/80">
-                <span className="font-extrabold text-[10px] uppercase tracking-wider text-foreground">Notifications Feed</span>
+                <span className="font-extrabold text-xs uppercase tracking-wider text-foreground">Notifications Feed</span>
                 <button
                   onClick={handleDismissAll}
-                  className="text-[10px] text-hq-cyan hover:underline font-bold"
+                  className="text-xs text-hq-cyan hover:underline font-bold"
                 >
                   Dismiss All
                 </button>
@@ -274,14 +274,14 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                     >
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-foreground/90">{n.title}</span>
-                        <span className="text-[9px] text-foreground/45">
+                        <span className="text-xs text-foreground/45">
                           {new Date(n.createdAt).toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit',
                           })}
                         </span>
                       </div>
-                      <p className="text-foreground/60 text-[11px] leading-relaxed">{n.message}</p>
+                      <p className="text-foreground/60 text-sm leading-relaxed">{n.message}</p>
                     </div>
                   ))
                 )}
@@ -290,7 +290,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <Link
                   href="/notifications"
                   onClick={() => setShowNotifications(false)}
-                  className="text-[10px] text-hq-cyan hover:text-hq-cyan/85 font-extrabold uppercase tracking-wider"
+                  className="text-xs text-hq-cyan hover:text-hq-cyan/85 font-extrabold uppercase tracking-wider"
                 >
                   Open Executive Inbox
                 </Link>
@@ -300,18 +300,18 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center space-x-4 select-none pl-2 border-l border-card-border">
             <div className="flex items-center space-x-2.5">
               <div className="p-[1.5px] bg-gradient-to-tr from-hq-blue via-[#bf5af2] to-hq-cyan rounded-full shadow-[0_0_10px_rgba(10,132,255,0.15)] transition-transform hover:scale-105">
-                <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center font-bold text-white text-[11px] uppercase tracking-wider">
+                <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center font-bold text-white text-sm uppercase tracking-wider">
                   {displayName ? displayName.slice(0, 2).toUpperCase() : (user?.email?.slice(0, 2).toUpperCase() ?? 'HQ')}
                 </div>
               </div>
               <div className="hidden sm:block text-left">
                 <p className="text-xs font-bold leading-tight text-foreground">{displayName || user?.email?.split('@')[0] || 'Account'}</p>
-                <p className="text-[9px] text-foreground/45 uppercase tracking-widest font-extrabold mt-0.5">Owner</p>
+                <p className="text-xs text-foreground/45 uppercase tracking-widest font-extrabold mt-0.5">Owner</p>
               </div>
             </div>
             <Button
               variant="ghost"
-              className="text-foreground/45 hover:text-red-400 text-[9px] uppercase tracking-widest px-2.5 h-8 font-black border border-card-border hover:border-red-500/20 transition-all duration-200 hover:bg-red-500/5 rounded-full"
+              className="text-foreground/45 hover:text-red-400 text-xs uppercase tracking-widest px-2.5 h-8 font-black border border-card-border hover:border-red-500/20 transition-all duration-200 hover:bg-red-500/5 rounded-full"
               onClick={async () => {
                 await logout();
                 router.push('/login');
@@ -337,7 +337,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                 {isSidebarOpen && (
                   <div className="flex items-center space-x-2 px-2 mb-2">
                     <div className="h-px flex-1 bg-card-border" />
-                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-foreground/25">
+                    <p className="text-sm font-black uppercase tracking-[0.18em] text-foreground/25">
                       {group.label}
                     </p>
                     <div className="h-px flex-1 bg-card-border" />
@@ -352,7 +352,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                         key={item.name}
                         href={item.href}
                         title={!isSidebarOpen ? item.name : undefined}
-                        className={`group relative flex items-center rounded-xl px-3 py-2.5 text-[11px] font-semibold transition-all duration-200 ${
+                        className={`group relative flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 ${
                           isActive
                             ? 'bg-gradient-to-r from-hq-blue/10 to-hq-purple/5 border border-hq-blue/20 text-hq-blue shadow-[0_0_12px_rgba(10,132,255,0.08)]'
                             : 'border border-transparent hover:bg-black/[0.04] dark:hover:bg-white/[0.04] text-foreground/55 hover:text-foreground'
@@ -394,32 +394,32 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Global Status Bar — Premium Ticker */}
-      <footer className="flex h-7 items-center justify-between border-t border-card-border/60 px-8 bg-white/50 dark:bg-[#070709]/60 backdrop-blur-xl text-[10px] text-foreground/40 select-none font-mono tracking-wide">
+      <footer className="flex h-7 items-center justify-between border-t border-card-border/60 px-8 bg-white/50 dark:bg-[#070709]/60 backdrop-blur-xl text-xs text-foreground/40 select-none font-mono tracking-wide">
         <div className="flex items-center space-x-5">
           <div className="flex items-center space-x-1.5">
             <span
               className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-hq-cyan shadow-[0_0_6px_#30D158] animate-pulse' : 'bg-red-500'}`}
             />
-            <span className="uppercase tracking-widest text-[9px] font-bold text-foreground/35">
+            <span className="uppercase tracking-widest text-xs font-bold text-foreground/35">
               {isConnected ? 'WS Connected' : 'WS Offline'}
             </span>
           </div>
           <span className="text-foreground/15">·</span>
           <div className="flex items-center space-x-1.5">
             <CloudLightning className="h-2.5 w-2.5 text-hq-blue" />
-            <span className="uppercase tracking-widest text-[9px] font-bold text-foreground/35">AI Gateway Active</span>
+            <span className="uppercase tracking-widest text-xs font-bold text-foreground/35">AI Gateway Active</span>
           </div>
         </div>
 
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1.5">
             <ShieldAlert className="h-2.5 w-2.5 text-amber-400/70" />
-            <span className="uppercase tracking-widest text-[9px] font-bold text-foreground/30">Standard Ops</span>
+            <span className="uppercase tracking-widest text-xs font-bold text-foreground/30">Standard Ops</span>
           </div>
           <span className="text-foreground/15">·</span>
           <div className="flex items-center space-x-1">
             <Terminal className="h-2.5 w-2.5 text-foreground/25" />
-            <span className="text-[9px] font-bold text-foreground/25">v1.0.0</span>
+            <span className="text-xs font-bold text-foreground/25">v1.0.0</span>
           </div>
         </div>
       </footer>
@@ -444,7 +444,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full h-auto border-0 bg-transparent p-0 text-sm font-medium placeholder:text-foreground/30 focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
-                <span className="text-[9px] uppercase tracking-wider text-foreground/25 font-bold shrink-0">ESC to close</span>
+                <span className="text-xs uppercase tracking-wider text-foreground/25 font-bold shrink-0">ESC to close</span>
               </div>
             </div>
             <div className="max-h-72 overflow-y-auto p-3 space-y-0.5">
@@ -517,7 +517,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                           <CmdIcon className="h-3.5 w-3.5 text-foreground/40 group-hover:text-hq-blue transition-colors" />
                         </div>
                         <span className="flex-1 font-semibold">{cmd.name}</span>
-                        <span className="text-[9px] text-foreground/30 bg-black/[0.05] dark:bg-white/[0.05] border border-card-border px-1.5 py-0.5 rounded-md font-mono">{cmd.shortcut}</span>
+                        <span className="text-xs text-foreground/30 bg-black/[0.05] dark:bg-white/[0.05] border border-card-border px-1.5 py-0.5 rounded-md font-mono">{cmd.shortcut}</span>
                       </button>
                     );
                   })}

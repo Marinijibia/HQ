@@ -58,7 +58,7 @@ export function SmartEmptyState({
           {hints.map((hint, i) => (
             <span
               key={i}
-              className="px-2.5 py-1 rounded-full text-[10px] font-bold border border-card-border text-foreground/60 bg-foreground/4 cursor-pointer hover:bg-foreground/8 transition-colors"
+              className="px-2.5 py-1 rounded-full text-xs font-bold border border-card-border text-foreground/60 bg-foreground/4 cursor-pointer hover:bg-foreground/8 transition-colors"
             >
               {hint}
             </span>

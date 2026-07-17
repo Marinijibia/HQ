@@ -117,10 +117,10 @@ export function GlobalActivityFeed({ className = '', maxItems = 7, compact = fal
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <p className={`font-extrabold text-[#1A1A1E] dark:text-white truncate ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+              <p className={`font-extrabold text-[#1A1A1E] dark:text-white truncate ${compact ? 'text-xs' : 'text-sm'}`}>
                 {event.title}
               </p>
-              <p className={`text-foreground/55 font-semibold truncate mt-0.5 ${compact ? 'text-[9px]' : 'text-[10px]'}`}>
+              <p className={`text-foreground/55 font-semibold truncate mt-0.5 ${compact ? 'text-xs' : 'text-xs'}`}>
                 {event.subtitle}
               </p>
             </div>
@@ -128,7 +128,7 @@ export function GlobalActivityFeed({ className = '', maxItems = 7, compact = fal
             {/* Time */}
             <div className="flex items-center gap-1 shrink-0">
               <Clock className="h-2.5 w-2.5 text-foreground/25" />
-              <span className="text-[9px] text-foreground/35 font-semibold whitespace-nowrap">{event.time}</span>
+              <span className="text-xs text-foreground/35 font-semibold whitespace-nowrap">{event.time}</span>
             </div>
           </div>
         );
@@ -139,7 +139,7 @@ export function GlobalActivityFeed({ className = '', maxItems = 7, compact = fal
           <div className="h-1 w-1 rounded-full bg-hq-blue animate-bounce" style={{ animationDelay: '0ms' }} />
           <div className="h-1 w-1 rounded-full bg-hq-blue animate-bounce" style={{ animationDelay: '150ms' }} />
           <div className="h-1 w-1 rounded-full bg-hq-blue animate-bounce" style={{ animationDelay: '300ms' }} />
-          <span className="text-[9px] text-foreground/35 font-semibold ml-1">Loading activity...</span>
+          <span className="text-xs text-foreground/35 font-semibold ml-1">Loading activity...</span>
         </div>
       )}
     </div>

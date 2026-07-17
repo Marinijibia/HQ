@@ -198,7 +198,7 @@ export default function TeamManagementPage() {
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center justify-between border-b border-card-border pb-2">
                 <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Active C-Suite human members</h3>
-                <Badge variant="neutral" className="text-[9px]">Granular RBAC active</Badge>
+                <Badge variant="neutral" className="text-xs">Granular RBAC active</Badge>
               </div>
 
               <div className="space-y-3">
@@ -217,15 +217,15 @@ export default function TeamManagementPage() {
                         </div>
                         <div>
                           <span className="text-xs font-extrabold text-[#1A1A1E] dark:text-white block">{m.name}</span>
-                          <span className="text-[10px] text-foreground/45 block font-semibold">{m.email}</span>
+                          <span className="text-xs text-foreground/45 block font-semibold">{m.email}</span>
                         </div>
                       </div>
 
                       <div className="text-right shrink-0">
-                        <Badge variant="ai" className="text-[8px] uppercase tracking-wider font-bold">
+                        <Badge variant="ai" className="text-sm uppercase tracking-wider font-bold">
                           {m.role.replace('_', ' ')}
                         </Badge>
-                        <p className="text-[9px] text-foreground/40 font-semibold mt-1">{m.department} · {m.team}</p>
+                        <p className="text-xs text-foreground/40 font-semibold mt-1">{m.department} · {m.team}</p>
                       </div>
                     </div>
                   </Card>
@@ -244,12 +244,12 @@ export default function TeamManagementPage() {
 
                   <div className="text-xs space-y-3 font-semibold">
                     <div>
-                      <span className="text-foreground/45 text-[9px] uppercase tracking-wider block">Full Name</span>
+                      <span className="text-foreground/45 text-xs uppercase tracking-wider block">Full Name</span>
                       <span className="text-white text-sm font-extrabold mt-0.5 block">{selectedMember.name}</span>
                     </div>
 
                     <div>
-                      <span className="text-foreground/45 text-[9px] uppercase tracking-wider block">Assigned C-Suite Role</span>
+                      <span className="text-foreground/45 text-xs uppercase tracking-wider block">Assigned C-Suite Role</span>
                       <select
                         className="bg-card-bg border border-card-border rounded-lg w-full p-2 h-9 text-xs font-bold focus:outline-none mt-1 text-white"
                         value={selectedMember.role}
@@ -266,10 +266,10 @@ export default function TeamManagementPage() {
                     </div>
 
                     <div className="border-t border-card-border pt-3 space-y-2.5">
-                      <span className="text-foreground/45 text-[9px] uppercase tracking-wider block">Co-pilot AI Directors</span>
+                      <span className="text-foreground/45 text-xs uppercase tracking-wider block">Co-pilot AI Directors</span>
                       <div className="flex flex-wrap gap-1.5">
                         {selectedMember.assignedExecutives.map(exec => (
-                          <Badge key={exec} variant="ai" className="text-[9px] gap-1 h-6">
+                          <Badge key={exec} variant="ai" className="text-xs gap-1 h-6">
                             <Bot className="h-3 w-3" />
                             {exec}
                           </Badge>
@@ -278,13 +278,13 @@ export default function TeamManagementPage() {
                     </div>
 
                     <div className="border-t border-card-border pt-3 space-y-2.5">
-                      <span className="text-foreground/45 text-[9px] uppercase tracking-wider block">Access Permissions Checklist</span>
+                      <span className="text-foreground/45 text-xs uppercase tracking-wider block">Access Permissions Checklist</span>
                       {[
                         { label: 'Can initiate missions WBS', ok: selectedMember.role !== 'GUEST' },
                         { label: 'Can download/write assets', ok: selectedMember.role !== 'GUEST' },
                         { label: 'Can modify billing & settings', ok: selectedMember.role === 'ORGANIZATION_OWNER' || selectedMember.role === 'ADMINISTRATOR' },
                       ].map((perm, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-[10px]">
+                        <div key={idx} className="flex items-center justify-between text-xs">
                           <span className="text-foreground/60">{perm.label}</span>
                           <span className={perm.ok ? 'text-green-500' : 'text-foreground/35'}>
                             {perm.ok ? 'Authorized' : 'Restricted'}
@@ -313,7 +313,7 @@ export default function TeamManagementPage() {
                   <Network className="h-4.5 w-4.5 text-hq-cyan" />
                   Interactive Human Reporting Structure
                 </h3>
-                <p className="text-[10px] text-foreground/50">Hierarchy structure resolved dynamically from roles and branches.</p>
+                <p className="text-xs text-foreground/50">Hierarchy structure resolved dynamically from roles and branches.</p>
               </div>
 
               {/* Visual chart tree */}
@@ -392,7 +392,7 @@ export default function TeamManagementPage() {
                     </div>
                   </div>
 
-                  <div className="border-t border-card-border pt-3 space-y-2 text-[10px] font-bold">
+                  <div className="border-t border-card-border pt-3 space-y-2 text-xs font-bold">
                     <p className="uppercase text-foreground/45 tracking-widest text-[8.5px]">Utilization metrics</p>
                     <div className="flex justify-between">
                       <span className="text-foreground/40">Workload Balance</span>
@@ -422,7 +422,7 @@ export default function TeamManagementPage() {
                   <Briefcase className="h-4.5 w-4.5 text-hq-purple" />
                   Cross-functional project Workspaces
                 </h3>
-                <Badge variant="neutral" className="text-[9px]">Goal-based clusters</Badge>
+                <Badge variant="neutral" className="text-xs">Goal-based clusters</Badge>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -430,14 +430,14 @@ export default function TeamManagementPage() {
                   <Card key={ws.id} className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] flex flex-col justify-between space-y-4">
                     <div className="space-y-2">
                       <h4 className="text-xs font-black text-[#1A1A1E] dark:text-white">{ws.name}</h4>
-                      <p className="text-[10px] text-foreground/50 leading-relaxed font-semibold">{ws.description}</p>
+                      <p className="text-xs text-foreground/50 leading-relaxed font-semibold">{ws.description}</p>
                     </div>
 
-                    <div className="border-t border-card-border pt-3 flex items-center justify-between text-[10px] font-bold text-foreground/55">
+                    <div className="border-t border-card-border pt-3 flex items-center justify-between text-xs font-bold text-foreground/55">
                       <span>Members: <span className="text-white">{ws.membersCount}</span></span>
                       <div className="flex gap-1">
                         {ws.executives.map(e => (
-                          <Badge key={e} variant="ai" className="text-[8px] px-1.5 py-0 h-5 font-bold">
+                          <Badge key={e} variant="ai" className="text-sm px-1.5 py-0 h-5 font-bold">
                             {e.split(' ')[1]}
                           </Badge>
                         ))}
@@ -513,14 +513,14 @@ export default function TeamManagementPage() {
                         <Mail className="h-5 w-5 text-hq-cyan shrink-0" />
                         <div>
                           <span className="text-xs font-extrabold text-white block">{inv.email}</span>
-                          <p className="text-[9px] text-foreground/45 font-semibold mt-0.5">
+                          <p className="text-xs text-foreground/45 font-semibold mt-0.5">
                             Invited: {inv.invitedAt} • Expires: {inv.expiresAt}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <Badge variant="neutral" className="text-[8px] font-bold">{inv.role}</Badge>
+                        <Badge variant="neutral" className="text-sm font-bold">{inv.role}</Badge>
                         <button
                           onClick={() => handleCancelInvitation(inv.id, inv.email)}
                           className="text-foreground/35 hover:text-red-500 p-1 rounded transition-colors"

@@ -468,7 +468,7 @@ export default function OnboardingPage() {
           {showResumePrompt ? (
             <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] text-foreground">
               <CardHeader className="text-left space-y-2">
-                <Badge variant="ai" className="w-fit text-[10px] tracking-widest font-bold">
+                <Badge variant="ai" className="w-fit text-xs tracking-widest font-bold">
                   AUTOSAVE RECOVERY
                 </Badge>
                 <CardTitle className="text-xl font-bold text-[#1A1A1E] dark:text-white">
@@ -511,7 +511,7 @@ export default function OnboardingPage() {
               {step === 1 && (
                 <>
                   <CardHeader className="text-left space-y-2">
-                    <Badge variant="ai" className="w-fit text-[10px] tracking-widest font-bold">
+                    <Badge variant="ai" className="w-fit text-xs tracking-widest font-bold">
                       WELCOME OWNER
                     </Badge>
                     <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight">
@@ -693,7 +693,7 @@ export default function OnboardingPage() {
                               }}
                             >
                               <Icon className="h-5 w-5 shrink-0" />
-                              <span className="text-[10px] font-bold tracking-tight leading-none">
+                              <span className="text-xs font-bold tracking-tight leading-none">
                                 {ind.label}
                               </span>
                             </button>
@@ -875,7 +875,7 @@ export default function OnboardingPage() {
                             <span>{goal}</span>
                             {isSelected && (
                               <span
-                                className="h-4 w-4 rounded-full flex items-center justify-center text-white text-[9px] font-bold"
+                                className="h-4 w-4 rounded-full flex items-center justify-center text-white text-xs font-bold"
                                 style={{ backgroundColor: brandColor }}
                               >
                                 ✓
@@ -1004,7 +1004,7 @@ export default function OnboardingPage() {
                         </div>
                         <Badge
                           variant="ai"
-                          className="px-3.5 py-1 text-[10px] bg-hq-blue/15 border-hq-blue/30 text-hq-blue font-bold rounded-full"
+                          className="px-3.5 py-1 text-xs bg-hq-blue/15 border-hq-blue/30 text-hq-blue font-bold rounded-full"
                         >
                           CEO
                         </Badge>
@@ -1020,7 +1020,7 @@ export default function OnboardingPage() {
                         </div>
                         <Badge
                           variant="premium"
-                          className="px-3.5 py-1 text-[10px] bg-hq-purple/15 border-hq-purple/30 text-hq-purple font-bold rounded-full"
+                          className="px-3.5 py-1 text-xs bg-hq-purple/15 border-hq-purple/30 text-hq-purple font-bold rounded-full"
                         >
                           COS
                         </Badge>
@@ -1036,7 +1036,7 @@ export default function OnboardingPage() {
                         </div>
                         <Badge
                           variant="ai"
-                          className="px-3.5 py-1 text-[10px] bg-hq-cyan/15 border-hq-cyan/30 text-hq-cyan font-bold rounded-full"
+                          className="px-3.5 py-1 text-xs bg-hq-cyan/15 border-hq-cyan/30 text-hq-cyan font-bold rounded-full"
                         >
                           Eng
                         </Badge>
@@ -1079,7 +1079,7 @@ export default function OnboardingPage() {
                     <div className="grid gap-4">
                       <div className="p-4 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-2xl flex justify-between items-center">
                         <div>
-                          <span className="font-bold text-foreground/45 block text-[10px] uppercase tracking-wider">
+                          <span className="font-bold text-foreground/45 block text-xs uppercase tracking-wider">
                             Organization Name
                           </span>
                           <span className="text-sm font-bold text-[#1A1A1E] dark:text-white">
@@ -1096,7 +1096,7 @@ export default function OnboardingPage() {
 
                       <div className="p-4 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-2xl flex justify-between items-center">
                         <div>
-                          <span className="font-bold text-foreground/45 block text-[10px] uppercase tracking-wider">
+                          <span className="font-bold text-foreground/45 block text-xs uppercase tracking-wider">
                             Time Zone & Language
                           </span>
                           <span className="text-sm font-bold text-[#1A1A1E] dark:text-white">
@@ -1113,7 +1113,7 @@ export default function OnboardingPage() {
 
                       <div className="p-4 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-2xl flex justify-between items-center">
                         <div>
-                          <span className="font-bold text-foreground/45 block text-[10px] uppercase tracking-wider">
+                          <span className="font-bold text-foreground/45 block text-xs uppercase tracking-wider">
                             AI CEO Name
                           </span>
                           <span className="text-sm font-bold text-[#1A1A1E] dark:text-white">
@@ -1130,7 +1130,7 @@ export default function OnboardingPage() {
 
                       <div className="p-4 border border-card-border bg-black/5 dark:bg-[#1E1E24]/20 rounded-2xl flex justify-between items-center">
                         <div>
-                          <span className="font-bold text-foreground/45 block text-[10px] uppercase tracking-wider">
+                          <span className="font-bold text-foreground/45 block text-xs uppercase tracking-wider">
                             Goals Selection
                           </span>
                           <span className="text-sm font-bold text-[#1A1A1E] dark:text-white">
@@ -1199,7 +1199,7 @@ export default function OnboardingPage() {
                               Maximum attempts exceeded. Locked out for {lockoutSeconds}s.
                             </p>
                           ) : (
-                            <p className="text-[10px] text-foreground/45 mt-2">
+                            <p className="text-xs text-foreground/45 mt-2">
                               Enter the 6-digit activation code (simulated code is `123456`).
                             </p>
                           )}
@@ -1248,7 +1248,7 @@ export default function OnboardingPage() {
 
                         <div className="relative flex py-2 items-center">
                           <div className="flex-grow border-t border-card-border"></div>
-                          <span className="flex-shrink mx-4 text-foreground/45 text-[10px] uppercase font-bold tracking-widest">
+                          <span className="flex-shrink mx-4 text-foreground/45 text-xs uppercase font-bold tracking-widest">
                             or
                           </span>
                           <div className="flex-grow border-t border-card-border"></div>
@@ -1324,7 +1324,7 @@ export default function OnboardingPage() {
                         &ldquo;Welcome. Your Executive Team is online and ready to help you achieve
                         your goals.&rdquo;
                       </p>
-                      <span className="block mt-3 text-[10px] text-foreground/45 uppercase tracking-widest font-bold">
+                      <span className="block mt-3 text-xs text-foreground/45 uppercase tracking-widest font-bold">
                         — {ceoName}, CEO
                       </span>
                     </div>

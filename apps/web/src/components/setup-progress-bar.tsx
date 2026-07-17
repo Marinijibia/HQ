@@ -77,13 +77,13 @@ export function SetupProgressBar({ brandColor = '#0A84FF' }: { brandColor?: stri
           <p className="text-xs font-extrabold" style={{ color: brandColor }}>
             🚀 Get started — {pct}% complete
           </p>
-          <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">
+          <p className="text-xs text-foreground/50 font-semibold mt-0.5">
             Complete these steps to unlock the full power of your AI executive team
           </p>
         </div>
         <button
           onClick={() => { localStorage.setItem('hq_setup_dismissed', 'true'); setDismissed(true); }}
-          className="text-[10px] text-foreground/30 hover:text-foreground/60 font-bold transition-colors"
+          className="text-xs text-foreground/30 hover:text-foreground/60 font-bold transition-colors"
         >
           Dismiss
         </button>
@@ -118,11 +118,11 @@ export function SetupProgressBar({ brandColor = '#0A84FF' }: { brandColor?: stri
                 <Circle className={`h-4 w-4 shrink-0 ${isNext ? 'text-foreground/40' : 'text-foreground/20'}`} />
               )}
               <div className="flex-1 min-w-0">
-                <p className={`text-[11px] font-extrabold ${done ? 'line-through text-foreground/40' : 'text-[#1A1A1E] dark:text-white'}`}>
+                <p className={`text-sm font-extrabold ${done ? 'line-through text-foreground/40' : 'text-[#1A1A1E] dark:text-white'}`}>
                   Step {i + 1}: {step.label}
                 </p>
                 {!done && (
-                  <p className="text-[10px] text-foreground/45 font-semibold mt-0.5 truncate">{step.description}</p>
+                  <p className="text-xs text-foreground/45 font-semibold mt-0.5 truncate">{step.description}</p>
                 )}
               </div>
               {isNext && !done && (

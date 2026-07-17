@@ -137,7 +137,7 @@ export default function TrustCenterPage() {
             Zero Trust security administration center. Audit active user sessions, configure SAML SSO connectors, and manage secrets rotation.
           </p>
         </div>
-        <Badge variant="success" className="py-1 px-3 text-[10px] font-black uppercase">
+        <Badge variant="success" className="py-1 px-3 text-xs font-black uppercase">
           🛡️ Zero Trust Enforced
         </Badge>
       </div>
@@ -179,7 +179,7 @@ export default function TrustCenterPage() {
               {/* Posture Score */}
               <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] flex items-center justify-between gap-4">
                 <div>
-                  <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-widest block">Tenant Security Posture</span>
+                  <span className="text-xs text-foreground/45 font-bold uppercase tracking-widest block">Tenant Security Posture</span>
                   <span className="text-3xl font-black text-white mt-1 block">{securityScore}% score</span>
                   <p className="text-[10.5px] text-foreground/50 font-semibold mt-1">Tenant isolation bounds validated. Zero Trust architecture fully active.</p>
                 </div>
@@ -203,7 +203,7 @@ export default function TrustCenterPage() {
                         <span className="text-[9.5px] text-foreground/45 font-semibold mt-0.5">Actor: {al.actor} · IP: {al.ip}</span>
                       </div>
                       <div className="flex gap-2.5 shrink-0 self-center items-center">
-                        <span className="text-[9px] text-foreground/40 font-bold">{al.timestamp}</span>
+                        <span className="text-xs text-foreground/40 font-bold">{al.timestamp}</span>
                         <Badge variant={al.severity === 'High' ? 'error' : 'neutral'} className="text-[7.5px] font-bold uppercase">
                           {al.severity}
                         </Badge>
@@ -221,11 +221,11 @@ export default function TrustCenterPage() {
                   <Layers className="h-4 w-4 text-hq-purple" />
                   Strict Tenant Isolation
                 </h4>
-                <p className="text-[10px] text-foreground/50 leading-relaxed font-semibold">
+                <p className="text-xs text-foreground/50 leading-relaxed font-semibold">
                   Each HQ tenant workspace runs inside isolated processes. All databases, memory graphs, and RAG knowledge vectors are segregated at rest and in transit.
                 </p>
 
-                <div className="border-t border-card-border pt-3 space-y-2 text-[10px] font-bold">
+                <div className="border-t border-card-border pt-3 space-y-2 text-xs font-bold">
                   <div className="flex justify-between">
                     <span className="text-foreground/40">Data Isolation</span>
                     <span className="text-green-500">100% segregated</span>
@@ -248,7 +248,7 @@ export default function TrustCenterPage() {
               <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
                 <div>
                   <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Enterprise Identity Providers (SSO)</h3>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">Link SAML 2.0 or OIDC directories to authorize human members.</p>
+                  <p className="text-xs text-foreground/50 font-semibold mt-0.5">Link SAML 2.0 or OIDC directories to authorize human members.</p>
                 </div>
 
                 <div className="space-y-3">
@@ -285,7 +285,7 @@ export default function TrustCenterPage() {
               <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] flex items-center justify-between gap-4">
                 <div className="space-y-1">
                   <h4 className="text-xs font-black text-white">Automated Provisioning (SCIM)</h4>
-                  <p className="text-[10px] text-foreground/50 leading-relaxed font-semibold">
+                  <p className="text-xs text-foreground/50 leading-relaxed font-semibold">
                     Automatically synchronize human directory deactivations, departments, and role transfers.
                   </p>
                 </div>
@@ -341,7 +341,7 @@ export default function TrustCenterPage() {
             <div className="flex items-center justify-between border-b border-card-border pb-2">
               <div>
                 <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Active Human & AI Sessions</h3>
-                <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">Inspect active device locations and AI container identifiers.</p>
+                <p className="text-xs text-foreground/50 font-semibold mt-0.5">Inspect active device locations and AI container identifiers.</p>
               </div>
 
               <Button
@@ -398,7 +398,7 @@ export default function TrustCenterPage() {
               <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
                 <div>
                   <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Tenant Secrets Vault</h3>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">Manage encrypted third-party credentials and oauth tokens.</p>
+                  <p className="text-xs text-foreground/50 font-semibold mt-0.5">Manage encrypted third-party credentials and oauth tokens.</p>
                 </div>
 
                 <div className="space-y-3">
@@ -427,7 +427,7 @@ export default function TrustCenterPage() {
               <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
                 <div>
                   <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">AI Sandbox Boundaries</h3>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">Enforce strict sandboxing constraints on AI Executive processes.</p>
+                  <p className="text-xs text-foreground/50 font-semibold mt-0.5">Enforce strict sandboxing constraints on AI Executive processes.</p>
                 </div>
 
                 <div className="space-y-3">

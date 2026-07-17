@@ -206,7 +206,7 @@ export default function IntegrationsHubPage() {
             <div className="md:col-span-2 space-y-6">
               <div className="flex items-center justify-between border-b border-card-border pb-2">
                 <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Active Integrations</h3>
-                <Badge variant="success" className="text-[8px] font-bold tracking-wider uppercase">ALL SYSTEMS STABLE</Badge>
+                <Badge variant="success" className="text-sm font-bold tracking-wider uppercase">ALL SYSTEMS STABLE</Badge>
               </div>
 
               <div className="space-y-4">
@@ -218,14 +218,14 @@ export default function IntegrationsHubPage() {
                       </div>
                       <div>
                         <span className="text-xs font-extrabold text-white block">{app.name}</span>
-                        <p className="text-[9px] text-foreground/45 mt-0.5 font-semibold">
+                        <p className="text-xs text-foreground/45 mt-0.5 font-semibold">
                           Sync: {app.lastSync} · Transferred: {app.dataTransferred}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Badge variant={app.status === 'Healthy' ? 'success' : 'warning'} className="text-[8px] font-black uppercase">
+                      <Badge variant={app.status === 'Healthy' ? 'success' : 'warning'} className="text-sm font-black uppercase">
                         {app.status}
                       </Badge>
                       <Button
@@ -296,7 +296,7 @@ export default function IntegrationsHubPage() {
                       <div className="h-10 w-10 rounded-xl bg-[#F9F9FB] dark:bg-[#0A0A0C] border border-card-border flex items-center justify-center text-xl shrink-0">
                         {item.logo}
                       </div>
-                      <Badge variant="neutral" className="text-[8px] uppercase tracking-wider font-bold">{item.category}</Badge>
+                      <Badge variant="neutral" className="text-sm uppercase tracking-wider font-bold">{item.category}</Badge>
                     </div>
                     <div>
                       <h4 className="text-xs font-black text-white">{item.name}</h4>
@@ -306,7 +306,7 @@ export default function IntegrationsHubPage() {
 
                   <Button
                     size="sm"
-                    className="text-white text-[10px] font-bold h-7.5 gap-1.5 w-full mt-2"
+                    className="text-white text-xs font-bold h-7.5 gap-1.5 w-full mt-2"
                     style={{ backgroundColor: brandColor }}
                     onClick={() => handleLaunchWizard(item)}
                   >
@@ -328,7 +328,7 @@ export default function IntegrationsHubPage() {
                   <Sliders className="h-4.5 w-4.5 text-hq-purple" />
                   Ecosystem Trigger Automations
                 </h3>
-                <Badge variant="neutral" className="text-[9px]">Event-driven recipes</Badge>
+                <Badge variant="neutral" className="text-xs">Event-driven recipes</Badge>
               </div>
 
               <div className="space-y-3">
@@ -372,7 +372,7 @@ export default function IntegrationsHubPage() {
                 {selectedCatalogItem.logo}
               </div>
               <div>
-                <Badge variant="ai" className="text-[8px] font-black tracking-wider uppercase">Connection Wizard · Step {wizardStep} of 6</Badge>
+                <Badge variant="ai" className="text-sm font-black tracking-wider uppercase">Connection Wizard · Step {wizardStep} of 6</Badge>
                 <h3 className="text-sm font-black text-white mt-1">Connect {selectedCatalogItem.name}</h3>
               </div>
             </div>
@@ -382,14 +382,14 @@ export default function IntegrationsHubPage() {
               {wizardStep === 1 && (
                 <div className="space-y-2 leading-relaxed">
                   <p className="text-foreground/75">You are initiating secure authentication to link your organizational {selectedCatalogItem.name} workspace.</p>
-                  <p className="text-[10px] text-foreground/40 leading-snug">Ensure you have admin rights on the target tenant software workspace.</p>
+                  <p className="text-xs text-foreground/40 leading-snug">Ensure you have admin rights on the target tenant software workspace.</p>
                 </div>
               )}
 
               {wizardStep === 2 && (
                 <div className="space-y-3">
                   <p className="text-foreground/75">Authenticate using OAuth 2.0 secure keys redirection.</p>
-                  <div className="border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-lg p-3 text-[10px] font-mono text-center flex items-center justify-center gap-1.5">
+                  <div className="border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-lg p-3 text-xs font-mono text-center flex items-center justify-center gap-1.5">
                     <ShieldCheck className="h-4 w-4 text-hq-cyan" />
                     <span>Redirection handshake keys verified.</span>
                   </div>
@@ -409,7 +409,7 @@ export default function IntegrationsHubPage() {
                       </div>
                       <div>
                         <p className="text-[10.5px] font-bold text-white">{scope.label}</p>
-                        <p className="text-[9px] text-foreground/45 font-semibold mt-0.5 leading-tight">{scope.desc}</p>
+                        <p className="text-xs text-foreground/45 font-semibold mt-0.5 leading-tight">{scope.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -479,13 +479,13 @@ export default function IntegrationsHubPage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <Card className="border border-card-border bg-card-bg w-full max-w-md p-6 shadow-level-4 space-y-6 text-left animate-in zoom-in-95 duration-200">
             <div>
-              <Badge variant="ai" className="text-[8px] font-black tracking-wider uppercase">Clearance Boundaries</Badge>
+              <Badge variant="ai" className="text-sm font-black tracking-wider uppercase">Clearance Boundaries</Badge>
               <h3 className="text-sm font-black text-white mt-1">Configure {selectedApp.name} Permissions</h3>
             </div>
 
             <div className="text-xs space-y-4 font-semibold">
               <div>
-                <span className="text-foreground/45 text-[9px] uppercase tracking-wider block">Assigned AI Co-Pilots</span>
+                <span className="text-foreground/45 text-xs uppercase tracking-wider block">Assigned AI Co-Pilots</span>
                 <p className="text-[9.5px] text-foreground/50 leading-relaxed font-semibold mt-0.5">Toggle which AI Executives are authorized to query datasets from this service.</p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {['CEO Elena', 'CTO Hiroshi', 'CFO Sophia', 'CMO Amara'].map(exec => {
@@ -499,7 +499,7 @@ export default function IntegrationsHubPage() {
                             : [...selectedApp.executives, exec];
                           setSelectedApp(prev => prev ? { ...prev, executives: nextExecs } : null);
                         }}
-                        className={`px-2.5 py-1 rounded text-[10px] font-bold ${
+                        className={`px-2.5 py-1 rounded text-xs font-bold ${
                           active ? 'bg-hq-cyan/20 text-hq-cyan border border-hq-cyan/30' : 'bg-card-bg border border-card-border text-foreground/40'
                         }`}
                       >
@@ -511,7 +511,7 @@ export default function IntegrationsHubPage() {
               </div>
 
               <div className="border-t border-card-border pt-4">
-                <span className="text-foreground/45 text-[9px] uppercase tracking-wider block">Authorized Scope Bounds</span>
+                <span className="text-foreground/45 text-xs uppercase tracking-wider block">Authorized Scope Bounds</span>
                 {[
                   { label: 'Read-only access to files database', value: true },
                   { label: 'Authorized to write/post notifications', value: false },
@@ -519,7 +519,7 @@ export default function IntegrationsHubPage() {
                 ].map((scope, idx) => (
                   <div key={idx} className="flex items-center justify-between p-2 rounded border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/10 mt-2">
                     <span className="text-foreground/75 text-[10.5px]">{scope.label}</span>
-                    <Badge variant={scope.value ? 'success' : 'neutral'} className="text-[8px] uppercase tracking-wider font-bold">
+                    <Badge variant={scope.value ? 'success' : 'neutral'} className="text-sm uppercase tracking-wider font-bold">
                       {scope.value ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>

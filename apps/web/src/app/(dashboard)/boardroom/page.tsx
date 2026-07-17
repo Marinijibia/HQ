@@ -372,7 +372,7 @@ export default function BoardroomPage() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">Welcome to your Executive Boardroom</p>
-            <p className="text-[11px] text-foreground/60 font-semibold mt-1 leading-relaxed">
+            <p className="text-sm text-foreground/60 font-semibold mt-1 leading-relaxed">
               These are your AI executives — each one specialises in a different area of your business.
               <strong className="text-foreground/80"> Click any executive card</strong> to brief them, ask a question, or request a report.
               Use <strong className="text-foreground/80">"Ask the Boardroom"</strong> below to consult all executives at once.
@@ -380,17 +380,17 @@ export default function BoardroomPage() {
             <div className="flex items-center gap-3 mt-3">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                <span className="text-[10px] text-foreground/50 font-semibold">Available — ready to brief</span>
+                <span className="text-xs text-foreground/50 font-semibold">Available — ready to brief</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                <span className="text-[10px] text-foreground/50 font-semibold">Busy — working on a task</span>
+                <span className="text-xs text-foreground/50 font-semibold">Busy — working on a task</span>
               </div>
             </div>
           </div>
           <button
             onClick={() => { localStorage.setItem('hq_boardroom_tip_dismissed', 'true'); setShowBoardroomTip(false); }}
-            className="text-foreground/30 hover:text-foreground/60 text-[10px] font-bold shrink-0 transition-colors"
+            className="text-foreground/30 hover:text-foreground/60 text-xs font-bold shrink-0 transition-colors"
           >
             Got it
           </button>
@@ -525,7 +525,7 @@ export default function BoardroomPage() {
                         <CardTitle className="text-sm font-bold group-hover:text-hq-blue transition-colors text-[#1A1A1E] dark:text-white">
                           {exec.name}
                         </CardTitle>
-                        <CardDescription className="text-[10px] leading-tight mt-0.5 font-medium">
+                        <CardDescription className="text-xs leading-tight mt-0.5 font-medium">
                           {exec.title}
                         </CardDescription>
                       </div>
@@ -533,7 +533,7 @@ export default function BoardroomPage() {
                     {isCollaborating && (
                       <Badge
                         variant="ai"
-                        className="bg-hq-purple/10 text-hq-purple border-hq-purple/30 text-[9px] animate-pulse"
+                        className="bg-hq-purple/10 text-hq-purple border-hq-purple/30 text-xs animate-pulse"
                       >
                         Active
                       </Badge>
@@ -542,7 +542,7 @@ export default function BoardroomPage() {
                   <CardContent className="py-3.5 space-y-3">
                     {exec.currentTask ? (
                       <div className="bg-[#F9F9FB] dark:bg-[#0A0A0C] border border-card-border rounded-xl p-2.5 text-xs">
-                        <p className="text-[9px] text-foreground/45 uppercase tracking-wider font-bold">
+                        <p className="text-xs text-foreground/45 uppercase tracking-wider font-bold">
                           Current Action
                         </p>
                         <p className="text-foreground/80 mt-0.5 line-clamp-1 font-semibold">
@@ -552,7 +552,7 @@ export default function BoardroomPage() {
                     ) : (
                       <div className="p-2.5 flex items-center gap-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Ready to receive instructions</p>
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Ready to receive instructions</p>
                       </div>
                     )}
                     <div className="flex items-center justify-between text-xs pt-1 border-t border-card-border/50">
@@ -561,12 +561,12 @@ export default function BoardroomPage() {
                     </div>
                   </CardContent>
                   <CardFooter className="pt-2 flex justify-between border-t border-card-border/50">
-                    <Button variant="ghost" size="sm" className="text-[10px] font-bold">
+                    <Button variant="ghost" size="sm" className="text-xs font-bold">
                       View Profile
                     </Button>
                     <Button
                       size="sm"
-                      className="text-[10px] font-bold h-7 px-3 text-white"
+                      className="text-xs font-bold h-7 px-3 text-white"
                       style={{ backgroundColor: brandColor }}
                     >
                       Instruct
@@ -583,7 +583,7 @@ export default function BoardroomPage() {
           {/* Dynamic Daily Brief Panel */}
           <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] text-foreground">
             <CardHeader className="pb-3 border-b border-card-border">
-              <Badge variant="ai" className="w-fit text-[10px]">
+              <Badge variant="ai" className="w-fit text-xs">
                 DAILY REPORT
               </Badge>
               <CardTitle className="text-md font-extrabold text-[#1A1A1E] dark:text-white mt-1">
@@ -596,7 +596,7 @@ export default function BoardroomPage() {
                 logistic targets and monitoring Stripe gateway hooks.&rdquo;
               </p>
               <div className="p-3 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-xl space-y-2">
-                <span className="font-bold text-[10px] text-foreground/45 uppercase tracking-wider">
+                <span className="font-bold text-xs text-foreground/45 uppercase tracking-wider">
                   Board Objectives
                 </span>
                 <ul className="space-y-1.5 list-none">
@@ -614,7 +614,7 @@ export default function BoardroomPage() {
                 <Button
                   size="sm"
                   onClick={() => handleExecutePill('Execute corporate Q3 petroleum targets')}
-                  className="w-full text-[10px] font-bold text-white flex items-center justify-center gap-1 shadow-md hover:scale-[1.01] transition-all animate-pulse"
+                  className="w-full text-xs font-bold text-white flex items-center justify-center gap-1 shadow-md hover:scale-[1.01] transition-all animate-pulse"
                   style={{ backgroundColor: brandColor }}
                 >
                   <Zap className="h-3 w-3" />
@@ -631,7 +631,7 @@ export default function BoardroomPage() {
                 <MessageSquare className="h-4 w-4 text-hq-blue" />
                 Ask the Boardroom
               </CardTitle>
-              <CardDescription className="text-[10px]">
+              <CardDescription className="text-xs">
                 Issue direct instructions or queries to the board.
               </CardDescription>
             </CardHeader>
@@ -650,7 +650,7 @@ export default function BoardroomPage() {
                         : 'bg-black/5 dark:bg-[#1E1E24]/30 border border-card-border text-foreground'
                     }`}
                   >
-                    <span className="font-bold text-[9px] uppercase tracking-wider block text-foreground/45">
+                    <span className="font-bold text-xs uppercase tracking-wider block text-foreground/45">
                       {msg.sender} ({msg.role})
                     </span>
                     <p className="font-medium">{msg.text}</p>
@@ -659,7 +659,7 @@ export default function BoardroomPage() {
               )}
               {isConsoleThinking && (
                 <div className="bg-black/5 dark:bg-[#1E1E24]/30 border border-card-border p-3 rounded-2xl max-w-[90%] text-left space-y-1 animate-pulse">
-                  <span className="font-bold text-[9px] uppercase tracking-wider block text-foreground/45">
+                  <span className="font-bold text-xs uppercase tracking-wider block text-foreground/45">
                     Board Directors
                   </span>
                   <div className="flex items-center gap-1.5 font-bold text-hq-purple">
@@ -678,7 +678,7 @@ export default function BoardroomPage() {
                       key={pill}
                       type="button"
                       onClick={() => handleExecutePill(pill)}
-                      className="px-2 py-0.5 rounded-lg border border-card-border bg-card-bg hover:bg-black/5 dark:hover:bg-white/5 text-[9px] font-bold text-foreground/60 transition-all"
+                      className="px-2 py-0.5 rounded-lg border border-card-border bg-card-bg hover:bg-black/5 dark:hover:bg-white/5 text-xs font-bold text-foreground/60 transition-all"
                     >
                       + {pill}
                     </button>
@@ -739,7 +739,7 @@ export default function BoardroomPage() {
 
             <div className="space-y-5 text-sm text-left">
               <div className="space-y-1">
-                <span className="text-[10px] text-foreground/45 uppercase tracking-wider block font-bold">
+                <span className="text-xs text-foreground/45 uppercase tracking-wider block font-bold">
                   Director Bio
                 </span>
                 <p className="text-foreground/80 leading-relaxed font-semibold text-xs">
@@ -747,7 +747,7 @@ export default function BoardroomPage() {
                 </p>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] text-foreground/45 uppercase tracking-wider block font-bold">
+                <span className="text-xs text-foreground/45 uppercase tracking-wider block font-bold">
                   Department Division
                 </span>
                 <p className="text-foreground/85 font-semibold text-xs">
@@ -755,7 +755,7 @@ export default function BoardroomPage() {
                 </p>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] text-foreground/45 uppercase tracking-wider block font-bold">
+                <span className="text-xs text-foreground/45 uppercase tracking-wider block font-bold">
                   Action History
                 </span>
                 <div className="flex items-center space-x-1.5 text-hq-cyan mt-1">

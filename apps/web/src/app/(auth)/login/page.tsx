@@ -149,7 +149,7 @@ export default function LoginPage() {
             ) : (
               <>
                 <CardHeader className="text-left space-y-2">
-                  <Badge variant="ai" className="w-fit text-[10px] tracking-widest font-bold">
+                  <Badge variant="ai" className="w-fit text-xs tracking-widest font-bold">
                     SECURITY VERIFICATION
                   </Badge>
                   <CardTitle className="text-2xl font-black text-[#1A1A1E] dark:text-white tracking-tight flex items-center gap-2">
@@ -175,7 +175,7 @@ export default function LoginPage() {
                           required
                           className="bg-white dark:bg-[#0A0A0C] border-card-border text-foreground tracking-widest text-center text-lg font-black h-11 focus-visible:ring-hq-blue"
                         />
-                        <p className="text-[10px] text-foreground/45 mt-2">
+                        <p className="text-xs text-foreground/45 mt-2">
                           Enter the 6-digit activation code sent to your inbox.
                         </p>
                       </div>
@@ -213,7 +213,7 @@ export default function LoginPage() {
 
                       <div className="relative flex py-2 items-center">
                         <div className="flex-grow border-t border-card-border"></div>
-                        <span className="flex-shrink mx-4 text-foreground/45 text-[10px] uppercase font-bold tracking-widest">
+                        <span className="flex-shrink mx-4 text-foreground/45 text-xs uppercase font-bold tracking-widest">
                           or
                         </span>
                         <div className="flex-grow border-t border-card-border"></div>

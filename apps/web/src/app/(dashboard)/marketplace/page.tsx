@@ -265,7 +265,7 @@ export default function MarketplacePage() {
                 />
               </div>
 
-              <div className="flex bg-[#F9F9FB] dark:bg-[#0A0A0C] border border-card-border rounded-lg p-0.5 text-[10px] font-bold uppercase">
+              <div className="flex bg-[#F9F9FB] dark:bg-[#0A0A0C] border border-card-border rounded-lg p-0.5 text-xs font-bold uppercase">
                 {['all', 'AI Executives', 'Workflow Templates', 'Knowledge Packs', 'Widgets'].map(cat => (
                   <button
                     key={cat}
@@ -289,11 +289,11 @@ export default function MarketplacePage() {
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <Badge variant="ai" className="text-[8px] font-black uppercase">Staff Picks Collection</Badge>
+                  <Badge variant="ai" className="text-sm font-black uppercase">Staff Picks Collection</Badge>
                   <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white mt-1 leading-snug">
                     Deploy the C-Suite Expansion Roster in 1-Click
                   </h3>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5 leading-relaxed">
+                  <p className="text-xs text-foreground/50 font-semibold mt-0.5 leading-relaxed">
                     Align your CFO, CTO, and CSD into a unified collaborative division with predefined security clearance boundaries.
                   </p>
                 </div>
@@ -321,17 +321,17 @@ export default function MarketplacePage() {
                       <div className="h-10 w-10 rounded-xl bg-[#F9F9FB] dark:bg-[#0A0A0C] border border-card-border flex items-center justify-center text-xl shrink-0">
                         {item.logo}
                       </div>
-                      <Badge variant="neutral" className="text-[8px] uppercase tracking-wider font-bold">{item.price}</Badge>
+                      <Badge variant="neutral" className="text-sm uppercase tracking-wider font-bold">{item.price}</Badge>
                     </div>
 
                     <div>
                       <h4 className="text-xs font-black text-white">{item.name}</h4>
                       <p className="text-[9.5px] text-foreground/45 font-bold uppercase tracking-wider mt-0.5">{item.publisher}</p>
-                      <p className="text-[10px] text-foreground/50 leading-relaxed font-semibold mt-2">{item.description}</p>
+                      <p className="text-xs text-foreground/50 leading-relaxed font-semibold mt-2">{item.description}</p>
                     </div>
                   </div>
 
-                  <div className="border-t border-card-border pt-3 flex items-center justify-between text-[9px] font-bold text-foreground/50 shrink-0">
+                  <div className="border-t border-card-border pt-3 flex items-center justify-between text-xs font-bold text-foreground/50 shrink-0">
                     <span className="flex items-center gap-1">
                       <Star className="h-3.5 w-3.5 text-yellow-500 fill-current" />
                       {item.rating} · ({item.installCount} installs)
@@ -353,7 +353,7 @@ export default function MarketplacePage() {
                   <CheckCircle className="h-4.5 w-4.5 text-hq-cyan" />
                   Active Headquarters Extensions
                 </h3>
-                <Badge variant="neutral" className="text-[9px]">Verified Clearance</Badge>
+                <Badge variant="neutral" className="text-xs">Verified Clearance</Badge>
               </div>
 
               <div className="space-y-3">
@@ -365,7 +365,7 @@ export default function MarketplacePage() {
                       </div>
                       <div>
                         <span className="text-xs font-black text-white block">{item.name}</span>
-                        <p className="text-[9px] text-foreground/45 mt-0.5 font-semibold">
+                        <p className="text-xs text-foreground/45 mt-0.5 font-semibold">
                           Publisher: {item.publisher} · Version: {item.version}
                         </p>
                       </div>
@@ -374,7 +374,7 @@ export default function MarketplacePage() {
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => handleToggleAutoUpdate(item.id)}
-                        className={`text-[9px] px-2.5 py-1 rounded font-black uppercase transition-all ${
+                        className={`text-xs px-2.5 py-1 rounded font-black uppercase transition-all ${
                           item.autoUpdate
                             ? 'bg-hq-cyan/15 text-hq-cyan border border-hq-cyan/20'
                             : 'bg-[#F9F9FB] dark:bg-[#0A0A0C] border border-card-border text-foreground/40'
@@ -421,7 +421,7 @@ export default function MarketplacePage() {
                       </div>
                       <div>
                         <h4 className="text-xs font-black text-white">{item.name}</h4>
-                        <Badge variant="neutral" className="text-[8px] uppercase tracking-wider font-bold mt-1">{item.category}</Badge>
+                        <Badge variant="neutral" className="text-sm uppercase tracking-wider font-bold mt-1">{item.category}</Badge>
                       </div>
                     </Card>
                   ))}
@@ -488,23 +488,23 @@ export default function MarketplacePage() {
                 {selectedItem.logo}
               </div>
               <div>
-                <Badge variant="ai" className="text-[8px] font-black tracking-wider uppercase">{selectedItem.category}</Badge>
+                <Badge variant="ai" className="text-sm font-black tracking-wider uppercase">{selectedItem.category}</Badge>
                 <h3 className="text-sm font-black text-white mt-1">{selectedItem.name}</h3>
-                <p className="text-[9px] text-foreground/45 font-bold uppercase mt-0.5">By {selectedItem.publisher} · Rating: {selectedItem.rating} ★</p>
+                <p className="text-xs text-foreground/45 font-bold uppercase mt-0.5">By {selectedItem.publisher} · Rating: {selectedItem.rating} ★</p>
               </div>
             </div>
 
             {/* Description */}
             <div className="text-xs space-y-4 font-semibold">
               <div>
-                <span className="text-foreground/45 text-[9px] uppercase tracking-wider block">Description</span>
+                <span className="text-foreground/45 text-xs uppercase tracking-wider block">Description</span>
                 <p className="text-foreground/75 leading-relaxed mt-1">{selectedItem.description}</p>
               </div>
 
               {/* Required Permissions */}
               <div className="border-t border-card-border pt-4 space-y-2">
-                <span className="text-foreground/45 text-[9px] uppercase tracking-wider block">Required Security Permissions</span>
-                <p className="text-[9px] text-foreground/45 font-semibold mt-0.5 leading-snug">Installing this item will grant the following access clearances to AI Co-Pilots:</p>
+                <span className="text-foreground/45 text-xs uppercase tracking-wider block">Required Security Permissions</span>
+                <p className="text-xs text-foreground/45 font-semibold mt-0.5 leading-snug">Installing this item will grant the following access clearances to AI Co-Pilots:</p>
                 
                 <div className="space-y-1.5 mt-2">
                   {selectedItem.permissions.map(perm => (

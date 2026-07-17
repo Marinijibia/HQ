@@ -346,7 +346,7 @@ export default function AssetCenterPage() {
       <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] text-left space-y-3.5">
         <div className="flex justify-between items-baseline">
           <div>
-            <span className="text-[10px] text-foreground/45 font-bold uppercase tracking-wider">
+            <span className="text-xs text-foreground/45 font-bold uppercase tracking-wider">
               Total Storage Capacity
             </span>
             <h3 className="text-lg font-extrabold text-[#1A1A1E] dark:text-white mt-0.5">
@@ -384,7 +384,7 @@ export default function AssetCenterPage() {
           ></div>
         </div>
 
-        <div className="flex flex-wrap gap-4 text-[10px] font-bold text-foreground/60">
+        <div className="flex flex-wrap gap-4 text-xs font-bold text-foreground/60">
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-hq-blue"></span>Documents (
             {formatBytes(docStorage)})
@@ -423,7 +423,7 @@ export default function AssetCenterPage() {
               <p className="text-xs font-bold text-[#1A1A1E] dark:text-white">
                 Drag and drop files here to audit
               </p>
-              <p className="text-[10px] text-foreground/50">
+              <p className="text-xs text-foreground/50">
                 Supports PDF, DOCX, JPEG, PNG, MP4 up to 50MB
               </p>
             </div>
@@ -431,7 +431,7 @@ export default function AssetCenterPage() {
             <Button
               onClick={() => document.getElementById('file-selector')?.click()}
               size="sm"
-              className="text-[10px] font-bold h-7 text-white"
+              className="text-xs font-bold h-7 text-white"
               style={{ backgroundColor: brandColor }}
             >
               Browse Files
@@ -441,7 +441,7 @@ export default function AssetCenterPage() {
           {/* Upload Progress feedback */}
           {uploadProgress !== null && (
             <div className="bg-card-bg border border-card-border p-4 rounded-xl space-y-2 text-left">
-              <div className="flex justify-between items-baseline text-[10px] font-bold text-foreground/75">
+              <div className="flex justify-between items-baseline text-xs font-bold text-foreground/75">
                 <span>Encrypting & Scanning File...</span>
                 <span>{uploadProgress}%</span>
               </div>
@@ -455,7 +455,7 @@ export default function AssetCenterPage() {
           )}
 
           {uploadError && (
-            <div className="border border-red-500/25 bg-red-500/5 text-red-500 text-[10px] font-bold p-3 rounded-xl flex items-center gap-1.5">
+            <div className="border border-red-500/25 bg-red-500/5 text-red-500 text-xs font-bold p-3 rounded-xl flex items-center gap-1.5">
               <AlertTriangle className="h-4 w-4 shrink-0" />
               <span>{uploadError}</span>
             </div>
@@ -538,7 +538,7 @@ export default function AssetCenterPage() {
                           <ShieldAlert className="h-3.5 w-3.5 text-red-500 shrink-0" />
                         )}
                       </h4>
-                      <p className="text-[10px] text-foreground/50 mt-0.5 font-semibold">
+                      <p className="text-xs text-foreground/50 mt-0.5 font-semibold">
                         {formatBytes(asset.fileSize)} • {asset.classification}
                       </p>
                     </div>
@@ -557,7 +557,7 @@ export default function AssetCenterPage() {
               {/* Asset Header Info */}
               <div className="border-b border-card-border pb-4 space-y-2.5">
                 <div className="flex justify-between items-start">
-                  <Badge variant="ai" className="text-[9px]">
+                  <Badge variant="ai" className="text-xs">
                     {selectedAsset.classification}
                   </Badge>
 
@@ -566,7 +566,7 @@ export default function AssetCenterPage() {
                       onClick={handleToggleHold}
                       variant="outline"
                       size="sm"
-                      className={`text-[9px] font-bold h-7 ${
+                      className={`text-xs font-bold h-7 ${
                         selectedAsset.isLegalHold
                           ? 'border-red-500 bg-red-500/5 text-red-500 hover:bg-red-500/10'
                           : 'border-card-border'
@@ -578,7 +578,7 @@ export default function AssetCenterPage() {
                     <a
                       href={selectedAsset.gcsPath}
                       download
-                      className="inline-flex items-center justify-center rounded-xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] px-3 py-1 text-[9px] font-bold text-foreground/75 hover:bg-black/5"
+                      className="inline-flex items-center justify-center rounded-xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] px-3 py-1 text-xs font-bold text-foreground/75 hover:bg-black/5"
                     >
                       <Download className="h-3.5 w-3.5 mr-1" />
                       Download
@@ -590,7 +590,7 @@ export default function AssetCenterPage() {
                   <h3 className="text-base font-extrabold text-[#1A1A1E] dark:text-white leading-tight">
                     {selectedAsset.filename}
                   </h3>
-                  <p className="text-[10px] text-foreground/50 mt-1 font-semibold leading-relaxed">
+                  <p className="text-xs text-foreground/50 mt-1 font-semibold leading-relaxed">
                     Checksum SHA-256:{' '}
                     <code className="bg-[#F9F9FB] dark:bg-[#0A0A0C] px-1 py-0.5 rounded text-hq-purple">
                       {selectedAsset.sha256}
@@ -601,21 +601,21 @@ export default function AssetCenterPage() {
 
               {/* Document Previewer */}
               <div className="space-y-2.5 text-left">
-                <h4 className="text-[10px] font-bold text-foreground/50 uppercase tracking-widest">
+                <h4 className="text-xs font-bold text-foreground/50 uppercase tracking-widest">
                   Secure Document Preview
                 </h4>
-                <div className="min-h-36 rounded-xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] p-4 text-[11px] leading-relaxed font-semibold overflow-y-auto text-foreground/80 max-h-56">
+                <div className="min-h-36 rounded-xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] p-4 text-sm leading-relaxed font-semibold overflow-y-auto text-foreground/80 max-h-56">
                   {selectedAsset.mimeType.startsWith('image/') ? (
                     <div className="flex flex-col items-center justify-center py-6 space-y-2">
                       <FileImage className="h-10 w-10 text-hq-cyan" />
-                      <span className="text-[10px] text-foreground/45">
+                      <span className="text-xs text-foreground/45">
                         Image content verified. Integrity hash match.
                       </span>
                     </div>
                   ) : selectedAsset.mimeType.startsWith('video/') ? (
                     <div className="flex flex-col items-center justify-center py-6 space-y-2">
                       <Video className="h-10 w-10 text-hq-purple" />
-                      <span className="text-[10px] text-foreground/45">
+                      <span className="text-xs text-foreground/45">
                         Video file format verified. Previews disabled on local fallbacks.
                       </span>
                     </div>
@@ -627,7 +627,7 @@ export default function AssetCenterPage() {
                       <p>
                         {selectedAsset.description || 'No description provided for this index.'}
                       </p>
-                      <div className="mt-4 border-t border-card-border/50 pt-2 text-[10px] text-foreground/40 font-bold uppercase">
+                      <div className="mt-4 border-t border-card-border/50 pt-2 text-xs text-foreground/40 font-bold uppercase">
                         Ledger metadata index: {selectedAsset.gcsPath}
                       </div>
                     </div>
@@ -637,7 +637,7 @@ export default function AssetCenterPage() {
 
               {/* Version History ledger */}
               <div className="space-y-4">
-                <div className="flex items-center space-x-2 text-foreground/50 uppercase tracking-widest text-[10px] font-bold border-b border-card-border pb-1.5">
+                <div className="flex items-center space-x-2 text-foreground/50 uppercase tracking-widest text-xs font-bold border-b border-card-border pb-1.5">
                   <History className="h-3.5 w-3.5" />
                   <span>Version History Ledger</span>
                 </div>
@@ -653,11 +653,11 @@ export default function AssetCenterPage() {
                           <span className="text-xs font-bold text-[#1A1A1E] dark:text-white">
                             Version {ver.version}
                           </span>
-                          <span className="text-[9px] text-foreground/45 font-semibold">
+                          <span className="text-xs text-foreground/45 font-semibold">
                             {new Date(ver.createdAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-[10px] text-foreground/60 font-semibold leading-tight">
+                        <p className="text-xs text-foreground/60 font-semibold leading-tight">
                           {ver.changeSummary || 'Manual index update'}
                         </p>
                       </div>
@@ -670,7 +670,7 @@ export default function AssetCenterPage() {
                         }
                         variant="ghost"
                         size="sm"
-                        className="text-[10px] font-extrabold h-7 border border-card-border text-hq-blue hover:bg-hq-blue/5 disabled:opacity-50 shrink-0"
+                        className="text-xs font-extrabold h-7 border border-card-border text-hq-blue hover:bg-hq-blue/5 disabled:opacity-50 shrink-0"
                       >
                         <RotateCcw className="h-3.5 w-3.5 mr-1" />
                         Rollback

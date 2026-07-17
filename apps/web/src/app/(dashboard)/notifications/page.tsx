@@ -229,7 +229,7 @@ export default function NotificationsInboxPage() {
     switch (priority) {
       case 'CRITICAL':
         return (
-          <Badge variant="error" className="text-[9px]">
+          <Badge variant="error" className="text-xs">
             Critical Exception
           </Badge>
         );
@@ -237,20 +237,20 @@ export default function NotificationsInboxPage() {
         return (
           <Badge
             variant="ai"
-            className="bg-hq-purple/10 text-hq-purple border-hq-purple/30 text-[9px]"
+            className="bg-hq-purple/10 text-hq-purple border-hq-purple/30 text-xs"
           >
             High Priority
           </Badge>
         );
       case 'MEDIUM':
         return (
-          <Badge variant="success" className="text-[9px]">
+          <Badge variant="success" className="text-xs">
             Operational
           </Badge>
         );
       default:
         return (
-          <Badge variant="neutral" className="text-[9px]">
+          <Badge variant="neutral" className="text-xs">
             Notice
           </Badge>
         );
@@ -372,11 +372,11 @@ export default function NotificationsInboxPage() {
                         <span className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">
                           {sender.name}
                         </span>
-                        <span className="text-[10px] text-foreground/50 font-bold uppercase tracking-wider">
+                        <span className="text-xs text-foreground/50 font-bold uppercase tracking-wider">
                           {sender.role}
                         </span>
                         {getPriorityBadge(notif.priority)}
-                        <span className="text-[10px] text-foreground/40 ml-auto font-semibold">
+                        <span className="text-xs text-foreground/40 ml-auto font-semibold">
                           {new Date(notif.createdAt).toLocaleDateString()} at{' '}
                           {new Date(notif.createdAt).toLocaleTimeString([], {
                             hour: '2-digit',
@@ -403,7 +403,7 @@ export default function NotificationsInboxPage() {
                           <Button
                             onClick={() => router.push(notif.actionUrl!)}
                             size="sm"
-                            className="text-[10px] font-bold text-white h-7 px-3.5 flex items-center gap-1.5 shadow-sm"
+                            className="text-xs font-bold text-white h-7 px-3.5 flex items-center gap-1.5 shadow-sm"
                             style={{ backgroundColor: brandColor }}
                           >
                             Execute Strategic Order
@@ -462,7 +462,7 @@ export default function NotificationsInboxPage() {
             <form onSubmit={handleSavePreferences} className="space-y-4 pt-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-foreground/75 flex items-center gap-1.5">
+                  <span className="text-sm font-bold text-foreground/75 flex items-center gap-1.5">
                     <Mail className="h-3.5 w-3.5 text-foreground/40" />
                     Email Summaries
                   </span>
@@ -475,7 +475,7 @@ export default function NotificationsInboxPage() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-foreground/75 flex items-center gap-1.5">
+                  <span className="text-sm font-bold text-foreground/75 flex items-center gap-1.5">
                     <Smartphone className="h-3.5 w-3.5 text-foreground/40" />
                     Mobile Push Alerts
                   </span>
@@ -488,7 +488,7 @@ export default function NotificationsInboxPage() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-foreground/75 flex items-center gap-1.5">
+                  <span className="text-sm font-bold text-foreground/75 flex items-center gap-1.5">
                     <Activity className="h-3.5 w-3.5 text-foreground/40 animate-pulse" />
                     Enforce Quiet Hours
                   </span>
@@ -505,7 +505,7 @@ export default function NotificationsInboxPage() {
                 <Button
                   type="submit"
                   size="sm"
-                  className="w-full text-[10px] font-bold text-white shadow-sm"
+                  className="w-full text-xs font-bold text-white shadow-sm"
                   style={{ backgroundColor: brandColor }}
                 >
                   Save Inbox Preferences
@@ -516,7 +516,7 @@ export default function NotificationsInboxPage() {
 
           {/* Preferences updated toast alert */}
           {prefSavedToast && (
-            <div className="border border-green-500/25 bg-green-500/5 text-green-500 p-3 rounded-xl text-center text-[10px] font-bold">
+            <div className="border border-green-500/25 bg-green-500/5 text-green-500 p-3 rounded-xl text-center text-xs font-bold">
               ✓ Preferences updated successfully!
             </div>
           )}

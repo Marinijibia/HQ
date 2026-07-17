@@ -219,9 +219,9 @@ export default function DiscussionsPage() {
           <div className="absolute -top-6 -left-6 w-64 h-24 bg-hq-blue/[0.04] rounded-full blur-3xl pointer-events-none" />
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] uppercase tracking-widest font-black text-foreground/30">Executive Boardroom</span>
+              <span className="text-xs uppercase tracking-widest font-black text-foreground/30">Executive Boardroom</span>
               <span className="h-1 w-1 rounded-full bg-hq-cyan animate-pulse" />
-              <span className="text-[10px] uppercase tracking-widest font-black text-hq-cyan/60">Live</span>
+              <span className="text-xs uppercase tracking-widest font-black text-hq-cyan/60">Live</span>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
               <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-hq-blue/20 to-hq-purple/10 border border-hq-blue/20 flex items-center justify-center">
@@ -271,7 +271,7 @@ export default function DiscussionsPage() {
           >
             <div className="absolute top-0 right-0 w-24 h-24 bg-hq-cyan/[0.04] rounded-full blur-2xl group-hover:bg-hq-blue/[0.08] transition-colors pointer-events-none" />
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[9px] font-black uppercase tracking-widest text-hq-cyan/80 flex items-center gap-1.5 bg-hq-cyan/10 px-2 py-1 rounded-full">
+              <span className="text-xs font-black uppercase tracking-widest text-hq-cyan/80 flex items-center gap-1.5 bg-hq-cyan/10 px-2 py-1 rounded-full">
                 <Sparkles className="h-3 w-3" />
                 Prompt Template
               </span>
@@ -280,7 +280,7 @@ export default function DiscussionsPage() {
               </div>
             </div>
             <h4 className="text-sm font-black text-foreground group-hover:text-hq-blue transition-colors">{item.title}</h4>
-            <p className="text-[11px] text-foreground/45 mt-1.5 leading-relaxed font-medium">{item.desc}</p>
+            <p className="text-sm text-foreground/45 mt-1.5 leading-relaxed font-medium">{item.desc}</p>
           </Card>
         ))}
       </div>
@@ -299,7 +299,7 @@ export default function DiscussionsPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as 'recent' | 'pinned' | 'archived')}
-                  className={`rounded-full px-4 py-1.5 text-[11px] font-bold flex items-center gap-1.5 transition-all duration-200 ${
+                  className={`rounded-full px-4 py-1.5 text-sm font-bold flex items-center gap-1.5 transition-all duration-200 ${
                     activeTab === tab.id
                       ? 'text-white shadow-sm'
                       : 'text-foreground/50 hover:text-foreground'
@@ -359,7 +359,7 @@ export default function DiscussionsPage() {
                 <div className="absolute top-0 right-0 w-24 h-20 bg-hq-blue/[0.03] rounded-full blur-2xl group-hover:bg-hq-blue/[0.07] transition-colors pointer-events-none" />
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
-                    <Badge variant={conv.missionId ? 'success' : 'ai'} className="text-[9px]">
+                    <Badge variant={conv.missionId ? 'success' : 'ai'} className="text-xs">
                       {conv.missionId ? 'Orchestrated' : 'Active Discussion'}
                     </Badge>
                     <div className="flex gap-1">
@@ -380,7 +380,7 @@ export default function DiscussionsPage() {
                     </div>
                   </div>
                   <div className="flex items-start gap-3 mt-3">
-                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-hq-blue/20 to-hq-purple/10 border border-hq-blue/15 flex items-center justify-center font-black text-[10px] text-hq-blue uppercase shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-hq-blue/20 to-hq-purple/10 border border-hq-blue/15 flex items-center justify-center font-black text-xs text-hq-blue uppercase shrink-0">
                       {(conv.title || 'BD').substring(0, 2)}
                     </div>
                     <CardTitle className="text-sm font-black text-foreground line-clamp-2 group-hover:text-hq-blue transition-colors leading-snug">
@@ -388,7 +388,7 @@ export default function DiscussionsPage() {
                     </CardTitle>
                   </div>
                 </CardHeader>
-                <CardFooter className="pt-3 pb-3 text-[9px] text-foreground/35 font-bold border-t border-card-border/50 flex justify-between uppercase tracking-wide">
+                <CardFooter className="pt-3 pb-3 text-xs text-foreground/35 font-bold border-t border-card-border/50 flex justify-between uppercase tracking-wide">
                   <span>{new Date(conv.createdAt).toLocaleDateString()}</span>
                   <span className="flex items-center gap-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-hq-cyan animate-pulse" />
@@ -414,14 +414,14 @@ export default function DiscussionsPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-black text-foreground tracking-tight">Start Boardroom Discussion</h2>
-                  <p className="text-[11px] text-foreground/40 font-medium mt-0.5">Convene specialist AI directors to evaluate your strategy.</p>
+                  <p className="text-sm text-foreground/40 font-medium mt-0.5">Convene specialist AI directors to evaluate your strategy.</p>
                 </div>
               </div>
             </div>
 
             <form onSubmit={handleStartDiscussion} className="space-y-5 p-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40">
+                <label className="text-xs font-black uppercase tracking-widest text-foreground/40">
                   Objective / Strategy Topic
                 </label>
                 <textarea
@@ -435,7 +435,7 @@ export default function DiscussionsPage() {
 
               {/* Specialist executive selectors */}
               <div className="space-y-2.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 block">
+                <label className="text-xs font-black uppercase tracking-widest text-foreground/40 block">
                   Select Specialist Directors
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -455,7 +455,7 @@ export default function DiscussionsPage() {
                         type="button"
                         onClick={() => handleToggleExec(m.key)}
                         disabled={m.key === 'ceo'}
-                        className="px-2.5 py-2 border rounded-xl transition-all duration-200 text-[10px] font-bold text-center flex items-center justify-center h-10 disabled:opacity-60"
+                        className="px-2.5 py-2 border rounded-xl transition-all duration-200 text-xs font-bold text-center flex items-center justify-center h-10 disabled:opacity-60"
                         style={{
                           borderColor: isSelected ? brandColor : undefined,
                           backgroundColor: isSelected ? brandColor + '12' : undefined,
@@ -475,13 +475,13 @@ export default function DiscussionsPage() {
                   type="button"
                   variant="ghost"
                   onClick={() => setShowStartModal(false)}
-                  className="text-[11px] font-bold h-9 px-4 rounded-full text-foreground/50 hover:text-foreground border border-card-border hover:border-card-border transition-all"
+                  className="text-sm font-bold h-9 px-4 rounded-full text-foreground/50 hover:text-foreground border border-card-border hover:border-card-border transition-all"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="text-[11px] font-black text-white h-9 px-5 rounded-full shadow-[0_4px_14px_rgba(10,132,255,0.3)] hover:shadow-[0_4px_20px_rgba(10,132,255,0.4)] transition-all"
+                  className="text-sm font-black text-white h-9 px-5 rounded-full shadow-[0_4px_14px_rgba(10,132,255,0.3)] hover:shadow-[0_4px_20px_rgba(10,132,255,0.4)] transition-all"
                   style={{ backgroundColor: brandColor }}
                 >
                   Convene Boardroom
