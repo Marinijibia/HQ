@@ -194,48 +194,58 @@ export default function DiscussionsPage() {
 
   return (
     <div className="space-y-8 select-none text-foreground pb-12">
-      {/* Title Header / Clean welcome for Guide Mode */}
+      {/* Guide Mode Welcome Banner */}
       {guideModeEnabled && ftxStep === 'arrival' ? (
-        <Card className="border border-hq-blue/20 bg-[#0B0B0E]/80 backdrop-blur-md p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-in fade-in duration-300 w-full text-left mb-6">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="h-10 w-10 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center text-lg font-black animate-pulse">
-              HQ
+        <Card className="relative overflow-hidden border border-hq-blue/20 bg-card-bg backdrop-blur-md p-6 sm:p-8 shadow-2xl animate-in fade-in duration-300 w-full text-left mb-6">
+          <div className="absolute top-0 right-0 w-64 h-32 bg-hq-blue/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="p-[1.5px] bg-gradient-to-tr from-hq-blue via-[#bf5af2] to-hq-cyan rounded-full shadow-[0_0_15px_rgba(10,132,255,0.2)]">
+              <div className="h-10 w-10 rounded-full bg-black flex items-center justify-center text-sm font-black text-white select-none animate-pulse">
+                HQ
+              </div>
             </div>
             <div>
-              <h1 className="text-xl font-extrabold tracking-tight text-white">Welcome to HQ</h1>
-              <p className="text-xs text-foreground/60 mt-0.5">Your Executive Board is online.</p>
+              <h1 className="text-xl font-black tracking-tight text-foreground">Welcome to HQ</h1>
+              <p className="text-xs text-foreground/45 mt-0.5 font-medium">Your Executive Board is standing by.</p>
             </div>
           </div>
-          <p className="text-sm text-foreground/80 leading-relaxed font-semibold">
-            I'm your Chief Executive Officer. Let's start our first boardroom discussion. Type a business objective or choose a prompt template card below to consult your executive board.
+          <p className="text-sm text-foreground/70 leading-relaxed font-medium">
+            I'm your Chief Executive Officer. Let's start our first boardroom discussion. Type a business objective or choose a prompt template below to consult your executive board.
           </p>
         </Card>
       ) : (
-        /* Standard Header */
-        <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
+        /* Premium Standard Header */
+        <div className="relative flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+          <div className="absolute -top-6 -left-6 w-64 h-24 bg-hq-blue/[0.04] rounded-full blur-3xl pointer-events-none" />
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
-              <MessageSquare className="h-8 w-8 text-hq-blue" />
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] uppercase tracking-widest font-black text-foreground/30">Executive Boardroom</span>
+              <span className="h-1 w-1 rounded-full bg-hq-cyan animate-pulse" />
+              <span className="text-[10px] uppercase tracking-widest font-black text-hq-cyan/60">Live</span>
+            </div>
+            <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
+              <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-hq-blue/20 to-hq-purple/10 border border-hq-blue/20 flex items-center justify-center">
+                <MessageSquare className="h-4 w-4 text-hq-blue" />
+              </div>
               Boardroom Discussions
             </h1>
-            <p className="text-foreground/60 text-sm mt-1">
-              Debate operational models, review assets, and direct specialists prior to launching
-              campaigns.
+            <p className="text-foreground/45 text-sm mt-1.5 font-medium">
+              Debate operational models, review assets, and direct specialists prior to launching campaigns.
             </p>
           </div>
 
           <Button
             onClick={() => setShowStartModal(true)}
-            className="flex items-center gap-2 h-9 text-xs text-white"
+            className="flex items-center gap-2.5 h-10 px-5 text-xs text-white font-bold rounded-full shadow-[0_4px_20px_rgba(10,132,255,0.3)] hover:shadow-[0_4px_28px_rgba(10,132,255,0.45)] transition-all duration-300 hover:scale-[1.02]"
             style={{ backgroundColor: brandColor }}
           >
-            <PlusCircle className="h-4 w-4" />
+            <PlusCircle className="h-3.5 w-3.5" />
             New Discussion
           </Button>
         </div>
       )}
 
-      {/* Suggested prompts cards */}
+      {/* Premium Prompt Template Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         {[
           {
@@ -257,46 +267,49 @@ export default function DiscussionsPage() {
           <Card
             key={index}
             onClick={() => handleQuickDiscussion(item.prompt)}
-            className="border border-card-border bg-card-bg hover:border-hq-blue/40 cursor-pointer card-transition p-5 text-left"
+            className="group relative overflow-hidden border border-card-border bg-card-bg hover:border-hq-blue/30 hover:shadow-[0_8px_30px_rgba(10,132,255,0.08)] cursor-pointer transition-all duration-300 p-5 text-left"
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-hq-cyan flex items-center gap-1">
-                <Sparkles className="h-3.5 w-3.5" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-hq-cyan/[0.04] rounded-full blur-2xl group-hover:bg-hq-blue/[0.08] transition-colors pointer-events-none" />
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[9px] font-black uppercase tracking-widest text-hq-cyan/80 flex items-center gap-1.5 bg-hq-cyan/10 px-2 py-1 rounded-full">
+                <Sparkles className="h-3 w-3" />
                 Prompt Template
               </span>
-              <ArrowRight className="h-4 w-4 text-foreground/45" />
+              <div className="h-6 w-6 rounded-lg bg-black/[0.04] dark:bg-white/[0.04] border border-card-border flex items-center justify-center group-hover:bg-hq-blue/10 group-hover:border-hq-blue/20 transition-all">
+                <ArrowRight className="h-3 w-3 text-foreground/35 group-hover:text-hq-blue transition-colors" />
+              </div>
             </div>
-            <h4 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">{item.title}</h4>
-            <p className="text-[11px] text-foreground/60 mt-1">{item.desc}</p>
+            <h4 className="text-sm font-black text-foreground group-hover:text-hq-blue transition-colors">{item.title}</h4>
+            <p className="text-[11px] text-foreground/45 mt-1.5 leading-relaxed font-medium">{item.desc}</p>
           </Card>
         ))}
       </div>
 
-      {/* Toolbar filters */}
+      {/* Premium Filter Toolbar */}
       {(!guideModeEnabled || ftxStep !== 'arrival') && (
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
-          <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1">
+          <div className="flex gap-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-card-border rounded-full p-1">
             {[
               { id: 'recent', label: 'All Discussions', icon: Clock },
-              { id: 'pinned', label: 'Pinned Only', icon: Pin },
-              { id: 'archived', label: 'Archived discussions', icon: Archive },
+              { id: 'pinned', label: 'Pinned', icon: Pin },
+              { id: 'archived', label: 'Archived', icon: Archive },
             ].map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as 'recent' | 'pinned' | 'archived')}
-                  className={`rounded-xl px-4 py-2 text-xs font-bold flex items-center gap-1.5 border transition-all ${
+                  className={`rounded-full px-4 py-1.5 text-[11px] font-bold flex items-center gap-1.5 transition-all duration-200 ${
                     activeTab === tab.id
-                      ? 'text-white border-transparent'
-                      : 'bg-card-bg border-card-border hover:bg-black/5 dark:hover:bg-white/5 text-foreground/75'
+                      ? 'text-white shadow-sm'
+                      : 'text-foreground/50 hover:text-foreground'
                   }`}
                   style={{
                     backgroundColor: activeTab === tab.id ? brandColor : undefined,
-                    boxShadow: activeTab === tab.id ? `0 4px 15px ${brandColor}2b` : undefined,
+                    boxShadow: activeTab === tab.id ? `0 2px 10px ${brandColor}40` : undefined,
                   }}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-3 w-3" />
                   {tab.label}
                 </button>
               );
@@ -304,13 +317,13 @@ export default function DiscussionsPage() {
           </div>
 
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-foreground/45" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-foreground/35" />
             <input
               type="text"
               placeholder="Search discussions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 w-60 rounded-md border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] pl-9 pr-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hq-blue"
+              className="h-9 w-56 rounded-full border border-card-border bg-black/[0.03] dark:bg-white/[0.03] pl-9 pr-4 text-xs text-foreground placeholder:text-foreground/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hq-blue/50 focus-visible:border-hq-blue/30 transition-all font-medium"
             />
           </div>
         </div>
@@ -341,37 +354,46 @@ export default function DiscussionsPage() {
               <Card
                 key={conv.id}
                 onClick={() => router.push(`/discussions/${conv.id}`)}
-                className="hover:border-hq-blue/50 transition-all cursor-pointer bg-card-bg border border-card-border text-left hover:shadow-lg flex flex-col justify-between"
+                className="group relative overflow-hidden hover:border-hq-blue/30 hover:shadow-[0_8px_30px_rgba(10,132,255,0.07)] transition-all duration-300 cursor-pointer bg-card-bg border border-card-border text-left flex flex-col justify-between"
               >
-                <CardHeader className="pb-2">
+                <div className="absolute top-0 right-0 w-24 h-20 bg-hq-blue/[0.03] rounded-full blur-2xl group-hover:bg-hq-blue/[0.07] transition-colors pointer-events-none" />
+                <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
                     <Badge variant={conv.missionId ? 'success' : 'ai'} className="text-[9px]">
                       {conv.missionId ? 'Orchestrated' : 'Active Discussion'}
                     </Badge>
-                    <div className="flex gap-1.5">
+                    <div className="flex gap-1">
                       <button
                         onClick={(e) => handleTogglePin(conv.id, e)}
-                        className={`p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 ${
-                          conv.isPinned ? 'text-hq-cyan' : 'text-foreground/45'
+                        className={`p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${
+                          conv.isPinned ? 'text-hq-cyan' : 'text-foreground/30 hover:text-foreground/60'
                         }`}
                       >
-                        <Pin className="h-3.5 w-3.5 fill-current" />
+                        <Pin className="h-3 w-3 fill-current" />
                       </button>
                       <button
                         onClick={(e) => handleToggleArchive(conv.id, e)}
-                        className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 text-foreground/45 hover:text-red-400"
+                        className="p-1.5 rounded-lg hover:bg-red-500/5 text-foreground/30 hover:text-red-400 transition-colors"
                       >
-                        <Archive className="h-3.5 w-3.5" />
+                        <Archive className="h-3 w-3" />
                       </button>
                     </div>
                   </div>
-                  <CardTitle className="text-sm font-extrabold text-[#1A1A1E] dark:text-white mt-2 line-clamp-2">
-                    {conv.title || 'Untitled Boardroom Session'}
-                  </CardTitle>
+                  <div className="flex items-start gap-3 mt-3">
+                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-hq-blue/20 to-hq-purple/10 border border-hq-blue/15 flex items-center justify-center font-black text-[10px] text-hq-blue uppercase shrink-0">
+                      {(conv.title || 'BD').substring(0, 2)}
+                    </div>
+                    <CardTitle className="text-sm font-black text-foreground line-clamp-2 group-hover:text-hq-blue transition-colors leading-snug">
+                      {conv.title || 'Untitled Boardroom Session'}
+                    </CardTitle>
+                  </div>
                 </CardHeader>
-                <CardFooter className="pt-2 text-[10px] text-foreground/45 font-semibold border-t border-card-border/50 bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-b-xl flex justify-between">
-                  <span>Created: {new Date(conv.createdAt).toLocaleDateString()}</span>
-                  <span>Active</span>
+                <CardFooter className="pt-3 pb-3 text-[9px] text-foreground/35 font-bold border-t border-card-border/50 flex justify-between uppercase tracking-wide">
+                  <span>{new Date(conv.createdAt).toLocaleDateString()}</span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-hq-cyan animate-pulse" />
+                    Active
+                  </span>
                 </CardFooter>
               </Card>
             ))}
@@ -379,22 +401,27 @@ export default function DiscussionsPage() {
         )
       )}
 
-      {/* Start Discussion Dialog Overlay */}
+      {/* Premium Start Discussion Modal */}
       {showStartModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <Card className="w-full max-w-lg border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] p-6 shadow-2xl animate-in zoom-in-95 duration-200 text-left">
-            <CardHeader className="p-0 pb-4 border-b border-card-border">
-              <CardTitle className="text-lg font-extrabold text-[#1A1A1E] dark:text-white">
-                Start Boardroom Discussion
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Convening specialist AI directors to evaluate campaign targets.
-              </CardDescription>
-            </CardHeader>
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/50 backdrop-blur-md animate-in fade-in duration-150">
+          <Card className="w-full max-w-lg border border-white/10 dark:border-white/[0.06] bg-white/95 dark:bg-[#0a0a0f]/98 backdrop-blur-2xl p-0 shadow-[0_32px_64px_rgba(0,0,0,0.3)] rounded-2xl animate-in zoom-in-95 slide-in-from-top-4 duration-200 text-left overflow-hidden">
+            {/* Modal Header */}
+            <div className="relative px-6 pt-6 pb-5 border-b border-card-border/60">
+              <div className="absolute top-0 right-0 w-48 h-24 bg-hq-blue/[0.04] rounded-full blur-3xl pointer-events-none" />
+              <div className="flex items-center gap-3 mb-1">
+                <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-hq-blue/20 to-hq-purple/10 border border-hq-blue/20 flex items-center justify-center">
+                  <MessageSquare className="h-3.5 w-3.5 text-hq-blue" />
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-foreground tracking-tight">Start Boardroom Discussion</h2>
+                  <p className="text-[11px] text-foreground/40 font-medium mt-0.5">Convene specialist AI directors to evaluate your strategy.</p>
+                </div>
+              </div>
+            </div>
 
-            <form onSubmit={handleStartDiscussion} className="space-y-4 pt-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground/75">
+            <form onSubmit={handleStartDiscussion} className="space-y-5 p-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40">
                   Objective / Strategy Topic
                 </label>
                 <textarea
@@ -402,13 +429,13 @@ export default function DiscussionsPage() {
                   value={objective}
                   onChange={(e) => setObjective(e.target.value)}
                   required
-                  className="min-h-20 w-full rounded-xl border border-card-border bg-white dark:bg-black p-3 text-xs focus:outline-none focus:ring-1 focus:ring-hq-blue text-foreground"
+                  className="min-h-24 w-full rounded-xl border border-card-border bg-black/[0.02] dark:bg-white/[0.03] p-4 text-sm focus:outline-none focus:ring-1 focus:ring-hq-blue/50 focus:border-hq-blue/30 text-foreground placeholder:text-foreground/25 font-medium transition-all resize-none"
                 />
               </div>
 
               {/* Specialist executive selectors */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-foreground/75 block">
+              <div className="space-y-2.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 block">
                   Select Specialist Directors
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -428,32 +455,33 @@ export default function DiscussionsPage() {
                         type="button"
                         onClick={() => handleToggleExec(m.key)}
                         disabled={m.key === 'ceo'}
-                        className="px-2.5 py-1.5 border rounded-xl transition-all text-[11px] font-bold text-center flex flex-col justify-center items-center h-10 disabled:opacity-50"
+                        className="px-2.5 py-2 border rounded-xl transition-all duration-200 text-[10px] font-bold text-center flex items-center justify-center h-10 disabled:opacity-60"
                         style={{
                           borderColor: isSelected ? brandColor : undefined,
-                          backgroundColor: isSelected ? brandColor + '0d' : undefined,
+                          backgroundColor: isSelected ? brandColor + '12' : undefined,
                           color: isSelected ? brandColor : undefined,
+                          boxShadow: isSelected ? `0 0 12px ${brandColor}20` : undefined,
                         }}
                       >
-                        <span>{m.name}</span>
+                        {m.name}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="flex gap-2.5 pt-4 border-t border-card-border justify-end">
+              <div className="flex gap-3 pt-2 border-t border-card-border/60 justify-end">
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant="ghost"
                   onClick={() => setShowStartModal(false)}
-                  className="text-xs font-bold h-9 px-4"
+                  className="text-[11px] font-bold h-9 px-4 rounded-full text-foreground/50 hover:text-foreground border border-card-border hover:border-card-border transition-all"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="text-xs font-bold text-white h-9 px-4"
+                  className="text-[11px] font-black text-white h-9 px-5 rounded-full shadow-[0_4px_14px_rgba(10,132,255,0.3)] hover:shadow-[0_4px_20px_rgba(10,132,255,0.4)] transition-all"
                   style={{ backgroundColor: brandColor }}
                 >
                   Convene Boardroom
