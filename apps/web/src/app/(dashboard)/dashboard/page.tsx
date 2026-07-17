@@ -254,103 +254,152 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Standard Welcome Banner */}
-      <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 text-left">
+      {/* Premium Welcome Hero */}
+      <div className="relative flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 text-left">
+        {/* Ambient background glow */}
+        <div className="absolute -top-8 -left-8 w-72 h-32 bg-hq-blue/5 rounded-full blur-3xl pointer-events-none" />
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
-            Welcome back, {ownerName}
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] uppercase tracking-widest font-black text-foreground/30 select-none">Headquarters Dashboard</span>
+            <span className="h-1 w-1 rounded-full bg-hq-cyan animate-pulse" />
+            <span className="text-[10px] uppercase tracking-widest font-black text-hq-cyan/60 select-none">Online</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-baseline gap-3">
+            Welcome back,{' '}
+            <span className="bg-gradient-to-r from-hq-blue via-[#bf5af2] to-hq-cyan bg-clip-text text-transparent">
+              {ownerName}
+            </span>
           </h1>
-          <p className="text-foreground/60 text-sm mt-1">
-            Your Headquarters is online. CEO{' '}
-            <span className="font-bold" style={{ color: brandColor }}>
+          <p className="text-foreground/50 text-sm mt-1.5 font-medium">
+            CEO{' '}
+            <span className="font-extrabold" style={{ color: brandColor }}>
               {ceoName}
             </span>{' '}
-            is coordinating tasks for {hqName}.
+            is coordinating the executive board for{' '}
+            <span className="font-bold text-foreground/70">{hqName}</span>.
           </p>
         </div>
 
         <Button
           onClick={() => setMissionPanelOpen(true)}
-          className="flex items-center gap-2 h-9 text-xs text-white"
+          className="flex items-center gap-2.5 h-10 px-5 text-xs text-white font-bold rounded-full shadow-[0_4px_20px_rgba(10,132,255,0.3)] hover:shadow-[0_4px_28px_rgba(10,132,255,0.45)] transition-all duration-300 hover:scale-[1.02]"
           style={{ backgroundColor: brandColor }}
         >
-          <Play className="h-4 w-4" />
+          <Play className="h-3.5 w-3.5" />
           Launch New Mission
         </Button>
       </div>
 
-      {/* Statistics Row */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
+      {/* Premium Statistics Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Active Missions */}
+        <Card className="relative overflow-hidden border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition group hover:border-hq-blue/30 hover:shadow-[0_8px_30px_rgba(10,132,255,0.08)] transition-all duration-300">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-hq-blue/5 rounded-full blur-2xl group-hover:bg-hq-blue/10 transition-colors" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">
+            <CardTitle className="text-[9px] font-black uppercase tracking-widest text-foreground/40">
               Active Missions
             </CardTitle>
-            <Activity className="h-4 w-4 text-hq-blue" />
+            <div className="h-7 w-7 rounded-lg bg-hq-blue/10 flex items-center justify-center">
+              <Activity className="h-3.5 w-3.5 text-hq-blue" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-[#1A1A1E] dark:text-white">
-              {missions.filter(m => m.status === 'PLANNING' || m.status === 'IN_PROGRESS' || m.status === 'RUNNING').length} / 1
+            <div className="text-3xl font-black text-foreground tracking-tight">
+              {missions.filter(m => m.status === 'PLANNING' || m.status === 'IN_PROGRESS' || m.status === 'RUNNING').length}
+              <span className="text-lg text-foreground/25 font-medium ml-1">/ 1</span>
             </div>
-            <p className="text-[10px] text-foreground/45 mt-1 font-semibold">
-              Free Tier Limit: Max 1 active
+            <p className="text-[9px] text-foreground/35 mt-1 font-bold uppercase tracking-wide">
+              Free Tier · Max 1 Active
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
+        {/* Weekly Growth */}
+        <Card className="relative overflow-hidden border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition group hover:border-hq-cyan/30 hover:shadow-[0_8px_30px_rgba(48,209,88,0.08)] transition-all duration-300">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-hq-cyan/5 rounded-full blur-2xl group-hover:bg-hq-cyan/10 transition-colors" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">
+            <CardTitle className="text-[9px] font-black uppercase tracking-widest text-foreground/40">
               Weekly Growth
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-hq-cyan" />
+            <div className="h-7 w-7 rounded-lg bg-hq-cyan/10 flex items-center justify-center">
+              <TrendingUp className="h-3.5 w-3.5 text-hq-cyan" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-hq-cyan">+24.5%</div>
-            <p className="text-[10px] text-foreground/45 mt-1 font-semibold">
-              Compared to previous week
+            <div className="text-3xl font-black text-hq-cyan tracking-tight">+24.5%</div>
+            <p className="text-[9px] text-foreground/35 mt-1 font-bold uppercase tracking-wide">
+              vs. Previous Week
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
+        {/* Scheduled Tasks */}
+        <Card className="relative overflow-hidden border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition group hover:border-hq-purple/30 hover:shadow-[0_8px_30px_rgba(191,90,242,0.08)] transition-all duration-300">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-hq-purple/5 rounded-full blur-2xl group-hover:bg-hq-purple/10 transition-colors" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">
-              Available Credits
+            <CardTitle className="text-[9px] font-black uppercase tracking-widest text-foreground/40">
+              Scheduled Tasks
             </CardTitle>
-            <CreditCard className="h-4 w-4 text-amber-500" />
+            <div className="h-7 w-7 rounded-lg bg-hq-purple/10 flex items-center justify-center">
+              <Calendar className="h-3.5 w-3.5 text-hq-purple" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-[#1A1A1E] dark:text-white">9,420</div>
-            <p className="text-[10px] text-foreground/45 mt-1 font-semibold">Resets in 12 days</p>
+            <div className="text-3xl font-black text-foreground tracking-tight">{missions.length}</div>
+            <p className="text-[9px] text-foreground/35 mt-1 font-bold uppercase tracking-wide">
+              Total Campaigns
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Available Credits */}
+        <Card className="relative overflow-hidden border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition group hover:border-amber-500/30 hover:shadow-[0_8px_30px_rgba(255,149,0,0.08)] transition-all duration-300">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-[9px] font-black uppercase tracking-widest text-foreground/40">
+              Available Credits
+            </CardTitle>
+            <div className="h-7 w-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <CreditCard className="h-3.5 w-3.5 text-amber-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-foreground tracking-tight">9,420</div>
+            <p className="text-[9px] text-foreground/35 mt-1 font-bold uppercase tracking-wide">
+              Resets in 12 Days
+            </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Grid Section */}
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Side: Active Mission & Autonomous Intelligence Feed */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Active Mission */}
-          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
-            <CardHeader>
-              <CardTitle className="text-md font-extrabold text-[#1A1A1E] dark:text-white">
-                Active Mission Control
-              </CardTitle>
-              <CardDescription className="text-xs">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Active Mission Control */}
+          <Card className="relative overflow-hidden border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition hover:border-hq-blue/20 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-48 h-24 bg-hq-blue/[0.04] rounded-full blur-3xl pointer-events-none" />
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-hq-blue shadow-[0_0_6px_rgba(10,132,255,0.8)] animate-pulse" />
+                <CardTitle className="text-sm font-black text-foreground tracking-tight">
+                  Active Mission Control
+                </CardTitle>
+              </div>
+              <CardDescription className="text-[11px] text-foreground/40 font-medium">
                 Real-time progress overview of active campaigns
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {activeMission ? (
-                <div className="border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-xl p-4.5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-bold text-[#1A1A1E] dark:text-white line-clamp-1 max-w-[280px] sm:max-w-[400px]">
+                <div className="border border-hq-blue/15 bg-hq-blue/[0.03] dark:bg-hq-blue/[0.05] rounded-2xl p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold text-foreground line-clamp-1">
                         {activeMission.objective}
                       </h4>
-                      <p className="text-xs text-foreground/60 mt-0.5 font-medium">
-                        Status: {activeMission.status}
+                      <p className="text-[10px] text-foreground/45 mt-1 font-semibold uppercase tracking-wide">
+                        Status · {activeMission.status}
                       </p>
                     </div>
                     <Badge variant={getBadgeVariant(activeMission.status)}>
@@ -358,41 +407,41 @@ export default function DashboardPage() {
                     </Badge>
                   </div>
 
-                  {/* Progress Bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs text-foreground/60">
-                      <span>Task Execution</span>
-                      <span>{activeMission.status === 'DELIVERED' || activeMission.status === 'APPROVED' ? 100 : 45}%</span>
+                  {/* Premium Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold">
+                      <span className="text-foreground/50 uppercase tracking-wide">Task Execution</span>
+                      <span className="text-hq-blue">{activeMission.status === 'DELIVERED' || activeMission.status === 'APPROVED' ? 100 : 45}%</span>
                     </div>
-                    <div className="w-full h-1.5 bg-black/5 dark:bg-[#1E1E24] rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-black/5 dark:bg-white/[0.05] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-hq-blue rounded-full transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-hq-blue to-hq-cyan rounded-full transition-all duration-700 shadow-[0_0_8px_rgba(10,132,255,0.4)]"
                         style={{ width: `${activeMission.status === 'DELIVERED' || activeMission.status === 'APPROVED' ? 100 : 45}%` }}
-                      ></div>
+                      />
                     </div>
                   </div>
 
-                  <div className="flex justify-between text-xs pt-1">
-                    <span className="text-foreground/45 font-medium">Platform Coordinator</span>
-                    <span className="font-bold text-hq-purple">{ceoName} (CEO)</span>
+                  <div className="flex justify-between text-[10px] pt-1">
+                    <span className="text-foreground/35 font-bold uppercase tracking-wide">Platform Coordinator</span>
+                    <span className="font-black text-hq-purple">{ceoName} · CEO</span>
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center p-8 border border-dashed border-card-border bg-[#F9F9FB]/50 dark:bg-[#0A0A0C]/50 rounded-xl text-center space-y-4">
-                  <div className="h-10 w-10 rounded-full bg-hq-blue/15 text-hq-blue flex items-center justify-center text-md font-bold">
+                <div className="flex flex-col items-center justify-center py-10 border border-dashed border-card-border rounded-2xl text-center space-y-4 bg-black/[0.01] dark:bg-white/[0.01]">
+                  <div className="h-12 w-12 rounded-2xl bg-hq-blue/10 border border-hq-blue/20 flex items-center justify-center text-xl">
                     ⚡
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-[#1A1A1E] dark:text-white">
-                      No Active Missions Started
+                  <div className="space-y-1.5">
+                    <h4 className="text-sm font-black text-foreground">
+                      No Active Missions
                     </h4>
-                    <p className="text-xs text-foreground/60 max-w-xs leading-normal">
-                      Start a boardroom discussion with your AI executive board to design, plan, and execute strategic campaigns.
+                    <p className="text-xs text-foreground/45 max-w-xs leading-relaxed font-medium">
+                      Convene your AI executive board to design, plan, and execute strategic campaigns.
                     </p>
                   </div>
                   <Button
                     onClick={() => router.push('/discussions')}
-                    className="bg-hq-blue hover:bg-hq-blue/90 text-white font-bold h-8 text-xs px-4"
+                    className="bg-hq-blue hover:bg-hq-blue/90 text-white font-black h-9 text-[11px] px-5 rounded-full shadow-[0_4px_14px_rgba(10,132,255,0.3)] hover:shadow-[0_4px_20px_rgba(10,132,255,0.4)] transition-all"
                   >
                     Consult Executive Board
                   </Button>
@@ -400,20 +449,20 @@ export default function DashboardPage() {
               )}
             </CardContent>
             {activeMission ? (
-              <CardFooter className="flex justify-end border-t border-card-border/50 pt-4 bg-black/5 dark:bg-[#1E1E24]/10 rounded-b-xl">
+              <CardFooter className="flex justify-end border-t border-card-border/50 pt-3 pb-3">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => router.push(`/missions/${activeMission.id}`)}
-                  className="flex items-center gap-1 text-xs font-semibold"
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-hq-blue hover:text-hq-blue hover:bg-hq-blue/5 rounded-lg"
                 >
                   Open Timeline
-                  <ChevronRight className="h-4 w-4" />
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </CardFooter>
             ) : (
-              <CardFooter className="flex justify-center border-t border-card-border/50 pt-4 bg-black/5 dark:bg-[#1E1E24]/10 rounded-b-xl text-[10px] text-foreground/45 font-medium">
-                Orchestrate objectives automatically from your debates.
+              <CardFooter className="flex justify-center border-t border-card-border/50 pt-3 pb-3 text-[9px] text-foreground/30 font-bold uppercase tracking-wider">
+                Orchestrate objectives automatically from boardroom debates
               </CardFooter>
             )}
           </Card>
@@ -497,145 +546,105 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Right Side: Recharts Analytics Graphics & C-Suite Contacts */}
-        <div className="space-y-8">
-          {/* Credit Outflow Trends (SVG Area/Line Chart) */}
-          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
+        {/* Right Side: Analytics & C-Suite Contacts */}
+        <div className="space-y-6">
+          {/* Credit Outflow Trends Chart */}
+          <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">
-                Credit Outflow Trend (Weekly)
-              </CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-foreground/40">
+                  Credit Outflow Trend
+                </CardTitle>
+                <span className="text-[9px] text-foreground/25 font-mono">· Weekly</span>
+              </div>
             </CardHeader>
-            <CardContent className="pt-4 flex flex-col items-center">
-              <svg className="w-full h-32" viewBox="0 0 300 100" fill="none">
+            <CardContent className="pt-2 flex flex-col items-center px-3">
+              <svg className="w-full h-28" viewBox="0 0 300 100" fill="none">
                 <defs>
                   <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#0A84FF" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#0A84FF" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                {/* Grid Lines */}
-                <line
-                  x1="0"
-                  y1="20"
-                  x2="300"
-                  y2="20"
-                  stroke="currentColor"
-                  strokeOpacity={0.15}
-                  strokeWidth="0.5"
-                />
-                <line
-                  x1="0"
-                  y1="50"
-                  x2="300"
-                  y2="50"
-                  stroke="currentColor"
-                  strokeOpacity={0.15}
-                  strokeWidth="0.5"
-                />
-                <line
-                  x1="0"
-                  y1="80"
-                  x2="300"
-                  y2="80"
-                  stroke="currentColor"
-                  strokeOpacity={0.15}
-                  strokeWidth="0.5"
-                />
-
-                {/* Area Fill */}
-                <path
-                  d="M 10 90 L 50 70 L 100 80 L 150 40 L 200 50 L 250 20 L 290 30 L 290 90 Z"
-                  fill="url(#areaGradient)"
-                />
-
-                {/* Line Path */}
-                <path
-                  d="M 10 90 L 50 70 L 100 80 L 150 40 L 200 50 L 250 20 L 290 30"
-                  stroke="#0EA5E9"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-
-                {/* Intersecting Dots */}
-                <circle cx="150" cy="40" r="3" fill="#0EA5E9" />
-                <circle cx="250" cy="20" r="3" fill="#0EA5E9" />
+                <line x1="0" y1="20" x2="300" y2="20" stroke="currentColor" strokeOpacity={0.06} strokeWidth="0.5" />
+                <line x1="0" y1="50" x2="300" y2="50" stroke="currentColor" strokeOpacity={0.06} strokeWidth="0.5" />
+                <line x1="0" y1="80" x2="300" y2="80" stroke="currentColor" strokeOpacity={0.06} strokeWidth="0.5" />
+                <path d="M 10 90 L 50 70 L 100 80 L 150 40 L 200 50 L 250 20 L 290 30 L 290 90 Z" fill="url(#areaGradient)" />
+                <path d="M 10 90 L 50 70 L 100 80 L 150 40 L 200 50 L 250 20 L 290 30" stroke="#0A84FF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="150" cy="40" r="2.5" fill="#0A84FF" />
+                <circle cx="250" cy="20" r="2.5" fill="#0A84FF" />
+                <circle cx="150" cy="40" r="5" fill="#0A84FF" fillOpacity={0.15} />
+                <circle cx="250" cy="20" r="5" fill="#0A84FF" fillOpacity={0.15} />
               </svg>
-              <div className="flex justify-between w-full text-[9px] text-foreground/45 px-2 mt-2 font-mono">
-                <span>Mon</span>
-                <span>Wed</span>
-                <span>Fri</span>
-                <span>Sun</span>
+              <div className="flex justify-between w-full text-[8px] text-foreground/30 px-1 font-mono font-bold tracking-wider">
+                <span>MON</span><span>WED</span><span>FRI</span><span>SUN</span>
               </div>
             </CardContent>
           </Card>
 
-          {/* C-Suite Utilization (SVG Bar Chart) */}
+          {/* Executive Utilization */}
           <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">
-                Executive Utilization (Hours)
+            <CardHeader className="pb-3">
+              <CardTitle className="text-[9px] font-black uppercase tracking-widest text-foreground/40">
+                Executive Utilization
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4 space-y-3.5 text-xs text-left">
-              <div className="space-y-1">
+            <CardContent className="space-y-4 text-xs text-left">
+              <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px]">
-                  <span className="text-foreground/75 font-semibold">{ceoName} (CEO)</span>
-                  <span className="text-foreground/55 font-mono">42 hrs (95%)</span>
+                  <span className="text-foreground/70 font-bold">{ceoName} · CEO</span>
+                  <span className="text-foreground/40 font-mono">95%</span>
                 </div>
-                <div className="w-full h-2 bg-black/5 dark:bg-[#1E1E24] rounded-full overflow-hidden">
-                  <div className="h-full bg-hq-blue w-[95%] rounded-full"></div>
+                <div className="w-full h-1.5 bg-black/5 dark:bg-white/[0.05] rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-hq-blue to-hq-cyan w-[95%] rounded-full shadow-[0_0_6px_rgba(10,132,255,0.3)]" />
                 </div>
               </div>
-
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px]">
-                  <span className="text-foreground/75 font-semibold">Arthur Steward (COS)</span>
-                  <span className="text-foreground/55 font-mono">34 hrs (80%)</span>
+                  <span className="text-foreground/70 font-bold">Arthur Steward · COS</span>
+                  <span className="text-foreground/40 font-mono">80%</span>
                 </div>
-                <div className="w-full h-2 bg-black/5 dark:bg-[#1E1E24] rounded-full overflow-hidden">
-                  <div className="h-full bg-hq-cyan w-[80%] rounded-full"></div>
+                <div className="w-full h-1.5 bg-black/5 dark:bg-white/[0.05] rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-hq-cyan to-[#30D158] w-[80%] rounded-full shadow-[0_0_6px_rgba(48,209,88,0.25)]" />
                 </div>
               </div>
-
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px]">
-                  <span className="text-foreground/75 font-semibold">Linus Kovacs (Tech)</span>
-                  <span className="text-foreground/55 font-mono">22 hrs (50%)</span>
+                  <span className="text-foreground/70 font-bold">Linus Kovacs · Tech</span>
+                  <span className="text-foreground/40 font-mono">50%</span>
                 </div>
-                <div className="w-full h-2 bg-black/5 dark:bg-[#1E1E24] rounded-full overflow-hidden">
-                  <div className="h-full bg-hq-purple w-[50%] rounded-full"></div>
+                <div className="w-full h-1.5 bg-black/5 dark:bg-white/[0.05] rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-hq-purple to-[#bf5af2] w-[50%] rounded-full shadow-[0_0_6px_rgba(191,90,242,0.25)]" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Boardroom Shortcuts */}
+          {/* Active Boardroom Discussions */}
           <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
-            <CardHeader>
-              <CardTitle className="text-md font-extrabold text-[#1A1A1E] dark:text-white">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-black text-foreground tracking-tight">
                 Active Discussions
               </CardTitle>
-              <CardDescription className="text-xs">Your operational boardroom debates</CardDescription>
+              <CardDescription className="text-[11px] text-foreground/40 font-medium">Your operational boardroom debates</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               {conversations.length > 0 ? (
                 conversations.map((conv: any) => (
                   <div
                     key={conv.id}
                     onClick={() => router.push(`/discussions/${conv.id}`)}
-                    className="flex items-center justify-between p-2 rounded-xl hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 cursor-pointer transition-all border border-transparent hover:border-hq-blue/20"
+                    className="flex items-center justify-between p-3 rounded-xl hover:bg-hq-blue/[0.05] cursor-pointer transition-all border border-transparent hover:border-hq-blue/15 group"
                   >
-                    <div className="flex items-center space-x-2">
-                      <div className="h-7 w-7 rounded-full bg-hq-blue/10 text-hq-blue flex items-center justify-center font-bold text-[10px] uppercase">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-hq-blue/20 to-hq-purple/10 border border-hq-blue/20 text-hq-blue flex items-center justify-center font-black text-[9px] uppercase">
                         {conv.title ? conv.title.substring(0, 2) : 'BD'}
                       </div>
                       <div className="text-xs text-left">
-                        <p className="font-bold text-[#1A1A1E] dark:text-white line-clamp-1 max-w-[150px]">
+                        <p className="font-bold text-foreground line-clamp-1 max-w-[130px] group-hover:text-hq-blue transition-colors">
                           {conv.title || 'Untitled Boardroom Session'}
                         </p>
-                        <p className="text-[10px] text-foreground/45">Active boardroom</p>
+                        <p className="text-[9px] text-foreground/35 font-bold uppercase tracking-wide mt-0.5">Active · Boardroom</p>
                       </div>
                     </div>
                     <Badge variant={conv.missionId ? 'success' : 'ai'} className="text-[9px]">
@@ -646,10 +655,10 @@ export default function DashboardPage() {
               ) : (
                 <div
                   onClick={() => router.push('/discussions')}
-                  className="flex items-center justify-center p-3 rounded-xl border border-dashed border-card-border bg-[#F9F9FB]/50 dark:bg-[#0A0A0C]/50 hover:bg-black/5 dark:hover:bg-[#1E1E24]/20 cursor-pointer text-center flex-col py-6 space-y-2"
+                  className="flex items-center justify-center p-3 rounded-xl border border-dashed border-card-border hover:bg-black/[0.03] dark:hover:bg-white/[0.03] cursor-pointer text-center flex-col py-8 space-y-3 transition-all"
                 >
-                  <span className="text-xs font-semibold text-foreground/60">No debates started yet</span>
-                  <Button size="sm" className="text-[10px] h-7 bg-hq-blue text-white hover:bg-hq-blue/90 font-bold px-3">
+                  <span className="text-xs font-bold text-foreground/40">No debates started yet</span>
+                  <Button size="sm" className="text-[10px] h-7 bg-hq-blue text-white hover:bg-hq-blue/90 font-black px-4 rounded-full shadow-[0_2px_8px_rgba(10,132,255,0.3)]">
                     Open Boardroom
                   </Button>
                 </div>
@@ -659,11 +668,11 @@ export default function DashboardPage() {
 
           {/* Global Activity Feed */}
           <Card className="border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-md font-extrabold text-[#1A1A1E] dark:text-white">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-black text-foreground tracking-tight">
                 Headquarters Activity
               </CardTitle>
-              <CardDescription className="text-xs">Live operational timeline</CardDescription>
+              <CardDescription className="text-[11px] text-foreground/40 font-medium">Live operational timeline</CardDescription>
             </CardHeader>
             <CardContent>
               <GlobalActivityFeed maxItems={6} compact token={token ?? undefined} />
