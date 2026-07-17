@@ -58,8 +58,6 @@ const navGroups: SidebarNavGroup[] = [
     items: [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Boardroom', href: '/boardroom', icon: BrainCircuit },
-      { name: 'Teams & Clearance', href: '/teams', icon: Users },
-      { name: 'Organization', href: '/organization', icon: Building2 },
       { name: 'Discussions', href: '/discussions', icon: MessageSquare },
       { name: 'Assets', href: '/assets', icon: Database },
       { name: 'Marketplace', href: '/marketplace', icon: Rocket },
@@ -78,11 +76,7 @@ const navGroups: SidebarNavGroup[] = [
       { name: 'Settings', href: '/settings', icon: Settings },
       { name: 'Billing', href: '/billing', icon: CreditCard },
       { name: 'Integrations', href: '/integration-hub', icon: Plug2 },
-      { name: 'Governance & Compliance', href: '/admin/compliance', icon: Shield },
       { name: 'Trust Center', href: '/trust-center', icon: Lock },
-      { name: 'White-labeling', href: '/admin/white-label', icon: Palette },
-      { name: 'Operations Center', href: '/admin/operations', icon: Activity },
-      { name: 'Kernel Console', href: '/admin/execution-log', icon: Terminal },
     ],
   },
 ];
