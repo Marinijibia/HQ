@@ -23,7 +23,7 @@ export function MobileBottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-hq-graphite/40 bg-background/95 backdrop-blur-md safe-area-pb">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-card-border bg-background/95 backdrop-blur-md safe-area-pb">
       <div className="flex items-center justify-around px-2 py-2">
         {MOBILE_NAV.map(item => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');

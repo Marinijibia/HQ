@@ -78,7 +78,7 @@ export function GuideModeBanner() {
       {/* Floating Guided Banner */}
       <div className="fixed bottom-6 right-6 z-50 w-80 sm:w-96 rounded-xl border border-hq-blue/30 bg-[#0B0B0E]/95 backdrop-blur-md p-4 text-sm shadow-2xl transition-all duration-300 select-none animate-in slide-in-from-bottom-5">
         {/* Banner Header */}
-        <div className="flex items-center justify-between pb-2 border-b border-hq-graphite/40">
+        <div className="flex items-center justify-between pb-2 border-b border-card-border">
           <div className="flex items-center space-x-2 text-hq-blue">
             <Sparkles className="h-4.5 w-4.5 animate-pulse" />
             <span className="font-bold tracking-wide uppercase text-[10px]">
@@ -88,7 +88,7 @@ export function GuideModeBanner() {
           <div className="flex items-center space-x-1">
             <button
               onClick={() => setMinimized(!minimized)}
-              className="text-foreground/50 hover:text-foreground text-xs px-1.5 py-0.5 rounded hover:bg-hq-graphite/30"
+              className="text-foreground/50 hover:text-foreground text-xs px-1.5 py-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10"
             >
               {minimized ? 'Expand' : 'Hide'}
             </button>
@@ -153,7 +153,7 @@ export function GuideModeBanner() {
             </div>
 
             {/* Instruction Tip */}
-            <div className="bg-hq-graphite/20 border border-hq-graphite/40 rounded-lg p-3 text-xs leading-relaxed text-foreground/90">
+            <div className="bg-black/5 dark:bg-white/5 border border-card-border rounded-lg p-3 text-xs leading-relaxed text-foreground/90">
               <span className="font-semibold text-hq-blue block mb-1">CEO Guidance:</span>
               {tipText}
             </div>

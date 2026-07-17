@@ -5,7 +5,7 @@ import {
   User,
   signInWithPopup,
   signOut,
-  onAuthStateChanged,
+  onIdTokenChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
@@ -31,12 +31,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const idToken = await currentUser.getIdToken();
-        setToken(idToken);
         try {
+          // Get the ID token (without forcing refresh as the interceptor and interval will manage freshness)
+          const idToken = await currentUser.getIdToken(false);
+          setToken(idToken);
           const res = await fetch('/api/users/me', {
             headers: {
               'Authorization': `Bearer ${idToken}`,
@@ -70,7 +71,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Global fetch interceptor to handle expired tokens and automatic relogin
+    let originalFetch: typeof window.fetch | null = null;
+    if (typeof window !== 'undefined') {
+      originalFetch = window.fetch;
+      window.fetch = async (input, init) => {
+        let response = await originalFetch!(input, init);
+        
+        if (response.status === 401) {
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            try {
+              // Token expired, force refresh from Firebase
+              const newToken = await currentUser.getIdToken(true);
+              setToken(newToken);
+              
+              // Prepare retried request headers
+              const headers = new Headers((init && init.headers) || {});
+              headers.set('Authorization', `Bearer ${newToken}`);
+              
+              // Retry fetching the original request with the fresh token
+              response = await originalFetch!(input, {
+                ...(init || {}),
+                headers,
+              });
+              
+              if (response.status === 401) {
+                // If it's still 401, redirect to login
+                await signOut(auth);
+                window.location.href = '/login';
+              }
+            } catch (refreshError) {
+              console.error('Fetch interceptor: failed refreshing token:', refreshError);
+              await signOut(auth);
+              window.location.href = '/login';
+            }
+          } else {
+            // Not authenticated, redirect to login page if we are not already on it
+            if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
+              window.location.href = '/login';
+            }
+          }
+        }
+        return response;
+      };
+    }
+
+    // Refresh token every 10 minutes to keep it active
+    const tokenRefreshInterval = setInterval(async () => {
+      if (auth.currentUser) {
+        try {
+          const freshToken = await auth.currentUser.getIdToken(false);
+          setToken(freshToken);
+        } catch (e) {
+          console.warn('Interval refresh: token update failed:', e);
+        }
+      }
+    }, 10 * 60 * 1000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(tokenRefreshInterval);
+      if (typeof window !== 'undefined' && originalFetch) {
+        window.fetch = originalFetch;
+      }
+    };
   }, []);
 
   const signInWithGoogle = async () => {

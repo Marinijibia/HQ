@@ -8,6 +8,7 @@ import { useSidebarStore } from '@/stores/sidebarStore';
 import { useCommandPaletteStore } from '@/stores/commandPaletteStore';
 import { GuideModeProvider, useGuideMode } from '../../contexts/guide-mode-context';
 import { GuideModeBanner } from '../../components/guide-mode-banner';
+import { useTheme } from '../../contexts/theme-context';
 import { Button, Card, Input } from '@hq/ui';
 import {
   LayoutDashboard,
@@ -34,6 +35,8 @@ import {
   Lock,
   Palette,
   Activity,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { ToastContainer } from '../../components/toast';
 import { MobileBottomNav } from '../../components/mobile-bottom-nav';
@@ -57,7 +60,6 @@ const navGroups: SidebarNavGroup[] = [
       { name: 'Boardroom', href: '/boardroom', icon: BrainCircuit },
       { name: 'Teams & Clearance', href: '/teams', icon: Users },
       { name: 'Organization', href: '/organization', icon: Building2 },
-      { name: 'Missions', href: '/missions', icon: Calendar },
       { name: 'Discussions', href: '/discussions', icon: MessageSquare },
       { name: 'Assets', href: '/assets', icon: Database },
       { name: 'Marketplace', href: '/marketplace', icon: Rocket },
@@ -102,6 +104,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
     setOpen: setPaletteOpen,
   } = useCommandPaletteStore();
   const [search, setSearch] = React.useState('');
+  const { isDarkMode, toggleTheme } = useTheme();
   const isConnected = true;
   const [showNotifications, setShowNotifications] = React.useState(false);
 
@@ -197,16 +200,16 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       {/* Top Banner / Navigation */}
-      <header className="relative z-50 flex h-14 items-center justify-between border-b border-hq-graphite/40 px-6 bg-hq-graphite/10 backdrop-blur-md">
+      <header className="relative z-50 flex h-14 items-center justify-between border-b border-card-border px-6 bg-black/[0.02] dark:bg-white/[0.02] backdrop-blur-md">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <div className="h-6 w-6 rounded-md bg-gradient-to-tr from-hq-blue to-hq-purple flex items-center justify-center font-bold text-white text-xs select-none">
               HQ
             </div>
-            <span className="font-bold tracking-tight text-white select-none">HQ</span>
+            <span className="font-bold tracking-tight text-foreground select-none">HQ</span>
           </div>
           <span className="text-foreground/40 font-light select-none">|</span>
-          <div className="flex items-center space-x-2 text-sm bg-hq-graphite/50 border border-hq-graphite/30 rounded-md px-2 py-0.5 select-none text-foreground/80">
+          <div className="flex items-center space-x-2 text-sm bg-black/[0.05] dark:bg-white/[0.05] border border-card-border rounded-md px-2 py-0.5 select-none text-foreground/80">
             <span className="h-2 w-2 rounded-full bg-hq-cyan animate-pulse"></span>
             <span>{orgName}</span>
           </div>
@@ -216,11 +219,25 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
           <Button
             variant="ghost"
             size="icon"
+            onClick={toggleTheme}
+            className="text-foreground/75 hover:text-foreground transition-all"
+            aria-label="Toggle Theme"
+          >
+            {isDarkMode ? (
+              <Sun className="h-4 w-4 text-amber-400" />
+            ) : (
+              <Moon className="h-4 w-4 text-indigo-400" />
+            )}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
             className="relative"
             onClick={() => setShowNotifications(!showNotifications)}
           >
             <Bell className="h-4 w-4" />
-            {notifications.filter((n) => !n.read).length > 0 && (
+            {Array.isArray(notifications) && notifications.filter((n) => !n.read).length > 0 && (
               <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-hq-purple text-[9px] font-bold text-white flex items-center justify-center">
                 {notifications.filter((n) => !n.read).length}
               </span>
@@ -228,9 +245,9 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
           </Button>
 
           {showNotifications && (
-            <Card className="absolute right-0 top-12 z-50 w-80 p-4 border border-hq-graphite/40 bg-hq-graphite/95 shadow-level-4 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between pb-2 border-b border-hq-graphite/40">
-                <span className="font-bold text-xs text-white">Notifications Feed</span>
+            <Card className="absolute right-0 top-12 z-50 w-80 p-4 border border-card-border bg-card-bg shadow-level-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between pb-2 border-b border-card-border">
+                <span className="font-bold text-xs text-foreground">Notifications Feed</span>
                 <button
                   onClick={handleDismissAll}
                   className="text-xs text-foreground/50 hover:text-foreground font-semibold"
@@ -239,16 +256,16 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
               <div className="mt-3 space-y-3">
-                {notifications.length === 0 ? (
+                {!Array.isArray(notifications) || notifications.length === 0 ? (
                   <p className="text-xs text-foreground/50 py-4 text-center">No active alerts.</p>
                 ) : (
                   notifications.slice(0, 4).map((n) => (
                     <div
                       key={n.id}
-                      className="text-xs space-y-1 py-1 border-b border-hq-graphite/20 last:border-0 text-left"
+                      className="text-xs space-y-1 py-1 border-b border-card-border last:border-0 text-left"
                     >
                       <div className="flex justify-between items-center">
-                        <span className="font-semibold text-white">{n.title}</span>
+                        <span className="font-semibold text-foreground">{n.title}</span>
                         <span className="text-[9px] text-foreground/45">
                           {new Date(n.createdAt).toLocaleTimeString([], {
                             hour: '2-digit',
@@ -261,7 +278,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                   ))
                 )}
               </div>
-              <div className="pt-2.5 mt-2 border-t border-hq-graphite/45 text-center">
+              <div className="pt-2.5 mt-2 border-t border-card-border text-center">
                 <Link
                   href="/notifications"
                   onClick={() => setShowNotifications(false)}
@@ -300,7 +317,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Navigation Sidebar */}
         <aside
-          className={`flex flex-col border-r border-hq-graphite/40 bg-hq-graphite/20 transition-all duration-300 ${
+          className={`flex flex-col border-r border-card-border bg-black/[0.015] dark:bg-white/[0.015] transition-all duration-300 ${
             isSidebarOpen ? 'w-64' : 'w-16'
           }`}
         >
@@ -324,7 +341,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                         className={`flex items-center rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
                           isActive
                             ? 'bg-hq-blue/15 border border-hq-blue/25 text-hq-blue'
-                            : 'border border-transparent hover:bg-hq-graphite/15 text-foreground/60 hover:text-foreground'
+                            : 'border border-transparent hover:bg-black/5 dark:hover:bg-white/5 text-foreground/60 hover:text-foreground'
                         } ${isSidebarOpen ? 'space-x-3' : 'justify-center'}`}
                       >
                         <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-hq-blue' : ''}`} />
@@ -333,12 +350,12 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                     );
                   })}
                 </div>
-                {isSidebarOpen && <div className="mt-3 border-b border-hq-graphite/20" />}
+                {isSidebarOpen && <div className="mt-3 border-b border-card-border" />}
               </div>
             ))}
           </div>
 
-          <div className="p-3 border-t border-hq-graphite/40 flex items-center justify-center">
+          <div className="p-3 border-t border-card-border flex items-center justify-center">
             <Button
               variant="ghost"
               size="icon"
@@ -361,7 +378,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Global Status Bar */}
-      <footer className="flex h-8 items-center justify-between border-t border-hq-graphite/40 px-6 bg-hq-graphite/25 backdrop-blur-md text-[11px] text-foreground/55 select-none">
+      <footer className="flex h-8 items-center justify-between border-t border-card-border px-6 bg-black/[0.02] dark:bg-white/[0.02] backdrop-blur-md text-[11px] text-foreground/55 select-none">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2">
             <span
@@ -398,10 +415,10 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
           onClick={() => setPaletteOpen(false)}
         >
           <Card
-            className="w-full max-w-lg border border-hq-graphite/40 bg-hq-graphite/95 shadow-level-5 overflow-hidden animate-in zoom-in-95 duration-200"
+            className="w-full max-w-lg border border-card-border bg-card-bg shadow-level-5 overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-hq-graphite/40">
+            <div className="p-4 border-b border-card-border">
               <Input
                 autoFocus
                 placeholder="Type a command or search..."
@@ -469,7 +486,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                       >
                         <CmdIcon className="h-3.5 w-3.5 shrink-0 text-foreground/40" />
                         <span className="flex-1">{cmd.name}</span>
-                        <span className="text-[9px] text-foreground/45 bg-hq-graphite/40 px-1.5 py-0.5 rounded">↵</span>
+                        <span className="text-[9px] text-foreground/45 bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded">↵</span>
                       </button>
                     );
                   })}

@@ -12,6 +12,7 @@ import {
   Paperclip,
   Activity,
   ChevronRight,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/auth-context';
 import { useGuideMode } from '../../../../contexts/guide-mode-context';
@@ -52,6 +53,7 @@ export default function DiscussionWorkspacePage() {
 
   const [conversation, setConversation] = React.useState<Conversation | null>(null);
   const [executives, setExecutives] = React.useState<Executive[]>([]);
+  const [mission, setMission] = React.useState<any | null>(null);
   const [loading, setLoading] = React.useState(true);
 
   // Input state
@@ -101,6 +103,16 @@ export default function DiscussionWorkspacePage() {
       if (convRes.ok) {
         const convData = await convRes.json();
         setConversation(convData);
+
+        if (convData.missionId) {
+          const missionRes = await fetch(`/api/missions/${convData.missionId}`, { headers });
+          if (missionRes.ok) {
+            const missionData = await missionRes.json();
+            setMission(missionData);
+          }
+        } else {
+          setMission(null);
+        }
       }
     } catch (e) {
       console.error('Error fetching boardroom discussion details:', e);
@@ -449,26 +461,76 @@ export default function DiscussionWorkspacePage() {
 
         {/* Action sidebar Panel */}
         <div className="space-y-6">
-          {/* Orchestrated Campaign Card */}
-          {conversation.missionId ? (
-            <Card className="border border-green-500/25 bg-green-500/5 text-left p-4.5 space-y-3">
+          {conversation.missionId && mission ? (
+            <Card className="border border-card-border bg-card-bg text-left p-4.5 space-y-4 shadow-[var(--card-shadow)]">
               <div>
-                <span className="text-[10px] text-green-500 font-bold uppercase tracking-wider">
-                  Associated Mission
+                <span className="text-[10px] text-hq-cyan font-bold uppercase tracking-wider block">
+                  Active Mission Dashboard
                 </span>
-                <h4 className="text-xs font-bold text-[#1A1A1E] dark:text-white mt-1 leading-snug">
-                  Discussion successfully orchestrated into active campaign!
+                <h4 className="text-xs font-bold text-white mt-1 leading-snug truncate">
+                  {mission.objective}
                 </h4>
               </div>
-              <Button
-                onClick={() => router.push('/missions')}
-                size="sm"
-                className="w-full text-[10px] font-bold text-white flex items-center justify-center gap-1"
-                style={{ backgroundColor: brandColor }}
-              >
-                Open Mission Control
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
+
+              {/* Progress bar */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[10px] font-bold text-foreground/45">
+                  <span>Task Execution Progress</span>
+                  <span>
+                    {Math.round(
+                      ((mission.tasks?.filter((t: any) => t.status === 'COMPLETED').length || 0) /
+                        (mission.tasks?.length || 1)) *
+                        100
+                    )}%
+                  </span>
+                </div>
+                <div className="h-1.5 w-full bg-[#0A0A0C] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-hq-cyan rounded-full transition-all duration-500"
+                    style={{
+                      width: `${
+                        ((mission.tasks?.filter((t: any) => t.status === 'COMPLETED').length || 0) /
+                          (mission.tasks?.length || 1)) *
+                        100
+                      }%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Dynamic WBS list */}
+              <div className="space-y-2.5 pt-2 border-t border-card-border/40">
+                <span className="text-[9px] text-foreground/40 font-bold uppercase tracking-wider block">
+                  Work Breakdown Tasks
+                </span>
+                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  {mission.tasks?.map((t: any, idx: number) => {
+                    const isCompleted = t.status === 'COMPLETED';
+                    const isRunning = t.status === 'RUNNING';
+                    const isFailed = t.status === 'FAILED';
+
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-2.5 p-2 rounded-lg bg-[#F9F9FB] dark:bg-[#0A0A0C]/30 border border-card-border/30 text-[11px] font-semibold"
+                      >
+                        <span className="mt-0.5 shrink-0">
+                          {isCompleted && <CheckCircle className="h-3.5 w-3.5 text-hq-cyan" />}
+                          {isRunning && <Activity className="h-3.5 w-3.5 text-hq-purple animate-spin" />}
+                          {isFailed && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
+                          {t.status === 'PENDING' && <span className="h-2.5 w-2.5 rounded-full bg-foreground/20 block m-0.5" />}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-white font-bold truncate">{t.name}</div>
+                          <div className="text-[9.5px] text-foreground/45 mt-0.5 leading-relaxed">
+                            {t.description}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </Card>
           ) : (
             <Card className="border border-card-border bg-card-bg text-left p-4.5 space-y-3 shadow-[var(--card-shadow)]">
@@ -536,14 +598,14 @@ export default function DiscussionWorkspacePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-2xl border border-hq-blue/30 bg-[#0B0B0E] p-8 text-center shadow-2xl relative space-y-6">
             <div className="space-y-2">
-              <div className="h-10 w-10 rounded-full border-2 border-t-hq-blue border-hq-graphite/30 animate-spin mx-auto mb-4" />
+              <div className="h-10 w-10 rounded-full border-2 border-t-hq-blue border-card-border/30 animate-spin mx-auto mb-4" />
               <h2 className="text-xl font-bold tracking-tight text-white text-center">CEO Analyzing boardroom outcome...</h2>
               <p className="text-xs text-foreground/50 text-center">
                 Elena is mapping structural components and compiling mission guidelines.
               </p>
             </div>
 
-            <div className="w-full bg-hq-graphite/10 border border-hq-graphite/40 rounded-xl p-5 grid grid-cols-2 gap-4 text-xs font-semibold text-left">
+            <div className="w-full bg-black/20 dark:bg-white/5 border border-card-border rounded-xl p-5 grid grid-cols-2 gap-4 text-xs font-semibold text-left">
               {[
                 { label: 'Business Type', checked: checklist[0] },
                 { label: 'Goal Alignment', checked: checklist[1] },

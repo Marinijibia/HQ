@@ -38,6 +38,11 @@ export class AuthGuard implements CanActivate {
         if (user) {
           payload.companyId = user.companyId || payload.companyId;
           payload.role = user.role || payload.role;
+        } else {
+          const defaultCompany = await this.userRepository.findDefaultCompany();
+          if (defaultCompany) {
+            payload.companyId = defaultCompany.id;
+          }
         }
       }
 

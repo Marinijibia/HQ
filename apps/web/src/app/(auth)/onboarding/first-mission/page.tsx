@@ -78,14 +78,14 @@ export default function FirstMissionPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0C] text-[#F2F2F7] flex flex-col justify-between font-sans select-none">
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between font-sans select-none">
       {/* Header */}
-      <header className="flex h-16 items-center justify-between border-b border-hq-graphite/40 px-6 sm:px-12 bg-hq-graphite/10 backdrop-blur-md">
+      <header className="flex h-16 items-center justify-between border-b border-card-border px-6 sm:px-12 bg-black/[0.02] dark:bg-white/[0.02] backdrop-blur-md">
         <div className="flex items-center space-x-2">
           <div className="h-7 w-7 rounded-md bg-gradient-to-tr from-hq-blue to-hq-purple flex items-center justify-center font-bold text-white text-sm">
             HQ
           </div>
-          <span className="font-bold tracking-tight text-white text-lg">HQ Guided Experience</span>
+          <span className="font-bold tracking-tight text-foreground text-lg">HQ Guided Experience</span>
         </div>
         <Badge variant="ai">First Mission</Badge>
       </header>
@@ -94,7 +94,7 @@ export default function FirstMissionPage() {
       <main className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-2xl space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center justify-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center justify-center gap-2">
               <Sparkles className="h-6 w-6 text-hq-blue animate-pulse" />
               {missionTitle}
             </h1>
@@ -103,7 +103,7 @@ export default function FirstMissionPage() {
             </p>
           </div>
 
-          <Card className="border border-hq-graphite/40 bg-hq-graphite/20">
+          <Card className="border border-card-border bg-card-bg">
             <CardHeader className="pb-4">
               <CardTitle className="text-sm">Objective: {missionObjective}</CardTitle>
               <CardDescription className="text-xs">
@@ -117,7 +117,7 @@ export default function FirstMissionPage() {
                   <span>Self-Orchestrating Deliverables...</span>
                   <span>{Math.round(progress)}%</span>
                 </div>
-                <div className="w-full h-1.5 bg-hq-graphite rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-hq-blue rounded-full transition-all duration-300"
                     style={{ width: `${progress}%` }}
@@ -131,7 +131,7 @@ export default function FirstMissionPage() {
                   className={`p-3 border rounded-lg transition-all ${
                     progress >= 40
                       ? 'border-hq-cyan bg-hq-cyan/5 text-hq-cyan'
-                      : 'border-hq-graphite/40 bg-hq-graphite/10 text-foreground/50'
+                      : 'border-card-border bg-black/5 dark:bg-white/5 text-foreground/50'
                   }`}
                 >
                   <p className="font-semibold">Step 1: Strategic Plan</p>
@@ -145,7 +145,7 @@ export default function FirstMissionPage() {
                       ? 'border-hq-cyan bg-hq-cyan/5 text-hq-cyan'
                       : progress >= 40
                         ? 'border-hq-blue bg-hq-blue/5 text-hq-blue animate-pulse'
-                        : 'border-hq-graphite/40 bg-hq-graphite/10 text-foreground/50'
+                        : 'border-card-border bg-black/5 dark:bg-white/5 text-foreground/50'
                   }`}
                 >
                   <p className="font-semibold">Step 2: Copy Drafts</p>
@@ -159,7 +159,7 @@ export default function FirstMissionPage() {
                       ? 'border-hq-cyan bg-hq-cyan/5 text-hq-cyan'
                       : progress >= 75
                         ? 'border-hq-blue bg-hq-blue/5 text-hq-blue animate-pulse'
-                        : 'border-hq-graphite/40 bg-hq-graphite/10 text-foreground/50'
+                        : 'border-card-border bg-black/5 dark:bg-white/5 text-foreground/50'
                   }`}
                 >
                   <p className="font-semibold">Step 3: Legal Check</p>
@@ -178,8 +178,8 @@ export default function FirstMissionPage() {
                   </div>
 
                   <div className="space-y-3 text-xs">
-                    <div className="p-3 border border-hq-graphite/30 bg-hq-graphite/20 rounded-md">
-                      <div className="flex items-center space-x-1.5 text-white font-semibold mb-1">
+                    <div className="p-3 border border-card-border bg-black/5 dark:bg-white/5 rounded-md">
+                      <div className="flex items-center space-x-1.5 text-foreground font-semibold mb-1">
                         <Twitter className="h-3.5 w-3.5 text-hq-blue" />
                         <span>Twitter Post</span>
                       </div>
@@ -190,8 +190,8 @@ export default function FirstMissionPage() {
                       </p>
                     </div>
 
-                    <div className="p-3 border border-hq-graphite/30 bg-hq-graphite/20 rounded-md">
-                      <div className="flex items-center space-x-1.5 text-white font-semibold mb-1">
+                    <div className="p-3 border border-card-border bg-black/5 dark:bg-white/5 rounded-md">
+                      <div className="flex items-center space-x-1.5 text-foreground font-semibold mb-1">
                         <Linkedin className="h-3.5 w-3.5 text-blue-500" />
                         <span>LinkedIn Update</span>
                       </div>
@@ -205,7 +205,7 @@ export default function FirstMissionPage() {
                 </div>
               ) : (
                 // Thinking log
-                <div className="p-4 border border-hq-graphite/40 bg-hq-graphite/10 rounded-lg flex items-center space-x-3 text-xs text-foreground/60">
+                <div className="p-4 border border-card-border bg-black/5 dark:bg-white/5 rounded-lg flex items-center space-x-3 text-xs text-foreground/60">
                   <Loader2 className="h-4 w-4 animate-spin text-hq-blue" />
                   <span>
                     {currentStep === 1
@@ -217,7 +217,7 @@ export default function FirstMissionPage() {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex justify-end border-t border-hq-graphite/20 pt-4">
+            <CardFooter className="flex justify-end border-t border-card-border pt-4">
               <Link
                 href="/discussions"
                 className={progress === 100 ? '' : 'pointer-events-none opacity-50'}
@@ -237,7 +237,7 @@ export default function FirstMissionPage() {
       </main>
 
       {/* Footer */}
-      <footer className="h-16 flex items-center justify-center border-t border-hq-graphite/40 bg-hq-graphite/20 text-xs text-foreground/45">
+      <footer className="h-16 flex items-center justify-center border-t border-card-border bg-black/[0.02] dark:bg-white/[0.02] text-xs text-foreground/45">
         <span>© 2026 HQ Inc. Multi-tenant Enterprise Layer.</span>
       </footer>
     </div>

@@ -282,7 +282,7 @@ export default function NotificationsInboxPage() {
           </Button>
           <Button
             onClick={handleMarkAllRead}
-            disabled={notifications.filter((n) => !n.read).length === 0}
+            disabled={!Array.isArray(notifications) || notifications.filter((n) => !n.read).length === 0}
             className="text-xs font-bold h-9 text-white"
             style={{ backgroundColor: brandColor }}
           >
@@ -339,7 +339,7 @@ export default function NotificationsInboxPage() {
             <div className="space-y-3 py-4">
               <ListSkeleton rows={6} />
             </div>
-          ) : notifications.length === 0 ? (
+          ) : !Array.isArray(notifications) || notifications.length === 0 ? (
             <Card className="border border-card-border bg-card-bg p-16 text-center">
               <Check className="h-10 w-10 text-emerald-500 bg-emerald-500/10 p-2 rounded-full mx-auto mb-3" />
               <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white">Inbox Clean</h3>

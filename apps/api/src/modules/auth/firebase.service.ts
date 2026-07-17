@@ -1,6 +1,17 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
+import * as crypto from 'crypto';
+
+function stringToUuid(str: string): string {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(str)) {
+    return str;
+  }
+  const hash = crypto.createHash('md5').update(str).digest('hex');
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+}
+
 
 @Injectable()
 export class FirebaseService implements OnModuleInit {
@@ -64,7 +75,7 @@ export class FirebaseService implements OnModuleInit {
       // Mock validation logic for local development if credentials aren't present
       if (token === 'development_mock_token_owner') {
         return {
-          uid: 'mock-owner-uid',
+          uid: stringToUuid('mock-owner-uid'),
           email: 'owner@hq.dev',
           role: 'ORGANIZATION_OWNER',
           companyId: 'mock-company-uuid',
@@ -73,7 +84,7 @@ export class FirebaseService implements OnModuleInit {
       if (token.startsWith('mock_token_')) {
         const role = token.replace('mock_token_', '').toUpperCase();
         return {
-          uid: `mock-uid-${role}`,
+          uid: stringToUuid(`mock-uid-${role}`),
           email: `${role.toLowerCase()}@hq.dev`,
           role,
           companyId: 'mock-company-uuid',
@@ -84,7 +95,7 @@ export class FirebaseService implements OnModuleInit {
 
     const decodedToken = await admin.auth().verifyIdToken(token);
     return {
-      uid: decodedToken.uid,
+      uid: stringToUuid(decodedToken.uid),
       email: decodedToken.email || '',
       role: (decodedToken.role as string) || 'MEMBER',
       companyId: (decodedToken.companyId as string) || '',

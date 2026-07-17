@@ -25,6 +25,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
+import { useRouter } from 'next/navigation';
 
 interface BoardExecutive {
   id?: string;
@@ -41,6 +42,7 @@ interface BoardExecutive {
 
 export default function BoardroomPage() {
   const { token } = useAuth();
+  const router = useRouter();
   const [selectedDept, setSelectedDept] = React.useState<string>('All');
   const [searchQuery, setSearchQuery] = React.useState<string>('');
   const [inspectingExec, setInspectingExec] = React.useState<BoardExecutive | null>(null);
@@ -59,6 +61,34 @@ export default function BoardroomPage() {
   // Custom onboarding data sync states
   const [ceoName, setCeoName] = React.useState('Elena Rostova');
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
+
+  const [isCreatingChat, setIsCreatingChat] = React.useState(false);
+
+  const handleStartChat = async (exec: BoardExecutive) => {
+    if (!token) return;
+    setIsCreatingChat(true);
+    try {
+      const res = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          objective: `Strategic session with ${exec.name} (${exec.title})`,
+          specialists: [exec.roleKey]
+        })
+      });
+      if (res.ok) {
+        const newConv = await res.json();
+        router.push(`/discussions/${newConv.id}`);
+      }
+    } catch (e) {
+      console.error('Failed to start chat with executive:', e);
+    } finally {
+      setIsCreatingChat(false);
+    }
+  };
 
   const seededExecutives: BoardExecutive[] = [
     {
@@ -743,9 +773,11 @@ export default function BoardroomPage() {
             <Button
               className="flex-1 flex items-center justify-center gap-1.5 text-white"
               style={{ backgroundColor: brandColor }}
+              onClick={() => handleStartChat(inspectingExec)}
+              disabled={isCreatingChat}
             >
               <Zap className="h-4 w-4" />
-              Direct Command
+              {isCreatingChat ? 'Starting Chat...' : 'Start 1-on-1 Chat'}
             </Button>
           </div>
         </div>

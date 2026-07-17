@@ -3,10 +3,22 @@
   "private": true,
   "version": "1.0.0",
   "packageManager": "yarn@1.22.22",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/@nestjs/core",
+      "**/@nestjs/core/**",
+      "**/@nestjs/common",
+      "**/@nestjs/common/**",
+      "**/@nestjs/bullmq",
+      "**/@nestjs/bullmq/**",
+      "**/bullmq",
+      "**/bullmq/**"
+    ]
+  },
   "resolutions": {
     "@nestjs/core": "^11.0.1",
     "@nestjs/common": "^11.0.1"

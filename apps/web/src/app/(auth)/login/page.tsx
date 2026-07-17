@@ -31,23 +31,28 @@ export default function LoginPage() {
   const [loadingHq, setLoadingHq] = React.useState(false);
   const [loadProgress, setLoadProgress] = React.useState(0);
 
-  // Handle initialization loading animation
+  // Handle incrementing progress state
   React.useEffect(() => {
     if (loadingHq) {
       const interval = setInterval(() => {
         setLoadProgress((prev) => {
-          const next = prev + 15;
-          if (next >= 100) {
+          if (prev >= 100) {
             clearInterval(interval);
-            router.push('/discussions');
             return 100;
           }
-          return next;
+          return prev + 15;
         });
       }, 300);
       return () => clearInterval(interval);
     }
-  }, [loadingHq, router]);
+  }, [loadingHq]);
+
+  // Handle redirect on completion
+  React.useEffect(() => {
+    if (loadProgress >= 100) {
+      router.push('/discussions');
+    }
+  }, [loadProgress, router]);
 
   const handleSendOTP = (e: React.FormEvent) => {
     e.preventDefault();

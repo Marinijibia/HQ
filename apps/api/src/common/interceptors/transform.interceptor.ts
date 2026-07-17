@@ -24,27 +24,7 @@ export class TransformInterceptor<T> implements NestInterceptor<
   ): Observable<Response<T>> {
     return next.handle().pipe(
       map((data) => {
-        // If the return object is already formatted with metadata
-        if (
-          data &&
-          typeof data === 'object' &&
-          'data' in data &&
-          'meta' in data
-        ) {
-          const resObj = data as Record<string, unknown>;
-          return {
-            success: true,
-            data: resObj.data,
-            meta: resObj.meta,
-            timestamp: new Date().toISOString(),
-          } as unknown as Response<T>;
-        }
-
-        return {
-          success: true,
-          data: data === undefined ? null : data,
-          timestamp: new Date().toISOString(),
-        };
+        return data === undefined ? null : data;
       }),
     );
   }

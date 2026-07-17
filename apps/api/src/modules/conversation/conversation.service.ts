@@ -111,7 +111,7 @@ export class ConversationService {
     }
 
     const ceo = await this.executiveRepository.findByRoleKey('ceo');
-    const ceoId = ceo ? ceo.id : 'ceo-id-placeholder';
+    const ceoId = ceo ? ceo.id : '00000000-0000-0000-0000-000000000000';
 
     // 3. Spawn CEO welcome & delegation message
     const specialistNames = activeSpecialists.map((s) => s.name).join(' and ');

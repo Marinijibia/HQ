@@ -206,17 +206,17 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="border border-hq-graphite/40 bg-hq-graphite/10 rounded-xl p-5 text-left text-xs leading-relaxed space-y-4">
+          <div className="border border-card-border bg-black/5 dark:bg-white/5 rounded-xl p-5 text-left text-xs leading-relaxed space-y-4">
             <div>
-              <span className="font-bold text-white block">Objective</span>
+              <span className="font-bold text-foreground block">Objective</span>
               <span className="text-foreground/75">{objectiveText || 'Compose launch creatives'}</span>
             </div>
             <div>
-              <span className="font-bold text-white block">Specialists Engaged</span>
+              <span className="font-bold text-foreground block">Specialists Engaged</span>
               <span className="text-foreground/75">CEO, CMO, CFO, Strategy Director, Legal Director</span>
             </div>
             <div>
-              <span className="font-bold text-white block">Resolutions & Deliverables</span>
+              <span className="font-bold text-foreground block">Resolutions & Deliverables</span>
               <ul className="list-disc pl-4 space-y-1 mt-1 text-foreground/70">
                 <li>Seeded brand design guidelines and primary styling settings values.</li>
                 <li>Completed competitive analysis model draft and regional compliance validation checks.</li>
