@@ -325,19 +325,23 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Workspace Frame */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Navigation Sidebar */}
+        {/* Left Navigation Sidebar — Premium Glassmorphism */}
         <aside
-          className={`flex flex-col border-r border-card-border bg-black/[0.015] dark:bg-white/[0.015] transition-all duration-300 ${
-            isSidebarOpen ? 'w-64' : 'w-16'
+          className={`flex flex-col border-r border-card-border bg-white/60 dark:bg-[#070709]/70 backdrop-blur-xl transition-all duration-300 ${
+            isSidebarOpen ? 'w-64' : 'w-[60px]'
           }`}
         >
-          <div className="flex-1 py-4 px-3 overflow-y-auto space-y-4">
+          <div className="flex-1 py-5 px-2.5 overflow-y-auto space-y-5">
             {navGroups.map((group) => (
               <div key={group.label}>
                 {isSidebarOpen && (
-                  <p className="text-[9px] font-extrabold uppercase tracking-widest text-foreground/30 px-3 mb-1.5">
-                    {group.label}
-                  </p>
+                  <div className="flex items-center space-x-2 px-2 mb-2">
+                    <div className="h-px flex-1 bg-card-border" />
+                    <p className="text-[8px] font-black uppercase tracking-[0.18em] text-foreground/25">
+                      {group.label}
+                    </p>
+                    <div className="h-px flex-1 bg-card-border" />
+                  </div>
                 )}
                 <div className="space-y-0.5">
                   {group.items.map((item) => {
@@ -348,34 +352,36 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                         key={item.name}
                         href={item.href}
                         title={!isSidebarOpen ? item.name : undefined}
-                        className={`flex items-center rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                        className={`group relative flex items-center rounded-xl px-3 py-2.5 text-[11px] font-semibold transition-all duration-200 ${
                           isActive
-                            ? 'bg-hq-blue/15 border border-hq-blue/25 text-hq-blue'
-                            : 'border border-transparent hover:bg-black/5 dark:hover:bg-white/5 text-foreground/60 hover:text-foreground'
+                            ? 'bg-gradient-to-r from-hq-blue/10 to-hq-purple/5 border border-hq-blue/20 text-hq-blue shadow-[0_0_12px_rgba(10,132,255,0.08)]'
+                            : 'border border-transparent hover:bg-black/[0.04] dark:hover:bg-white/[0.04] text-foreground/55 hover:text-foreground'
                         } ${isSidebarOpen ? 'space-x-3' : 'justify-center'}`}
                       >
-                        <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-hq-blue' : ''}`} />
-                        {isSidebarOpen && <span>{item.name}</span>}
+                        {isActive && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-hq-blue shadow-[0_0_8px_rgba(10,132,255,0.6)]" />
+                        )}
+                        <Icon className={`h-4 w-4 shrink-0 transition-colors ${isActive ? 'text-hq-blue' : 'text-foreground/45 group-hover:text-foreground/80'}`} />
+                        {isSidebarOpen && <span className="leading-none">{item.name}</span>}
                       </Link>
                     );
                   })}
                 </div>
-                {isSidebarOpen && <div className="mt-3 border-b border-card-border" />}
               </div>
             ))}
           </div>
 
-          <div className="p-3 border-t border-card-border flex items-center justify-center">
+          <div className="p-3 border-t border-card-border/60 flex items-center justify-center">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-foreground/50 hover:text-foreground"
+              className="h-7 w-7 rounded-full text-foreground/35 hover:text-foreground hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-all duration-200"
               onClick={toggleSidebar}
             >
               {isSidebarOpen ? (
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3.5 w-3.5" />
               ) : (
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3.5 w-3.5" />
               )}
             </Button>
           </div>
@@ -387,101 +393,114 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* Global Status Bar */}
-      <footer className="flex h-8 items-center justify-between border-t border-card-border px-6 bg-black/[0.02] dark:bg-white/[0.02] backdrop-blur-md text-[11px] text-foreground/55 select-none">
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2">
+      {/* Global Status Bar — Premium Ticker */}
+      <footer className="flex h-7 items-center justify-between border-t border-card-border/60 px-8 bg-white/50 dark:bg-[#070709]/60 backdrop-blur-xl text-[10px] text-foreground/40 select-none font-mono tracking-wide">
+        <div className="flex items-center space-x-5">
+          <div className="flex items-center space-x-1.5">
             <span
-              className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-hq-cyan animate-pulse' : 'bg-red-500'}`}
-            ></span>
-            <span>WebSocket Status: {isConnected ? 'Connected' : 'Offline'}</span>
+              className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-hq-cyan shadow-[0_0_6px_#30D158] animate-pulse' : 'bg-red-500'}`}
+            />
+            <span className="uppercase tracking-widest text-[9px] font-bold text-foreground/35">
+              {isConnected ? 'WS Connected' : 'WS Offline'}
+            </span>
           </div>
-          <span className="text-foreground/20">|</span>
-          <div className="flex items-center space-x-2">
-            <CloudLightning className="h-3 w-3 text-hq-blue" />
-            <span>AI Gateway: Active</span>
+          <span className="text-foreground/15">·</span>
+          <div className="flex items-center space-x-1.5">
+            <CloudLightning className="h-2.5 w-2.5 text-hq-blue" />
+            <span className="uppercase tracking-widest text-[9px] font-bold text-foreground/35">AI Gateway Active</span>
           </div>
         </div>
 
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1.5 text-yellow-500/80">
-            <ShieldAlert className="h-3.5 w-3.5" />
-            <span className="font-semibold uppercase tracking-wider text-[9px]">
-              Standard Operations
-            </span>
+          <div className="flex items-center space-x-1.5">
+            <ShieldAlert className="h-2.5 w-2.5 text-amber-400/70" />
+            <span className="uppercase tracking-widest text-[9px] font-bold text-foreground/30">Standard Ops</span>
           </div>
-          <span className="text-foreground/20">|</span>
-          <div className="flex items-center space-x-1 font-mono">
-            <Terminal className="h-3 w-3" />
-            <span>v1.0.0</span>
+          <span className="text-foreground/15">·</span>
+          <div className="flex items-center space-x-1">
+            <Terminal className="h-2.5 w-2.5 text-foreground/25" />
+            <span className="text-[9px] font-bold text-foreground/25">v1.0.0</span>
           </div>
         </div>
       </footer>
 
-      {/* Global Command Palette Overlay (Cmd + K) */}
+      {/* Global Command Palette Overlay (Cmd + K) — Premium Glassmorphism */}
       {isPaletteOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/50 backdrop-blur-md p-4 animate-in fade-in duration-150"
           onClick={() => setPaletteOpen(false)}
         >
           <Card
-            className="w-full max-w-lg border border-card-border bg-card-bg shadow-level-5 overflow-hidden animate-in zoom-in-95 duration-200"
+            className="w-full max-w-xl border border-white/10 dark:border-white/[0.06] bg-white/90 dark:bg-[#0a0a0f]/95 backdrop-blur-2xl shadow-[0_32px_64px_rgba(0,0,0,0.35)] overflow-hidden rounded-2xl animate-in zoom-in-95 slide-in-from-top-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-card-border">
-              <Input
-                autoFocus
-                placeholder="Type a command or search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-10"
-              />
+            <div className="relative px-5 py-4 border-b border-card-border/60">
+              <div className="flex items-center space-x-3 bg-black/[0.03] dark:bg-white/[0.04] border border-card-border rounded-xl px-4 py-2.5 focus-within:border-hq-blue/30 focus-within:shadow-[0_0_0_3px_rgba(10,132,255,0.08)] transition-all duration-200">
+                <span className="text-foreground/30 text-xs font-mono">⌘</span>
+                <Input
+                  autoFocus
+                  placeholder="Search commands, pages, or actions..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full h-auto border-0 bg-transparent p-0 text-sm font-medium placeholder:text-foreground/30 focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+                <span className="text-[9px] uppercase tracking-wider text-foreground/25 font-bold shrink-0">ESC to close</span>
+              </div>
             </div>
-            <div className="max-h-60 overflow-y-auto p-2 space-y-1">
+            <div className="max-h-72 overflow-y-auto p-3 space-y-0.5">
               {[
                 {
                   name: 'Go to Dashboard',
                   icon: LayoutDashboard,
+                  shortcut: 'D',
                   action: () => { router.push('/dashboard'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Go to Boardroom',
                   icon: Users,
+                  shortcut: 'B',
                   action: () => { router.push('/boardroom'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Go to Missions',
                   icon: Calendar,
+                  shortcut: 'M',
                   action: () => { router.push('/missions'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Go to Intelligence',
                   icon: Brain,
+                  shortcut: 'I',
                   action: () => { router.push('/intelligence'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Go to Settings',
                   icon: Settings,
+                  shortcut: 'S',
                   action: () => { router.push('/settings'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Launch New Mission',
                   icon: Rocket,
+                  shortcut: 'N',
                   action: () => { router.push('/missions'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Open Asset Library',
                   icon: UploadCloud,
+                  shortcut: 'A',
                   action: () => { router.push('/assets'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Brief the Boardroom',
                   icon: BrainCircuit,
+                  shortcut: 'R',
                   action: () => { router.push('/discussions'); setPaletteOpen(false); },
                 },
                 {
                   name: 'Toggle Sidebar',
                   icon: ChevronLeft,
+                  shortcut: '\\',
                   action: () => { toggleSidebar(); setPaletteOpen(false); },
                 },
               ]
@@ -492,14 +511,28 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                       <button
                         key={idx}
                         onClick={cmd.action}
-                        className="w-full text-left rounded-lg px-3 py-2.5 text-xs text-foreground/80 hover:bg-hq-blue/10 hover:text-white border border-transparent hover:border-hq-blue/20 transition-all font-medium flex items-center gap-3"
+                        className="w-full text-left rounded-xl px-4 py-3 text-xs text-foreground/70 hover:bg-hq-blue/[0.08] hover:text-hq-blue border border-transparent hover:border-hq-blue/15 transition-all duration-150 font-medium flex items-center gap-3 group"
                       >
-                        <CmdIcon className="h-3.5 w-3.5 shrink-0 text-foreground/40" />
-                        <span className="flex-1">{cmd.name}</span>
-                        <span className="text-[9px] text-foreground/45 bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded">↵</span>
+                        <div className="h-7 w-7 rounded-lg bg-black/[0.04] dark:bg-white/[0.04] border border-card-border flex items-center justify-center shrink-0 group-hover:bg-hq-blue/10 group-hover:border-hq-blue/20 transition-all">
+                          <CmdIcon className="h-3.5 w-3.5 text-foreground/40 group-hover:text-hq-blue transition-colors" />
+                        </div>
+                        <span className="flex-1 font-semibold">{cmd.name}</span>
+                        <span className="text-[9px] text-foreground/30 bg-black/[0.05] dark:bg-white/[0.05] border border-card-border px-1.5 py-0.5 rounded-md font-mono">{cmd.shortcut}</span>
                       </button>
                     );
                   })}
+              {search && [
+                {
+                  name: 'Go to Dashboard',
+                  icon: LayoutDashboard,
+                  shortcut: 'D',
+                  action: () => { router.push('/dashboard'); setPaletteOpen(false); },
+                },
+              ].filter((cmd) => cmd.name.toLowerCase().includes(search.toLowerCase())).length === 0 && (
+                <div className="py-10 text-center">
+                  <p className="text-xs text-foreground/35 font-medium">No commands found for &ldquo;{search}&rdquo;</p>
+                </div>
+              )}
             </div>
           </Card>
         </div>
