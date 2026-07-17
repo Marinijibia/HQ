@@ -109,7 +109,14 @@ export default function DiscussionsPage() {
 
   const handleStartDiscussion = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!objective.trim() || !token) return;
+    if (!objective.trim()) {
+      toast.error('Please enter an objective or strategy topic.');
+      return;
+    }
+    if (!token) {
+      toast.error('Authentication token not found. Please log in again.');
+      return;
+    }
 
     try {
       const headers: Record<string, string> = {
@@ -138,9 +145,13 @@ export default function DiscussionsPage() {
         }
 
         router.push(`/discussions/${data.id}`);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(`❌ Failed to start discussion: ${errData.message || 'Server error'}`);
       }
     } catch (err) {
       console.error('Failed starting discussion:', err);
+      toast.error('❌ Failed to connect to server. Please check database connectivity.');
     }
   };
 
