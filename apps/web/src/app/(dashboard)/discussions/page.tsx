@@ -12,6 +12,7 @@ import {
   Clock,
   ArrowRight,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { useGuideMode } from '../../../contexts/guide-mode-context';
@@ -26,6 +27,13 @@ interface Conversation {
   isPinned: boolean;
   isArchived: boolean;
   missionId?: string | null;
+}
+
+interface Executive {
+  id: string;
+  name: string;
+  roleKey: string;
+  title: string;
 }
 
 export default function DiscussionsPage() {
@@ -47,21 +55,34 @@ export default function DiscussionsPage() {
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
 
   const [conversations, setConversations] = React.useState<Conversation[]>([]);
+  const [executives, setExecutives] = React.useState<Executive[]>([]);
   const [loading, setLoading] = React.useState(true);
 
+  // Sync settings & local draft
   React.useEffect(() => {
-    // Read from onboarding draft
     const draftStr = localStorage.getItem('hq_onboarding_draft');
     if (draftStr) {
       try {
         const draft = JSON.parse(draftStr);
         if (draft.ceoName) setCeoName(draft.ceoName);
         if (draft.brandColor) setBrandColor(draft.brandColor);
-      } catch (e) {
-        console.warn('Error reading onboarding draft:', e);
-      }
+      } catch { /* silent */ }
     }
   }, []);
+
+  // Fetch live executives for start modal selector
+  React.useEffect(() => {
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+    fetch('/api/executives', { headers })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setExecutives(data);
+        }
+      })
+      .catch((e) => console.error('Error fetching executives:', e));
+  }, [token]);
 
   const fetchConversations = React.useCallback(async () => {
     if (!token) return;
@@ -75,7 +96,7 @@ export default function DiscussionsPage() {
       const params = [];
       if (activeTab === 'pinned') params.push('isPinned=true');
       if (activeTab === 'archived') params.push('isArchived=true');
-      else params.push('isArchived=false'); // don't show archived by default
+      else params.push('isArchived=false'); // filter archived by default
 
       if (searchQuery) params.push(`search=${encodeURIComponent(searchQuery)}`);
 
@@ -103,7 +124,7 @@ export default function DiscussionsPage() {
 
   const handleToggleExec = (key: string) => {
     setSelectedExecs((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
     );
   };
 
@@ -137,8 +158,8 @@ export default function DiscussionsPage() {
         setShowStartModal(false);
         setObjective('');
         setSelectedExecs(['ceo']);
-        toast.success('💬 Discussion started — your executives are gathering now');
-        
+        toast.success('💬 Boardroom session initialized successfully');
+
         if (guideModeEnabled && ftxStep === 'arrival') {
           startMission(objective);
           setFtxStep('input');
@@ -147,7 +168,7 @@ export default function DiscussionsPage() {
         router.push(`/discussions/${data.id}`);
       } else {
         const errData = await res.json().catch(() => ({}));
-        toast.error(`❌ Failed to start discussion: ${errData.message || 'Server error'}`);
+        toast.error(`❌ Failed to start boardroom session: ${errData.message || 'Server error'}`);
       }
     } catch (err) {
       console.error('Failed starting discussion:', err);
@@ -164,9 +185,7 @@ export default function DiscussionsPage() {
     e.stopPropagation();
     if (!token) return;
     try {
-      const headers: Record<string, string> = {
-        Authorization: `Bearer ${token}`,
-      };
+      const headers = { Authorization: `Bearer ${token}` };
       const res = await fetch(`/api/conversations/${id}/pin`, { method: 'POST', headers });
       if (res.ok) {
         fetchConversations();
@@ -180,9 +199,7 @@ export default function DiscussionsPage() {
     e.stopPropagation();
     if (!token) return;
     try {
-      const headers: Record<string, string> = {
-        Authorization: `Bearer ${token}`,
-      };
+      const headers = { Authorization: `Bearer ${token}` };
       const res = await fetch(`/api/conversations/${id}/archive`, { method: 'POST', headers });
       if (res.ok) {
         fetchConversations();
@@ -191,6 +208,18 @@ export default function DiscussionsPage() {
       console.error('Archive action failed:', err);
     }
   };
+
+  // Map real executives options dynamically
+  const selectorOptions = React.useMemo(() => {
+    if (executives.length === 0) {
+      return [{ key: 'ceo', name: ceoName, title: 'Chief Executive Officer' }];
+    }
+    return executives.map((e) => ({
+      key: e.roleKey,
+      name: e.roleKey === 'ceo' ? ceoName : e.name,
+      title: e.title,
+    }));
+  }, [executives, ceoName]);
 
   return (
     <div className="space-y-8 select-none text-foreground pb-12">
@@ -215,7 +244,7 @@ export default function DiscussionsPage() {
         </Card>
       ) : (
         /* Premium Standard Header */
-        <div className="relative flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+        <div className="relative flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 text-left">
           <div className="absolute -top-6 -left-6 w-64 h-24 bg-hq-blue/[0.04] rounded-full blur-3xl pointer-events-none" />
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -230,13 +259,13 @@ export default function DiscussionsPage() {
               Boardroom Discussions
             </h1>
             <p className="text-foreground/45 text-sm mt-1.5 font-medium">
-              Debate operational models, review assets, and direct specialists prior to launching campaigns.
+              Orchestrate strategic targets, debate operational parameters, and consult specialists.
             </p>
           </div>
 
           <Button
             onClick={() => setShowStartModal(true)}
-            className="flex items-center gap-2.5 h-10 px-5 text-xs text-white font-bold rounded-full shadow-[0_4px_20px_rgba(10,132,255,0.3)] hover:shadow-[0_4px_28px_rgba(10,132,255,0.45)] transition-all duration-300 hover:scale-[1.02]"
+            className="flex items-center gap-2.5 h-10 px-5 text-sm text-white font-bold rounded-full shadow-[0_4px_20px_rgba(10,132,255,0.3)] hover:shadow-[0_4px_28px_rgba(10,132,255,0.45)] transition-all duration-300 hover:scale-[1.02]"
             style={{ backgroundColor: brandColor }}
           >
             <PlusCircle className="h-3.5 w-3.5" />
@@ -271,8 +300,8 @@ export default function DiscussionsPage() {
           >
             <div className="absolute top-0 right-0 w-24 h-24 bg-hq-cyan/[0.04] rounded-full blur-2xl group-hover:bg-hq-blue/[0.08] transition-colors pointer-events-none" />
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-black uppercase tracking-widest text-hq-cyan/80 flex items-center gap-1.5 bg-hq-cyan/10 px-2 py-1 rounded-full">
-                <Sparkles className="h-3 w-3" />
+              <span className="text-xs font-black uppercase tracking-widest text-hq-cyan/80 flex items-center gap-1.5 bg-hq-cyan/10 px-2.5 py-1 rounded-full">
+                <Sparkles className="h-3 w-3 animate-pulse" />
                 Prompt Template
               </span>
               <div className="h-6 w-6 rounded-lg bg-black/[0.04] dark:bg-white/[0.04] border border-card-border flex items-center justify-center group-hover:bg-hq-blue/10 group-hover:border-hq-blue/20 transition-all">
@@ -280,7 +309,7 @@ export default function DiscussionsPage() {
               </div>
             </div>
             <h4 className="text-sm font-black text-foreground group-hover:text-hq-blue transition-colors">{item.title}</h4>
-            <p className="text-sm text-foreground/45 mt-1.5 leading-relaxed font-medium">{item.desc}</p>
+            <p className="text-xs text-foreground/45 mt-1.5 leading-relaxed font-semibold">{item.desc}</p>
           </Card>
         ))}
       </div>
@@ -288,7 +317,7 @@ export default function DiscussionsPage() {
       {/* Premium Filter Toolbar */}
       {(!guideModeEnabled || ftxStep !== 'arrival') && (
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1">
-          <div className="flex gap-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-card-border rounded-full p-1">
+          <div className="flex gap-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-card-border rounded-full p-1 w-fit">
             {[
               { id: 'recent', label: 'All Discussions', icon: Clock },
               { id: 'pinned', label: 'Pinned', icon: Pin },
@@ -299,7 +328,7 @@ export default function DiscussionsPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as 'recent' | 'pinned' | 'archived')}
-                  className={`rounded-full px-4 py-1.5 text-sm font-bold flex items-center gap-1.5 transition-all duration-200 ${
+                  className={`rounded-full px-4 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-all duration-200 ${
                     activeTab === tab.id
                       ? 'text-white shadow-sm'
                       : 'text-foreground/50 hover:text-foreground'
@@ -309,7 +338,7 @@ export default function DiscussionsPage() {
                     boxShadow: activeTab === tab.id ? `0 2px 10px ${brandColor}40` : undefined,
                   }}
                 >
-                  <Icon className="h-3 w-3" />
+                  <Icon className="h-3.5 w-3.5" />
                   {tab.label}
                 </button>
               );
@@ -375,7 +404,7 @@ export default function DiscussionsPage() {
                         onClick={(e) => handleToggleArchive(conv.id, e)}
                         className="p-1.5 rounded-lg hover:bg-red-500/5 text-foreground/30 hover:text-red-400 transition-colors"
                       >
-                        <Archive className="h-3 w-3" />
+                        <Archive className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
@@ -403,7 +432,7 @@ export default function DiscussionsPage() {
 
       {/* Premium Start Discussion Modal */}
       {showStartModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/50 backdrop-blur-md animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-150">
           <Card className="w-full max-w-lg border border-white/10 dark:border-white/[0.06] bg-white/95 dark:bg-[#0a0a0f]/98 backdrop-blur-2xl p-0 shadow-[0_32px_64px_rgba(0,0,0,0.3)] rounded-2xl animate-in zoom-in-95 slide-in-from-top-4 duration-200 text-left overflow-hidden">
             {/* Modal Header */}
             <div className="relative px-6 pt-6 pb-5 border-b border-card-border/60">
@@ -414,14 +443,14 @@ export default function DiscussionsPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-black text-foreground tracking-tight">Start Boardroom Discussion</h2>
-                  <p className="text-sm text-foreground/40 font-medium mt-0.5">Convene specialist AI directors to evaluate your strategy.</p>
+                  <p className="text-xs text-foreground/40 font-medium mt-0.5">Convene specialist AI directors to evaluate your strategy.</p>
                 </div>
               </div>
             </div>
 
             <form onSubmit={handleStartDiscussion} className="space-y-5 p-6">
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-foreground/40">
+              <div className="space-y-2 text-left">
+                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40">
                   Objective / Strategy Topic
                 </label>
                 <textarea
@@ -433,21 +462,13 @@ export default function DiscussionsPage() {
                 />
               </div>
 
-              {/* Specialist executive selectors */}
-              <div className="space-y-2.5">
-                <label className="text-xs font-black uppercase tracking-widest text-foreground/40 block">
+              {/* Dynamic selector options */}
+              <div className="space-y-2.5 text-left">
+                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 block">
                   Select Specialist Directors
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[
-                    { key: 'ceo', name: ceoName },
-                    { key: 'strategy_director', name: 'Alistair Thorne' },
-                    { key: 'technology_director', name: 'Hiroshi Tanaka' },
-                    { key: 'software_engineering_director', name: 'Linus Kovacs' },
-                    { key: 'ai_ml_director', name: 'Sarah Ndiaye' },
-                    { key: 'finance_director', name: 'Sophia Sterling' },
-                    { key: 'security_director', name: 'Jack Bauer' },
-                  ].map((m) => {
+                  {selectorOptions.map((m) => {
                     const isSelected = selectedExecs.includes(m.key);
                     return (
                       <button
@@ -470,18 +491,18 @@ export default function DiscussionsPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2 border-t border-card-border/60 justify-end">
+              <div className="flex gap-3 pt-4 border-t border-card-border/60 justify-end">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setShowStartModal(false)}
-                  className="text-sm font-bold h-9 px-4 rounded-full text-foreground/50 hover:text-foreground border border-card-border hover:border-card-border transition-all"
+                  className="text-xs font-bold h-9 px-4 rounded-full text-foreground/50 hover:text-foreground border border-card-border hover:border-card-border transition-all"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="text-sm font-black text-white h-9 px-5 rounded-full shadow-[0_4px_14px_rgba(10,132,255,0.3)] hover:shadow-[0_4px_20px_rgba(10,132,255,0.4)] transition-all"
+                  className="text-xs font-black text-white h-9 px-5 rounded-full shadow-[0_4px_14px_rgba(10,132,255,0.3)] hover:shadow-[0_4px_20px_rgba(10,132,255,0.4)] transition-all"
                   style={{ backgroundColor: brandColor }}
                 >
                   Convene Boardroom
