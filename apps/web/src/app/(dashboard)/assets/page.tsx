@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   RotateCcw,
   ArrowRight,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { SmartEmptyState } from '../../../components/smart-empty-state';
@@ -71,7 +72,6 @@ export default function AssetCenterPage() {
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
 
   React.useEffect(() => {
-    // Read brand color from onboarding draft
     const draftStr = localStorage.getItem('hq_onboarding_draft');
     if (draftStr) {
       try {
@@ -269,6 +269,7 @@ export default function AssetCenterPage() {
         const updated = await res.json();
         setSelectedAsset(updated);
         fetchAssets();
+        toast.success(updated.isLegalHold ? '🔒 Legal hold activated' : '🔓 Legal hold released');
       }
     } catch (e) {
       console.error('Toggle Legal Hold failed:', e);
@@ -277,7 +278,7 @@ export default function AssetCenterPage() {
 
   const getMimeIcon = (mime: string) => {
     if (mime.startsWith('image/')) return <FileImage className="h-5 w-5 text-hq-cyan shrink-0" />;
-    if (mime.startsWith('video/')) return <Video className="h-5 w-5 text-hq-purple shrink-0" />;
+    if (mime.startsWith('video/')) return <Video className="h-5 w-5 text-[#bf5af2] shrink-0" />;
     if (mime.includes('pdf') || mime.includes('document') || mime.includes('text')) {
       return <FileText className="h-5 w-5 text-hq-blue shrink-0" />;
     }
@@ -299,7 +300,7 @@ export default function AssetCenterPage() {
       (a) =>
         a.mimeType.includes('pdf') ||
         a.mimeType.includes('document') ||
-        a.mimeType.includes('text'),
+        a.mimeType.includes('text')
     )
     .reduce((sum, a) => sum + a.fileSize, 0);
   const imageStorage = assets
@@ -317,7 +318,7 @@ export default function AssetCenterPage() {
     limitBytes = 10 * 1024 * 1024 * 1024; // 10 GB
     limitStr = '10.0 GB';
   } else if (planCode === 'enterprise') {
-    limitBytes = 100 * 1024 * 1024 * 1024; // Visual limit
+    limitBytes = 100 * 1024 * 1024 * 1024;
     limitStr = 'Unlimited';
   }
 
@@ -329,36 +330,44 @@ export default function AssetCenterPage() {
   return (
     <div className="space-y-8 select-none text-foreground pb-12">
       {/* Page Header */}
-      <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-4">
+      <div className="relative flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 text-left">
+        <div className="absolute -top-6 -left-6 w-64 h-24 bg-hq-blue/[0.04] rounded-full blur-3xl pointer-events-none" />
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
-            <FolderOpen className="h-8 w-8 text-hq-blue" />
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs uppercase tracking-widest font-black text-foreground/30">Secure Asset Registry</span>
+            <span className="h-1 w-1 rounded-full bg-hq-cyan animate-pulse" />
+            <span className="text-xs uppercase tracking-widest font-black text-hq-cyan/60">Verified</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
+            <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-hq-blue/20 to-hq-purple/10 border border-hq-blue/20 flex items-center justify-center">
+              <FolderOpen className="h-4 w-4 text-hq-blue" />
+            </div>
             Asset Center
           </h1>
-          <p className="text-foreground/60 text-sm mt-1">
-            Secure digital vault indexing copywriting drafts, design files, reports, and version
-            histories.
+          <p className="text-foreground/45 text-sm mt-1.5 font-medium">
+            Secure digital vault indexing copywriting drafts, design files, operational reports, and version histories.
           </p>
         </div>
       </div>
 
       {/* Storage Breakdown Banner */}
-      <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] text-left space-y-3.5">
+      <Card className="border border-card-border bg-card-bg/60 backdrop-blur-md p-5 shadow-[var(--card-shadow)] text-left space-y-3.5 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-20 bg-hq-blue/[0.02] rounded-full blur-2xl pointer-events-none" />
         <div className="flex justify-between items-baseline">
           <div>
             <span className="text-xs text-foreground/45 font-bold uppercase tracking-wider">
               Total Storage Capacity
             </span>
-            <h3 className="text-lg font-extrabold text-[#1A1A1E] dark:text-white mt-0.5">
+            <h3 className="text-lg font-black text-foreground mt-0.5">
               {formatBytes(totalStorageUsed)} of {limitStr} Used
             </h3>
           </div>
           {planCode !== 'enterprise' ? (
-            <span className="text-xs text-foreground/50 font-bold">
+            <span className="text-xs text-foreground/50 font-bold bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full">
               {((totalStorageUsed / limitBytes) * 100).toFixed(2)}% used
             </span>
           ) : (
-            <span className="text-xs text-foreground/50 font-bold">
+            <span className="text-xs text-foreground/50 font-bold bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full">
               Enterprise Tier (Unlimited)
             </span>
           )}
@@ -367,39 +376,35 @@ export default function AssetCenterPage() {
         {/* Visual progress bar */}
         <div className="h-2.5 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden flex">
           <div
-            className="bg-hq-blue h-full transition-all"
+            className="bg-hq-blue h-full transition-all duration-500"
             style={{ width: `${docPercentage}%` }}
           ></div>
           <div
-            className="bg-hq-cyan h-full transition-all"
+            className="bg-hq-cyan h-full transition-all duration-500"
             style={{ width: `${imagePercentage}%` }}
           ></div>
           <div
-            className="bg-hq-purple h-full transition-all"
+            className="bg-[#bf5af2] h-full transition-all duration-500"
             style={{ width: `${videoPercentage}%` }}
           ></div>
           <div
-            className="bg-foreground/20 h-full transition-all"
+            className="bg-foreground/20 h-full transition-all duration-500"
             style={{ width: `${otherPercentage}%` }}
           ></div>
         </div>
 
         <div className="flex flex-wrap gap-4 text-xs font-bold text-foreground/60">
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-hq-blue"></span>Documents (
-            {formatBytes(docStorage)})
+            <span className="h-2.5 w-2.5 rounded-full bg-hq-blue"></span>Documents ({formatBytes(docStorage)})
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-hq-cyan"></span>Images (
-            {formatBytes(imageStorage)})
+            <span className="h-2.5 w-2.5 rounded-full bg-hq-cyan"></span>Images ({formatBytes(imageStorage)})
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-hq-purple"></span>Videos (
-            {formatBytes(videoStorage)})
+            <span className="h-2.5 w-2.5 rounded-full bg-[#bf5af2]"></span>Videos ({formatBytes(videoStorage)})
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-foreground/20"></span>Other (
-            {formatBytes(otherStorage)})
+            <span className="h-2.5 w-2.5 rounded-full bg-foreground/20"></span>Other ({formatBytes(otherStorage)})
           </span>
         </div>
       </Card>
@@ -412,18 +417,18 @@ export default function AssetCenterPage() {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-2 ${
+            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center space-y-2 ${
               isDragging
                 ? 'border-hq-blue bg-hq-blue/5'
-                : 'border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] hover:bg-black/5 dark:hover:bg-white/5'
+                : 'border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/50 hover:bg-black/5 dark:hover:bg-white/5'
             }`}
           >
-            <UploadCloud className="h-8 w-8 text-foreground/45" />
+            <UploadCloud className="h-8 w-8 text-foreground/45 animate-pulse" />
             <div className="space-y-1">
-              <p className="text-xs font-bold text-[#1A1A1E] dark:text-white">
+              <p className="text-xs font-bold text-foreground">
                 Drag and drop files here to audit
               </p>
-              <p className="text-xs text-foreground/50">
+              <p className="text-[11px] text-foreground/45 font-medium">
                 Supports PDF, DOCX, JPEG, PNG, MP4 up to 50MB
               </p>
             </div>
@@ -431,7 +436,7 @@ export default function AssetCenterPage() {
             <Button
               onClick={() => document.getElementById('file-selector')?.click()}
               size="sm"
-              className="text-xs font-bold h-7 text-white"
+              className="text-xs font-bold h-8 text-white rounded-full px-4"
               style={{ backgroundColor: brandColor }}
             >
               Browse Files
@@ -447,7 +452,7 @@ export default function AssetCenterPage() {
               </div>
               <div className="h-1.5 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden">
                 <div
-                  className="bg-hq-blue h-full transition-all"
+                  className="bg-hq-blue h-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>
@@ -455,14 +460,14 @@ export default function AssetCenterPage() {
           )}
 
           {uploadError && (
-            <div className="border border-red-500/25 bg-red-500/5 text-red-500 text-xs font-bold p-3 rounded-xl flex items-center gap-1.5">
+            <div className="border border-red-500/25 bg-red-500/5 text-red-500 text-xs font-bold p-3 rounded-xl flex items-center gap-1.5 text-left">
               <AlertTriangle className="h-4 w-4 shrink-0" />
               <span>{uploadError}</span>
             </div>
           )}
 
           {/* Search bar & Category filters */}
-          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-card-bg border border-card-border p-3.5 rounded-2xl">
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-card-bg/60 border border-card-border p-3 rounded-2xl">
             <div className="flex gap-1.5">
               {[
                 { id: 'all', label: 'All Files' },
@@ -487,14 +492,14 @@ export default function AssetCenterPage() {
               ))}
             </div>
 
-            <div className="relative w-full sm:w-48">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-foreground/45" />
+            <div className="relative w-full sm:w-44">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-foreground/45" />
               <input
                 type="text"
                 placeholder="Search ledger..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 w-full rounded-md border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] pl-9 pr-4 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hq-blue"
+                className="h-8.5 w-full rounded-full border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] pl-8.5 pr-4 text-xs text-foreground placeholder:text-foreground/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hq-blue/40 transition-all font-semibold"
               />
             </div>
           </div>
@@ -510,7 +515,7 @@ export default function AssetCenterPage() {
               title="Your asset library is empty"
               description="Upload brand guidelines, reports, handbooks and documents. HQ reads them to build a smarter understanding of your organization."
               cta="Upload First File"
-              onCta={() => document.getElementById('file-upload-input')?.click()}
+              onCta={() => document.getElementById('file-selector')?.click()}
               hints={[
                 'Upload your brand guidelines so HQ learns your tone and colors',
                 'Add your employee handbook to teach HQ your culture and policies',
@@ -523,27 +528,27 @@ export default function AssetCenterPage() {
                 <div
                   key={asset.id}
                   onClick={() => setSelectedAssetId(asset.id)}
-                  className={`p-3.5 border rounded-xl flex items-center justify-between cursor-pointer transition-all ${
+                  className={`p-3.5 border rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${
                     selectedAssetId === asset.id
                       ? 'border-hq-blue bg-hq-blue/5'
-                      : 'border-card-border bg-card-bg hover:bg-black/5 dark:hover:bg-white/5'
+                      : 'border-card-border bg-card-bg/60 hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center space-x-3 text-left">
                     {getMimeIcon(asset.mimeType)}
                     <div>
-                      <h4 className="text-xs font-bold text-[#1A1A1E] dark:text-white leading-tight flex items-center gap-1.5">
+                      <h4 className="text-xs font-bold text-foreground leading-tight flex items-center gap-1.5">
                         {asset.filename}
                         {asset.isLegalHold && (
                           <ShieldAlert className="h-3.5 w-3.5 text-red-500 shrink-0" />
                         )}
                       </h4>
-                      <p className="text-xs text-foreground/50 mt-0.5 font-semibold">
+                      <p className="text-[11px] text-foreground/45 mt-0.5 font-semibold">
                         {formatBytes(asset.fileSize)} • {asset.classification}
                       </p>
                     </div>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-foreground/45" />
+                  <ArrowRight className="h-4 w-4 text-foreground/45 group-hover:text-foreground transition-colors" />
                 </div>
               ))}
             </div>
@@ -553,9 +558,10 @@ export default function AssetCenterPage() {
         {/* Detailed asset inspector panel */}
         <div className="lg:col-span-2">
           {selectedAsset ? (
-            <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] text-left space-y-6">
+            <Card className="border border-card-border bg-card-bg/60 backdrop-blur-md p-5 shadow-[var(--card-shadow)] text-left space-y-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-20 bg-hq-blue/[0.01] rounded-full blur-2xl pointer-events-none" />
               {/* Asset Header Info */}
-              <div className="border-b border-card-border pb-4 space-y-2.5">
+              <div className="border-b border-card-border pb-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <Badge variant="ai" className="text-xs">
                     {selectedAsset.classification}
@@ -566,7 +572,7 @@ export default function AssetCenterPage() {
                       onClick={handleToggleHold}
                       variant="outline"
                       size="sm"
-                      className={`text-xs font-bold h-7 ${
+                      className={`text-xs font-bold h-7 rounded-full px-3 transition-all ${
                         selectedAsset.isLegalHold
                           ? 'border-red-500 bg-red-500/5 text-red-500 hover:bg-red-500/10'
                           : 'border-card-border'
@@ -578,7 +584,7 @@ export default function AssetCenterPage() {
                     <a
                       href={selectedAsset.gcsPath}
                       download
-                      className="inline-flex items-center justify-center rounded-xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] px-3 py-1 text-xs font-bold text-foreground/75 hover:bg-black/5"
+                      className="inline-flex items-center justify-center rounded-full border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] px-3.5 py-1 text-xs font-bold text-foreground/75 hover:bg-black/5 hover:text-foreground transition-colors h-7"
                     >
                       <Download className="h-3.5 w-3.5 mr-1" />
                       Download
@@ -587,12 +593,12 @@ export default function AssetCenterPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-base font-extrabold text-[#1A1A1E] dark:text-white leading-tight">
+                  <h3 className="text-base font-black text-foreground leading-tight">
                     {selectedAsset.filename}
                   </h3>
-                  <p className="text-xs text-foreground/50 mt-1 font-semibold leading-relaxed">
+                  <p className="text-[11px] text-foreground/45 mt-1 font-semibold leading-relaxed">
                     Checksum SHA-256:{' '}
-                    <code className="bg-[#F9F9FB] dark:bg-[#0A0A0C] px-1 py-0.5 rounded text-hq-purple">
+                    <code className="bg-black/5 dark:bg-black/40 px-1.5 py-0.5 rounded font-mono text-hq-purple">
                       {selectedAsset.sha256}
                     </code>
                   </p>
@@ -601,10 +607,11 @@ export default function AssetCenterPage() {
 
               {/* Document Previewer */}
               <div className="space-y-2.5 text-left">
-                <h4 className="text-xs font-bold text-foreground/50 uppercase tracking-widest">
+                <h4 className="text-[10px] font-black text-foreground/40 uppercase tracking-widest flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-hq-cyan" />
                   Secure Document Preview
                 </h4>
-                <div className="min-h-36 rounded-xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] p-4 text-sm leading-relaxed font-semibold overflow-y-auto text-foreground/80 max-h-56">
+                <div className="min-h-36 rounded-2xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/50 p-4 text-xs leading-relaxed font-semibold overflow-y-auto text-foreground/80 max-h-56">
                   {selectedAsset.mimeType.startsWith('image/') ? (
                     <div className="flex flex-col items-center justify-center py-6 space-y-2">
                       <FileImage className="h-10 w-10 text-hq-cyan" />
@@ -614,20 +621,20 @@ export default function AssetCenterPage() {
                     </div>
                   ) : selectedAsset.mimeType.startsWith('video/') ? (
                     <div className="flex flex-col items-center justify-center py-6 space-y-2">
-                      <Video className="h-10 w-10 text-hq-purple" />
+                      <Video className="h-10 w-10 text-[#bf5af2]" />
                       <span className="text-xs text-foreground/45">
                         Video file format verified. Previews disabled on local fallbacks.
                       </span>
                     </div>
                   ) : (
                     <div>
-                      <p className="font-extrabold text-[#1A1A1E] dark:text-white mb-2">
+                      <p className="font-black text-foreground mb-2">
                         {selectedAsset.filename} Description
                       </p>
-                      <p>
+                      <p className="text-foreground/70">
                         {selectedAsset.description || 'No description provided for this index.'}
                       </p>
-                      <div className="mt-4 border-t border-card-border/50 pt-2 text-xs text-foreground/40 font-bold uppercase">
+                      <div className="mt-4 border-t border-card-border/50 pt-2 text-[10px] text-foreground/35 font-bold uppercase tracking-wider">
                         Ledger metadata index: {selectedAsset.gcsPath}
                       </div>
                     </div>
@@ -637,27 +644,27 @@ export default function AssetCenterPage() {
 
               {/* Version History ledger */}
               <div className="space-y-4">
-                <div className="flex items-center space-x-2 text-foreground/50 uppercase tracking-widest text-xs font-bold border-b border-card-border pb-1.5">
+                <div className="flex items-center space-x-2 text-foreground/40 uppercase tracking-widest text-[10px] font-black border-b border-card-border pb-1.5">
                   <History className="h-3.5 w-3.5" />
                   <span>Version History Ledger</span>
                 </div>
 
-                <div className="space-y-3 max-h-52 overflow-y-auto">
+                <div className="space-y-3 max-h-52 overflow-y-auto pr-1">
                   {selectedAsset.versions?.map((ver) => (
                     <div
                       key={ver.id}
-                      className="p-3 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-xl flex items-center justify-between text-left"
+                      className="p-3 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/40 rounded-xl flex items-center justify-between text-left"
                     >
                       <div className="space-y-1">
                         <div className="flex items-baseline space-x-2">
-                          <span className="text-xs font-bold text-[#1A1A1E] dark:text-white">
+                          <span className="text-xs font-bold text-foreground">
                             Version {ver.version}
                           </span>
-                          <span className="text-xs text-foreground/45 font-semibold">
+                          <span className="text-[10px] text-foreground/40 font-semibold">
                             {new Date(ver.createdAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-xs text-foreground/60 font-semibold leading-tight">
+                        <p className="text-[11px] text-foreground/60 font-semibold leading-tight">
                           {ver.changeSummary || 'Manual index update'}
                         </p>
                       </div>
@@ -670,7 +677,7 @@ export default function AssetCenterPage() {
                         }
                         variant="ghost"
                         size="sm"
-                        className="text-xs font-extrabold h-7 border border-card-border text-hq-blue hover:bg-hq-blue/5 disabled:opacity-50 shrink-0"
+                        className="text-xs font-black h-7 border border-card-border text-hq-blue hover:bg-hq-blue/5 disabled:opacity-50 shrink-0 rounded-full"
                       >
                         <RotateCcw className="h-3.5 w-3.5 mr-1" />
                         Rollback
@@ -681,11 +688,11 @@ export default function AssetCenterPage() {
               </div>
             </Card>
           ) : (
-            <Card className="border border-card-border bg-card-bg p-16 text-center">
+            <Card className="border border-card-border bg-card-bg/60 backdrop-blur-md p-16 text-center">
               <FolderOpen className="h-10 w-10 text-foreground/25 mx-auto mb-3" />
-              <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white">Select Asset</h3>
-              <p className="text-xs text-foreground/50 mt-1">
-                Select an asset from the ledger to inspect files and rollbacks.
+              <h3 className="text-sm font-bold text-foreground">Select Asset</h3>
+              <p className="text-xs text-foreground/45 mt-1 font-medium">
+                Select an asset from the ledger to inspect files and version rollbacks.
               </p>
             </Card>
           )}
