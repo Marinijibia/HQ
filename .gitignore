@@ -1,3 +1,7 @@
+# Next.js
+.next/
+out/
+
 # dependencies
 node_modules/
 dist/
@@ -33,3 +37,4 @@ Thumbs.db
 # local uploads
 /apps/api/uploads/
 /uploads/
+
