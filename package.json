@@ -16,7 +16,17 @@
       "**/@nestjs/bullmq",
       "**/@nestjs/bullmq/**",
       "**/bullmq",
-      "**/bullmq/**"
+      "**/bullmq/**",
+      "**/expo",
+      "**/expo/**",
+      "**/expo-*",
+      "**/expo-*/**",
+      "**/react-native",
+      "**/react-native/**",
+      "**/react-native-*",
+      "**/react-native-*/**",
+      "**/nativewind",
+      "**/nativewind/**"
     ]
   },
   "resolutions": {
