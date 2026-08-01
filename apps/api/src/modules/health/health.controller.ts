@@ -10,6 +10,15 @@ export class HealthController {
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
   ) {}
 
+  @Get('liveness')
+  getLiveness() {
+    return {
+      status: 'UP',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    };
+  }
+
   @Get()
   async getHealth(@Res() res: express.Response) {
     const healthcheck = {

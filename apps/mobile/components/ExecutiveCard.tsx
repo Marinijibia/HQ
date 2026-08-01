@@ -11,11 +11,13 @@ interface ExecutiveProps {
 }
 
 export function ExecutiveCard({ name, role, status, confidence, onSelect }: ExecutiveProps) {
-  const statusColors = {
-    active: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-    idle: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-    busy: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+  const statusBadgeStyle = {
+    active: { bg: "bg-emerald-500/20 border-emerald-500/30", text: "text-emerald-400" },
+    idle: { bg: "bg-amber-500/20 border-amber-500/30", text: "text-amber-400" },
+    busy: { bg: "bg-cyan-500/20 border-cyan-500/30", text: "text-cyan-400" },
   };
+
+  const style = statusBadgeStyle[status];
 
   return (
     <TouchableOpacity
@@ -33,8 +35,8 @@ export function ExecutiveCard({ name, role, status, confidence, onSelect }: Exec
             <Text className="text-xs text-gray-400 font-medium">{role}</Text>
           </View>
         </View>
-        <View className={`px-2.5 py-1 rounded-full border ${statusColors[status]}`}>
-          <Text className="text-xs font-semibold uppercase tracking-wider">{status}</Text>
+        <View className={`px-2.5 py-1 rounded-full border ${style.bg}`}>
+          <Text className={`text-xs font-semibold uppercase tracking-wider ${style.text}`}>{status}</Text>
         </View>
       </View>
 

@@ -32,23 +32,27 @@ export class AuthGuard implements CanActivate {
     try {
       const payload = await this.firebaseService.verifyIdToken(token);
       
-      // If claims do not have companyId or role, resolve them from PostgreSQL
-      if (!payload.companyId || !payload.role) {
-        const user = await this.userRepository.findById(payload.uid);
-        if (user) {
-          payload.companyId = user.companyId || payload.companyId;
-          payload.role = user.role || payload.role;
-        } else {
-          const defaultCompany = await this.userRepository.findDefaultCompany();
-          if (defaultCompany) {
-            payload.companyId = defaultCompany.id;
-          }
+      const user = await this.userRepository.findById(payload.uid);
+      if (user) {
+        if (user.deletedAt) {
+          this.logger.warn(`Rejected request from soft-deleted user ${user.id}`);
+          throw new UnauthorizedException('User account has been deactivated');
+        }
+        payload.companyId = user.companyId || payload.companyId;
+        payload.role = user.role || payload.role;
+      } else {
+        const defaultCompany = await this.userRepository.findDefaultCompany();
+        if (defaultCompany) {
+          payload.companyId = defaultCompany.id;
         }
       }
 
       request.user = payload;
       return true;
     } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
       this.logger.warn(
         `Token verification failed: ${(error as Error).message}`,
       );

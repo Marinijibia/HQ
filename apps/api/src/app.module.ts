@@ -31,6 +31,8 @@ import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
+import { EmailModule } from './modules/email/email.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -46,6 +48,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     }),
     EventEmitterModule.forRoot(),
     RedisModule,
+    EmailModule,
     AuthModule,
     DatabaseModule,
     HealthModule,

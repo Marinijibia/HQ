@@ -191,8 +191,15 @@ export default function AssetCenterPage() {
       });
 
       if (!uploadRes.ok) {
-        const errData = await uploadRes.json();
-        throw new Error(errData.message || 'Storage check failed');
+        let message = 'Storage check failed';
+        try {
+          const errData = await uploadRes.json();
+          message = errData.message || message;
+        } catch {
+          const text = await uploadRes.text();
+          message = text || uploadRes.statusText || message;
+        }
+        throw new Error(message);
       }
 
       setUploadProgress(50);

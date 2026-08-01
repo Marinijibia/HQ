@@ -1,8 +1,10 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
-// Load environment variables before NestFactory boots
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+// Load environment variables from apps/api/.env and cwd .env before NestFactory boots
+dotenv.config({ path: path.resolve(process.cwd(), 'apps/api/.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config();
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
@@ -14,6 +16,36 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
+
+  app.enableCors({
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) return callback(null, true);
+
+      const allowedDomains = [
+        'https://hq.netify.ng',
+        'https://admin.hq.netify.ng',
+        'https://api.hq.netify.ng',
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3002',
+        'http://127.0.0.1:5000',
+      ];
+
+      if (
+        allowedDomains.includes(origin) ||
+        /\.netify\.ng$/.test(origin) ||
+        /\.run\.app$/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -37,6 +69,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT || 5000;
+  await app.listen(port);
 }
 bootstrap();

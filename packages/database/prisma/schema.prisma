@@ -3,6 +3,7 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
+  binaryTargets   = ["native", "debian-openssl-3.0.x", "debian-openssl-1.1.x"]
 }
 
 datasource db {
@@ -161,6 +162,11 @@ model User {
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
   deletedAt       DateTime?        @map("deleted_at")
+  firebaseUid     String?          @unique @map("firebase_uid")
+  displayName     String?          @map("display_name")
+  photoUrl        String?          @map("photo_url")
+  lastLoginAt     DateTime?        @map("last_login_at")
+  emailVerified   Boolean          @default(false) @map("email_verified")
   createdBy       String?          @db.Uuid @map("created_by")
   updatedBy       String?          @db.Uuid @map("updated_by")
   deletedBy       String?          @db.Uuid @map("deleted_by")

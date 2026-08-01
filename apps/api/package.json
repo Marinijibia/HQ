@@ -9,7 +9,8 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "dev": "nest start --watch",
+    "dev": "nest build && node dist/main",
+    "watch": "nest start --watch",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
@@ -42,6 +43,7 @@
     "rxjs": "^7.8.1",
     "@hq/prompts": "1.0.0",
     "@hq/executives": "1.0.0",
+    "@hq/database": "*",
     "@google/generative-ai": "^0.21.0",
     "stripe": "^14.25.0"
   },

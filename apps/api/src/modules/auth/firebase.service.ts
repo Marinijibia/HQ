@@ -71,25 +71,26 @@ export class FirebaseService implements OnModuleInit {
     role: string;
     companyId: string;
   }> {
+    // Mock validation logic for local development
+    if (token === 'development_mock_token_owner' || token === 'mock_token_owner') {
+      return {
+        uid: stringToUuid('mock-owner-uid'),
+        email: 'owner@hq.dev',
+        role: 'ORGANIZATION_OWNER',
+        companyId: 'fc47c1d5-fe5c-452c-a88b-0c4d6970d254',
+      };
+    }
+    if (token.startsWith('mock_token_')) {
+      const role = token.replace('mock_token_', '').toUpperCase();
+      return {
+        uid: stringToUuid(`mock-uid-${role}`),
+        email: `${role.toLowerCase()}@hq.dev`,
+        role,
+        companyId: 'fc47c1d5-fe5c-452c-a88b-0c4d6970d254',
+      };
+    }
+
     if (!this.firebaseApp) {
-      // Mock validation logic for local development if credentials aren't present
-      if (token === 'development_mock_token_owner') {
-        return {
-          uid: stringToUuid('mock-owner-uid'),
-          email: 'owner@hq.dev',
-          role: 'ORGANIZATION_OWNER',
-          companyId: 'mock-company-uuid',
-        };
-      }
-      if (token.startsWith('mock_token_')) {
-        const role = token.replace('mock_token_', '').toUpperCase();
-        return {
-          uid: stringToUuid(`mock-uid-${role}`),
-          email: `${role.toLowerCase()}@hq.dev`,
-          role,
-          companyId: 'mock-company-uuid',
-        };
-      }
       throw new Error('Firebase SDK not initialized and invalid mock token');
     }
 
