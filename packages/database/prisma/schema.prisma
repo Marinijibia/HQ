@@ -21,6 +21,7 @@ model Company {
   name               String
   slug               String              @unique
   logoUrl            String?             @map("logo_url")
+  slogan             String?             @map("slogan")
   primaryColor       String?             @map("primary_color")
   secondaryColor     String?             @map("secondary_color")
   createdAt          DateTime            @default(now()) @map("created_at")

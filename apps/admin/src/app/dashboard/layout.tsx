@@ -102,8 +102,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Header logo */}
           <div className="h-16 px-6 border-b border-card-border flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="h-7 w-7 rounded-md bg-gradient-to-tr from-rose-600 to-rose-900 flex items-center justify-center font-bold text-white text-xs shadow-[0_0_15px_rgba(225,29,72,0.2)]">
-                HQ
+              <div className="p-[1.5px] bg-gradient-to-tr from-rose-600 to-rose-900 rounded-md shadow-[0_0_15px_rgba(225,29,72,0.2)]">
+                <img src="/logo.png" alt="HQ Admin Logo" className="h-7 w-7 rounded-md object-cover" />
               </div>
               <span className="font-black text-sm tracking-tight text-white">
                 Operations <span className="text-rose-500 text-[10px] font-bold">STAFF</span>

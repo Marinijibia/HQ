@@ -14,6 +14,7 @@ import {
   SendOtpDto,
   VerifyOtpDto,
   ForgotPasswordDto,
+  ResetPasswordDto,
 } from './dto/auth.dto';
 import { AuthGuard } from './auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -49,6 +50,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Send password reset link via Resend email' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset user password using token from email link' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
   }
 
   @Get('me')

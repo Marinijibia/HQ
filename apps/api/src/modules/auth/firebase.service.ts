@@ -115,4 +115,12 @@ export class FirebaseService implements OnModuleInit {
     }
     await admin.auth().setCustomUserClaims(uid, claims);
   }
+
+  async updateUserPassword(uid: string, newPassword: string) {
+    if (!this.firebaseApp) {
+      this.logger.log(`Mock: updating password for ${uid}`);
+      return;
+    }
+    await admin.auth().updateUser(uid, { password: newPassword });
+  }
 }

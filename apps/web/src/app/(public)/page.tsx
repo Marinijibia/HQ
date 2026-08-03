@@ -66,6 +66,17 @@ export default function LandingPage() {
               </Button>
             </Link>
           </div>
+
+          {/* Hero Headquarters Showcase Banner */}
+          <div className="pt-8 max-w-3xl mx-auto">
+            <div className="relative p-1.5 rounded-[2.5rem] bg-gradient-to-tr from-hq-blue/40 via-[#BF5AF2]/30 to-hq-cyan/40 border border-card-border shadow-[0_0_60px_rgba(10,132,255,0.3)] group transition-transform duration-500 hover:scale-[1.01]">
+              <img
+                src="/landing-hero.png"
+                alt="Headquarters — Plan. Execute. Achieve."
+                className="w-full rounded-[2.2rem] shadow-2xl object-cover"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

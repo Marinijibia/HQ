@@ -1,2 +1,16 @@
 @import "tailwindcss";
 @import "nativewind/theme";
+
+@theme {
+  --color-hq-blue: #0A84FF;
+  --color-hq-cyan: #30D158;
+  --color-hq-purple: #BF5AF2;
+  --color-hq-rose: #F43F5E;
+  --color-hq-graphite: #1C1C1E;
+  --color-hq-dark: #0A0A0C;
+  --color-hq-card: #161618;
+  --color-hq-border: rgba(255, 255, 255, 0.08);
+
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}

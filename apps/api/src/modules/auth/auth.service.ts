@@ -181,6 +181,40 @@ export class AuthService {
     };
   }
 
+  async resetPassword(token: string, newPassword: string) {
+    const redisKey = `pwd_reset:${token}`;
+    const email = await this.redis.get(redisKey);
+
+    if (!email) {
+      throw new BadRequestException('Invalid or expired password reset link');
+    }
+
+    await this.redis.del(redisKey);
+
+    const user = await this.userRepository.findByEmail(email);
+    if (user && user.firebaseUid) {
+      try {
+        await this.firebaseService.updateUserPassword(user.firebaseUid, newPassword);
+      } catch (e) {
+        this.logger.warn(`Failed updating Firebase Auth password for ${email}: ${(e as Error).message}`);
+      }
+    }
+
+    this.emailService
+      .sendSecurityAlertEmail(
+        email,
+        user?.displayName || 'HQ User',
+        'Password Reset Successful',
+        'Your HQ account password was updated successfully.',
+      )
+      .catch(() => {});
+
+    return {
+      success: true,
+      message: 'Password reset successfully',
+    };
+  }
+
   async getMe(userId: string) {
     const user = await this.userRepository.findById(userId);
     if (!user) {

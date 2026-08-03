@@ -112,6 +112,22 @@ export class EmailService {
     return this.sendRawEmail({ to, subject, html });
   }
 
+  async sendSecurityAlertEmail(
+    to: string,
+    name: string,
+    alertTitle: string,
+    alertDetails: string,
+  ): Promise<boolean> {
+    const timestamp = new Date().toUTCString();
+    const { subject, html } = getSecurityLoginNoticeEmailTemplate(
+      name,
+      alertTitle,
+      alertDetails,
+      timestamp,
+    );
+    return this.sendRawEmail({ to, subject, html });
+  }
+
   async sendTeamInvitation(
     to: string,
     name: string,

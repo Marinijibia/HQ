@@ -54,8 +54,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         <div className="max-w-7xl mx-auto px-6 sm:px-12 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2.5 group">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-hq-blue via-[#8B5CF6] to-hq-purple flex items-center justify-center font-extrabold text-white text-sm shadow-[0_0_15px_rgba(14,165,233,0.3)]">
-              HQ
+            <div className="p-[1.5px] bg-gradient-to-tr from-hq-blue via-[#8B5CF6] to-hq-purple rounded-xl shadow-[0_0_15px_rgba(14,165,233,0.3)]">
+              <img src="/logo.png" alt="HQ Logo" className="h-8 w-8 rounded-[10px] object-cover" />
             </div>
             <span className="font-extrabold tracking-tight text-[#1A1A1E] dark:text-white text-xl">
               HQ<span className="text-hq-cyan">.</span>

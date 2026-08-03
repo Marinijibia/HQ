@@ -2,27 +2,43 @@
 
 import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, Button, Badge, Avatar, Input } from '@hq/ui';
+import Link from 'next/link';
+import { Card, Button, Badge, Input } from '@hq/ui';
 import {
   ArrowLeft,
   Send,
   Zap,
-  CheckCircle,
+  CheckCircle2,
   FileText,
   Paperclip,
   Activity,
   ChevronRight,
   AlertTriangle,
+  Rocket,
+  Sparkles,
+  Cpu,
+  User,
+  Copy,
+  Pin,
+  ShieldCheck,
+  TrendingUp,
+  MessageSquare,
+  Search,
+  Plus,
+  Layers,
+  Clock,
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/auth-context';
-import { useGuideMode } from '../../../../contexts/guide-mode-context';
+import { toast } from '../../../../components/toast';
+import { FormattedMessage } from '../../../../components/formatted-message';
 
 interface Message {
   id: string;
   senderId: string;
   senderType: 'USER' | 'EXECUTIVE';
   content: string;
-  timestamp: string;
+  timestamp?: string;
+  createdAt?: string;
 }
 
 interface Executive {
@@ -30,110 +46,119 @@ interface Executive {
   name: string;
   roleKey: string;
   title: string;
-  avatarUrl?: string;
 }
 
-interface Conversation {
+interface ConversationItem {
   id: string;
   title: string;
+  createdAt: string;
   isPinned: boolean;
   isArchived: boolean;
   missionId?: string | null;
+}
+
+interface MissionItem {
+  id: string;
+  objective: string;
+  status: 'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+  createdAt: string;
+}
+
+interface ConversationDetail extends ConversationItem {
   messages: Message[];
 }
 
-export default function DiscussionWorkspacePage() {
+export default function DiscussionThreadWorkspacePage() {
   const { id } = useParams();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const router = useRouter();
 
-  const { guideModeEnabled, ftxStep, setFtxStep } = useGuideMode();
-  const [showReasonerModal, setShowReasonerModal] = React.useState(false);
-  const [checklist, setChecklist] = React.useState<boolean[]>([false, false, false, false, false, false]);
-
-  const [conversation, setConversation] = React.useState<Conversation | null>(null);
+  const [conversation, setConversation] = React.useState<ConversationDetail | null>(null);
   const [executives, setExecutives] = React.useState<Executive[]>([]);
-  const [mission, setMission] = React.useState<any | null>(null);
   const [loading, setLoading] = React.useState(true);
 
-  // Input state
+  // Left Sidebar States (Discussions & Missions lists)
+  const [allConversations, setAllConversations] = React.useState<ConversationItem[]>([]);
+  const [allMissions, setAllMissions] = React.useState<MissionItem[]>([]);
+  const [sidebarTab, setSidebarTab] = React.useState<'discussions' | 'missions'>('discussions');
+  const [sidebarSearch, setSidebarSearch] = React.useState('');
+
+  // Message Input & Deliberation state
   const [content, setContent] = React.useState('');
   const [sending, setSending] = React.useState(false);
   const [isDeliberating, setIsDeliberating] = React.useState(false);
-  const [streamingMessageId, setStreamingMessageId] = React.useState<string | null>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages, isDeliberating]);
 
-  // Custom onboarding data
-  const [ceoName, setCeoName] = React.useState('Elena Rostova');
-  const [brandColor, setBrandColor] = React.useState('#0A84FF');
+  const fetchSidebarLists = React.useCallback(async () => {
+    if (!token) return;
+    try {
+      const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+      const [convRes, missRes] = await Promise.all([
+        fetch('/api/conversations?isArchived=false', { headers }),
+        fetch('/api/missions', { headers }),
+      ]);
 
-  React.useEffect(() => {
-    // Read onboarding draft
-    const draftStr = localStorage.getItem('hq_onboarding_draft');
-    if (draftStr) {
-      try {
-        const draft = JSON.parse(draftStr);
-        if (draft.ceoName) setCeoName(draft.ceoName);
-        if (draft.brandColor) setBrandColor(draft.brandColor);
-      } catch (e) {
-        console.warn('Error reading onboarding draft:', e);
+      if (convRes.ok) {
+        const convData = await convRes.json();
+        setAllConversations(Array.isArray(convData) ? convData : []);
       }
+      if (missRes.ok) {
+        const missData = await missRes.json();
+        setAllMissions(Array.isArray(missData) ? missData : []);
+      }
+    } catch (e) {
+      console.error('Error fetching sidebar lists:', e);
     }
-  }, []);
+  }, [token]);
 
-  const fetchDiscussionData = React.useCallback(async () => {
+  const fetchThreadData = React.useCallback(async () => {
     if (!token || !id) return;
     try {
       const headers: Record<string, string> = {
         Authorization: `Bearer ${token}`,
       };
-      // Fetch Executives list to map avatars/names
       const execRes = await fetch('/api/executives', { headers });
       if (execRes.ok) {
         const execsData = await execRes.json();
         setExecutives(execsData);
       }
 
-      // Fetch specific conversation
       const convRes = await fetch(`/api/conversations/${id}`, { headers });
       if (convRes.ok) {
         const convData = await convRes.json();
         setConversation(convData);
-
-        if (convData.missionId) {
-          const missionRes = await fetch(`/api/missions/${convData.missionId}`, { headers });
-          if (missionRes.ok) {
-            const missionData = await missionRes.json();
-            setMission(missionData);
-          }
-        } else {
-          setMission(null);
-        }
       }
     } catch (e) {
-      console.error('Error fetching boardroom discussion details:', e);
+      console.error('Error fetching boardroom thread details:', e);
     } finally {
       setLoading(false);
     }
   }, [token, id]);
 
   React.useEffect(() => {
-    if (token && id) {
-      fetchDiscussionData();
+    if (token) {
+      fetchSidebarLists();
     }
-  }, [token, id, fetchDiscussionData]);
+  }, [token, fetchSidebarLists]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!content.trim() || !token || !id) return;
+  React.useEffect(() => {
+    if (token && id) {
+      fetchThreadData();
+    }
+  }, [token, id, fetchThreadData]);
 
-    const messageText = content;
-    setContent('');
+  const handleSendMessage = async (e?: React.FormEvent, customText?: string) => {
+    if (e) e.preventDefault();
+    const textToSend = customText || content;
+    if (!textToSend.trim() || !token || !id) return;
+
+    if (!customText) setContent('');
     setSending(true);
+    setIsDeliberating(true);
 
     try {
       const headers: Record<string, string> = {
@@ -141,503 +166,444 @@ export default function DiscussionWorkspacePage() {
         Authorization: `Bearer ${token}`,
       };
 
-      // Pessimistic/Optimistic add message logic
       const res = await fetch(`/api/conversations/${id}/messages`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ content: messageText }),
+        body: JSON.stringify({ content: textToSend }),
       });
 
-      if (res.ok) {
-        setIsDeliberating(true);
-        await new Promise((r) => setTimeout(r, 1800));
-        await fetchDiscussionData();
-        // Mark the latest executive message for typewriter reveal
-        setStreamingMessageId('latest');
-        setTimeout(() => setStreamingMessageId(null), 4000);
+      if (!res.ok) {
+        throw new Error('Failed to dispatch directive');
       }
+
+      toast.info('⚡ Gemini AI Executive Agents deliberating query...');
+      await fetchThreadData();
+      await fetchSidebarLists();
     } catch (err) {
-      console.error('Failed sending chat message:', err);
+      toast.error(err instanceof Error ? err.message : 'Error sending message');
     } finally {
       setSending(false);
       setIsDeliberating(false);
     }
   };
 
-  const handleQuickPillClick = (pillText: string) => {
-    setContent(pillText);
-  };
-
   const handleConvertToMission = async () => {
-    if (!token || !id) return;
-
-    if (guideModeEnabled && ftxStep === 'input') {
-      setShowReasonerModal(true);
-      setChecklist([false, false, false, false, false, false]);
-
-      let currentIdx = 0;
-      const interval = setInterval(() => {
-        setChecklist((prev) => {
-          const next = [...prev];
-          next[currentIdx] = true;
-          return next;
-        });
-        currentIdx += 1;
-
-        if (currentIdx >= 6) {
-          clearInterval(interval);
-          setTimeout(async () => {
-            try {
-              const headers: Record<string, string> = {
-                Authorization: `Bearer ${token}`,
-              };
-              const res = await fetch(`/api/conversations/${id}/convert-mission`, {
-                method: 'POST',
-                headers,
-              });
-              if (res.ok) {
-                const data = await res.json();
-                setFtxStep('executing');
-                setShowReasonerModal(false);
-                router.push(`/missions/${data.id}`);
-              } else {
-                setShowReasonerModal(false);
-              }
-            } catch (err) {
-              console.error('FTX Mission conversion failed:', err);
-              setShowReasonerModal(false);
-            }
-          }, 600);
-        }
-      }, 450);
-      return;
-    }
-
+    if (!conversation || !token) return;
     try {
-      const headers: Record<string, string> = {
-        Authorization: `Bearer ${token}`,
-      };
-      const res = await fetch(`/api/conversations/${id}/convert-mission`, {
+      const res = await fetch('/api/missions', {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          objective: conversation.title,
+        }),
       });
+
       if (res.ok) {
-        // Refresh to show orchestrated mission link
-        await fetchDiscussionData();
+        const mission = await res.json();
+        toast.success('🚀 Discussion Converted to Autonomous Mission Task!');
+        router.push(`/missions/${mission.id}`);
       }
-    } catch (err) {
-      console.error('Mission conversion failed:', err);
+    } catch {
+      toast.error('Failed to convert discussion to mission');
     }
   };
 
-  const getSenderDetails = (msg: Message) => {
-    if (msg.senderType === 'USER') {
+  const handleCopyMessage = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Text copied to clipboard!');
+  };
+
+  // Helper to map Executive sender info
+  const getExecutiveInfo = (senderId: string) => {
+    const found = executives.find((e) => e.id === senderId);
+    if (found) {
+      const rankTitle = found.name.includes('(') ? found.name : `${found.name} (${found.title})`;
       return {
-        name: 'Owner',
-        title: 'HQ Owner',
-        avatarFallback: 'OW',
-        isUser: true,
-      };
-    }
-    // Match specialist
-    const exec = executives.find((e) => e.id === msg.senderId || e.roleKey === 'ceo');
-    if (exec) {
-      // Overwrite CEO name if matched
-      const name = exec.roleKey === 'ceo' ? ceoName : exec.name;
-      return {
-        name,
-        title: exec.title,
-        avatarFallback: name.substring(0, 2).toUpperCase(),
-        isUser: false,
+        name: rankTitle,
+        title: found.title,
+        roleKey: found.roleKey,
       };
     }
     return {
-      name: ceoName,
+      name: 'Elena Rostova (Chief Executive Officer)',
       title: 'Chief Executive Officer (CEO)',
-      avatarFallback: 'CEO',
-      isUser: false,
+      roleKey: 'ceo',
     };
   };
 
+  const getRoleAccent = (roleKey: string) => {
+    switch (roleKey) {
+      case 'ceo':
+        return {
+          badge: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-300',
+          gradient: 'from-cyan-500 via-blue-600 to-purple-600',
+        };
+      case 'cto':
+        return {
+          badge: 'border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-300',
+          gradient: 'from-blue-600 via-cyan-500 to-indigo-600',
+        };
+      case 'cfo':
+        return {
+          badge: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
+          gradient: 'from-emerald-500 via-teal-600 to-cyan-500',
+        };
+      case 'cmo':
+        return {
+          badge: 'border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-300',
+          gradient: 'from-purple-600 via-pink-600 to-purple-500',
+        };
+      default:
+        return {
+          badge: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-300',
+          gradient: 'from-cyan-500 via-blue-600 to-purple-600',
+        };
+    }
+  };
+
+  const filteredSidebarConversations = allConversations.filter((c) =>
+    c.title.toLowerCase().includes(sidebarSearch.toLowerCase())
+  );
+
+  const filteredSidebarMissions = allMissions.filter((m) =>
+    m.objective.toLowerCase().includes(sidebarSearch.toLowerCase())
+  );
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white select-none">
+      <div className="flex h-[75vh] items-center justify-center bg-background select-none">
         <div className="flex flex-col items-center space-y-3">
-          <div className="h-8 w-8 rounded-full border-2 border-hq-cyan border-t-transparent animate-spin"></div>
-          <p className="text-xs text-foreground/50">Booting boardroom workspace...</p>
+          <div className="relative flex items-center justify-center">
+            <Cpu className="h-10 w-10 text-cyan-500 animate-spin" />
+            <div className="absolute inset-0 h-10 w-10 rounded-full border border-cyan-500/40 animate-ping" />
+          </div>
+          <p className="text-xs text-foreground/60 font-black tracking-wider uppercase">Opening Boardroom Command Lounge...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (!conversation) {
-    return (
-      <div className="p-8 text-center">
-        <h2 className="text-lg font-bold text-red-500">Boardroom discussion not found</h2>
-        <Button onClick={() => router.push('/discussions')} className="mt-4">
-          Back to Discussions
-        </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 select-none text-foreground pb-12">
-      {/* Back button and Pinned controls */}
-      <div className="flex items-center justify-between border-b border-card-border pb-4">
-        <div className="flex items-center space-x-3 text-left">
-          <button
-            onClick={() => router.push('/discussions')}
-            className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 text-foreground/60 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-xl font-extrabold text-[#1A1A1E] dark:text-white leading-tight">
-              {conversation.title || 'Boardroom Discussion'}
-            </h1>
-            <p className="text-[10px] text-foreground/50 mt-0.5 font-semibold uppercase tracking-wider">
-              Discussion Session
-            </p>
+    <div className="flex h-[calc(100vh-5.75rem)] -mx-8 -mt-8 -mb-8 w-[calc(100%+4rem)] select-none text-foreground bg-background overflow-hidden relative text-left">
+      {/* Ambient Background Glows */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* ========================================================================= */}
+      {/* LEFT SIDEBAR: Integrated Discussions & Autonomous Missions Navigator */}
+      {/* ========================================================================= */}
+      <div className="hidden md:flex flex-col w-80 border-r border-card-border bg-card/60 backdrop-blur-2xl flex-shrink-0 z-20">
+        {/* Sidebar Header & Start Discussion Button */}
+        <div className="p-4 border-b border-card-border space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black text-cyan-500 uppercase tracking-widest flex items-center gap-1.5">
+              <Layers className="h-3.5 w-3.5" /> BOARDROOM NAVIGATOR
+            </span>
+            <Button
+              onClick={() => router.push('/discussions')}
+              size="sm"
+              className="bg-cyan-500 hover:bg-cyan-400 text-black font-black text-[10px] h-7 px-2.5 rounded-lg flex items-center gap-1"
+            >
+              <Plus className="h-3 w-3 stroke-[3]" /> New
+            </Button>
+          </div>
+
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-foreground/40" />
+            <Input
+              placeholder="Search threads & missions..."
+              value={sidebarSearch}
+              onChange={(e) => setSidebarSearch(e.target.value)}
+              className="pl-9 bg-muted/40 border-card-border text-xs h-8 rounded-xl focus-visible:ring-cyan-500"
+            />
+          </div>
+
+          {/* Tab Switcher: Discussions / Missions */}
+          <div className="grid grid-cols-2 gap-1 p-1 bg-muted/50 rounded-xl border border-card-border">
+            <button
+              onClick={() => setSidebarTab('discussions')}
+              className={`py-1.5 rounded-lg text-[11px] font-black transition-all flex items-center justify-center gap-1.5 ${
+                sidebarTab === 'discussions'
+                  ? 'bg-card text-cyan-600 dark:text-cyan-300 shadow-sm border border-card-border'
+                  : 'text-foreground/50 hover:text-foreground'
+              }`}
+            >
+              <MessageSquare className="h-3 w-3" /> Threads ({allConversations.length})
+            </button>
+            <button
+              onClick={() => setSidebarTab('missions')}
+              className={`py-1.5 rounded-lg text-[11px] font-black transition-all flex items-center justify-center gap-1.5 ${
+                sidebarTab === 'missions'
+                  ? 'bg-card text-cyan-600 dark:text-cyan-300 shadow-sm border border-card-border'
+                  : 'text-foreground/50 hover:text-foreground'
+              }`}
+            >
+              <Rocket className="h-3 w-3" /> Missions ({allMissions.length})
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {conversation.isPinned && (
-            <Badge
-              variant="ai"
-              className="bg-hq-cyan/10 text-hq-cyan border-hq-cyan/30 text-[10px]"
-            >
-              Pinned
-            </Badge>
+        {/* Sidebar Item List */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
+          {sidebarTab === 'discussions' ? (
+            filteredSidebarConversations.length === 0 ? (
+              <div className="py-8 text-center text-xs text-foreground/50 font-medium">No threads found</div>
+            ) : (
+              filteredSidebarConversations.map((c) => {
+                const isActive = c.id === id;
+                return (
+                  <div
+                    key={c.id}
+                    onClick={() => router.push(`/discussions/${c.id}`)}
+                    className={`p-3 rounded-xl border cursor-pointer transition-all space-y-1 ${
+                      isActive
+                        ? 'bg-cyan-500/15 border-cyan-500/50 text-foreground font-black shadow-sm'
+                        : 'bg-card/40 border-card-border hover:border-cyan-500/30 text-foreground/75 hover:text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-[10px] font-bold">
+                      <span className="text-cyan-500 uppercase tracking-wider flex items-center gap-1">
+                        <MessageSquare className="h-3 w-3" /> Thread
+                      </span>
+                      <span className="text-foreground/40">{new Date(c.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="text-xs font-bold truncate">{c.title}</div>
+                  </div>
+                );
+              })
+            )
+          ) : filteredSidebarMissions.length === 0 ? (
+            <div className="py-8 text-center text-xs text-foreground/50 font-medium">No active missions found</div>
+          ) : (
+            filteredSidebarMissions.map((m) => (
+              <div
+                key={m.id}
+                onClick={() => router.push(`/missions/${m.id}`)}
+                className="p-3 rounded-xl border border-card-border bg-card/40 hover:border-cyan-500/40 cursor-pointer transition-all space-y-1 text-left"
+              >
+                <div className="flex items-center justify-between text-[10px]">
+                  <Badge variant="outline" className="border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 text-[9px] font-black px-1.5 py-0">
+                    {m.status}
+                  </Badge>
+                  <span className="text-foreground/40">{new Date(m.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="text-xs font-bold truncate text-foreground">{m.objective}</div>
+              </div>
+            ))
           )}
-          {conversation.missionId && (
-            <Badge variant="success" className="text-[10px]">
-              Mission Active
-            </Badge>
-          )}
+        </div>
+
+        {/* Sidebar Bottom Executive Status Footer */}
+        <div className="p-3 border-t border-card-border bg-black/[0.02] dark:bg-white/[0.02] space-y-2 mt-auto">
+          <div className="flex items-center justify-between text-[10px] font-black uppercase text-foreground/50">
+            <span>Executive Board System</span>
+            <span className="text-emerald-500 font-mono flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" /> 100% ONLINE
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs font-bold text-foreground">
+            <span className="flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-cyan-500" /> Gemini Multi-Agent</span>
+            <Badge variant="outline" className="text-[9px] border-cyan-500/30 text-cyan-500 bg-cyan-500/10">Active</Badge>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-4 items-start">
-        {/* Chat Timeline (Main panel) */}
-        <div className="lg:col-span-3 flex flex-col h-[650px] border border-card-border bg-card-bg shadow-[var(--card-shadow)] rounded-2xl overflow-hidden justify-between">
-          {/* Active Participants Header bar */}
-          <div className="border-b border-card-border p-3.5 bg-[#F9F9FB] dark:bg-[#0A0A0C] flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-bold text-foreground/50 uppercase tracking-widest block">
-                Active Participants:
-              </span>
-              <div className="flex -space-x-1.5 overflow-hidden">
-                <Avatar fallback="CEO" variant="executive" size="sm" />
-                <Avatar fallback="ST" variant="executive" size="sm" />
-                <Avatar fallback="TE" size="sm" />
-              </div>
-            </div>
+      {/* ========================================================================= */}
+      {/* RIGHT MAIN CHAT LOUNGE WORKSPACE */}
+      {/* ========================================================================= */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+        {/* Sticky Top Header Bar */}
+        <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between border-b border-card-border px-6 py-3.5 bg-card/90 backdrop-blur-2xl shadow-sm gap-4">
+          <div className="flex items-center space-x-3.5">
+            <Link
+              href="/discussions"
+              className="md:hidden text-xs text-foreground/60 hover:text-foreground flex items-center gap-1.5 font-extrabold transition-colors px-2.5 py-1 rounded-lg hover:bg-muted"
+            >
+              <ArrowLeft className="h-4 w-4 text-cyan-500" />
+              <span>Back</span>
+            </Link>
 
-            <div className="flex items-center gap-1.5 text-[10px] text-foreground/60 font-semibold">
-              <Activity className="h-3.5 w-3.5 text-hq-purple animate-pulse" />
-              <span>Deliberating strategy path</span>
+            <div className="flex items-center gap-2 max-w-md">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
+              <h2 className="text-sm sm:text-base font-black text-foreground truncate tracking-tight">
+                {conversation?.title || 'Boardroom Thread'}
+              </h2>
             </div>
           </div>
 
-          {/* Messages History */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4">
-            {conversation.messages.map((msg, idx) => {
-              const sender = getSenderDetails(msg);
-              const isLatestExec =
-                streamingMessageId === 'latest' &&
-                msg.senderType === 'EXECUTIVE' &&
-                idx === conversation.messages.length - 1;
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex gap-3 text-left max-w-[85%] ${
-                    sender.isUser ? 'ml-auto flex-row-reverse' : ''
-                  } ${isLatestExec ? 'animate-in fade-in slide-in-from-bottom-2 duration-500' : ''}`}
-                >
-                  <Avatar
-                    fallback={sender.avatarFallback}
-                    variant={sender.isUser ? 'user' : 'executive'}
-                    size="md"
-                  />
-                  <div className="space-y-1">
-                    <div
-                      className={`flex items-baseline gap-2 ${sender.isUser ? 'justify-end' : ''}`}
-                    >
-                      <span className="text-[11px] font-extrabold text-[#1A1A1E] dark:text-white">
-                        {sender.name}
-                      </span>
-                      <span className="text-[9px] text-foreground/45 font-semibold">
-                        {sender.title}
-                      </span>
-                    </div>
-                    <div
-                      className={`p-3.5 rounded-2xl text-xs font-medium leading-relaxed ${
-                        sender.isUser
-                          ? 'bg-hq-blue/10 border border-hq-blue/25 text-foreground'
-                          : 'bg-black/5 dark:bg-[#1E1E24]/30 border border-card-border text-foreground'
-                      }`}
-                    >
-                      {msg.content}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            {/* Typewriter scroll anchor */}
-            <div ref={messagesEndRef} />
-
-            {isDeliberating && (
-              <div className="flex gap-3 text-left max-w-[85%]">
-                <Avatar fallback="CEO" variant="executive" size="md" />
-                <div className="space-y-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-[11px] font-extrabold text-[#1A1A1E] dark:text-white">
-                      {ceoName}
-                    </span>
-                    <span className="text-[9px] text-hq-purple font-semibold animate-pulse">
-                      thinking…
-                    </span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-black/5 dark:bg-[#1E1E24]/30 border border-hq-purple/20 flex items-center gap-2">
-                    {[0, 150, 300].map((delay) => (
-                      <span
-                        key={delay}
-                        className="h-2 w-2 rounded-full bg-hq-purple animate-bounce"
-                        style={{ animationDelay: `${delay}ms` }}
-                      />
-                    ))}
-                    <span className="text-[10px] text-hq-purple/70 font-semibold ml-1">Consulting the boardroom…</span>
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="flex items-center gap-2.5">
+            <Button
+              onClick={handleConvertToMission}
+              className="bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-black text-xs h-9 px-4 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.35)] transition-all flex items-center gap-2"
+            >
+              <Rocket className="h-3.5 w-3.5 stroke-[2.5]" />
+              <span>Convert to Mission</span>
+            </Button>
           </div>
+        </div>
 
-          {/* Form & suggested action pills */}
-          <div className="p-4 border-t border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] shrink-0 flex flex-col gap-2.5">
-            {/* Context query pills */}
+        {/* Active Board Presence Bar */}
+        <div className="flex items-center justify-between px-6 py-2 bg-black/[0.02] dark:bg-white/[0.02] border-b border-card-border text-xs z-10">
+          <div className="flex items-center gap-2.5 overflow-x-auto py-0.5">
+            <span className="text-[10px] font-black uppercase text-cyan-600 dark:text-cyan-400 tracking-widest flex items-center gap-1.5 flex-shrink-0">
+              <ShieldCheck className="h-3.5 w-3.5 text-cyan-500" />
+              Active Board:
+            </span>
+
             <div className="flex flex-wrap gap-1.5">
               {[
-                'Outline B2B logistics risks',
-                'Verify database schema types',
-                'Calculate capital allocation budget',
-              ].map((pill) => (
-                <button
-                  key={pill}
-                  type="button"
-                  onClick={() => handleQuickPillClick(pill)}
-                  className="px-2.5 py-0.5 rounded-lg border border-card-border bg-card-bg hover:bg-black/5 dark:hover:bg-white/5 text-[9px] font-bold text-foreground/60 transition-all"
-                >
-                  + {pill}
-                </button>
-              ))}
+                { name: 'Elena Rostova (Chief Executive Officer)', role: 'ceo' },
+                { name: 'Marcus Vance (Chief Technology Officer)', role: 'cto' },
+                { name: 'Arthur Pendelton (Chief Financial Officer)', role: 'cfo' },
+              ].map((lead) => {
+                const accent = getRoleAccent(lead.role);
+                return (
+                  <span
+                    key={lead.name}
+                    className={`px-2.5 py-0.5 rounded-full border text-[10px] font-extrabold flex items-center gap-1.5 shadow-sm transition-all hover:scale-105 cursor-default ${accent.badge}`}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                    {lead.name}
+                  </span>
+                );
+              })}
             </div>
-
-            <form onSubmit={handleSendMessage} className="flex gap-2 w-full">
-              <Input
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Ask Alistair or Elena for suggestions..."
-                disabled={sending}
-                className="bg-white dark:bg-black border-card-border text-xs flex-1 h-9"
-              />
-              <Button
-                type="submit"
-                disabled={sending || !content.trim()}
-                className="h-9 px-4 text-white flex items-center justify-center"
-                style={{ backgroundColor: brandColor }}
-              >
-                {sending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
-            </form>
           </div>
+
+          {isDeliberating && (
+            <span className="text-[11px] text-cyan-600 dark:text-cyan-300 font-black flex items-center gap-1.5 animate-pulse flex-shrink-0">
+              <Cpu className="h-3.5 w-3.5 text-cyan-500 animate-spin" />
+              Gemini Multi-Agent Deliberating...
+            </span>
+          )}
         </div>
 
-        {/* Action sidebar Panel */}
-        <div className="space-y-6">
-          {conversation.missionId && mission ? (
-            <Card className="border border-card-border bg-card-bg text-left p-4.5 space-y-4 shadow-[var(--card-shadow)]">
-              <div>
-                <span className="text-[10px] text-hq-cyan font-bold uppercase tracking-wider block">
-                  Active Mission Dashboard
-                </span>
-                <h4 className="text-xs font-bold text-white mt-1 leading-snug truncate">
-                  {mission.objective}
-                </h4>
+        {/* Scrollable Chat Thread Message Feed */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-8 space-y-6 max-w-5xl mx-auto w-full z-10">
+          {/* Executive Deliberation Context Banner */}
+          <div className="p-4 rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 via-blue-500/5 to-purple-500/10 backdrop-blur-xl flex items-center justify-between shadow-sm text-left">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-black flex-shrink-0">
+                <ShieldCheck className="h-5 w-5 text-cyan-500" />
               </div>
+              <div>
+                <h4 className="text-xs font-black text-foreground uppercase tracking-wider">Executive Multi-Agent Lounge Active</h4>
+                <p className="text-[11px] text-foreground/60 font-medium">Directives are evaluated by CEO, CTO, CFO, CMO & CRO in real-time with automated mission execution.</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="hidden sm:flex border-cyan-500/30 text-cyan-500 bg-cyan-500/10 text-[10px] font-bold">
+              Gemini Powered
+            </Badge>
+          </div>
+          {conversation?.messages.map((msg) => {
+            const isUser = msg.senderType === 'USER';
+            const execInfo = !isUser ? getExecutiveInfo(msg.senderId) : null;
+            const accent = execInfo ? getRoleAccent(execInfo.roleKey) : getRoleAccent('ceo');
 
-              {/* Progress bar */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[10px] font-bold text-foreground/45">
-                  <span>Task Execution Progress</span>
-                  <span>
-                    {Math.round(
-                      ((mission.tasks?.filter((t: any) => t.status === 'COMPLETED').length || 0) /
-                        (mission.tasks?.length || 1)) *
-                        100
-                    )}%
-                  </span>
+            return (
+              <div
+                key={msg.id}
+                className={`flex items-start gap-3.5 group ${isUser ? 'flex-row-reverse' : ''}`}
+              >
+                {/* Executive Avatar Ring */}
+                <div
+                  className={`h-10 w-10 rounded-2xl flex items-center justify-center flex-shrink-0 font-black text-xs shadow-md transition-transform group-hover:scale-105 p-[2px] bg-gradient-to-tr ${
+                    isUser
+                      ? 'from-cyan-500 to-blue-600 text-white'
+                      : accent.gradient
+                  }`}
+                >
+                  <div className="h-full w-full bg-white dark:bg-slate-900 rounded-[14px] flex items-center justify-center text-cyan-600 dark:text-cyan-300">
+                    {isUser ? <User className="h-4 w-4 text-cyan-600 dark:text-cyan-300" /> : <Sparkles className="h-4 w-4 text-cyan-600 dark:text-cyan-300" />}
+                  </div>
                 </div>
-                <div className="h-1.5 w-full bg-[#0A0A0C] rounded-full overflow-hidden">
+
+                {/* Message Content Box */}
+                <div className={`space-y-1.5 max-w-3xl ${isUser ? 'text-right' : 'text-left'}`}>
+                  <div className="flex items-center justify-between gap-2 px-1">
+                    <span className={`text-[11px] font-black uppercase tracking-wider ${isUser ? 'text-cyan-600 dark:text-cyan-400' : 'text-purple-600 dark:text-purple-300'}`}>
+                      {isUser ? user?.email?.split('@')[0] || 'Workspace Owner' : execInfo?.name}
+                    </span>
+
+                    <button
+                      onClick={() => handleCopyMessage(msg.content)}
+                      className="text-foreground/30 hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                      title="Copy Text"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                  </div>
+
                   <div
-                    className="h-full bg-hq-cyan rounded-full transition-all duration-500"
-                    style={{
-                      width: `${
-                        ((mission.tasks?.filter((t: any) => t.status === 'COMPLETED').length || 0) /
-                          (mission.tasks?.length || 1)) *
-                        100
-                      }%`,
-                    }}
-                  />
+                    className={`p-4 sm:p-5 rounded-2xl text-xs sm:text-sm leading-relaxed border transition-all ${
+                      isUser
+                        ? 'bg-cyan-500/10 dark:bg-cyan-500/15 border-cyan-500/30 text-slate-900 dark:text-foreground rounded-tr-none shadow-sm'
+                        : 'bg-white dark:bg-card/90 backdrop-blur-2xl border-slate-200 dark:border-card-border text-slate-900 dark:text-foreground rounded-tl-none shadow-md hover:border-cyan-500/30'
+                    }`}
+                  >
+                    <FormattedMessage content={msg.content} />
+                  </div>
                 </div>
               </div>
+            );
+          })}
 
-              {/* Dynamic WBS list */}
-              <div className="space-y-2.5 pt-2 border-t border-card-border/40">
-                <span className="text-[9px] text-foreground/40 font-bold uppercase tracking-wider block">
-                  Work Breakdown Tasks
-                </span>
-                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                  {mission.tasks?.map((t: any, idx: number) => {
-                    const isCompleted = t.status === 'COMPLETED';
-                    const isRunning = t.status === 'RUNNING';
-                    const isFailed = t.status === 'FAILED';
-
-                    return (
-                      <div
-                        key={idx}
-                        className="flex items-start gap-2.5 p-2 rounded-lg bg-[#F9F9FB] dark:bg-[#0A0A0C]/30 border border-card-border/30 text-[11px] font-semibold"
-                      >
-                        <span className="mt-0.5 shrink-0">
-                          {isCompleted && <CheckCircle className="h-3.5 w-3.5 text-hq-cyan" />}
-                          {isRunning && <Activity className="h-3.5 w-3.5 text-hq-purple animate-spin" />}
-                          {isFailed && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
-                          {t.status === 'PENDING' && <span className="h-2.5 w-2.5 rounded-full bg-foreground/20 block m-0.5" />}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="text-white font-bold truncate">{t.name}</div>
-                          <div className="text-[9.5px] text-foreground/45 mt-0.5 leading-relaxed">
-                            {t.description}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </Card>
-          ) : (
-            <Card className="border border-card-border bg-card-bg text-left p-4.5 space-y-3 shadow-[var(--card-shadow)]">
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/50">
-                  Orchestrate Campaign
-                </h3>
-                <p className="text-[10px] text-foreground/60 mt-1 leading-relaxed">
-                  Convert this debate into a structured mission task queue managed by Arthur (Chief
-                  of Staff).
-                </p>
-              </div>
-              <Button
-                onClick={handleConvertToMission}
-                size="sm"
-                className="w-full text-[10px] font-bold text-white flex items-center justify-center gap-1.5 shadow-md"
-                style={{ backgroundColor: brandColor }}
-              >
-                <Zap className="h-3.5 w-3.5 animate-pulse" />
-                Approve & Launch Mission
-              </Button>
-            </Card>
+          {isDeliberating && (
+            <div className="flex items-center gap-3 text-xs text-cyan-600 dark:text-cyan-300 font-black py-3 px-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 animate-pulse text-left max-w-md">
+              <Cpu className="h-4 w-4 text-cyan-500 animate-spin" />
+              <span>AI Executive Board formulating multi-agent response...</span>
+            </div>
           )}
+          <div ref={messagesEndRef} />
+        </div>
 
-          {/* Discussion Actions Checklist */}
-          <Card className="border border-card-border bg-card-bg text-left p-4.5 space-y-4 shadow-[var(--card-shadow)]">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/50 border-b border-card-border pb-1.5">
-              Discussions Controls
-            </h3>
-            <div className="space-y-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full text-[10px] font-bold border-card-border flex justify-start items-center gap-1.5"
+        {/* ========================================================================= */}
+        {/* STICKY BOTTOM DIRECTIVE CONSOLE INPUT SECTION */}
+        {/* ========================================================================= */}
+        <div className="sticky bottom-0 z-20 border-t border-slate-200 dark:border-card-border bg-white/95 dark:bg-card/95 backdrop-blur-2xl p-4 sm:p-6 shadow-2xl max-w-5xl mx-auto w-full space-y-3">
+          {/* Quick Suggestion Chips */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-[11px] font-bold text-foreground/50">
+            <span className="flex-shrink-0 text-cyan-600 dark:text-cyan-400 uppercase tracking-widest font-black text-[10px]">Quick Directives:</span>
+            {[
+              'Audit security parameters & token rotation',
+              'Run financial margin & cost projection model',
+              'Optimize B2B growth campaign funnels',
+            ].map((chip) => (
+              <button
+                key={chip}
+                onClick={() => handleSendMessage(undefined, chip)}
+                disabled={sending}
+                className="px-3 py-1 rounded-full bg-slate-100 dark:bg-white/[0.04] hover:bg-cyan-500/15 border border-slate-200 dark:border-card-border hover:border-cyan-500/40 text-slate-700 dark:text-foreground/75 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all flex-shrink-0 text-[11px]"
               >
-                <CheckCircle className="h-4 w-4 text-emerald-500" />
-                Save Decisions to Knowledge
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full text-[10px] font-bold border-card-border flex justify-start items-center gap-1.5"
-              >
-                <FileText className="h-4 w-4 text-hq-purple" />
-                Export Meeting Summary
-              </Button>
-            </div>
-          </Card>
+                + {chip}
+              </button>
+            ))}
+          </div>
 
-          {/* Attachments Section */}
-          <Card className="border border-card-border bg-card-bg text-left p-4.5 space-y-4 shadow-[var(--card-shadow)]">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/50 border-b border-card-border pb-1.5 flex items-center justify-between">
-              <span>Attachments</span>
-              <Paperclip className="h-3.5 w-3.5 text-foreground/45" />
-            </h3>
-            <div className="border-2 border-dashed border-card-border rounded-xl p-6 text-center hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors">
-              <p className="text-[10px] text-foreground/50 leading-snug">
-                Drag and drop briefing files here to analyze them.
-              </p>
-            </div>
-          </Card>
+          {/* Sticky Input Form */}
+          <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+            <Input
+              placeholder="Ask your AI Executive Board or provide new corporate directives..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              disabled={sending}
+              className="bg-white dark:bg-white/[0.04] border-slate-300 dark:border-card-border text-slate-900 dark:text-foreground text-xs sm:text-sm h-12 rounded-xl focus-visible:ring-cyan-500 flex-1 placeholder:text-slate-400 dark:placeholder:text-foreground/40 font-medium"
+            />
+            <Button
+              type="submit"
+              disabled={sending || !content.trim()}
+              className="h-12 px-6 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-black text-xs rounded-xl shadow-[0_0_25px_rgba(6,182,212,0.35)] transition-all flex items-center gap-2 disabled:opacity-40"
+            >
+              {sending ? <Cpu className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 stroke-[2.5]" />}
+              <span>Send Directive</span>
+            </Button>
+          </form>
         </div>
       </div>
-      {showReasonerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-2xl border border-hq-blue/30 bg-[#0B0B0E] p-8 text-center shadow-2xl relative space-y-6">
-            <div className="space-y-2">
-              <div className="h-10 w-10 rounded-full border-2 border-t-hq-blue border-card-border/30 animate-spin mx-auto mb-4" />
-              <h2 className="text-xl font-bold tracking-tight text-white text-center">CEO Analyzing boardroom outcome...</h2>
-              <p className="text-xs text-foreground/50 text-center">
-                Elena is mapping structural components and compiling mission guidelines.
-              </p>
-            </div>
-
-            <div className="w-full bg-black/20 dark:bg-white/5 border border-card-border rounded-xl p-5 grid grid-cols-2 gap-4 text-xs font-semibold text-left">
-              {[
-                { label: 'Business Type', checked: checklist[0] },
-                { label: 'Goal Alignment', checked: checklist[1] },
-                { label: 'Timeline Estimator', checked: checklist[2] },
-                { label: 'Required Departments', checked: checklist[3] },
-                { label: 'Risks Matrix', checked: checklist[4] },
-                { label: 'Deliverables Plan', checked: checklist[5] },
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-center space-x-2">
-                  <span
-                    className={`h-4 w-4 rounded-full border flex items-center justify-center transition-all ${item.checked ? 'border-hq-blue bg-hq-blue/10 text-hq-blue scale-105' : 'border-foreground/20 text-transparent'}`}
-                  >
-                    ✓
-                  </span>
-                  <span className={item.checked ? 'text-white' : 'text-foreground/40'}>
-                    {item.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
-}
-
-// Extra Lucide icon placeholder wrapper to avoid compiler failures
-function Loader2({ className }: { className?: string }) {
-  return <Activity className={`${className} animate-pulse`} />;
-}
-
-function RefreshCw({ className }: { className?: string }) {
-  return <Activity className={`${className} animate-spin`} />;
 }

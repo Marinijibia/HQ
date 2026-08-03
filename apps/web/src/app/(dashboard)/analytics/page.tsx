@@ -347,13 +347,13 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-8 select-none text-foreground pb-12">
       {/* Page Header */}
-      <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-4">
+      <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-4 text-left">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
-            <BarChart3 className="h-8 w-8 text-hq-blue" />
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <BarChart3 className="h-8 w-8 text-cyan-500" />
             Analytics & Recommendations
           </h1>
-          <p className="text-foreground/60 text-sm mt-1">
+          <p className="text-slate-600 dark:text-foreground/60 text-sm mt-1 font-medium">
             Executive-grade business intelligence with AI-driven briefings, RAG Knowledge Graph and strategic recommendations.
           </p>
         </div>
@@ -362,7 +362,7 @@ export default function AnalyticsPage() {
             onClick={fetchAnalytics}
             variant="outline"
             size="sm"
-            className="text-xs h-9 border-card-border font-bold gap-1.5"
+            className="text-xs h-9 border-slate-200 dark:border-card-border font-bold gap-1.5 text-slate-700 dark:text-foreground"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Refresh
@@ -371,8 +371,7 @@ export default function AnalyticsPage() {
             onClick={handleExport}
             size="sm"
             disabled={exporting}
-            className="text-xs h-9 text-white font-bold gap-1.5"
-            style={{ backgroundColor: brandColor }}
+            className="text-xs h-9 text-white font-bold gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
           >
             <Download className="h-3.5 w-3.5" />
             {exporting ? 'Compiling...' : 'Export Report'}
@@ -381,19 +380,19 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1.5 border-b border-card-border">
+      <div className="flex gap-1.5 border-b border-card-border overflow-x-auto no-scrollbar">
         {TABS.map((tab) => {
           const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all ${
-                activeTab === tab.id
-                  ? 'border-current text-white'
-                  : 'border-transparent text-foreground/55 hover:text-foreground'
+              className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-extrabold border-b-2 transition-all flex-shrink-0 ${
+                isActive
+                  ? 'border-cyan-500 text-cyan-600 dark:text-cyan-300'
+                  : 'border-transparent text-slate-600 dark:text-foreground/55 hover:text-slate-900 dark:hover:text-foreground'
               }`}
-              style={activeTab === tab.id ? { borderColor: brandColor, color: brandColor } : {}}
             >
               <Icon className="h-3.5 w-3.5" />
               {tab.label}

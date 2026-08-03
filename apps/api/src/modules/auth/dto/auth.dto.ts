@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEmail } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class FirebaseLoginDto {
@@ -47,4 +47,23 @@ export class ForgotPasswordDto {
   @IsEmail()
   @IsNotEmpty()
   email!: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({
+    description: 'Password reset token from email link',
+    example: 'abc123token',
+  })
+  @IsString()
+  @IsNotEmpty()
+  token!: string;
+
+  @ApiProperty({
+    description: 'New password (min 8 characters)',
+    example: 'NewSecurePassword123!',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  newPassword!: string;
 }

@@ -5,9 +5,10 @@ import { ConversationRepository } from './conversation.repository';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { ExecutiveModule } from '../executive/executive.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [AuthModule, DatabaseModule, ExecutiveModule],
+  imports: [AuthModule, DatabaseModule, ExecutiveModule, NotificationModule],
   controllers: [ConversationController],
   providers: [ConversationService, ConversationRepository],
   exports: [ConversationService, ConversationRepository],

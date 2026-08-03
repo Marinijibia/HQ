@@ -71,5 +71,6 @@ async function bootstrap() {
 
   const port = process.env.PORT || 5000;
   await app.listen(port);
+  console.log(`\n🚀 HQ API Backend successfully listening on http://localhost:${port}\n📖 Swagger API Documentation available at http://localhost:${port}/api/docs\n`);
 }
 bootstrap();

@@ -14,12 +14,15 @@ import { auth, googleProvider } from '../lib/firebase';
 interface AuthContextType {
   user: User | null;
   dbUser: any | null;
+  organization: any | null;
+  permissions: string[];
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
   token: string | null;
+  refetchUser: () => Promise<void>;
 }
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
@@ -27,88 +30,150 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [dbUser, setDbUser] = React.useState<any | null>(null);
+  const [organization, setOrganization] = React.useState<any | null>(null);
+  const [permissions, setPermissions] = React.useState<string[]>([]);
   const [token, setToken] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
+
+  const syncBackendSession = async (currentUser: User) => {
+    try {
+      const idToken = await currentUser.getIdToken(false);
+      setToken(idToken);
+
+      const res = await fetch('/api/auth/firebase', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setDbUser(data.user);
+        setOrganization(data.organization || null);
+        setPermissions(data.permissions || []);
+        
+        const ownerName = data.user?.displayName || currentUser.displayName || currentUser.email?.split('@')[0] || 'Executive';
+        const orgName = data.organization?.name || 'HQ Organization';
+
+        try {
+          const existingDraft = JSON.parse(localStorage.getItem('hq_onboarding_draft') || '{}');
+          localStorage.setItem(
+            'hq_onboarding_draft',
+            JSON.stringify({
+              ...existingDraft,
+              brandColor: data.organization?.brandColor || existingDraft.brandColor || '#06b6d4',
+              ownerName,
+              hqName: orgName,
+              orgName,
+            }),
+          );
+        } catch { /* ignore */ }
+      } else {
+        const meRes = await fetch('/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (meRes.ok) {
+          const meData = await meRes.json();
+          setDbUser(meData.user);
+          setOrganization(meData.organization || meData.company || null);
+          setPermissions(meData.permissions || []);
+
+          const ownerName = meData.user?.displayName || currentUser.displayName || currentUser.email?.split('@')[0] || 'Executive';
+          const orgName = meData.organization?.name || meData.company?.name || 'HQ Organization';
+
+          try {
+            const existingDraft = JSON.parse(localStorage.getItem('hq_onboarding_draft') || '{}');
+            localStorage.setItem(
+              'hq_onboarding_draft',
+              JSON.stringify({
+                ...existingDraft,
+                ownerName,
+                hqName: orgName,
+                orgName,
+              }),
+            );
+          } catch { /* ignore */ }
+        }
+      }
+    } catch (err) {
+      console.warn('Backend authentication sync warning:', err);
+    }
+  };
 
   React.useEffect(() => {
     const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        try {
-          // Get the ID token (without forcing refresh as the interceptor and interval will manage freshness)
-          const idToken = await currentUser.getIdToken(false);
-          setToken(idToken);
-          const res = await fetch('/api/users/me', {
-            headers: {
-              'Authorization': `Bearer ${idToken}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          if (res.ok) {
-            const dbUserData = await res.json();
-            setDbUser(dbUserData);
-            console.log('PostgreSQL User Profile Synced:', dbUserData);
-            const settingsRes = await fetch('/api/settings/org', {
-              headers: { 'Authorization': `Bearer ${idToken}` }
-            });
-            if (settingsRes.ok) {
-              const orgData = await settingsRes.json();
-              if (orgData && orgData.brandColor) {
-                localStorage.setItem('hq_onboarding_draft', JSON.stringify({
-                  brandColor: orgData.brandColor,
-                  ownerName: orgData.name || 'Acme Corporation'
-                }));
-              }
-            }
-          }
-        } catch (err) {
-          console.warn('Error lazy-syncing user profile with postgres backend:', err);
-        }
+        await syncBackendSession(currentUser);
       } else {
         setToken(null);
         setDbUser(null);
+        setOrganization(null);
+        setPermissions([]);
       }
       setLoading(false);
     });
 
-    // Global fetch interceptor to handle expired tokens and automatic relogin
     let originalFetch: typeof window.fetch | null = null;
     if (typeof window !== 'undefined') {
       originalFetch = window.fetch;
       window.fetch = async (input, init) => {
         let response = await originalFetch!(input, init);
-        
+
+        const urlString = typeof input === 'string' ? input : (input as any)?.url || '';
+        if (urlString.includes('/api/auth/') || urlString.includes('/organizations/onboard')) {
+          return response;
+        }
+
         if (response.status === 401) {
           const currentUser = auth.currentUser;
           if (currentUser) {
             try {
-              // Token expired, force refresh from Firebase
               const newToken = await currentUser.getIdToken(true);
               setToken(newToken);
-              
-              // Prepare retried request headers
+
               const headers = new Headers((init && init.headers) || {});
               headers.set('Authorization', `Bearer ${newToken}`);
-              
-              // Retry fetching the original request with the fresh token
+
               response = await originalFetch!(input, {
                 ...(init || {}),
                 headers,
               });
-              
+
               if (response.status === 401) {
-                // If it's still 401, redirect to login
                 await signOut(auth);
-                window.location.href = '/login';
+                if (
+                  typeof window !== 'undefined' &&
+                  !window.location.pathname.startsWith('/login') &&
+                  !window.location.pathname.startsWith('/onboarding')
+                ) {
+                  window.location.href = '/login';
+                }
               }
             } catch (refreshError) {
-              console.error('Fetch interceptor: failed refreshing token:', refreshError);
+              console.error('Token refresh interceptor error:', refreshError);
               await signOut(auth);
-              window.location.href = '/login';
+              if (
+                typeof window !== 'undefined' &&
+                !window.location.pathname.startsWith('/login') &&
+                !window.location.pathname.startsWith('/onboarding')
+              ) {
+                window.location.href = '/login';
+              }
             }
           } else {
-            // Not authenticated, redirect to login page if we are not already on it
-            if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
+            if (
+              typeof window !== 'undefined' &&
+              !window.location.pathname.startsWith('/login') &&
+              !window.location.pathname.startsWith('/onboarding') &&
+              !window.location.pathname.startsWith('/forgot-password') &&
+              !window.location.pathname.startsWith('/reset-password')
+            ) {
               window.location.href = '/login';
             }
           }
@@ -117,14 +182,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
     }
 
-    // Refresh token every 10 minutes to keep it active
     const tokenRefreshInterval = setInterval(async () => {
       if (auth.currentUser) {
         try {
           const freshToken = await auth.currentUser.getIdToken(false);
           setToken(freshToken);
         } catch (e) {
-          console.warn('Interval refresh: token update failed:', e);
+          console.warn('Interval refresh: token update warning:', e);
         }
       }
     }, 10 * 60 * 1000);
@@ -138,12 +202,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const refetchUser = async () => {
+    if (auth.currentUser) {
+      await syncBackendSession(auth.currentUser);
+    }
+  };
+
   const signInWithGoogle = async () => {
     setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
-      console.error('Firebase Auth sign in failed:', error);
+      console.error('Firebase Google sign in error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -155,7 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await signInWithEmailAndPassword(auth, email, pass);
     } catch (error) {
-      console.error('Firebase Auth sign in with email failed:', error);
+      console.error('Firebase Email sign in error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -167,7 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await createUserWithEmailAndPassword(auth, email, pass);
     } catch (error) {
-      console.error('Firebase Auth sign up with email failed:', error);
+      console.error('Firebase Email sign up error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -178,8 +248,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       await signOut(auth);
+      await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     } catch (error) {
-      console.error('Firebase Auth sign out failed:', error);
+      console.error('Sign out error:', error);
     } finally {
       setLoading(false);
     }
@@ -190,12 +261,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         dbUser,
+        organization,
+        permissions,
         loading,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
         logout,
         token,
+        refetchUser,
       }}
     >
       {children}

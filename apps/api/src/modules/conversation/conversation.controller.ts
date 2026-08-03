@@ -21,7 +21,13 @@ export class StartDiscussionDto {
 
   @IsArray()
   @IsOptional()
+  @IsString({ each: true })
   specialists?: string[];
+
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  specialistKeys?: string[];
 }
 
 export class SendMessageDto {
@@ -72,11 +78,12 @@ export class ConversationController {
     @Req() req: types.AuthenticatedRequest,
     @Body() dto: StartDiscussionDto,
   ) {
+    const keys = dto.specialistKeys || dto.specialists || [];
     return this.conversationService.startDiscussion(
       req.user.uid,
       req.user.companyId,
       dto.objective,
-      dto.specialists,
+      keys,
     );
   }
 
@@ -95,18 +102,6 @@ export class ConversationController {
       'USER',
       dto.content,
     );
-  }
-
-  @Post(':id/pin')
-  @ApiOperation({ summary: 'Toggle pin status of discussion' })
-  async togglePin(@Param('id') id: string) {
-    return this.conversationService.togglePin(id);
-  }
-
-  @Post(':id/archive')
-  @ApiOperation({ summary: 'Toggle archived status of discussion' })
-  async toggleArchive(@Param('id') id: string) {
-    return this.conversationService.toggleArchive(id);
   }
 
   @Post(':id/convert-mission')

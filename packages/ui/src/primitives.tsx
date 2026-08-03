@@ -18,6 +18,7 @@ const badgeVariants = cva(
         neutral: 'bg-hq-graphite text-foreground/80 border border-hq-graphite/40',
         ai: 'bg-hq-purple/20 text-hq-purple border border-hq-purple/30 shadow-level-5 animate-pulse',
         premium: 'bg-yellow-500 text-background font-bold shadow-md',
+        outline: 'border border-card-border bg-transparent text-foreground/80',
       },
     },
     defaultVariants: {

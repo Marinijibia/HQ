@@ -474,8 +474,8 @@ export default function AssetCenterPage() {
           )}
 
           {/* Search bar & Category filters */}
-          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-card-bg/60 border border-card-border p-3 rounded-2xl">
-            <div className="flex gap-1.5">
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-white dark:bg-card-bg/60 border border-slate-200 dark:border-card-border p-3 rounded-2xl shadow-sm">
+            <div className="flex flex-wrap gap-1.5">
               {[
                 { id: 'all', label: 'All Files' },
                 { id: 'document', label: 'Docs' },
@@ -487,12 +487,9 @@ export default function AssetCenterPage() {
                   onClick={() => setActiveCategory(category.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                     activeCategory === category.id
-                      ? 'text-white border-transparent'
-                      : 'bg-[#F9F9FB] dark:bg-[#0A0A0C] border-card-border text-foreground/70 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-cyan-500 text-white border-transparent'
+                      : 'bg-slate-100 dark:bg-[#0A0A0C] border-slate-200 dark:border-card-border text-slate-700 dark:text-foreground/70 hover:bg-slate-200 dark:hover:bg-white/5'
                   }`}
-                  style={{
-                    backgroundColor: activeCategory === category.id ? brandColor : undefined,
-                  }}
                 >
                   {category.label}
                 </button>
@@ -506,7 +503,7 @@ export default function AssetCenterPage() {
                 placeholder="Search ledger..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8.5 w-full rounded-full border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] pl-8.5 pr-4 text-xs text-foreground placeholder:text-foreground/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hq-blue/40 transition-all font-semibold"
+                className="h-8.5 w-full rounded-full border border-slate-300 dark:border-card-border bg-white dark:bg-[#0A0A0C] pl-8.5 pr-4 text-xs text-slate-900 dark:text-foreground placeholder:text-slate-400 dark:placeholder:text-foreground/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500 transition-all font-semibold"
               />
             </div>
           </div>
