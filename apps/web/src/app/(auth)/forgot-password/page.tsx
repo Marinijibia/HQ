@@ -14,6 +14,7 @@ import {
   Badge,
 } from '@hq/ui';
 import { Mail, ArrowLeft, CheckCircle2, ShieldAlert, Sparkles, ShieldCheck } from 'lucide-react';
+import { HQLogo } from '../../../components/hq-logo';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = React.useState('');
@@ -62,11 +63,7 @@ export default function ForgotPasswordPage() {
       {/* Header */}
       <header className="flex h-20 items-center justify-between border-b border-white/10 px-6 sm:px-12 bg-[#0A0B10]/60 backdrop-blur-2xl relative z-10">
         <div className="flex items-center space-x-3">
-          <div className="p-0.5 bg-gradient-to-tr from-cyan-500 via-blue-500 to-purple-600 rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-            <div className="bg-[#050508] p-1.5 rounded-[14px]">
-              <img src="/logo.png" alt="HQ Logo" className="h-6 w-6 object-cover rounded-lg" />
-            </div>
-          </div>
+          <HQLogo size={28} />
           <div className="flex flex-col">
             <span className="font-black tracking-tight text-white text-base flex items-center gap-2">
               HQ <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent text-xs font-bold uppercase tracking-widest">RECOVERY</span>

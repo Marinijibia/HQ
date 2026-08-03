@@ -14,6 +14,7 @@ import {
   Input,
   Badge,
 } from '@hq/ui';
+import { HQLogo } from '../../../components/hq-logo';
 import { ArrowLeft, CheckCircle2, ShieldAlert, KeyRound, Loader2, Sparkles, ShieldCheck } from 'lucide-react';
 
 function ResetPasswordForm() {
@@ -162,11 +163,7 @@ export default function ResetPasswordPage() {
       {/* Header */}
       <header className="flex h-20 items-center justify-between border-b border-white/10 px-6 sm:px-12 bg-[#0A0B10]/60 backdrop-blur-2xl relative z-10">
         <div className="flex items-center space-x-3">
-          <div className="p-0.5 bg-gradient-to-tr from-purple-500 via-pink-500 to-cyan-500 rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.3)]">
-            <div className="bg-[#050508] p-1.5 rounded-[14px]">
-              <img src="/logo.png" alt="HQ Logo" className="h-6 w-6 object-cover rounded-lg" />
-            </div>
-          </div>
+          <HQLogo size={28} />
           <div className="flex flex-col">
             <span className="font-black tracking-tight text-white text-base flex items-center gap-2">
               HQ <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent text-xs font-bold uppercase tracking-widest">SECURITY</span>

@@ -28,7 +28,8 @@ COPY --from=builder /app/out/yarn.lock ./yarn.lock
 # Configure official npm registry & install dependencies
 RUN yarn config set registry https://registry.npmjs.org/ \
     && yarn config set network-timeout 300000 \
-    && yarn install --prefer-offline --no-lockfile --ignore-engines
+    && yarn install --prefer-offline --no-lockfile --ignore-engines \
+    && yarn cache clean
 
 # Copy full pruned workspace source
 COPY --from=builder /app/out/full/ ./

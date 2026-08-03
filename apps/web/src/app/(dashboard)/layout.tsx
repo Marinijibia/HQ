@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/auth-context';
+import { HQLogo } from '../../components/hq-logo';
 import { useSidebarStore } from '@/stores/sidebarStore';
 import { useCommandPaletteStore } from '@/stores/commandPaletteStore';
 import { GuideModeProvider, useGuideMode } from '../../contexts/guide-mode-context';
@@ -200,9 +201,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
           {/* Logo & Brand Capsule */}
           <Link href="/dashboard" className="flex items-center space-x-2.5 group transition-transform hover:scale-[1.02]">
-            <div className="p-[2px] bg-gradient-to-tr from-cyan-500 via-blue-600 to-purple-600 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-              <img src="/logo.png" alt="HQ Logo" className="h-7 w-7 rounded-[10px] object-cover" />
-            </div>
+            <HQLogo size={28} />
             <div className="flex flex-col text-left">
               <span className="font-black tracking-tight text-foreground text-lg leading-none select-none">
                 HQ<span className="text-cyan-500 animate-pulse font-black">.</span>
@@ -411,9 +410,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             <div className="relative w-72 max-w-[80vw] bg-white dark:bg-[#070709] border-r border-card-border h-full flex flex-col p-5 shadow-2xl z-50 space-y-6 text-left">
               <div className="flex items-center justify-between pb-4 border-b border-card-border">
                 <div className="flex items-center space-x-2">
-                  <div className="p-1 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
-                    <img src="/logo.png" alt="HQ Logo" className="h-6 w-6 rounded-md object-cover" />
-                  </div>
+                  <HQLogo size={24} />
                   <span className="font-extrabold text-base text-foreground">HQ Command Center</span>
                 </div>
                 <button onClick={() => setMobileDrawerOpen(false)} className="p-1 text-foreground/40 hover:text-foreground">
