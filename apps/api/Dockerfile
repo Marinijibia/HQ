@@ -5,7 +5,7 @@ FROM node:22-bookworm-slim AS base
 
 WORKDIR /app
 
-RUN apt-get update \
+RUN apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false update \
     && apt-get install -y --no-install-recommends git openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -28,10 +28,11 @@ WORKDIR /app
 COPY --from=builder /app/out/json/ ./
 COPY --from=builder /app/out/yarn.lock ./yarn.lock
 
-# Configure official npm registry & install dependencies
+# Configure official npm registry, extend timeouts & limit concurrency for Docker networking stability
 RUN yarn config set registry https://registry.npmjs.org/ \
-    && yarn config set network-timeout 300000 \
-    && yarn install --prefer-offline --no-lockfile --ignore-engines \
+    && yarn config set network-timeout 600000 \
+    && yarn config set network-concurrency 1 \
+    && yarn install --frozen-lockfile --ignore-engines \
     && yarn cache clean
 
 COPY --from=builder /app/out/full/ ./
@@ -49,7 +50,7 @@ FROM node:22-bookworm-slim AS runner
 
 WORKDIR /app
 
-RUN apt-get update \
+RUN apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false update \
     && apt-get install -y --no-install-recommends openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 

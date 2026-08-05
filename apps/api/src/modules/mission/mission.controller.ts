@@ -14,6 +14,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { MissionRepository } from './mission.repository';
 import { CosService } from './cos.service';
 import { MoeService } from './moe.service';
+import { CeoOrchestratorService } from './ceo-orchestrator.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { EntitlementGuard } from '../auth/entitlement.guard';
@@ -37,6 +38,21 @@ export class CreateMissionDto {
   deadline?: string;
 }
 
+export class ScopeMissionPromptDto {
+  @IsString()
+  @IsNotEmpty()
+  message!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  companyId!: string;
+
+  @IsString()
+  @IsOptional()
+  mode?: 'CONVERSATION' | 'JOB_ASSIGNMENT';
+}
+
+
 export class UpdateMissionDto {
   @IsString()
   @IsOptional()
@@ -59,7 +75,16 @@ export class MissionController {
     private readonly missionRepository: MissionRepository,
     private readonly cosService: CosService,
     private readonly moeService: MoeService,
+    private readonly ceoOrchestrator: CeoOrchestratorService,
   ) {}
+
+  @Post('ceo/scope')
+  @ApiOperation({ summary: 'Scope mission objective with CEO Asad & check department feasibility' })
+  async scopeWithCeo(@Body() dto: ScopeMissionPromptDto) {
+    return this.ceoOrchestrator.scopeMission(dto.companyId, dto.message, dto.mode);
+  }
+
+
 
   @Post()
   @UseGuards(EntitlementGuard)

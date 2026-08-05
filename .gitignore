@@ -38,3 +38,7 @@ Thumbs.db
 /apps/api/uploads/
 /uploads/
 
+# Docker and cache files
+AppDataLocalDocker*
+DevCachenpm/
+*.vhdx

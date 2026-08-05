@@ -94,4 +94,30 @@ export class BillingController {
   async history(@Req() req: types.AuthenticatedRequest) {
     return this.billingService.getBillingHistory(req.user.companyId);
   }
+
+  @Get('circle/treasury')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'Retrieve Circle USDC Agentic Payments treasury status and ledger' })
+  async getCircleTreasury(@Req() req: types.AuthenticatedRequest) {
+    return this.billingService.getCircleAgenticTreasury(req.user.companyId);
+  }
+
+  @Post('circle/execute-payment')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Execute an autonomous Circle USDC Agentic payment' })
+  async executeCirclePayment(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() body: { amountUsdc: number; vendorName: string; serviceDescription: string; executiveRole?: string },
+  ) {
+    return this.billingService.executeAgenticUsdcPayment(
+      req.user.companyId,
+      body.amountUsdc,
+      body.vendorName,
+      body.serviceDescription,
+      body.executiveRole || 'Julian Vance (CFO)',
+    );
+  }
 }

@@ -232,3 +232,36 @@ export function getTeamInvitationEmailTemplate(
   `;
   return { subject, html: getBaseEmailLayout(subject, content) };
 }
+
+export function getTransactionReceiptEmailTemplate(
+  name: string,
+  amountFormatted: string,
+  gateway: string,
+  reference: string,
+  vendorOrPlan: string,
+  executiveRole?: string,
+): { subject: string; html: string } {
+  const subject = `🧾 Transaction Receipt: ${reference.slice(0, 16)} — HQ AI OS`;
+  const content = `
+    <h2>Transaction Receipt 🧾</h2>
+    <p>Hello ${name},</p>
+    <p>This email confirms a successful financial settlement processed through HQ AI OS.</p>
+
+    <div class="card">
+      <p style="margin: 6px 0; font-size: 20px; font-weight: bold; color: #10b981;">
+        ${amountFormatted}
+      </p>
+      <p style="margin: 4px 0;"><strong>Transaction Hash / Ref:</strong> <code style="color:#38bdf8;">${reference}</code></p>
+      <p style="margin: 4px 0;"><strong>Gateway / Protocol:</strong> ${gateway}</p>
+      <p style="margin: 4px 0;"><strong>Item / Service:</strong> ${vendorOrPlan}</p>
+      ${executiveRole ? `<p style="margin: 4px 0;"><strong>Authorized By:</strong> ${executiveRole}</p>` : ''}
+      <p style="margin: 4px 0;"><strong>Date & Time:</strong> ${new Date().toUTCString()}</p>
+      <p style="margin: 4px 0;"><strong>Settlement Status:</strong> <span style="color:#10b981; font-weight:bold;">COMPLETED / SETTLED</span></p>
+    </div>
+
+    <p style="font-size: 13px; color: #9ca3af; margin-top: 20px;">
+      You can review your full transaction audit ledger anytime in your <a href="https://hq.netify.ng/billing" style="color:#38bdf8;">HQ Billing & Treasury Hub</a>.
+    </p>
+  `;
+  return { subject, html: getBaseEmailLayout(subject, content) };
+}

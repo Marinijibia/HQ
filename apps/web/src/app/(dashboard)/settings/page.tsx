@@ -149,103 +149,78 @@ const INTEGRATIONS = [
 
 export default function SettingsPage() {
   const { token } = useAuth();
-  const {
-    guideModeEnabled,
-    setGuideModeEnabled,
-    missionsCompleted,
-    visitedWorkspaces,
-    resetProgress,
-  } = useGuideMode();
-
   const [activeSection, setActiveSection] = React.useState('headquarters');
+  const [loading, setLoading] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [savedMsg, setSavedMsg] = React.useState('');
+
   const [settings, setSettings] = React.useState<OrgSettings>({
-    hqName: 'Headquarters',
+    hqName: 'Vision HQ',
     timezone: 'UTC',
     language: 'English',
     currency: 'USD',
     legalName: '',
     businessAddress: '',
     contactEmail: '',
-    industry: '',
-    aiTone: 'Professional',
+    industry: 'Technology',
+    aiTone: 'Executive',
     aiFormality: 'Formal',
     aiResponseLength: 'Balanced',
     notifyEmail: true,
     notifyBrowser: true,
     notifyPush: false,
     quietHoursStart: '22:00',
-    quietHoursEnd: '08:00',
+    quietHoursEnd: '07:00',
   });
 
   const [teamMembers, setTeamMembers] = React.useState<TeamMember[]>([]);
   const [apiKeys, setApiKeys] = React.useState<ApiKey[]>([]);
   const [auditLogs, setAuditLogs] = React.useState<AuditLog[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [saving, setSaving] = React.useState(false);
-  const [savedMsg, setSavedMsg] = React.useState('');
-  const [newKeyName, setNewKeyName] = React.useState('');
-  const [newKeyResult, setNewKeyResult] = React.useState('');
-  const [newKeyVisible, setNewKeyVisible] = React.useState(false);
-  const [brandColor, setBrandColor] = React.useState('#0A84FF');
-  const [copiedId, setCopiedId] = React.useState('');
 
-  // ── Sub-tab states for Organization & Team ─────────────────────────────────
+  // Sub-tabs states
   const [orgTab, setOrgTab] = React.useState<'overview' | 'structure' | 'branches' | 'evolution'>('overview');
   const [teamTab, setTeamTab] = React.useState<'directory' | 'chart' | 'workspaces' | 'invitations'>('directory');
 
-  // Organization sub-states
-  const [departments, setDepartments] = React.useState([
-    { id: 'dept-tech', name: 'Technology & Engineering', executive: 'CTO Hiroshi', teamCount: 4, missionCount: 3, status: 'Active' },
-    { id: 'dept-mktg', name: 'Growth & Marketing', executive: 'CMO Amara', teamCount: 3, missionCount: 2, status: 'Active' },
-    { id: 'dept-fin', name: 'Finance & Compliance', executive: 'CFO Sophia', teamCount: 2, missionCount: 1, status: 'Active' },
-    { id: 'dept-cs', name: 'Customer Success', executive: 'CSD Yuki', teamCount: 3, missionCount: 2, status: 'Active' },
-  ]);
-  const [branches, setBranches] = React.useState([
-    { id: 'br-1', name: 'Abuja Headquarters', region: 'Nigeria', manager: 'Elena Rostova', memberCount: 12 },
-    { id: 'br-2', name: 'London Office', region: 'United Kingdom', manager: 'Sophia Sterling', memberCount: 8 },
-    { id: 'br-3', name: 'Lagos Corridor Hub', region: 'Nigeria', manager: 'Alistair Thorne', memberCount: 15 },
-  ]);
+  // Interactive form states
   const [newDeptName, setNewDeptName] = React.useState('');
   const [newDeptExec, setNewDeptExec] = React.useState('');
+  const [departments, setDepartments] = React.useState([
+    { id: 'dept-1', name: 'Executive Office', executive: 'Elena Rostova (CEO)', teamCount: 4, missionCount: 12, status: 'Active' },
+    { id: 'dept-2', name: 'Finance & Treasury', executive: 'Marcus Vance (CFO)', teamCount: 3, missionCount: 8, status: 'Active' },
+    { id: 'dept-3', name: 'Technology & AI Core', executive: 'Dr. Aris Thorne (CTO)', teamCount: 6, missionCount: 15, status: 'Active' },
+  ]);
+
   const [newBranchName, setNewBranchName] = React.useState('');
   const [newBranchRegion, setNewBranchRegion] = React.useState('');
   const [newBranchManager, setNewBranchManager] = React.useState('');
+  const [branches, setBranches] = React.useState([
+    { id: 'br-1', name: 'San Francisco HQ', region: 'North America', manager: 'Elena Rostova', memberCount: 12 },
+    { id: 'br-2', name: 'London Regional Office', region: 'Europe', manager: 'Alistair Vance', memberCount: 5 },
+  ]);
 
-  // Team sub-states
-  const [selectedMember, setSelectedMember] = React.useState<TeamMember | null>(null);
-  const [invitations, setInvitations] = React.useState([
-    { id: 'inv-1', email: 'auditor@external.com', role: 'GUEST', invitedAt: '2026-07-10', expiresAt: '2026-07-17' },
-    { id: 'inv-2', email: 'dev.partner@hq.corp', role: 'MEMBER', invitedAt: '2026-07-12', expiresAt: '2026-07-19' },
-  ]);
-  const [workspaces, setWorkspaces] = React.useState([
-    { id: 'ws-1', name: 'Product Growth Workspace', description: 'Cross-functional alignment for Product & Engineering.', membersCount: 5, executives: ['CTO Hiroshi', 'CMO Amara'] },
-    { id: 'ws-2', name: 'West African Corridors Campaign', description: 'Operations and Logistics scaling task force.', membersCount: 3, executives: ['Morgan Vance', 'CFO Sophia'] },
-  ]);
   const [inviteEmail, setInviteEmail] = React.useState('');
   const [inviteRole, setInviteRole] = React.useState('MEMBER');
-  const [inviteDept, setInviteDept] = React.useState('Technology & Engineering');
-  const [inviteTeam, setInviteTeam] = React.useState('Backend Devs');
+  const [invitations, setInvitations] = React.useState([
+    { id: 'inv-1', email: 'sarah.c@company.com', role: 'ADMINISTRATOR', invitedAt: '2026-07-20', expiresAt: '2026-08-15' },
+  ]);
+
+  const [workspaces, setWorkspaces] = React.useState([
+    { id: 'ws-1', name: 'Q3 Product Expansion', description: 'Core launching team for enterprise AI agents', membersCount: 5, executives: ['Elena Rostova', 'Dr. Aris Thorne'] },
+    { id: 'ws-2', name: 'Global Compliance Audit', description: 'Legal & security alignment workspace', membersCount: 3, executives: ['Victoria Sterling'] },
+  ]);
   const [newWsName, setNewWsName] = React.useState('');
   const [newWsDesc, setNewWsDesc] = React.useState('');
 
-  // Handle URL active section sync
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get('tab') || params.get('section');
-      if (tab) {
-        if (tab === 'team' || tab === 'teams') {
-          setActiveSection('team');
-        } else if (tab === 'organization' || tab === 'org') {
-          setActiveSection('organization');
-        } else if (ESSENTIAL_SECTIONS.some((s) => s.id === tab) || ADVANCED_SECTIONS.some((s) => s.id === tab)) {
-          setActiveSection(tab);
-        }
-      }
-    }
-  }, []);
+  const [selectedMember, setSelectedMember] = React.useState<TeamMember | null>(null);
 
-  // Load brand color from local storage
+  // API Key Generator states
+  const [newKeyName, setNewKeyName] = React.useState('');
+  const [newKeyResult, setNewKeyResult] = React.useState<string | null>(null);
+  const [newKeyVisible, setNewKeyVisible] = React.useState(false);
+
+  // Dynamic branding
+  const [brandColor, setBrandColor] = React.useState('#0A84FF');
+
   React.useEffect(() => {
     const draft = localStorage.getItem('hq_onboarding_draft');
     if (draft) {
@@ -269,7 +244,6 @@ export default function SettingsPage() {
     ])
       .then(([org, team, keys, logs]) => {
         if (org) setSettings((prev) => ({ ...prev, ...org }));
-        // Map backend team members to support UI fields
         const mappedTeam = (team || []).map((m: any) => ({
           id: m.id,
           name: m.name || m.email.split('@')[0],
@@ -278,7 +252,7 @@ export default function SettingsPage() {
           createdAt: m.createdAt,
           department: m.role === 'ORGANIZATION_OWNER' ? 'Executive Office' : 'Technology & Engineering',
           team: m.role === 'ORGANIZATION_OWNER' ? 'Boardroom' : 'Backend Devs',
-          assignedExecutives: m.role === 'ORGANIZATION_OWNER' ? ['Elena Rostova (CEO)', 'Alistair Thorne'] : ['Dr. Hiroshi Tanaka'],
+          assignedExecutives: m.role === 'ORGANIZATION_OWNER' ? ['Elena Rostova (CEO)'] : ['Dr. Aris Thorne'],
         }));
         setTeamMembers(mappedTeam);
         setApiKeys(keys || []);
@@ -319,7 +293,6 @@ export default function SettingsPage() {
         setNewKeyResult(data.key);
         setNewKeyVisible(true);
         setNewKeyName('');
-        // Refresh keys
         const keysRes = await fetch('/api/settings/api-keys', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -348,7 +321,6 @@ export default function SettingsPage() {
     }
   };
 
-  // Organization operations
   const handleAddDepartment = () => {
     if (!newDeptName.trim()) return;
     const newDept = {
@@ -386,7 +358,6 @@ export default function SettingsPage() {
     toast.success(`🌍 Branch "${newBr.name}" registered successfully`);
   };
 
-  // Team operations
   const handleSendInvitation = async () => {
     if (!inviteEmail.trim() || !token) return;
     try {
@@ -408,7 +379,6 @@ export default function SettingsPage() {
         setInviteEmail('');
         toast.success(`✉️ Invitation sent successfully to: "${newInv.email}"`);
 
-        // Refresh team members list
         const teamRes = await fetch('/api/settings/team', { headers });
         if (teamRes.ok) {
           const teamData = await teamRes.json();
@@ -448,8 +418,8 @@ export default function SettingsPage() {
     toast.success('🔒 Access control role updated');
   };
 
-  const inputCls = 'bg-card-bg border border-card-border rounded-xl w-full p-2.5 h-10 text-sm focus:outline-none text-foreground placeholder:text-foreground/30';
-  const selectCls = 'bg-card-bg border border-card-border rounded-xl w-full p-2.5 h-10 text-sm focus:outline-none text-foreground';
+  const inputCls = 'bg-white dark:bg-card-bg border border-slate-300 dark:border-card-border rounded-xl w-full p-2.5 h-10 text-sm focus:outline-none text-slate-900 dark:text-foreground placeholder:text-slate-400 dark:placeholder:text-foreground/30 shadow-sm';
+  const selectCls = 'bg-white dark:bg-card-bg border border-slate-300 dark:border-card-border rounded-xl w-full p-2.5 h-10 text-sm focus:outline-none text-slate-900 dark:text-foreground shadow-sm';
 
   // ─── Render Panels ─────────────────────────────────────────────────────────
 
@@ -458,16 +428,91 @@ export default function SettingsPage() {
       // ── HEADQUARTERS ──────────────────────────────────────────────────
       case 'headquarters':
         return (
-          <div className="space-y-5 text-left">
+          <div className="space-y-5 text-left animate-in fade-in duration-300">
             <SectionHeader
               title="Headquarters Settings"
               desc="Configure your HQ's identity, locale parameters, and default language settings."
-              icon={<Building2 className="h-5 w-5" style={{ color: brandColor }} />}
+              icon={<Building2 className="h-5 w-5 text-cyan-500" />}
             />
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Headquarters Name" hint="Appears across the entire application">
                 <input className={inputCls} value={settings.hqName} onChange={(e) => setSettings((p) => ({ ...p, hqName: e.target.value }))} placeholder="e.g. Vision HQ" />
               </Field>
+
+              {/* Executive Honorific Title, Name & Preferred Asad Voice Persona */}
+              <Field label="Executive Honorific Title" hint="Used by Asad Voice Assistant when speaking to you">
+                <select
+                  className={selectCls}
+                  value={localStorage.getItem('hq_user_title') || 'Alh'}
+                  onChange={(e) => {
+                    localStorage.setItem('hq_user_title', e.target.value);
+                    toast.success(`Title set to "${e.target.value}"`);
+                  }}
+                >
+                  <option value="Alh">Alhaji / Hajjia (Alh)</option>
+                  <option value="Dr">Doctor (Dr)</option>
+                  <option value="Prof">Professor (Prof)</option>
+                  <option value="Engr">Engineer (Engr)</option>
+                  <option value="Surv">Surveyor (Surv)</option>
+                  <option value="Arc">Architect (Arc)</option>
+                  <option value="Barr">Barrister (Barr)</option>
+                  <option value="Chief">Chief</option>
+                  <option value="Mr">Mr</option>
+                  <option value="Mrs">Mrs</option>
+                  <option value="Ms">Ms</option>
+                  <option value="Sir">Sir</option>
+                  <option value="Lady">Lady</option>
+                </select>
+              </Field>
+
+              <Field label="Executive First/Last Name" hint="Used by Asad Voice Assistant">
+                <input
+                  className={inputCls}
+                  defaultValue={localStorage.getItem('hq_user_display_name') || 'Umar'}
+                  onBlur={(e) => {
+                    localStorage.setItem('hq_user_display_name', e.target.value);
+                    toast.success('Executive Display Name saved');
+                  }}
+                  placeholder="e.g. Umar / Sophia"
+                />
+              </Field>
+
+              <Field label="Preferred Asad AI Voice Persona" hint="Selected voice model for Asad TTS responses">
+                <div className="flex items-center gap-2">
+                  <select
+                    className={`${selectCls} flex-1`}
+                    value={localStorage.getItem('hq_asad_voice_persona') || 'Asad Male Executive'}
+                    onChange={(e) => {
+                      localStorage.setItem('hq_asad_voice_persona', e.target.value);
+                      toast.success(`Asad Voice Persona updated to "${e.target.value}"`);
+                    }}
+                  >
+                    <option value="Asad Male Executive">Asad Male Executive (Resonant & Confident)</option>
+                    <option value="Asad Female Executive">Asad Female Executive (Articulate & Polished)</option>
+                    <option value="Asad Neural British">Asad Neural British (Refined & Crisp)</option>
+                    <option value="Asad System Default">Asad System Default</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if ('speechSynthesis' in window) {
+                        window.speechSynthesis.cancel();
+                        const title = localStorage.getItem('hq_user_title') || 'Alh';
+                        const name = localStorage.getItem('hq_user_display_name') || 'Umar';
+                        const persona = localStorage.getItem('hq_asad_voice_persona') || 'Asad Male Executive';
+                        const sample = new SpeechSynthesisUtterance(`Okay, ${title} ${name}, Asad voice persona test active.`);
+                        sample.pitch = persona.includes('Female') ? 1.25 : 0.95;
+                        window.speechSynthesis.speak(sample);
+                      }
+                    }}
+                    className="h-10 px-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold hover:bg-cyan-500/20 flex items-center gap-1.5 flex-shrink-0"
+                  >
+                    <HeadphonesIcon className="h-4 w-4" /> Test Voice
+                  </button>
+                </div>
+              </Field>
+
               <Field label="Industry" hint="Your organization's primary sector">
                 <input className={inputCls} value={settings.industry || ''} onChange={(e) => setSettings((p) => ({ ...p, industry: e.target.value }))} placeholder="e.g. Technology, Logistics" />
               </Field>
@@ -497,15 +542,15 @@ export default function SettingsPage() {
       // ── ORGANIZATION & HIERARCHY ──────────────────────────────────────
       case 'organization':
         return (
-          <div className="space-y-6 text-left">
+          <div className="space-y-6 text-left animate-in fade-in duration-300">
             <SectionHeader
               title="Organization & Hierarchy"
               desc="Model business units, map department structure, align branch offices, and audit growth trajectory."
-              icon={<Globe className="h-5 w-5" style={{ color: brandColor }} />}
+              icon={<Globe className="h-5 w-5 text-cyan-500" />}
             />
 
             {/* Sub Tabs */}
-            <div className="flex gap-1 border-b border-card-border pb-1">
+            <div className="flex gap-1 border-b border-slate-200 dark:border-card-border pb-1">
               {[
                 { id: 'overview', label: 'Identity Profile', icon: Globe },
                 { id: 'structure', label: 'Departments & Structure', icon: GitBranch },
@@ -519,9 +564,8 @@ export default function SettingsPage() {
                     key={tab.id}
                     onClick={() => setOrgTab(tab.id as any)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all border-b-2 ${
-                      active ? 'text-white' : 'text-foreground/50 hover:text-foreground'
+                      active ? 'text-cyan-500 border-cyan-500' : 'text-slate-500 dark:text-foreground/50 border-transparent hover:text-slate-900 dark:hover:text-foreground'
                     }`}
-                    style={active ? { borderColor: brandColor, color: brandColor } : { borderColor: 'transparent' }}
                   >
                     <Icon className="h-3.5 w-3.5" />
                     {tab.label}
@@ -535,596 +579,58 @@ export default function SettingsPage() {
               {orgTab === 'overview' && (
                 <div className="grid gap-6 md:grid-cols-3">
                   <div className="md:col-span-2 space-y-5">
-                    <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
-                      <h3 className="text-sm font-extrabold text-foreground flex items-center gap-1.5">
-                        <Globe className="h-4 w-4 text-hq-cyan" />
+                    <Card className="border border-slate-200 dark:border-card-border bg-white dark:bg-card-bg p-5 shadow-sm space-y-4">
+                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Globe className="h-4 w-4 text-cyan-500" />
                         Corporate Identity profile
                       </h3>
                       <div className="grid gap-4 sm:grid-cols-2 text-xs">
                         <div>
-                          <span className="text-foreground/45 font-bold uppercase tracking-wider block">Organization Name</span>
-                          <span className="text-sm font-black text-foreground">{settings.hqName}</span>
+                          <span className="text-slate-500 dark:text-foreground/45 font-bold uppercase tracking-wider block">Organization Name</span>
+                          <span className="text-sm font-black text-slate-900 dark:text-white">{settings.hqName}</span>
                         </div>
                         <div>
-                          <span className="text-foreground/45 font-bold uppercase tracking-wider block">Sector Industry</span>
-                          <span className="text-sm font-semibold text-foreground">{settings.industry || 'Technology & Logistics'}</span>
+                          <span className="text-slate-500 dark:text-foreground/45 font-bold uppercase tracking-wider block">Sector Industry</span>
+                          <span className="text-sm font-semibold text-slate-800 dark:text-foreground">{settings.industry || 'Technology & Logistics'}</span>
                         </div>
                         <div>
-                          <span className="text-foreground/45 font-bold uppercase tracking-wider block">Legal Entity Name</span>
-                          <span className="text-xs font-semibold text-foreground">{settings.legalName || 'N/A'}</span>
+                          <span className="text-slate-500 dark:text-foreground/45 font-bold uppercase tracking-wider block">Legal Entity Name</span>
+                          <span className="text-xs font-semibold text-slate-800 dark:text-foreground">{settings.legalName || 'N/A'}</span>
                         </div>
                         <div>
-                          <span className="text-foreground/45 font-bold uppercase tracking-wider block">Registered Address</span>
-                          <span className="text-xs font-semibold text-foreground">{settings.businessAddress || 'N/A'}</span>
-                        </div>
-                      </div>
-                    </Card>
-                  </div>
-                  <div className="space-y-4">
-                    <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-3">
-                      <h4 className="text-xs font-black text-foreground/40 uppercase tracking-widest flex items-center gap-1">
-                        <Activity className="h-4.5 w-4.5 text-hq-cyan animate-pulse" />
-                        Hierarchy Metrics
-                      </h4>
-                      <div className="space-y-2.5 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-foreground/50">Active Departments</span>
-                          <span className="font-bold text-hq-cyan">{departments.filter((d) => d.status === 'Active').length}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-foreground/50">Regional Branches</span>
-                          <span className="font-bold text-hq-purple">{branches.length}</span>
+                          <span className="text-slate-500 dark:text-foreground/45 font-bold uppercase tracking-wider block">Registered Address</span>
+                          <span className="text-xs font-semibold text-slate-800 dark:text-foreground">{settings.businessAddress || 'N/A'}</span>
                         </div>
                       </div>
                     </Card>
                   </div>
                 </div>
               )}
-
-              {orgTab === 'structure' && (
-                <div className="grid gap-6 md:grid-cols-3">
-                  <div className="md:col-span-2 space-y-3">
-                    {departments.filter((d) => d.status === 'Active').map((dept) => (
-                      <Card key={dept.id} className="border border-card-border bg-card-bg p-4 flex items-center justify-between">
-                        <div className="text-left">
-                          <h4 className="text-sm font-bold text-foreground">{dept.name}</h4>
-                          <p className="text-xs text-foreground/45 mt-0.5">Specialist Coordinator: {dept.executive}</p>
-                        </div>
-                        <button onClick={() => handleArchiveDept(dept.id, dept.name)} className="text-foreground/35 hover:text-red-500 transition-colors">
-                          <Archive className="h-4 w-4" />
-                        </button>
-                      </Card>
-                    ))}
-                  </div>
-                  <div>
-                    <Card className="border border-card-border bg-card-bg p-5 space-y-4">
-                      <h4 className="text-xs font-black text-foreground uppercase tracking-wider">Add Department</h4>
-                      <div className="space-y-3 text-xs">
-                        <Field label="Department Name">
-                          <Input value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} placeholder="e.g. Legal Division" />
-                        </Field>
-                        <Field label="Board Coordinator">
-                          <Input value={newDeptExec} onChange={(e) => setNewDeptExec(e.target.value)} placeholder="e.g. Jack Bauer" />
-                        </Field>
-                        <Button onClick={handleAddDepartment} size="sm" className="w-full text-white text-xs font-bold rounded-full" style={{ backgroundColor: brandColor }}>
-                          Add Department
-                        </Button>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              )}
-
-              {orgTab === 'branches' && (
-                <div className="grid gap-6 md:grid-cols-3">
-                  <div className="md:col-span-2 space-y-3">
-                    {branches.map((br) => (
-                      <Card key={br.id} className="border border-card-border bg-card-bg p-4 flex justify-between items-center">
-                        <div>
-                          <h4 className="text-sm font-bold text-foreground">{br.name}</h4>
-                          <p className="text-xs text-foreground/45 mt-0.5">Manager: {br.manager} • Region: {br.region}</p>
-                        </div>
-                        <Badge variant="neutral" className="text-xs">{br.memberCount} Staff</Badge>
-                      </Card>
-                    ))}
-                  </div>
-                  <div>
-                    <Card className="border border-card-border bg-card-bg p-5 space-y-4">
-                      <h4 className="text-xs font-black text-foreground uppercase tracking-wider">Register Branch</h4>
-                      <div className="space-y-3 text-xs">
-                        <Field label="Branch Name">
-                          <Input value={newBranchName} onChange={(e) => setNewBranchName(e.target.value)} placeholder="e.g. Lagos Hub" />
-                        </Field>
-                        <Field label="Region / Country">
-                          <Input value={newBranchRegion} onChange={(e) => setNewBranchRegion(e.target.value)} placeholder="e.g. Nigeria" />
-                        </Field>
-                        <Field label="Branch Manager">
-                          <Input value={newBranchManager} onChange={(e) => setNewBranchManager(e.target.value)} placeholder="e.g. Elena Rostova" />
-                        </Field>
-                        <Button onClick={handleAddBranch} size="sm" className="w-full text-white text-xs font-bold rounded-full" style={{ backgroundColor: brandColor }}>
-                          Register Office Node
-                        </Button>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              )}
-
-              {orgTab === 'evolution' && (
-                <Card className="border border-card-border bg-card-bg p-6 text-center space-y-3 max-w-lg">
-                  <div className="h-10 w-10 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto">
-                    <Award className="h-6 w-6" />
-                  </div>
-                  <h4 className="text-sm font-bold text-foreground">Evolution Trajectory: Startup Stage</h4>
-                  <p className="text-xs text-foreground/50 max-w-sm mx-auto leading-relaxed">
-                    HQ tracks your business complexity and scales up AI executive resource limits automatically as you set up departments and branch systems.
-                  </p>
-                </Card>
-              )}
             </div>
-          </div>
-        );
-
-      // ── TEAM & ACCESS CLEARANCE ──────────────────────────────────────
-      case 'team':
-        return (
-          <div className="space-y-6 text-left">
-            <SectionHeader
-              title="Team & Access Clearance"
-              desc="Manage human members, assign organizational clearings, and configure reporting charts."
-              icon={<Users className="h-5 w-5" style={{ color: brandColor }} />}
-            />
-
-            {/* Sub Tabs */}
-            <div className="flex gap-1 border-b border-card-border pb-1">
-              {[
-                { id: 'directory', label: 'Members Directory', icon: Users },
-                { id: 'chart', label: 'Organizational Chart', icon: Network },
-                { id: 'workspaces', label: 'Workspaces', icon: Briefcase },
-                { id: 'invitations', label: 'Invitations', icon: Mail },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const active = teamTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setTeamTab(tab.id as any)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all border-b-2 ${
-                      active ? 'text-white' : 'text-foreground/50 hover:text-foreground'
-                    }`}
-                    style={active ? { borderColor: brandColor, color: brandColor } : { borderColor: 'transparent' }}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Sub Tab Content */}
-            <div className="space-y-5">
-              {teamTab === 'directory' && (
-                <div className="grid gap-6 md:grid-cols-3">
-                  <div className="md:col-span-2 space-y-3">
-                    {teamMembers.map((m) => (
-                      <Card
-                        key={m.id}
-                        onClick={() => setSelectedMember(m)}
-                        className={`border p-4 shadow-sm cursor-pointer transition-all ${
-                          selectedMember?.id === m.id ? 'border-hq-blue bg-hq-blue/[0.03]' : 'border-card-border bg-card-bg'
-                        }`}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 bg-foreground/10 text-foreground font-black text-xs rounded-full flex items-center justify-center">
-                              {m.name.substring(0, 2).toUpperCase()}
-                            </div>
-                            <div>
-                              <h4 className="text-sm font-bold text-foreground">{m.name}</h4>
-                              <p className="text-xs text-foreground/45">{m.email}</p>
-                            </div>
-                          </div>
-                          <Badge variant="neutral" className="text-xs shrink-0 capitalize">{m.role.toLowerCase()}</Badge>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                  <div>
-                    {selectedMember ? (
-                      <Card className="border border-card-border bg-card-bg p-5 space-y-4">
-                        <h4 className="text-xs font-black text-foreground uppercase tracking-wider">Access Clearances</h4>
-                        <div className="space-y-3 text-xs">
-                          <div>
-                            <span className="text-foreground/55 font-bold block">Clearance Level</span>
-                            <select
-                              value={selectedMember.role}
-                              onChange={(e) => handleUpdateRole(selectedMember.id, e.target.value)}
-                              className={selectCls + ' mt-1.5 h-9'}
-                            >
-                              <option value="ORGANIZATION_OWNER">Owner</option>
-                              <option value="ADMINISTRATOR">Administrator</option>
-                              <option value="MEMBER">Member</option>
-                              <option value="GUEST">Guest</option>
-                            </select>
-                          </div>
-                        </div>
-                      </Card>
-                    ) : (
-                      <Card className="border border-dashed border-card-border bg-card-bg p-8 text-center text-xs text-foreground/40 font-medium">
-                        Select a member from the directory to inspect role clearings.
-                      </Card>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {teamTab === 'chart' && (
-                <Card className="border border-card-border bg-card-bg p-5 text-center">
-                  <h4 className="text-sm font-bold text-foreground mb-3">Reporting Line chart</h4>
-                  <div className="h-72 border border-card-border/50 bg-black/[0.02] dark:bg-white/[0.01] rounded-2xl flex items-center justify-center relative overflow-hidden">
-                    <svg className="w-full h-full" viewBox="0 0 400 240">
-                      <line x1="200" y1="50" x2="200" y2="130" stroke="currentColor" strokeOpacity={0.15} strokeWidth="1.5" strokeDasharray="3 3" />
-                      <rect x="140" y="25" width="120" height="35" rx="6" fill="#0A0A0C" stroke={brandColor} strokeWidth={1} />
-                      <text x="200" y="46" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">Elena Rostova</text>
-                      <text x="200" y="55" fill={brandColor} fontSize="6.5" textAnchor="middle">C-Suite Owner</text>
-
-                      <rect x="140" y="130" width="120" height="35" rx="6" fill="#0A0A0C" stroke="currentColor" strokeOpacity={0.2} strokeWidth={1} />
-                      <text x="200" y="151" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">CFO Sophia</text>
-                      <text x="200" y="160" fill="currentColor" fillOpacity={0.4} fontSize="6.5" textAnchor="middle">Finance Lead</text>
-                    </svg>
-                  </div>
-                </Card>
-              )}
-
-              {teamTab === 'workspaces' && (
-                <div className="grid gap-6 md:grid-cols-3">
-                  <div className="md:col-span-2 space-y-3">
-                    {workspaces.map((ws) => (
-                      <Card key={ws.id} className="border border-card-border bg-card-bg p-4 space-y-2">
-                        <h4 className="text-sm font-bold text-foreground">{ws.name}</h4>
-                        <p className="text-xs text-foreground/45">{ws.description}</p>
-                      </Card>
-                    ))}
-                  </div>
-                  <div>
-                    <Card className="border border-card-border bg-card-bg p-5 space-y-4">
-                      <h4 className="text-xs font-black text-foreground uppercase tracking-wider font-bold">Add Workspace</h4>
-                      <div className="space-y-3 text-xs">
-                        <Field label="Workspace Name">
-                          <Input value={newWsName} onChange={(e) => setNewWsName(e.target.value)} placeholder="e.g. Campaign Alpha" />
-                        </Field>
-                        <Field label="Description">
-                          <Input value={newWsDesc} onChange={(e) => setNewWsDesc(e.target.value)} placeholder="e.g. Q3 Logistics outreach team" />
-                        </Field>
-                        <Button onClick={handleCreateWorkspace} size="sm" className="w-full text-white text-xs font-bold rounded-full" style={{ backgroundColor: brandColor }}>
-                          Create Workspace
-                        </Button>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              )}
-
-              {teamTab === 'invitations' && (
-                <div className="grid gap-6 md:grid-cols-3">
-                  <div className="md:col-span-2 space-y-3">
-                    {invitations.length === 0 ? (
-                      <p className="text-xs text-foreground/40 italic">No pending invitations.</p>
-                    ) : (
-                      invitations.map((inv) => (
-                        <Card key={inv.id} className="border border-card-border bg-card-bg p-4 flex items-center justify-between">
-                          <div>
-                            <h4 className="text-sm font-bold text-foreground">{inv.email}</h4>
-                            <p className="text-xs text-foreground/45 mt-0.5">Role: {inv.role} • Expires: {inv.expiresAt}</p>
-                          </div>
-                          <button onClick={() => handleCancelInvitation(inv.id, inv.email)} className="text-foreground/35 hover:text-red-500 transition-colors">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </Card>
-                      ))
-                    )}
-                  </div>
-                  <div>
-                    <Card className="border border-card-border bg-card-bg p-5 space-y-4">
-                      <h4 className="text-xs font-black text-foreground uppercase tracking-wider">Invite Member</h4>
-                      <div className="space-y-3 text-xs">
-                        <Field label="Email Address">
-                          <Input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="name@company.com" />
-                        </Field>
-                        <Field label="Clearance Role">
-                          <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className={selectCls + ' h-9'}>
-                            <option value="ADMINISTRATOR">Administrator</option>
-                            <option value="MEMBER">Member</option>
-                            <option value="GUEST">Guest</option>
-                          </select>
-                        </Field>
-                        <Button onClick={handleSendInvitation} size="sm" className="w-full text-white text-xs font-bold rounded-full" style={{ backgroundColor: brandColor }}>
-                          Send Invitation Link
-                        </Button>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-
-      // ── BRANDING ──────────────────────────────────────────────────────
-      case 'branding':
-        return (
-          <div className="space-y-5 text-left">
-            <SectionHeader
-              title="Branding"
-              desc="Customize colors, logo, and visual identity across your Headquarters."
-              icon={<Palette className="h-5 w-5" style={{ color: brandColor }} />}
-            />
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] space-y-3">
-                <p className="text-xs font-extrabold text-foreground">Primary Brand Color</p>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl border border-card-border overflow-hidden shrink-0">
-                    <input type="color" value={brandColor} onChange={(e) => setBrandColor(e.target.value)} className="h-full w-full cursor-pointer border-0 p-0" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-extrabold" style={{ color: brandColor }}>{brandColor.toUpperCase()}</p>
-                    <p className="text-xs text-foreground/50 font-semibold">Click swatch to change</p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] space-y-3">
-                <p className="text-xs font-extrabold text-foreground">Organization Logo</p>
-                <div className="h-20 border-2 border-dashed border-card-border rounded-xl flex items-center justify-center cursor-pointer hover:border-hq-blue/50 transition-colors">
-                  <p className="text-xs text-foreground/40 font-semibold">Click or drag to upload logo</p>
-                </div>
-              </Card>
-            </div>
-          </div>
-        );
-
-      // ── SECURITY ──────────────────────────────────────────────────────
-      case 'security':
-        return (
-          <div className="space-y-5 text-left">
-            <SectionHeader
-              title="Security Settings"
-              desc="Manage authentication rules, session configurations, and access logs."
-              icon={<Shield className="h-5 w-5" style={{ color: brandColor }} />}
-            />
-            <div className="grid gap-4 md:grid-cols-3">
-              {[
-                { label: 'MFA Status', value: 'Enabled', color: '#22C55E' },
-                { label: 'Active Sessions', value: '1', color: brandColor },
-                { label: 'Login Failures (24h)', value: '0', color: '#0EA5E9' },
-              ].map((stat, i) => (
-                <Card key={i} className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] text-left">
-                  <p className="text-xs text-foreground/45 font-bold uppercase tracking-widest">{stat.label}</p>
-                  <p className="text-2xl font-extrabold mt-1" style={{ color: stat.color }}>{stat.value}</p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        );
-
-      // ── NOTIFICATIONS ─────────────────────────────────────────────────
-      case 'notifications':
-        return (
-          <div className="space-y-5 text-left">
-            <SectionHeader
-              title="Notifications"
-              desc="Select routing triggers for emails, browser notifications, and push alerts."
-              icon={<Bell className="h-5 w-5" style={{ color: brandColor }} />}
-            />
-            <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
-              <p className="text-xs font-extrabold text-foreground">Notification Channels</p>
-              {[
-                { label: 'Email Notifications', desc: 'Receive critical alerts and briefing digests', key: 'notifyEmail' },
-                { label: 'Browser Notifications', desc: 'Live workspace notifications on active sessions', key: 'notifyBrowser' },
-                { label: 'Push Notifications', desc: 'Direct dashboard notifications on mobile', key: 'notifyPush' },
-              ].map((c, i) => (
-                <div key={i} className="flex items-start justify-between gap-4 py-2 border-b border-card-border last:border-0">
-                  <div className="text-left">
-                    <p className="text-xs font-extrabold text-foreground">{c.label}</p>
-                    <p className="text-xs text-foreground/50 font-semibold mt-0.5">{c.desc}</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={(settings as any)[c.key]}
-                    onChange={(e) => setSettings((p) => ({ ...p, [c.key]: e.target.checked }))}
-                    className="h-4 w-4 rounded border-card-border focus:ring-hq-blue shrink-0 cursor-pointer"
-                  />
-                </div>
-              ))}
-            </Card>
-          </div>
-        );
-
-      // ── BILLING ───────────────────────────────────────────────────────
-      case 'billing':
-        return (
-          <div className="space-y-5 text-left">
-            <SectionHeader
-              title="Billing & Subscriptions"
-              desc="Manage subscription plans, billing histories, and credit allocations."
-              icon={<CreditCard className="h-5 w-5" style={{ color: brandColor }} />}
-            />
-            <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-3">
-              <h4 className="text-sm font-extrabold text-foreground">Active Subscription Plan</h4>
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <Badge variant="ai" className="text-sm">HQ Free Tier</Badge>
-                  <p className="text-xs text-foreground/45 mt-1">Limited to 1 active concurrent strategic mission WBS.</p>
-                </div>
-                <Button size="sm" className="text-white text-xs font-bold rounded-full" style={{ backgroundColor: brandColor }}>
-                  Upgrade Plan
-                </Button>
-              </div>
-            </Card>
-          </div>
-        );
-
-      // ── AI EXECUTIVES ─────────────────────────────────────────────────
-      case 'executives':
-        return (
-          <div className="space-y-5 text-left">
-            <SectionHeader
-              title="AI Executive Directory"
-              desc="Audit active configurations and personality structures for C-Suite AI partners."
-              icon={<Bot className="h-5 w-5" style={{ color: brandColor }} />}
-            />
-            <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] text-center text-xs text-foreground/40 py-12">
-              <Bot className="h-8 w-8 text-foreground/20 mx-auto mb-2" />
-              <span>Configure AI personality parameters on the Executive Registry.</span>
-            </Card>
-          </div>
-        );
-
-      // ── INTEGRATIONS ──────────────────────────────────────────────────
-      case 'integrations':
-        return (
-          <div className="space-y-5 text-left">
-            <SectionHeader
-              title="Integration Catalog"
-              desc="Securely connect third-party platforms to synchronize digital assets and notifications."
-              icon={<Plug2 className="h-5 w-5" style={{ color: brandColor }} />}
-            />
-            <div className="grid gap-4 sm:grid-cols-2 text-left">
-              {INTEGRATIONS.map((app) => (
-                <Card key={app.id} className="border border-card-border bg-card-bg p-4 flex justify-between items-start gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{app.logo}</span>
-                      <h4 className="text-xs font-black text-foreground">{app.name}</h4>
-                    </div>
-                    <p className="text-xs text-foreground/45 mt-1">{app.desc}</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="h-8 rounded-full border-card-border">Connect</Button>
-                </Card>
-              ))}
-            </div>
-          </div>
-        );
-
-      // ── STORAGE ───────────────────────────────────────────────────────
-      case 'storage':
-        return (
-          <div className="space-y-5 text-left">
-            <SectionHeader
-              title="Storage Analytics"
-              desc="Audit secure file storage quotas and vector indexes constraints."
-              icon={<Database className="h-5 w-5" style={{ color: brandColor }} />}
-            />
-            <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-2">
-              <div className="flex justify-between text-xs font-bold text-foreground/50">
-                <span>Storage utilization</span>
-                <span>0 MB / 1,024 MB (0%)</span>
-              </div>
-              <div className="h-2 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden">
-                <div className="h-full bg-hq-blue rounded-full transition-all" style={{ width: '0%' }}></div>
-              </div>
-            </Card>
-          </div>
-        );
-
-      // ── API KEYS & DEVELOPERS ─────────────────────────────────────────
-      case 'api':
-        return (
-          <div className="space-y-5 text-left">
-            <SectionHeader
-              title="API & Developer Options"
-              desc="Generate secure API keys to integrate custom workflows with HQ."
-              icon={<Code2 className="h-5 w-5" style={{ color: brandColor }} />}
-            />
-            <div className="space-y-4">
-              <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
-                <h4 className="text-xs font-black text-foreground uppercase tracking-wider">Generate API Key</h4>
-                <div className="flex gap-2.5">
-                  <Input value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} placeholder="Key description label..." className="text-xs flex-1 h-9 rounded-full px-3" />
-                  <Button onClick={handleCreateKey} size="sm" className="text-white text-xs font-bold rounded-full shrink-0" style={{ backgroundColor: brandColor }}>
-                    Create Key
-                  </Button>
-                </div>
-                {newKeyVisible && newKeyResult && (
-                  <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl space-y-1.5 text-xs text-green-600 dark:text-green-400">
-                    <p className="font-bold">Key generated! Copy it now (will not be shown again):</p>
-                    <div className="flex items-center gap-2 font-mono bg-black/5 dark:bg-black/40 p-2 rounded-lg">
-                      <span className="flex-1 select-all break-all">{newKeyResult}</span>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(newKeyResult);
-                          toast.success('Key copied to clipboard');
-                        }}
-                        className="text-foreground/50 hover:text-foreground"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </Card>
-
-              {apiKeys.length > 0 && (
-                <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-3">
-                  <h4 className="text-xs font-black text-foreground uppercase tracking-wider">Active API Keys</h4>
-                  <div className="space-y-2.5">
-                    {apiKeys.map((k) => (
-                      <div key={k.id} className="flex justify-between items-center text-xs py-2 border-b border-card-border/60 last:border-0">
-                        <div>
-                          <p className="font-bold text-foreground">{k.name}</p>
-                          <p className="font-mono text-foreground/45 mt-0.5">Prefix: {k.keyPrefix}...</p>
-                        </div>
-                        <button onClick={() => handleDeleteKey(k.id)} className="text-foreground/35 hover:text-red-500 transition-colors">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-            </div>
-          </div>
-        );
-
-      // ── AUDIT LOGS ────────────────────────────────────────────────────
-      case 'audit':
-        return (
-          <div className="space-y-5 text-left">
-            <SectionHeader
-              title="Audit Logs"
-              desc="View security activities and compliance logs recorded across your workspace."
-              icon={<FileText className="h-5 w-5" style={{ color: brandColor }} />}
-            />
-            <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-3">
-              <h4 className="text-xs font-black text-foreground uppercase tracking-wider">Activity Ledger</h4>
-              <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-                {auditLogs.length === 0 ? (
-                  <p className="text-xs text-foreground/40 italic">No logs recorded yet.</p>
-                ) : (
-                  auditLogs.map((log) => (
-                    <div key={log.id} className="text-xs py-2 border-b border-card-border/50 last:border-0 flex justify-between items-start">
-                      <div>
-                        <p className="font-bold text-foreground">{log.eventType}</p>
-                        <p className="text-foreground/45 text-[11px] mt-0.5">Actor: {log.actor?.email || 'System'}</p>
-                      </div>
-                      <span className="text-[10px] text-foreground/35 font-mono">{new Date(log.createdAt).toLocaleTimeString()}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </Card>
           </div>
         );
 
       default:
-        return <EmptyState text="Select a settings section from the sidebar navigation map." />;
+        return (
+          <div className="space-y-5 text-left animate-in fade-in duration-300">
+            <SectionHeader
+              title="Settings Directory"
+              desc="Manage settings across all operational and enterprise modules."
+              icon={<Settings2 className="h-5 w-5 text-cyan-500" />}
+            />
+            <Card className="border border-slate-200 dark:border-card-border bg-white dark:bg-card-bg p-8 text-center shadow-sm">
+              <p className="text-xs text-slate-500 dark:text-foreground/50 font-medium">Select a section from the sidebar to inspect parameters.</p>
+            </Card>
+          </div>
+        );
     }
   };
 
   return (
     <div className="flex flex-col md:flex-row gap-8 select-none text-foreground pb-12">
       {/* ─── Left sidebar nav ─────────────────────────────────────────── */}
-      <aside className="w-52 shrink-0 space-y-1 text-left">
-        <p className="text-[10px] font-black text-foreground/30 uppercase tracking-widest px-2 pb-1.5">Essential</p>
+      <aside className="w-56 shrink-0 space-y-1 text-left">
+        <p className="text-[10px] font-black text-slate-400 dark:text-foreground/30 uppercase tracking-widest px-2 pb-1.5">Essential</p>
         {ESSENTIAL_SECTIONS.map((s) => {
           const Icon = s.icon;
           const active = activeSection === s.id;
@@ -1132,25 +638,17 @@ export default function SettingsPage() {
             <button
               key={s.id}
               onClick={() => setActiveSection(s.id)}
-              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-full text-left text-xs font-black transition-all ${
-                active ? 'text-white shadow-sm' : 'text-foreground/50 hover:text-foreground hover:bg-foreground/5'
+              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-black transition-all ${
+                active ? 'bg-cyan-500 text-white shadow-sm' : 'text-slate-600 dark:text-foreground/50 hover:text-slate-900 dark:hover:text-foreground hover:bg-slate-100 dark:hover:bg-white/5'
               }`}
-              style={
-                active
-                  ? {
-                      backgroundColor: brandColor,
-                      boxShadow: `0 2px 10px ${brandColor}40`,
-                    }
-                  : {}
-              }
             >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <Icon className="h-4 w-4 shrink-0" />
               {s.label}
             </button>
           );
         })}
 
-        <p className="text-[10px] font-black text-foreground/30 uppercase tracking-widest px-2 pb-1.5 pt-5">Advanced</p>
+        <p className="text-[10px] font-black text-slate-400 dark:text-foreground/30 uppercase tracking-widest px-2 pb-1.5 pt-5">Advanced</p>
         {ADVANCED_SECTIONS.map((s) => {
           const Icon = s.icon;
           const active = activeSection === s.id;
@@ -1158,19 +656,11 @@ export default function SettingsPage() {
             <button
               key={s.id}
               onClick={() => setActiveSection(s.id)}
-              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-full text-left text-xs font-black transition-all ${
-                active ? 'text-white shadow-sm' : 'text-foreground/50 hover:text-foreground hover:bg-foreground/5'
+              className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left text-xs font-black transition-all ${
+                active ? 'bg-cyan-500 text-white shadow-sm' : 'text-slate-600 dark:text-foreground/50 hover:text-slate-900 dark:hover:text-foreground hover:bg-slate-100 dark:hover:bg-white/5'
               }`}
-              style={
-                active
-                  ? {
-                      backgroundColor: brandColor,
-                      boxShadow: `0 2px 10px ${brandColor}40`,
-                    }
-                  : {}
-              }
             >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <Icon className="h-4 w-4 shrink-0" />
               {s.label}
             </button>
           );
@@ -1181,8 +671,8 @@ export default function SettingsPage() {
       <main className="flex-1 min-w-0">
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center space-y-3">
-            <div className="h-8 w-8 rounded-full border-2 border-hq-blue border-t-transparent animate-spin" />
-            <p className="text-xs text-foreground/45 font-semibold">Loading settings registry...</p>
+            <div className="h-8 w-8 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
+            <p className="text-xs text-slate-500 dark:text-foreground/45 font-semibold">Loading settings registry...</p>
           </div>
         ) : (
           renderSection()
@@ -1196,11 +686,11 @@ export default function SettingsPage() {
 
 function SectionHeader({ title, desc, icon }: { title: string; desc: string; icon: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3 pb-4 border-b border-card-border mb-5">
+    <div className="flex items-start gap-3 pb-4 border-b border-slate-200 dark:border-card-border mb-5">
       <div className="mt-0.5 shrink-0">{icon}</div>
       <div>
-        <h2 className="text-base font-black text-foreground tracking-tight leading-none">{title}</h2>
-        <p className="text-xs text-foreground/45 font-semibold mt-1.5 leading-normal">{desc}</p>
+        <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight leading-none">{title}</h2>
+        <p className="text-xs text-slate-500 dark:text-foreground/45 font-semibold mt-1.5 leading-normal">{desc}</p>
       </div>
     </div>
   );
@@ -1218,14 +708,13 @@ function SaveBar({
   brandColor: string;
 }) {
   return (
-    <div className="flex items-center justify-between pt-4 border-t border-card-border mt-2">
-      <p className="text-xs text-green-500 font-extrabold h-4">{savedMsg}</p>
+    <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-card-border mt-2">
+      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-extrabold h-4">{savedMsg}</p>
       <Button
         onClick={onSave}
         disabled={saving}
         size="sm"
-        className="text-white font-black text-xs h-8.5 rounded-full px-4"
-        style={{ backgroundColor: brandColor }}
+        className="text-white font-black text-xs h-8.5 rounded-full px-5 bg-cyan-500 hover:bg-cyan-400"
       >
         <Save className="h-3.5 w-3.5 mr-1.5" />
         {saving ? 'Saving...' : 'Save Changes'}
@@ -1234,20 +723,12 @@ function SaveBar({
   );
 }
 
-function EmptyState({ text }: { text: string }) {
-  return (
-    <div className="py-10 flex flex-col items-center justify-center space-y-2">
-      <p className="text-sm text-foreground/40 font-semibold text-center max-w-xs">{text}</p>
-    </div>
-  );
-}
-
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1 text-left">
-      <label className="text-xs font-black text-foreground/65 block">{label}</label>
+      <label className="text-xs font-black text-slate-700 dark:text-foreground/65 block">{label}</label>
       {children}
-      {hint && <p className="text-[10.5px] text-foreground/35 font-semibold mt-0.5 leading-tight">{hint}</p>}
+      {hint && <p className="text-[10.5px] text-slate-500 dark:text-foreground/35 font-semibold mt-0.5 leading-tight">{hint}</p>}
     </div>
   );
 }

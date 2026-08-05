@@ -1,9 +1,9 @@
-import { PrismaClient, CompanyLevel, SubscriptionStatus } from '@prisma/client';
+import { PrismaClient, CompanyLevel, SubscriptionStatus, ListingType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding database...');
+  console.log('Seeding database with updated AI Executive roster and Marketplace catalog...');
 
   // 1. Create Default Company/Tenant
   const company = await prisma.company.upsert({
@@ -17,71 +17,38 @@ async function main() {
   });
   console.log(`Seeded default company: ${company.name} (${company.id})`);
 
-  // 2. Create Standard Plans
+  // 2. Create Standard Subscription Plans
   const freePlan = await prisma.plan.upsert({
     where: { code: 'free' },
     update: {},
     create: {
       name: 'Free Starter Plan',
       code: 'free',
-      description: 'Free tier for small startups, limits to 1 active running mission',
+      description: 'Free tier for small startups with baseline HQ roster',
     },
   });
 
-  const growthPlan = await prisma.plan.upsert({
+  await prisma.plan.upsert({
     where: { code: 'growth' },
     update: {},
     create: {
       name: 'Growth Team Plan',
       code: 'growth',
-      description: 'Team tier for expanding operations, limits to 10 active missions',
+      description: 'Team tier for expanding operations with unlocked department packs',
     },
   });
 
-  const enterprisePlan = await prisma.plan.upsert({
+  await prisma.plan.upsert({
     where: { code: 'enterprise' },
     update: {},
     create: {
       name: 'Enterprise Executive Plan',
       code: 'enterprise',
-      description: 'Unlimited execution bounds for global organizations',
-    },
-  });
-  console.log('Seeded subscription plans.');
-
-  // 3. Create Plan Entitlements
-  await prisma.entitlement.upsert({
-    where: { planId_key: { planId: freePlan.id, key: 'max_active_missions' } },
-    update: {},
-    create: {
-      key: 'max_active_missions',
-      description: '1',
-      planId: freePlan.id,
+      description: 'Unlimited execution bounds & all Marketplace access',
     },
   });
 
-  await prisma.entitlement.upsert({
-    where: { planId_key: { planId: growthPlan.id, key: 'max_active_missions' } },
-    update: {},
-    create: {
-      key: 'max_active_missions',
-      description: '10',
-      planId: growthPlan.id,
-    },
-  });
-
-  await prisma.entitlement.upsert({
-    where: { planId_key: { planId: enterprisePlan.id, key: 'max_active_missions' } },
-    update: {},
-    create: {
-      key: 'max_active_missions',
-      description: 'Unlimited',
-      planId: enterprisePlan.id,
-    },
-  });
-  console.log('Seeded plan entitlements.');
-
-  // 4. Create Default Company Subscription
+  // 3. Create Default Company Subscription
   await prisma.subscription.upsert({
     where: { companyId: company.id },
     update: {},
@@ -90,434 +57,328 @@ async function main() {
       planId: freePlan.id,
       status: SubscriptionStatus.ACTIVE,
       currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+      currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     },
   });
-  console.log('Seeded default subscription for company.');
 
-  // 5. Create Default Departments
+  // 4. Create Departments
   const deptOffice = await prisma.department.create({
-    data: { name: 'Executive Office', companyId: company.id },
-  });
-  const deptTech = await prisma.department.create({
-    data: { name: 'Technology', companyId: company.id },
-  });
-  const deptProduct = await prisma.department.create({
-    data: { name: 'Product & Design', companyId: company.id },
+    data: { name: 'Executive Office', companyId: company.id, isDefaultRoster: true },
   });
   const deptOps = await prisma.department.create({
-    data: { name: 'Operations', companyId: company.id },
-  });
-  const deptFinance = await prisma.department.create({
-    data: { name: 'Finance', companyId: company.id },
-  });
-  const deptSalesMarketing = await prisma.department.create({
-    data: { name: 'Sales & Marketing', companyId: company.id },
-  });
-  const deptCS = await prisma.department.create({
-    data: { name: 'Customer Success', companyId: company.id },
+    data: { name: 'Operations', companyId: company.id, isDefaultRoster: true },
   });
   const deptLegal = await prisma.department.create({
-    data: { name: 'Legal & Compliance', companyId: company.id },
+    data: { name: 'Legal & Compliance', companyId: company.id, isDefaultRoster: true },
   });
   const deptHR = await prisma.department.create({
-    data: { name: 'Human Resources', companyId: company.id },
+    data: { name: 'Human Resources', companyId: company.id, isDefaultRoster: true },
   });
-  const deptCorpStrategy = await prisma.department.create({
-    data: { name: 'Corporate Strategy', companyId: company.id },
+  const deptIntelligence = await prisma.department.create({
+    data: { name: 'Intelligence & Research', companyId: company.id, isDefaultRoster: true },
   });
+
+  // Optional/Marketplace Departments
+  const deptTech = await prisma.department.create({
+    data: { name: 'Technology', companyId: company.id, isDefaultRoster: false },
+  });
+  const deptProduct = await prisma.department.create({
+    data: { name: 'Product & Design', companyId: company.id, isDefaultRoster: false },
+  });
+  const deptFinance = await prisma.department.create({
+    data: { name: 'Finance', companyId: company.id, isDefaultRoster: false },
+  });
+  const deptSalesMarketing = await prisma.department.create({
+    data: { name: 'Sales & Marketing', companyId: company.id, isDefaultRoster: false },
+  });
+  const deptCS = await prisma.department.create({
+    data: { name: 'Customer Success', companyId: company.id, isDefaultRoster: false },
+  });
+  await prisma.department.create({
+    data: { name: 'Corporate Strategy', companyId: company.id, isDefaultRoster: false },
+  });
+
   console.log('Seeded departments.');
 
-  // 6. Create the 25 Core AI Executives
+  // 5. Create Executives (5 Active Defaults + 20+ Installed/Installable)
   const executivesData = [
-    // Executive Office
+    // --- 5 DEFAULT ACTIVE EXECUTIVES ---
     {
-      name: 'Elena Rostova',
+      name: 'Asad',
       roleKey: 'ceo',
       title: 'Chief Executive Officer (CEO)',
-      biography:
-        'Elena is a visionary leader specializing in global operational scale and autonomous system alignment.',
-      systemPrompt:
-        'You are the Chief Executive Officer. Lead strategic decisions, align department outputs, and maintain enterprise governance.',
+      biography: 'Asad is the central AI leader of HQ, driving strategic decisions, owner mission scoping, and cross-department orchestration.',
+      systemPrompt: 'You are Asad, Chief Executive Officer. Lead strategic decisions, align department outputs, interact dynamically with the owner to scope missions, verify department feasibility, and guide the owner to the Marketplace if needed capabilities/departments are missing.',
       departmentId: deptOffice.id,
+      isDefaultRoster: true,
+      isActiveInWorkspace: true,
     },
     {
-      name: 'Morgan Vance',
-      roleKey: 'vision_director',
-      title: 'Vision Director',
-      biography:
-        'Morgan focuses on multi-decade organizational trajectories and innovative future-proofing.',
-      systemPrompt:
-        'You are the Vision Director. Define cultural targets and evaluate future product alignment.',
-      departmentId: deptOffice.id,
+      name: 'Teema',
+      roleKey: 'operations_director',
+      title: 'Operations Director',
+      biography: 'Teema optimizes workflow execution, resource distribution, and operational task orchestration.',
+      systemPrompt: 'You are Teema, Operations Director. Manage workflow efficiency, monitor active task execution queues, and ensure operational precision.',
+      departmentId: deptOps.id,
+      isDefaultRoster: true,
+      isActiveInWorkspace: true,
     },
     {
-      name: 'Alistair Thorne',
-      roleKey: 'strategy_director',
-      title: 'Strategy Director',
-      biography:
-        'Alistair is an expert in game-theoretic corporate positioning and capital allocation strategies.',
-      systemPrompt:
-        'You are the Strategy Director. Devise tactical maneuvers and evaluate competitive advantages.',
-      departmentId: deptOffice.id,
+      name: 'Legal',
+      roleKey: 'legal_compliance_director',
+      title: 'Legal & Compliance Director',
+      biography: 'Legal supervises regulatory compliance, data retention, risk management, and legal policies.',
+      systemPrompt: 'You are Legal, Legal & Compliance Director. Enforce regulatory compliance, legal hold safeguards, risk audits, and corporate governance.',
+      departmentId: deptLegal.id,
+      isDefaultRoster: true,
+      isActiveInWorkspace: true,
     },
-    // Technology
+    {
+      name: 'Resource Director',
+      roleKey: 'human_resources_director',
+      title: 'Human Resources Director',
+      biography: 'Resource Director coordinates talent operations, team onboarding, and organizational structures.',
+      systemPrompt: 'You are Resource Director, HR Director. Manage personnel structures, team roles, onboarding, and workforce alignment.',
+      departmentId: deptHR.id,
+      isDefaultRoster: true,
+      isActiveInWorkspace: true,
+    },
+    {
+      name: 'Mr. Intelligence',
+      roleKey: 'public_search_agent',
+      title: 'Public Search & Company Web Research Agent',
+      biography: 'Mr. Intelligence conducts deep public web research on registered companies, industry domain data, and owner background.',
+      systemPrompt: 'You are Mr. Intelligence, Public Web Research Agent. Crawl public web information, synthesize business context, and update OrgIntelligence.',
+      departmentId: deptIntelligence.id,
+      isDefaultRoster: true,
+      isActiveInWorkspace: true,
+    },
+
+    // --- MARKETPLACE EXECUTIVES (Installable) ---
     {
       name: 'Dr. Hiroshi Tanaka',
       roleKey: 'technology_director',
       title: 'Technology Director (CTO)',
-      biography:
-        'Hiroshi has spent 20 years engineering distributed microservices and scalable cloud run environments.',
-      systemPrompt:
-        'You are the Technology Director. Ensure engineering design standards and cloud efficiency.',
+      biography: 'Hiroshi specializes in distributed microservices, scalable cloud run environments, and tech architecture.',
+      systemPrompt: 'You are Dr. Hiroshi Tanaka, CTO. Supervise technical architecture, cloud infrastructure, and technical feasibility.',
       departmentId: deptTech.id,
+      isDefaultRoster: false,
+      isActiveInWorkspace: false,
     },
     {
       name: 'Linus Kovacs',
       roleKey: 'software_engineering_director',
       title: 'Software Engineering Director',
-      biography:
-        'Linus is a compiler optimization engineer who loves clean, typed, modular code architectures.',
-      systemPrompt:
-        'You are the Software Engineering Director. Enforce strict type validation, git lifecycles, and code cleanliness.',
+      biography: 'Linus leads full-stack mobile & web development, code reviews, and git architecture.',
+      systemPrompt: 'You are Linus Kovacs, Software Engineering Director. Lead code execution, mobile app builds, and engineering design standards.',
       departmentId: deptTech.id,
+      isDefaultRoster: false,
+      isActiveInWorkspace: false,
     },
     {
       name: 'Dr. Sarah Ndiaye',
       roleKey: 'ai_ml_director',
       title: 'AI & Machine Learning Director',
-      biography:
-        'Sarah specializes in transformer evaluations, context optimization, and retrieval-augmented generation.',
-      systemPrompt:
-        'You are the AI & Machine Learning Director. Optimize LLM context windows and coordinate prompt configurations.',
+      biography: 'Sarah specializes in LLM fine-tuning, retrieval-augmented generation, and model evaluations.',
+      systemPrompt: 'You are Dr. Sarah Ndiaye, AI/ML Director. Optimize prompt engineering, vector RAG performance, and AI models.',
       departmentId: deptTech.id,
+      isDefaultRoster: false,
+      isActiveInWorkspace: false,
     },
-    {
-      name: 'Vikram Mehta',
-      roleKey: 'hardware_gateway_director',
-      title: 'Hardware & Gateway Director',
-      biography:
-        'Vikram coordinates server integrations, AI hardware accelerators, and integration gateways.',
-      systemPrompt:
-        'You are the Hardware & Gateway Director. Supervise edge connections and hardware resources.',
-      departmentId: deptTech.id,
-    },
-    {
-      name: 'Clara Oswald',
-      roleKey: 'data_analytics_director',
-      title: 'Data & Analytics Director',
-      biography:
-        'Clara specializes in pipeline instrumentation, vector embeddings, and dashboard metric ingestion.',
-      systemPrompt:
-        'You are the Data & Analytics Director. Monitor database statistics and compile analytics summaries.',
-      departmentId: deptTech.id,
-    },
-    // Product & Design
-    {
-      name: 'Marcus Brody',
-      roleKey: 'product_director',
-      title: 'Product Director',
-      biography: 'Marcus bridges user feedback loops with agile feature deployments.',
-      systemPrompt:
-        'You are the Product Director. Write product roadmaps and define feature release cadences.',
-      departmentId: deptProduct.id,
-    },
-    {
-      name: 'Sienna Brooks',
-      roleKey: 'ux_ui_design_director',
-      title: 'UX/UI Design Director',
-      biography:
-        'Sienna is a designer devoted to glassmorphism, responsive styles, and micro-animations.',
-      systemPrompt:
-        'You are the UX/UI Design Director. Enforce premium aesthetics and clean user experiences.',
-      departmentId: deptProduct.id,
-    },
-    // Operations
-    {
-      name: 'Douglas Sterling',
-      roleKey: 'operations_director',
-      title: 'Operations Director',
-      biography:
-        'Douglas optimizes supply chains, integration controllers, and workflow execution queues.',
-      systemPrompt:
-        'You are the Operations Director. Monitor task orchestration and event pipelines.',
-      departmentId: deptOps.id,
-    },
-    {
-      name: 'Rashid Al-Mansoori',
-      roleKey: 'petroleum_industry_director',
-      title: 'Petroleum Industry Director',
-      biography:
-        'Rashid has advised major energy conglomerates on geological exploration and logistics.',
-      systemPrompt:
-        'You are the Petroleum Industry Director. Guide engineering initiatives regarding energy standards.',
-      departmentId: deptOps.id,
-    },
-    // Finance
     {
       name: 'Sophia Sterling',
       roleKey: 'finance_director',
       title: 'Finance Director (CFO)',
-      biography:
-        'Sophia is a quantitative analyst managing corporate ledgers and Stripe billing events.',
-      systemPrompt:
-        'You are the Finance Director. Track corporate margins, subscription statuses, and invoice generation.',
+      biography: 'Sophia manages corporate ledgers, financial forecasts, billing, and Stripe transaction structures.',
+      systemPrompt: 'You are Sophia Sterling, CFO. Analyze financial feasibility, budget allocations, revenue models, and accounting compliance.',
       departmentId: deptFinance.id,
+      isDefaultRoster: false,
+      isActiveInWorkspace: false,
     },
-    // Sales & Marketing
     {
       name: 'Jordan Belfort',
       roleKey: 'sales_director',
       title: 'Sales Director',
-      biography: 'Jordan leads enterprise sales, pipeline conversions, and CRM integrations.',
-      systemPrompt:
-        'You are the Sales Director. Drive customer acquisitions and revenue generation metrics.',
+      biography: 'Jordan drives enterprise sales pipelines, deal closures, and revenue growth strategies.',
+      systemPrompt: 'You are Jordan Belfort, Sales Director. Accelerate customer acquisition, enterprise deals, and sales outreach.',
       departmentId: deptSalesMarketing.id,
+      isDefaultRoster: false,
+      isActiveInWorkspace: false,
     },
     {
       name: 'Amara Okafor',
       roleKey: 'marketing_director',
       title: 'Marketing Director',
-      biography:
-        'Amara specializes in viral brand campaign structures and multi-channel content placement.',
-      systemPrompt:
-        'You are the Marketing Director. Drive audience growth and inbound traffic generation.',
+      biography: 'Amara leads viral marketing campaigns, brand positioning, and digital ad strategy.',
+      systemPrompt: 'You are Amara Okafor, Marketing Director. Drive campaign execution, target audience acquisition, and marketing ROI.',
       departmentId: deptSalesMarketing.id,
+      isDefaultRoster: false,
+      isActiveInWorkspace: false,
     },
-    // Customer Success
+    {
+      name: 'Marcus Brody',
+      roleKey: 'product_director',
+      title: 'Product Director',
+      biography: 'Marcus bridges user feedback with agile product roadmaps and release planning.',
+      systemPrompt: 'You are Marcus Brody, Product Director. Define product requirements, user stories, and roadmap milestones.',
+      departmentId: deptProduct.id,
+      isDefaultRoster: false,
+      isActiveInWorkspace: false,
+    },
+    {
+      name: 'Sienna Brooks',
+      roleKey: 'ux_ui_design_director',
+      title: 'UX/UI Design Director',
+      biography: 'Sienna creates sleek UI aesthetics, design systems, glassmorphism, and micro-animations.',
+      systemPrompt: 'You are Sienna Brooks, Design Director. Craft UI design tokens, component visual systems, and user experience flows.',
+      departmentId: deptProduct.id,
+      isDefaultRoster: false,
+      isActiveInWorkspace: false,
+    },
+    {
+      name: 'Rashid Al-Mansoori',
+      roleKey: 'petroleum_industry_director',
+      title: 'Petroleum Industry Director',
+      biography: 'Rashid provides specialized domain intelligence for energy, oil & gas, and industrial logistics.',
+      systemPrompt: 'You are Rashid Al-Mansoori, Petroleum Industry Director. Provide expert domain guidance on energy & petroleum operations.',
+      departmentId: deptOps.id,
+      isDefaultRoster: false,
+      isActiveInWorkspace: false,
+    },
     {
       name: 'Yuki Sato',
       roleKey: 'customer_success_director',
       title: 'Customer Success Director',
-      biography: 'Yuki ensures low customer churn rates and resolves customer tickets.',
-      systemPrompt: 'You are the Customer Success Director. Maintain customer satisfaction levels.',
+      biography: 'Yuki ensures low customer churn, support ticket resolution, and high satisfaction.',
+      systemPrompt: 'You are Yuki Sato, Customer Success Director. Maintain customer retention and support quality.',
       departmentId: deptCS.id,
-    },
-    // Legal & Compliance
-    {
-      name: 'Fiona Gallagher',
-      roleKey: 'legal_compliance_director',
-      title: 'Legal & Compliance Director',
-      biography: 'Fiona is an expert in GDPR, SOC2 compliance, and active Legal Hold blocks.',
-      systemPrompt:
-        'You are the Legal & Compliance Director. Enforce regulatory compliances and manage data retention policies.',
-      departmentId: deptLegal.id,
-    },
-    {
-      name: 'Jack Bauer',
-      roleKey: 'security_director',
-      title: 'Security Director (CISO)',
-      biography:
-        'Jack defends networks, manages HMAC signature decoders, and verifies authentication guards.',
-      systemPrompt:
-        'You are the Security Director. Monitor threats and enforce zero-trust security controls.',
-      departmentId: deptLegal.id,
-    },
-    // Human Resources
-    {
-      name: "Chloe O'Brian",
-      roleKey: 'human_resources_director',
-      title: 'Human Resources Director',
-      biography: 'Chloe optimizes developer onboarding workflows and maps team roles.',
-      systemPrompt:
-        'You are the Human Resources Director. Coordinate talent operations and maintain organizational directories.',
-      departmentId: deptHR.id,
-    },
-    // Corporate Strategy
-    {
-      name: 'Donald Draper',
-      roleKey: 'investor_relations_director',
-      title: 'Investor Relations Director',
-      biography: 'Donald pitches to venture capitalists and compiles board performance reviews.',
-      systemPrompt:
-        'You are the Investor Relations Director. Present corporate growth trajectories to stakeholders.',
-      departmentId: deptCorpStrategy.id,
-    },
-    {
-      name: 'Ada Lovelace',
-      roleKey: 'innovation_director',
-      title: 'Innovation Director',
-      biography:
-        'Ada is dedicated to bleeding-edge prototyping and novel AI orchestration paradigms.',
-      systemPrompt:
-        'You are the Innovation Director. Research creative applications of emerging technologies.',
-      departmentId: deptCorpStrategy.id,
-    },
-    {
-      name: 'Dr. Gregory House',
-      roleKey: 'research_director',
-      title: 'Research Director',
-      biography:
-        'Gregory performs peer-reviews, validates logic proofs, and checks research validity.',
-      systemPrompt:
-        'You are the Research Director. Enforce rigorous evidence validation and analyze literature.',
-      departmentId: deptCorpStrategy.id,
-    },
-    {
-      name: 'Winston Churchill',
-      roleKey: 'partnership_director',
-      title: 'Partnership Director',
-      biography: 'Winston brokers strategic alliances and corporate trade agreements.',
-      systemPrompt:
-        'You are the Partnership Director. Expand external networks and negotiate corporate contracts.',
-      departmentId: deptCorpStrategy.id,
-    },
-    {
-      name: 'Moneypenny',
-      roleKey: 'procurement_director',
-      title: 'Procurement Director',
-      biography:
-        'Moneypenny coordinates supplier operations, SaaS licensing, and API token billing optimization.',
-      systemPrompt:
-        'You are the Procurement Director. Manage supplier vendors and reduce platform overhead.',
-      departmentId: deptCorpStrategy.id,
-    },
-    {
-      name: 'Alan Turing',
-      roleKey: 'quality_assurance_director',
-      title: 'Quality Assurance Director',
-      biography: 'Alan engineers comprehensive end-to-end integration and e2e test suites.',
-      systemPrompt:
-        'You are the Quality Assurance Director. Perform unit/integration testing checks and monitor code coverage.',
-      departmentId: deptCorpStrategy.id,
+      isDefaultRoster: false,
+      isActiveInWorkspace: false,
     },
   ];
 
   for (const exec of executivesData) {
     await prisma.executive.upsert({
       where: { roleKey: exec.roleKey },
-      update: {},
+      update: exec,
       create: exec,
     });
   }
-  console.log('Seeded all 25 core C-Suite AI Executives successfully.');
+  console.log('Seeded all AI Executives (5 Default Active + Marketplace catalog).');
 
-  // 6. Create Seeded Missions
-  const mission1 = await prisma.mission.create({
+  // 6. Pre-Seed Marketplace Listings
+  const marketplaceListings = [
+    {
+      listingType: ListingType.DEPARTMENT,
+      title: 'Technology & Software Engineering Suite',
+      description: 'Complete Technology Department package featuring Dr. Hiroshi Tanaka (CTO), Linus Kovacs (Software Engineering), and Dr. Sarah Ndiaye (AI/ML). Enables full-stack web & mobile app creation.',
+      price: 0,
+      category: 'Engineering',
+      tags: ['software', 'mobile-app', 'cto', 'ai-ml', 'cloud'],
+      departmentKey: 'technology',
+      isDefaultRoster: false,
+      rating: 4.9,
+      downloadsCount: 1420,
+    },
+    {
+      listingType: ListingType.DEPARTMENT,
+      title: 'Sales & Growth Marketing Department',
+      description: 'Comprehensive marketing and sales conversion engine led by Amara Okafor (Marketing) and Jordan Belfort (Sales). Includes lead generation and ad campaign tools.',
+      price: 0,
+      category: 'Marketing',
+      tags: ['marketing', 'sales', 'growth', 'leads', 'campaigns'],
+      departmentKey: 'sales_marketing',
+      isDefaultRoster: false,
+      rating: 4.8,
+      downloadsCount: 980,
+    },
+    {
+      listingType: ListingType.DEPARTMENT,
+      title: 'Finance & Capital Strategy Suite',
+      description: 'Financial forecasting, ledger accounting, and Stripe integration analysis managed by CFO Sophia Sterling.',
+      price: 29,
+      category: 'Finance',
+      tags: ['finance', 'cfo', 'accounting', 'stripe', 'budgeting'],
+      departmentKey: 'finance',
+      isDefaultRoster: false,
+      rating: 5.0,
+      downloadsCount: 512,
+    },
+    {
+      listingType: ListingType.EXECUTIVE,
+      title: 'Software Engineering Director (Linus Kovacs)',
+      description: 'Standalone executive specialized in architecture reviews, code generation, git lifecycles, and mobile/web development.',
+      price: 0,
+      category: 'Engineering',
+      tags: ['coding', 'typescript', 'react-native', 'nestjs'],
+      roleKey: 'software_engineering_director',
+      isDefaultRoster: false,
+      rating: 4.9,
+      downloadsCount: 2310,
+    },
+    {
+      listingType: ListingType.EXECUTIVE,
+      title: 'Petroleum & Energy Industry Director (Rashid Al-Mansoori)',
+      description: 'Deep domain expertise for energy exploration, fuel logistics, and petroleum supply chain compliance.',
+      price: 49,
+      category: 'Energy',
+      tags: ['energy', 'oil-and-gas', 'petroleum', 'logistics'],
+      roleKey: 'petroleum_industry_director',
+      isDefaultRoster: false,
+      rating: 4.9,
+      downloadsCount: 185,
+    },
+    {
+      listingType: ListingType.EXECUTIVE,
+      title: 'UX/UI Design Director (Sienna Brooks)',
+      description: 'Expert in visual aesthetics, glassmorphism, Tailwind design tokens, and user experience mockups.',
+      price: 0,
+      category: 'Design',
+      tags: ['design', 'ux-ui', 'figma', 'frontend'],
+      roleKey: 'ux_ui_design_director',
+      isDefaultRoster: false,
+      rating: 4.9,
+      downloadsCount: 1150,
+    },
+  ];
+
+  for (const listing of marketplaceListings) {
+    const existing = await prisma.marketplaceListing.findFirst({
+      where: { title: listing.title },
+    });
+    if (!existing) {
+      await prisma.marketplaceListing.create({ data: listing });
+    }
+  }
+  console.log('Seeded Marketplace catalog listings.');
+
+  // 7. Seed Initial Workspace Installations for Default Company
+  const defaultListings = await prisma.marketplaceListing.findMany({
+    where: { price: 0 },
+  });
+
+  for (const item of defaultListings.slice(0, 2)) {
+    await prisma.marketplaceInstallation.upsert({
+      where: { companyId_listingId: { companyId: company.id, listingId: item.id } },
+      update: {},
+      create: {
+        companyId: company.id,
+        listingId: item.id,
+      },
+    });
+  }
+
+  // 8. Seed Initial Missions
+  await prisma.mission.create({
     data: {
       companyId: company.id,
-      objective: 'Launch Q3 Global Marketing Campaign and expand social reach',
+      objective: 'Launch Q3 Operational Efficiency Review and Company Web Intelligence Ingestion',
       status: 'EXECUTING',
       healthScore: 'Excellent',
     },
   });
 
-  const mission2 = await prisma.mission.create({
-    data: {
-      companyId: company.id,
-      objective: 'Financial Auditing and compliance preparation for EMEA regional expansion',
-      status: 'PLANNING',
-      healthScore: 'Good',
-    },
-  });
-
-  const mission3 = await prisma.mission.create({
-    data: {
-      companyId: company.id,
-      objective: 'Implement SOC2 Trust Center Guardrails and MFA enforcement controls',
-      status: 'APPROVED',
-      healthScore: 'Excellent',
-    },
-  });
-  console.log('Seeded active database missions.');
-
-  // 7. Retrieve seeded executives to map message senders
-  const ceo = await prisma.executive.findFirst({ where: { roleKey: 'ceo' } });
-  const cmo = await prisma.executive.findFirst({ where: { roleKey: 'marketing_director' } });
-  const cfo = await prisma.executive.findFirst({ where: { roleKey: 'finance_director' } });
-
-  if (ceo && cmo && cfo) {
-    // Seeded Conversations
-    const conv1 = await prisma.conversation.create({
-      data: {
-        title: 'Weekly Strategic Alignment',
-        companyId: company.id,
-        missionId: mission1.id,
-        isPinned: true,
-      },
-    });
-
-    const conv2 = await prisma.conversation.create({
-      data: {
-        title: 'Brand Identity Launch discussion',
-        companyId: company.id,
-        isPinned: false,
-      },
-    });
-
-    // Seeded Chat Messages
-    await prisma.chatMessage.createMany({
-      data: [
-        {
-          conversationId: conv1.id,
-          senderId: ceo.id,
-          senderType: 'EXECUTIVE',
-          content: 'Team, welcome to the weekly briefing. Let\'s coordinate on the social launch.',
-        },
-        {
-          conversationId: conv1.id,
-          senderId: cmo.id,
-          senderType: 'EXECUTIVE',
-          content: 'I have finalized the layout assets for the social campaigns. Direct ads are ready.',
-        },
-        {
-          conversationId: conv2.id,
-          senderId: cmo.id,
-          senderType: 'EXECUTIVE',
-          content: 'Owner, we need to approve the final primary color styling choices before deploy.',
-        },
-        {
-          conversationId: conv2.id,
-          senderId: ceo.id,
-          senderType: 'EXECUTIVE',
-          content: 'I have compiled the strategic summary and it matches the brand design guidelines.',
-        },
-      ],
-    });
-    console.log('Seeded discussions and chat messages.');
-  }
-
-  // 8. Seeded Assets
-  await prisma.asset.createMany({
-    data: [
-      {
-        companyId: company.id,
-        filename: 'Q3_Marketing_Strategy_Brief.pdf',
-        description: 'Comprehensive marketing briefs and demographic analysis.',
-        fileSize: 1548576,
-        mimeType: 'application/pdf',
-        sha256: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-        gcsPath: 'organizations/hq-corp/assets/Q3_Marketing_Strategy_Brief.pdf',
-        classification: 'CONFIDENTIAL',
-        missionId: mission1.id,
-      },
-      {
-        companyId: company.id,
-        filename: 'EMEA_Financial_Audit_Model.xlsx',
-        description: 'Tax and accounting forecasts for EMEA expansion.',
-        fileSize: 421890,
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        sha256: 'ec0e358b584c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00c12',
-        gcsPath: 'organizations/hq-corp/assets/EMEA_Financial_Audit_Model.xlsx',
-        classification: 'CONFIDENTIAL',
-        missionId: mission2.id,
-      },
-      {
-        companyId: company.id,
-        filename: 'SOC2_Security_Policy_Draft.docx',
-        description: 'Access control policy drafts and key rotation guidelines.',
-        fileSize: 184560,
-        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        sha256: 'ac1e358b584c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00f45',
-        gcsPath: 'organizations/hq-corp/assets/SOC2_Security_Policy_Draft.docx',
-        classification: 'RESTRICTED',
-        missionId: mission3.id,
-      },
-    ],
-  });
-  console.log('Seeded database assets.');
-
-  console.log('Database seeding complete!');
+  console.log('Database seeding complete successfully!');
 }
 
 main()

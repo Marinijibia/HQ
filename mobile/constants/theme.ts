@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 
 export const HQColors = {
   blue: '#0A84FF',
-  cyan: '#30D158',
+  cyan: '#06B6D4',
   purple: '#BF5AF2',
   rose: '#F43F5E',
   dark: '#0A0A0C',

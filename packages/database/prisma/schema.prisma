@@ -58,6 +58,7 @@ model Company {
   orgSettings        OrgSettings?
   apiKeys            ApiKey[]
   orgIntelligence    OrgIntelligence?
+  marketplaceInstallations MarketplaceInstallation[]
 
   @@index([parentId])
   @@index([slug])
@@ -114,6 +115,7 @@ model Department {
   id             String       @id @default(uuid()) @db.Uuid
   name           String
   description    String?
+  isDefaultRoster Boolean     @default(false) @map("is_default_roster")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
   deletedAt      DateTime?    @map("deleted_at")
@@ -126,6 +128,7 @@ model Department {
 
   teams          Team[]
   executives     Executive[]
+  trainingData   DepartmentTrainingData[]
 
   @@index([companyId])
   @@map("departments")
@@ -204,29 +207,33 @@ enum UserRole {
 // ==========================================
 
 model Executive {
-  id             String       @id @default(uuid()) @db.Uuid
-  name           String
-  roleKey        String       @unique @map("role_key")
-  title          String
-  biography      String?
-  systemPrompt   String?      @map("system_prompt")
-  avatarUrl      String?      @map("avatar_url")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
-  deletedAt      DateTime?    @map("deleted_at")
-  createdBy      String?      @db.Uuid @map("created_by")
-  updatedBy      String?      @db.Uuid @map("updated_by")
-  deletedBy      String?      @db.Uuid @map("deleted_by")
+  id                  String       @id @default(uuid()) @db.Uuid
+  name                String
+  roleKey             String       @unique @map("role_key")
+  title               String
+  biography           String?
+  systemPrompt        String?      @map("system_prompt")
+  avatarUrl           String?      @map("avatar_url")
+  isDefaultRoster     Boolean      @default(false) @map("is_default_roster")
+  isActiveInWorkspace Boolean      @default(true) @map("is_active_in_workspace")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+  deletedAt           DateTime?    @map("deleted_at")
+  createdBy           String?      @db.Uuid @map("created_by")
+  updatedBy           String?      @db.Uuid @map("updated_by")
+  deletedBy           String?      @db.Uuid @map("deleted_by")
 
-  departmentId   String       @db.Uuid @map("department_id")
-  department     Department   @relation(fields: [departmentId], references: [id])
+  departmentId        String       @db.Uuid @map("department_id")
+  department          Department   @relation(fields: [departmentId], references: [id])
 
-  tasks          MissionTask[]
-  memories       ExecutiveMemory[]
+  tasks               MissionTask[]
+  memories            ExecutiveMemory[]
+  trainingData        ExecutiveTrainingData[]
 
   @@index([departmentId])
   @@map("executives")
 }
+
 
 // ==========================================
 // 4. MISSIONS & TASK GRAPH (E15)
@@ -729,3 +736,82 @@ model OrgIntelligence {
 
   @@map("org_intelligence")
 }
+
+// ==========================================
+// 12. MARKETPLACE & CMS TRAINING MODELS
+// ==========================================
+
+enum ListingType {
+  EXECUTIVE
+  DEPARTMENT
+}
+
+model MarketplaceListing {
+  id               String                    @id @default(uuid()) @db.Uuid
+  listingType      ListingType               @default(EXECUTIVE) @map("listing_type")
+  title            String
+  description      String
+  price            Float                     @default(0)
+  currency         String                    @default("USD")
+  iconUrl          String?                   @map("icon_url")
+  category         String                    @default("General")
+  tags             String[]
+  isPublished      Boolean                   @default(true) @map("is_published")
+  isDefaultRoster  Boolean                   @default(false) @map("is_default_roster")
+  downloadsCount   Int                       @default(0) @map("downloads_count")
+  rating           Float                     @default(5.0)
+  roleKey          String?                   @map("role_key")
+  departmentKey    String?                   @map("department_key")
+  executiveData    Json?                     @map("executive_data")
+  departmentData   Json?                     @map("department_data")
+  createdAt        DateTime                  @default(now()) @map("created_at")
+  updatedAt        DateTime                  @updatedAt @map("updated_at")
+
+  installations    MarketplaceInstallation[]
+
+  @@map("marketplace_listings")
+}
+
+model MarketplaceInstallation {
+  id             String             @id @default(uuid()) @db.Uuid
+  companyId      String             @db.Uuid @map("company_id")
+  company        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  listingId      String             @db.Uuid @map("listing_id")
+  listing        MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  installedAt    DateTime           @default(now()) @map("installed_at")
+  installedBy    String?            @db.Uuid @map("installed_by")
+
+  @@unique([companyId, listingId])
+  @@index([companyId])
+  @@index([listingId])
+  @@map("marketplace_installations")
+}
+
+model DepartmentTrainingData {
+  id             String       @id @default(uuid()) @db.Uuid
+  departmentId   String       @db.Uuid @map("department_id")
+  department     Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  filename       String
+  content        String
+  embedding      Unsupported("vector(1536)")?
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@index([departmentId])
+  @@map("department_training_data")
+}
+
+model ExecutiveTrainingData {
+  id             String       @id @default(uuid()) @db.Uuid
+  executiveId    String       @db.Uuid @map("executive_id")
+  executive      Executive    @relation(fields: [executiveId], references: [id], onDelete: Cascade)
+  filename       String
+  content        String
+  embedding      Unsupported("vector(1536)")?
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@index([executiveId])
+  @@map("executive_training_data")
+}
+

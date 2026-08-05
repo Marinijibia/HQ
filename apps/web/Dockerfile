@@ -25,10 +25,11 @@ WORKDIR /app
 COPY --from=builder /app/out/json/ ./
 COPY --from=builder /app/out/yarn.lock ./yarn.lock
 
-# Configure official npm registry & install dependencies
+# Configure official npm registry, extend timeouts & limit concurrency for Docker networking stability
 RUN yarn config set registry https://registry.npmjs.org/ \
-    && yarn config set network-timeout 300000 \
-    && yarn install --prefer-offline --no-lockfile --ignore-engines \
+    && yarn config set network-timeout 600000 \
+    && yarn config set network-concurrency 1 \
+    && yarn install --frozen-lockfile --ignore-engines \
     && yarn cache clean
 
 # Copy full pruned workspace source
@@ -55,11 +56,11 @@ RUN groupadd --system nodejs \
     && useradd --system --gid nodejs --create-home nextjs
 
 # Copy standalone server, static assets, and public directory
-COPY --from=installer --chown=nestjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=installer --chown=nestjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=installer --chown=nestjs:nodejs /app/apps/web/public ./apps/web/public
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
-USER nestjs
+USER nextjs
 
 EXPOSE 3000
 

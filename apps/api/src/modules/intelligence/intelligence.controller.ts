@@ -10,15 +10,36 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { IntelligenceService } from './intelligence.service';
+import { CompanyResearchService } from './company-research.service';
 import { AuthGuard } from '../auth/auth.guard';
 import * as types from '../../common/interfaces/request.interface';
+
+export class TriggerResearchDto {
+  companyName!: string;
+  domainHint?: string;
+}
 
 @ApiTags('Intelligence')
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
 @Controller('intelligence')
 export class IntelligenceController {
-  constructor(private readonly intelligenceService: IntelligenceService) {}
+  constructor(
+    private readonly intelligenceService: IntelligenceService,
+    private readonly researchService: CompanyResearchService,
+  ) {}
+
+
+  @Post('research')
+  @ApiOperation({ summary: 'Mr. Intelligence: Conduct automated public web research on company' })
+  triggerResearch(@Req() req: types.AuthenticatedRequest, @Body() body: TriggerResearchDto) {
+    return this.researchService.researchCompany(
+      req.user.companyId,
+      body.companyName,
+      body.domainHint,
+    );
+  }
+
 
   @Get()
   @ApiOperation({ summary: 'Get the full Digital Organization Model' })

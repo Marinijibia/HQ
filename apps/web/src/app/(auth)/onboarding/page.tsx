@@ -38,6 +38,7 @@ import {
   Palette,
   Check,
   CheckCircle,
+  Volume2,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { HQLogo } from '../../../components/hq-logo';
@@ -60,6 +61,11 @@ export default function OnboardingPage() {
   const [website, setWebsite] = React.useState('');
   const [industry, setIndustry] = React.useState('Technology');
   const [companySize, setCompanySize] = React.useState('1-5');
+
+  // Executive Honorific Title, Name & Voice Persona
+  const [userTitle, setUserTitle] = React.useState('Alh');
+  const [userDisplayName, setUserDisplayName] = React.useState('');
+  const [voicePersona, setVoicePersona] = React.useState('Asad Male Executive');
 
   // Step 2: Plain-English Target Market
   const [targetMarket, setTargetMarket] = React.useState('B2B');
@@ -293,6 +299,9 @@ export default function OnboardingPage() {
       orgSlug,
       industry,
       companySize,
+      userTitle,
+      userDisplayName,
+      voicePersona,
       customerType: targetMarket,
       businessDesc,
       goals: selectedGoals,
@@ -301,6 +310,11 @@ export default function OnboardingPage() {
       aiStyle,
       brandColor,
     };
+
+    // Save user title, display name, and voice persona locally
+    localStorage.setItem('hq_user_title', userTitle);
+    localStorage.setItem('hq_user_display_name', userDisplayName || 'Executive');
+    localStorage.setItem('hq_asad_voice_persona', voicePersona);
 
     try {
       setSubmitProgress(30);
@@ -458,17 +472,83 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Team Size</label>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Company Size</label>
                     <select
                       value={companySize}
                       onChange={(e) => setCompanySize(e.target.value)}
                       className="w-full bg-black/50 border border-white/10 text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-500"
                     >
-                      <option value="1-5">1 - 5 Team Members</option>
-                      <option value="6-20">6 - 20 Team Members</option>
-                      <option value="21-50">21 - 50 Team Members</option>
-                      <option value="50+">50+ Enterprise Scale</option>
+                      <option value="1-5">1-5 Employees</option>
+                      <option value="6-20">6-20 Employees</option>
+                      <option value="21-100">21-100 Employees</option>
+                      <option value="100+">100+ Enterprise</option>
                     </select>
+                  </div>
+
+                  {/* Executive Honorific Title, Name & Preferred Voice Persona */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:col-span-2 pt-4 border-t border-white/10 mt-2">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-cyan-400">Executive Title *</label>
+                      <select
+                        value={userTitle}
+                        onChange={(e) => setUserTitle(e.target.value)}
+                        className="w-full bg-black/50 border border-cyan-500/40 text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-400 font-bold"
+                      >
+                        <option value="Alh">Alhaji / Hajjia (Alh)</option>
+                        <option value="Dr">Doctor (Dr)</option>
+                        <option value="Prof">Professor (Prof)</option>
+                        <option value="Engr">Engineer (Engr)</option>
+                        <option value="Surv">Surveyor (Surv)</option>
+                        <option value="Arc">Architect (Arc)</option>
+                        <option value="Barr">Barrister (Barr)</option>
+                        <option value="Chief">Chief</option>
+                        <option value="Mr">Mr</option>
+                        <option value="Mrs">Mrs</option>
+                        <option value="Ms">Ms</option>
+                        <option value="Sir">Sir</option>
+                        <option value="Lady">Lady</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-cyan-400">Executive Name *</label>
+                      <Input
+                        placeholder="e.g. Umar / Sophia"
+                        value={userDisplayName}
+                        onChange={(e) => setUserDisplayName(e.target.value)}
+                        className="bg-black/50 border-cyan-500/40 text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl font-bold"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 sm:col-span-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-purple-400">Preferred Asad AI Voice Persona</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if ('speechSynthesis' in window) {
+                              window.speechSynthesis.cancel();
+                              const sample = new SpeechSynthesisUtterance(`Okay, ${userTitle} ${userDisplayName || 'Executive'}, Asad voice persona active.`);
+                              sample.pitch = voicePersona.includes('Female') ? 1.2 : 0.95;
+                              window.speechSynthesis.speak(sample);
+                            }
+                          }}
+                          className="text-[10px] font-black text-cyan-300 uppercase tracking-widest hover:underline flex items-center gap-1"
+                        >
+                          <Volume2 className="h-3.5 w-3.5 text-cyan-400" /> Test Voice Sound
+                        </button>
+                      </div>
+                      <select
+                        value={voicePersona}
+                        onChange={(e) => setVoicePersona(e.target.value)}
+                        className="w-full bg-black/50 border border-purple-500/40 text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-purple-400 font-bold"
+                      >
+                        <option value="Asad Male Executive">Asad Male Executive (Resonant & Confident)</option>
+                        <option value="Asad Female Executive">Asad Female Executive (Articulate & Polished)</option>
+                        <option value="Asad Neural British">Asad Neural British (Refined & Crisp)</option>
+                        <option value="Asad System Default">Asad System Default</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>

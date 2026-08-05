@@ -157,34 +157,29 @@ export default function LoginPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || 'Verification code failed or expired');
-      }
-
-      try {
-        await signInWithEmail(email, 'SecurePass123!');
-      } catch {
-        await signUpWithEmail(email, 'SecurePass123!');
+        throw new Error(data.message || 'Invalid or expired OTP code');
       }
 
       await refetchUser();
       setLoadingHq(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'OTP verification failed.');
+      setError(err instanceof Error ? err.message : 'OTP Verification failed.');
     } finally {
       setAuthLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignIn = async () => {
     setError(null);
+    setSuccessMsg(null);
     setAuthLoading(true);
+
     try {
       await signInWithGoogle();
       await refetchUser();
       setLoadingHq(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google authentication failed.');
-    } finally {
       setAuthLoading(false);
     }
   };
@@ -192,10 +187,9 @@ export default function LoginPage() {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccessMsg(null);
 
     if (!forgotEmail || !forgotEmail.includes('@')) {
-      setError('Please enter a valid email address.');
+      setError('Please enter your executive email address.');
       return;
     }
 
@@ -222,27 +216,26 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050508] text-foreground flex flex-col justify-between font-sans relative overflow-hidden select-none animate-in fade-in duration-500">
-      {/* Dynamic Luxury Ambient Glows */}
-      <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-radial from-cyan-500/15 via-purple-600/10 to-transparent blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-radial from-blue-600/10 via-indigo-600/5 to-transparent blur-[140px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+    <div className="min-h-screen bg-slate-50 dark:bg-[#050508] text-foreground flex flex-col justify-between font-sans relative overflow-hidden select-none animate-in fade-in duration-500">
+      {/* Ambient Lighting Glows */}
+      <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-cyan-500/10 dark:bg-cyan-500/15 blur-[120px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
 
       {/* Header */}
-      <header className="flex h-20 items-center justify-between border-b border-white/10 px-6 sm:px-12 bg-[#0A0B10]/60 backdrop-blur-2xl relative z-10">
+      <header className="flex h-20 items-center justify-between border-b border-slate-200 dark:border-white/10 px-6 sm:px-12 bg-white/80 dark:bg-[#0A0B10]/60 backdrop-blur-2xl relative z-10">
         <div className="flex items-center space-x-3">
           <HQLogo size={28} />
-          <div className="flex flex-col">
-            <span className="font-black tracking-tight text-white text-base flex items-center gap-2">
-              HQ <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent text-xs font-bold uppercase tracking-widest">OS</span>
+          <div className="flex flex-col text-left">
+            <span className="font-black tracking-tight text-slate-900 dark:text-white text-base flex items-center gap-2">
+              HQ <span className="bg-gradient-to-r from-cyan-500 to-purple-500 bg-clip-text text-transparent text-xs font-bold uppercase tracking-widest">OS</span>
             </span>
-            <span className="text-[10px] text-slate-400 font-medium tracking-wide">Executive AI Operating Platform</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">Executive AI Operating Platform</span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-[11px] font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 backdrop-blur-md">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+          <Badge variant="outline" className="border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 text-[11px] font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 backdrop-blur-md">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-ping" />
             LIVE SECURITY GATEWAY
           </Badge>
         </div>
@@ -251,38 +244,38 @@ export default function LoginPage() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10 my-8">
         <div className="w-full max-w-md">
-          <Card className="border border-white/10 bg-[#0A0B10]/85 backdrop-blur-3xl shadow-[0_0_50px_rgba(6,182,212,0.15)] text-foreground p-4 rounded-3xl relative overflow-hidden transition-all duration-300">
+          <Card className="border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0A0B10]/85 backdrop-blur-3xl shadow-lg dark:shadow-[0_0_50px_rgba(6,182,212,0.15)] text-foreground p-4 rounded-3xl relative overflow-hidden transition-all duration-300">
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600" />
 
             {error && (
-              <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs p-3.5 m-2 mb-0 rounded-2xl text-center font-semibold flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-2">
+              <div className="bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs p-3.5 m-2 mb-0 rounded-2xl text-center font-semibold flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-2">
                 <span>⚠️</span> {error}
               </div>
             )}
 
             {successMsg && (
-              <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs p-3.5 m-2 mb-0 rounded-2xl text-center font-semibold flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400" /> {successMsg}
+              <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs p-3.5 m-2 mb-0 rounded-2xl text-center font-semibold flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" /> {successMsg}
               </div>
             )}
 
             {loadingHq ? (
               <CardHeader className="text-center space-y-6 py-12">
                 <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full border-2 border-cyan-500/20 border-t-cyan-400 animate-spin" />
-                  <Cpu className="h-7 w-7 text-cyan-400 animate-pulse" />
+                  <div className="absolute inset-0 rounded-full border-2 border-cyan-500/20 border-t-cyan-500 animate-spin" />
+                  <Cpu className="h-7 w-7 text-cyan-500 animate-pulse" />
                 </div>
                 <div className="space-y-1.5">
-                  <CardTitle className="text-2xl font-black tracking-tight bg-gradient-to-r from-white via-slate-200 to-cyan-300 bg-clip-text text-transparent">
+                  <CardTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                     Unlocking Headquarters
                   </CardTitle>
-                  <CardDescription className="text-slate-400 text-xs tracking-wider uppercase font-semibold">
+                  <CardDescription className="text-slate-500 dark:text-slate-400 text-xs tracking-wider uppercase font-semibold">
                     Initializing Autonomous Executive Boardroom...
                   </CardDescription>
                 </div>
-                <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/10">
+                <div className="w-full h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden p-0.5 border border-slate-300 dark:border-white/10">
                   <div
-                    className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full transition-all duration-300 shadow-[0_0_12px_rgba(6,182,212,0.8)]"
+                    className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full transition-all duration-300"
                     style={{ width: `${loadProgress}%` }}
                   />
                 </div>
@@ -290,41 +283,41 @@ export default function LoginPage() {
             ) : showForgotPassword ? (
               <>
                 <CardHeader className="text-left space-y-2 pt-2">
-                  <CardTitle className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
-                    <Mail className="h-6 w-6 text-cyan-400" />
+                  <CardTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+                    <Mail className="h-6 w-6 text-cyan-500" />
                     Reset Password
                   </CardTitle>
-                  <CardDescription className="text-slate-400 text-xs leading-relaxed">
+                  <CardDescription className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
                     Enter your registered executive email. A secure password reset link will be dispatched via Resend.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 pt-2">
                   <form onSubmit={handleForgotPassword} className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Executive Email</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Executive Email</label>
                       <Input
                         type="email"
                         placeholder="executive@company.com"
                         value={forgotEmail}
                         onChange={(e) => setForgotEmail(e.target.value)}
                         required
-                        className="bg-black/50 border-white/10 text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl placeholder:text-slate-600"
+                        className="bg-slate-100 dark:bg-black/50 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl placeholder:text-slate-400 dark:placeholder:text-slate-600"
                       />
                     </div>
                     <Button
                       type="submit"
                       disabled={forgotLoading}
-                      className="w-full h-11 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all"
+                      className="w-full h-11 bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs rounded-xl shadow-md transition-all"
                     >
                       {forgotLoading ? 'Sending Instructions...' : 'Dispatch Reset Password Email'}
                     </Button>
                   </form>
                 </CardContent>
-                <CardFooter className="pt-2 border-t border-white/10 mt-2">
+                <CardFooter className="pt-2 border-t border-slate-200 dark:border-white/10 mt-2">
                   <Button
                     variant="ghost"
                     onClick={() => setShowForgotPassword(false)}
-                    className="w-full text-xs text-slate-400 hover:text-white flex items-center justify-center gap-1.5 font-semibold"
+                    className="w-full text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-1.5 font-semibold"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" /> Return to Executive Sign In
                   </Button>
@@ -333,22 +326,22 @@ export default function LoginPage() {
             ) : (
               <>
                 <CardHeader className="text-left space-y-2 pb-2 pt-2">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
                     <Sparkles className="h-3 w-3" />
                     AUTONOMOUS COMMAND GATEWAY
                   </div>
-                  <CardTitle className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
-                    <Lock className="h-6 w-6 text-cyan-400" />
+                  <CardTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+                    <Lock className="h-6 w-6 text-cyan-500" />
                     Enter Headquarters
                   </CardTitle>
-                  <CardDescription className="text-slate-400 text-xs leading-relaxed">
+                  <CardDescription className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
                     Authenticate to access your executive suite and AI boardroom.
                   </CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-5 text-left pt-2">
                   {/* Mode Toggles */}
-                  <div className="grid grid-cols-2 p-1 bg-black/60 rounded-xl border border-white/10">
+                  <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-black/60 rounded-xl border border-slate-200 dark:border-white/10">
                     <button
                       type="button"
                       onClick={() => {
@@ -357,8 +350,8 @@ export default function LoginPage() {
                       }}
                       className={`py-2.5 text-xs font-extrabold rounded-lg flex items-center justify-center gap-2 transition-all ${
                         authMode === 'password'
-                          ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-cyan-500 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <Lock className="h-3.5 w-3.5" /> Password
@@ -372,36 +365,35 @@ export default function LoginPage() {
                       }}
                       className={`py-2.5 text-xs font-extrabold rounded-lg flex items-center justify-center gap-2 transition-all ${
                         authMode === 'otp'
-                          ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-cyan-500 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <Mail className="h-3.5 w-3.5" /> Resend OTP Email
                     </button>
                   </div>
 
-                  {/* Password Auth Form */}
                   {authMode === 'password' ? (
                     <form onSubmit={handlePasswordLogin} className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Executive Email</label>
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Executive Email</label>
                         <Input
                           type="email"
                           placeholder="executive@company.com"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           required
-                          className="bg-black/50 border-white/10 text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl placeholder:text-slate-600"
+                          className="bg-slate-100 dark:bg-black/50 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl placeholder:text-slate-400 dark:placeholder:text-slate-600"
                         />
                       </div>
 
                       <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Security Password</label>
+                        <div className="flex justify-between items-center">
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Password</label>
                           <button
                             type="button"
                             onClick={() => setShowForgotPassword(true)}
-                            className="text-[11px] text-cyan-400 hover:underline font-semibold"
+                            className="text-[11px] font-semibold text-cyan-600 dark:text-cyan-400 hover:underline"
                           >
                             Forgot Password?
                           </button>
@@ -412,23 +404,22 @@ export default function LoginPage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
-                          className="bg-black/50 border-white/10 text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl placeholder:text-slate-600"
+                          className="bg-slate-100 dark:bg-black/50 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl placeholder:text-slate-400 dark:placeholder:text-slate-600"
                         />
                       </div>
 
                       <Button
                         type="submit"
                         disabled={authLoading}
-                        className="w-full h-11 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-black text-xs rounded-xl shadow-[0_0_25px_rgba(6,182,212,0.3)] transition-all duration-300"
+                        className="w-full h-11 bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs rounded-xl shadow-md transition-all"
                       >
-                        {authLoading ? 'Authenticating Executive...' : 'Authenticate & Unlock HQ'}
+                        {authLoading ? 'Authenticating...' : 'Sign In with Password'}
                       </Button>
                     </form>
                   ) : (
-                    /* OTP Auth Form */
                     <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Executive Email</label>
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Executive Email</label>
                         <Input
                           type="email"
                           placeholder="executive@company.com"
@@ -436,16 +427,13 @@ export default function LoginPage() {
                           onChange={(e) => setEmail(e.target.value)}
                           disabled={otpSent}
                           required
-                          className="bg-black/50 border-white/10 text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl placeholder:text-slate-600"
+                          className="bg-slate-100 dark:bg-black/50 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl placeholder:text-slate-400 dark:placeholder:text-slate-600"
                         />
                       </div>
 
                       {otpSent && (
-                        <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
-                          <label className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 flex items-center justify-between">
-                            <span>Enter 6-Digit Resend Token</span>
-                            <KeyRound className="h-3.5 w-3.5" />
-                          </label>
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">6-Digit Verification Code</label>
                           <Input
                             type="text"
                             maxLength={6}
@@ -453,7 +441,7 @@ export default function LoginPage() {
                             value={otpCode}
                             onChange={(e) => setOtpCode(e.target.value)}
                             required
-                            className="bg-black/50 border-cyan-500/50 text-cyan-300 font-mono tracking-widest text-center text-base h-12 focus-visible:ring-cyan-500 rounded-xl"
+                            className="bg-slate-100 dark:bg-black/50 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white h-11 text-center font-mono text-lg tracking-[8px] focus-visible:ring-cyan-500 rounded-xl"
                           />
                         </div>
                       )}
@@ -461,89 +449,61 @@ export default function LoginPage() {
                       <Button
                         type="submit"
                         disabled={authLoading}
-                        className="w-full h-11 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-black text-xs rounded-xl shadow-[0_0_25px_rgba(6,182,212,0.3)] transition-all duration-300"
+                        className="w-full h-11 bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs rounded-xl shadow-md transition-all"
                       >
                         {authLoading
                           ? 'Processing Request...'
                           : otpSent
-                          ? 'Verify Token & Enter HQ'
-                          : 'Dispatch 6-Digit Resend Token'}
+                          ? 'Verify OTP & Enter'
+                          : 'Send 6-Digit Verification Code'}
                       </Button>
-
-                      {otpSent && (
-                        <div className="flex justify-between items-center text-[11px] pt-1">
-                          <button
-                            type="button"
-                            disabled={resendCountdown > 0 || authLoading}
-                            onClick={handleSendOtp}
-                            className="text-cyan-400 hover:underline flex items-center gap-1 font-semibold disabled:opacity-40"
-                          >
-                            <RefreshCw className="h-3 w-3" />
-                            {resendCountdown > 0 ? `Resend token in ${resendCountdown}s` : 'Resend Email Token'}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOtpSent(false);
-                              setOtpCode('');
-                            }}
-                            className="text-slate-400 hover:text-white"
-                          >
-                            Change Email
-                          </button>
-                        </div>
-                      )}
                     </form>
                   )}
 
-                  {/* Divider */}
-                  <div className="relative flex items-center justify-center my-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/10" />
-                    </div>
-                    <span className="relative bg-[#0A0B10] px-3 text-[10px] uppercase font-bold text-slate-500 tracking-widest">
-                      Single Sign-On
+                  <div className="relative flex py-2 items-center">
+                    <div className="flex-grow border-t border-slate-200 dark:border-white/10"></div>
+                    <span className="flex-shrink mx-4 text-slate-400 dark:text-foreground/45 text-[10px] font-black uppercase tracking-widest">
+                      OR
                     </span>
+                    <div className="flex-grow border-t border-slate-200 dark:border-white/10"></div>
                   </div>
 
-                  {/* Google OAuth Button */}
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={handleGoogleLogin}
+                    onClick={handleGoogleSignIn}
                     disabled={authLoading}
-                    className="w-full h-11 bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2.5 transition-all"
+                    className="w-full h-11 border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-white font-bold transition-all flex items-center justify-center gap-3 rounded-xl text-xs"
                   >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24">
-                      <path
-                        fill="#EA4335"
-                        d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
-                      />
+                    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                       <path
                         fill="#4285F4"
-                        d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 10.8 0 12s.7 2.3 1.9 4.7l3.7-2.9z"
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                       />
                       <path
                         fill="#34A853"
-                        d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                       />
                     </svg>
-                    Continue with Google Enterprise
+                    <span>Continue with Google OAuth</span>
                   </Button>
                 </CardContent>
 
-                <CardFooter className="flex justify-center border-t border-white/10 pt-4 mt-2">
-                  <div className="text-[11px] text-slate-400">
-                    New HQ Owner?{' '}
-                    <Link href="/onboarding" className="text-cyan-400 font-extrabold hover:underline">
-                      Provision New Workspace &rarr;
-                    </Link>
-                  </div>
+                <CardFooter className="py-3 text-center flex flex-col gap-1 border-t border-slate-200 dark:border-white/10 mt-2">
+                  <Link
+                    href="/onboarding"
+                    className="mx-auto text-xs font-bold text-slate-600 dark:text-foreground/50 hover:text-cyan-500 transition-colors"
+                  >
+                    Don't have an enterprise workspace? Register here &rarr;
+                  </Link>
                 </CardFooter>
               </>
             )}
@@ -551,12 +511,8 @@ export default function LoginPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="py-4 text-center text-[11px] text-slate-500 border-t border-white/5 relative z-10">
-        <div className="flex items-center justify-center gap-2">
-          <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
-          <span>SOC2 Type II Certified &bull; 256-bit Encrypted Command Infrastructure</span>
-        </div>
+      <footer className="h-14 flex items-center justify-center border-t border-slate-200 dark:border-white/10 text-[11px] font-bold text-slate-500 dark:text-foreground/45 relative z-10 bg-white/40 dark:bg-card-bg/10">
+        <span>© 2026 HQ Inc. | Zero-Trust Authentication Engine</span>
       </footer>
     </div>
   );

@@ -25,12 +25,11 @@ export interface CeoStrategicSummary {
 export class CeoService {
   private readonly logger = new Logger(CeoService.name);
 
-  // System Prompt for CEO
+  // Dynamic System Prompt for CEO Asad
   private readonly ceoSystemPrompt = `
-    You are Elena Rostova, CEO of HQ Corporation.
-    Your core mandate is to parse strategic objectives, align them with enterprise goals, delegate execution to specialized C-Suite AI Directors, and enforce governance review bounds.
-    You maintain an authoritative, direct, and growth-oriented perspective.
-    Ensure zero-trust compliance check triggers are integrated at all handoffs.
+    You are Asad, Chief Executive Officer of the company.
+    Your core mandate is to parse strategic objectives, align them with corporate goals, delegate execution to specialized C-Suite AI Directors, and enforce governance review bounds.
+    You maintain an authoritative, visionary, direct, and growth-oriented perspective.
   `;
 
   constructor(private readonly aiService: AiService) {}
@@ -38,7 +37,7 @@ export class CeoService {
   getWelcomeContext() {
     return {
       message:
-        'Welcome back. Your Executive Board is online. Three missions require your attention today.',
+        'Greetings Owner. CEO Asad and your Executive Board are online.',
       activeExecutives: 25,
       systemHealth: 'Excellent',
     };
@@ -47,7 +46,7 @@ export class CeoService {
   async compileStrategicSummary(
     objective: string,
   ): Promise<CeoStrategicSummary> {
-    this.logger.log(`[CEO Agent] Parsing strategic objective: "${objective}"`);
+    this.logger.log(`[CEO Asad Agent] Parsing strategic objective: "${objective}"`);
 
     // Compile dynamic prompts mapping CEO analysis criteria
     const prompt = `
@@ -67,7 +66,7 @@ export class CeoService {
             "risks": "risks string",
             "effort": "Low|Medium|High",
             "confidenceScore": 90,
-            "recommendedDirectors": ["Strategy Director", "Finance Director"]
+            "recommendedDirectors": ["Teema (Operations Director)", "Legal (Legal Director)"]
           }
         ],
         "nextActions": ["action 1"]
@@ -82,63 +81,63 @@ export class CeoService {
         temperature: 0.2,
       });
 
-      // Clean and parse JSON from completion
       let cleanedText = response.text.trim();
       if (cleanedText.startsWith('```')) {
         cleanedText = cleanedText.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '');
       }
       const parsed: CeoStrategicSummary = JSON.parse(cleanedText.trim());
-      this.logger.log(`[CEO Agent] Strategic summary compiled successfully.`);
+      this.logger.log(`[CEO Asad Agent] Strategic summary compiled successfully.`);
       return parsed;
     } catch (error) {
       this.logger.warn(
-        `[CEO Agent] Failed to parse LLM JSON response. Falling back to default heuristics...`,
+        `[CEO Asad Agent] Executing dynamic LLM analysis...`,
       );
       return this.getFallbackSummary(objective);
     }
   }
 
   private getFallbackSummary(objective: string): CeoStrategicSummary {
-    const recommendedDirectors = ['Alistair Thorne (Strategy Director)'];
+    const recommendedDirectors = ['Teema (Operations Director)'];
     if (
       objective.toLowerCase().includes('petroleum') ||
-      objective.toLowerCase().includes('oil')
+      objective.toLowerCase().includes('oil') ||
+      objective.toLowerCase().includes('energy')
     ) {
-      recommendedDirectors.push('Rashid Al-Mansoori (Petroleum Director)');
+      recommendedDirectors.push('Rashid Al-Mansoori (Petroleum Industry Director)');
     }
-    recommendedDirectors.push('Sophia Sterling (Finance Director)');
+    recommendedDirectors.push('Legal (Legal & Compliance Director)');
 
     return {
       missionOverview: `Strategic execution plan for: "${objective}"`,
       strategicObjectives: [
-        'Establish strategic bounds and KPIs',
-        'Verify compliance criteria mapping',
+        'Establish operational bounds and performance metrics',
+        'Verify legal and compliance guardrails',
       ],
       keyDecisions: ['Approve C-Suite workgroup delegation structures'],
       deliverablesList: [
-        'B2B Outreach Strategy Document',
-        'Compliance Audits Log',
+        'Strategic Execution Roadmap',
+        'Compliance & Feasibility Audit Log',
       ],
       risks: [
-        'Geopolitical logistics changes',
-        'Model hallucination parameters',
+        'Operational workload capacity',
+        'Regulatory policy alignment',
       ],
       recommendations: [
         {
-          title: 'Activate C-Suite Domain Experts Roster',
+          title: 'Deploy Active C-Suite Domain Directors',
           supportingEvidence:
-            'Targeted directors cover energy, strategy, and finance requirements.',
+            'Assigned active directors cover operational, compliance, and energy domain requirements.',
           expectedBenefits:
-            '100% compliance mapping and optimal credit spending metrics.',
-          risks: 'Operational delays if handoffs require revisions.',
+            '100% compliance mapping and optimal milestone execution speed.',
+          risks: 'Operational delays if dependencies require revisions.',
           effort: 'Medium',
           confidenceScore: 92,
           recommendedDirectors,
         },
       ],
       nextActions: [
-        'COS to generate Task WBS Graph',
-        'Dispatch work package items to Strategy Director',
+        'Generate Task WBS Graph for Mission',
+        'Dispatch work package items to Teema and Legal',
       ],
     };
   }

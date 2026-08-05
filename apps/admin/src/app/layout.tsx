@@ -3,6 +3,7 @@ import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_ADMIN_URL || 'https://admin.hq.netify.ng'),
   title: 'HQ Operations Console — Admin Portal',
   description: 'Manage and monitor customer activity logs, compliance parameters, white label settings and executive AI core statistics.',
   icons: {

@@ -150,40 +150,10 @@ export default function NotificationsInboxPage() {
     }
   };
 
-  const handleToggleArchive = async (id: string) => {
-    if (!token) return;
-    try {
-      const res = await fetch(`/api/notifications/${id}/archive`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        fetchInboxData();
-      }
-    } catch (err) {
-      console.error('Failed toggling archive:', err);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!token) return;
-    try {
-      const res = await fetch(`/api/notifications/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        fetchInboxData();
-      }
-    } catch (err) {
-      console.error('Failed deleting alert:', err);
-    }
-  };
-
   const handleMarkAllRead = async () => {
     if (!token) return;
     try {
-      const res = await fetch('/api/notifications/mark-all-read', {
+      const res = await fetch('/api/notifications/read-all', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -191,32 +161,25 @@ export default function NotificationsInboxPage() {
         fetchInboxData();
       }
     } catch (err) {
-      console.error('Failed bulk mark read:', err);
+      console.error('Failed marking all as read:', err);
     }
   };
 
-  const handleSavePreferences = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSavePreferences = () => {
     setPrefSavedToast(true);
     setTimeout(() => setPrefSavedToast(false), 3000);
   };
 
   const getSenderDetails = (notif: Notification) => {
-    if (notif.senderType !== 'EXECUTIVE') {
-      return {
-        name: 'HQ System',
-        role: 'Platform Alert',
-        fallback: 'SYS',
-      };
-    }
-    const exec = executives.find((e) => e.id === notif.senderId);
-    if (exec) {
-      const name = exec.roleKey === 'ceo' ? ceoName : exec.name;
-      return {
-        name,
-        role: exec.title,
-        fallback: name.substring(0, 2).toUpperCase(),
-      };
+    if (notif.senderId) {
+      const exec = executives.find((e) => e.id === notif.senderId);
+      if (exec) {
+        return {
+          name: exec.name,
+          role: exec.title,
+          fallback: exec.name.split(' ').map((n) => n[0]).join(''),
+        };
+      }
     }
     return {
       name: ceoName,
@@ -237,7 +200,7 @@ export default function NotificationsInboxPage() {
         return (
           <Badge
             variant="ai"
-            className="bg-hq-purple/10 text-hq-purple border-hq-purple/30 text-xs"
+            className="bg-purple-500/10 text-purple-600 dark:text-purple-300 border-purple-500/30 text-xs"
           >
             High Priority
           </Badge>
@@ -258,15 +221,15 @@ export default function NotificationsInboxPage() {
   };
 
   return (
-    <div className="space-y-8 select-none text-foreground pb-12">
+    <div className="space-y-8 select-none text-foreground pb-12 animate-in fade-in duration-500">
       {/* Page Header */}
-      <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-4">
+      <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-4 text-left">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white flex items-center gap-2">
-            <Bell className="h-8 w-8 text-hq-blue" />
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <Bell className="h-8 w-8 text-cyan-500" />
             Executive Inbox & Alerts
           </h1>
-          <p className="text-foreground/60 text-sm mt-1">
+          <p className="text-slate-600 dark:text-foreground/60 text-sm mt-1 font-medium">
             Official strategic briefings and security escalations from your C-Suite executives.
           </p>
         </div>
@@ -275,7 +238,7 @@ export default function NotificationsInboxPage() {
           <Button
             variant="outline"
             onClick={() => setShowArchived(!showArchived)}
-            className="text-xs font-bold h-9 border-card-border"
+            className="text-xs font-bold h-9 border-slate-200 dark:border-card-border text-slate-700 dark:text-foreground"
           >
             <Archive className="h-4 w-4 mr-1.5" />
             {showArchived ? 'Active Alerts' : 'Archived Feed'}
@@ -283,8 +246,7 @@ export default function NotificationsInboxPage() {
           <Button
             onClick={handleMarkAllRead}
             disabled={!Array.isArray(notifications) || notifications.filter((n) => !n.read).length === 0}
-            className="text-xs font-bold h-9 text-white"
-            style={{ backgroundColor: brandColor }}
+            className="text-xs font-bold h-9 text-white bg-cyan-500 hover:bg-cyan-400"
           >
             <CheckCheck className="h-4 w-4 mr-1.5" />
             Mark All Read
@@ -297,8 +259,8 @@ export default function NotificationsInboxPage() {
         {/* Inbox Main Stream */}
         <div className="lg:col-span-3 space-y-4">
           {/* Filters and search bar */}
-          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-card-bg border border-card-border p-3.5 rounded-2xl">
-            <div className="flex gap-1.5">
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-white dark:bg-card-bg border border-slate-200 dark:border-card-border p-3.5 rounded-2xl shadow-sm">
+            <div className="flex flex-wrap gap-1.5">
               {[
                 { id: 'all', label: 'All Messages' },
                 { id: 'executive', label: 'C-Suite Alerts' },
@@ -310,12 +272,9 @@ export default function NotificationsInboxPage() {
                   onClick={() => setActiveCategory(category.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                     activeCategory === category.id
-                      ? 'text-white border-transparent'
-                      : 'bg-[#F9F9FB] dark:bg-[#0A0A0C] border-card-border text-foreground/70 hover:bg-black/5 dark:hover:bg-white/5'
+                      ? 'bg-cyan-500 text-white border-transparent'
+                      : 'bg-slate-100 dark:bg-[#0A0A0C] border-slate-200 dark:border-card-border text-slate-700 dark:text-foreground/70 hover:bg-slate-200 dark:hover:bg-white/5'
                   }`}
-                  style={{
-                    backgroundColor: activeCategory === category.id ? brandColor : undefined,
-                  }}
                 >
                   {category.label}
                 </button>
@@ -329,7 +288,7 @@ export default function NotificationsInboxPage() {
                 placeholder="Search alerts inbox..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 w-full rounded-md border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] pl-9 pr-4 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-hq-blue"
+                className="h-9 w-full rounded-md border border-slate-300 dark:border-card-border bg-white dark:bg-[#0A0A0C] pl-9 pr-4 text-xs text-slate-900 dark:text-foreground placeholder:text-slate-400 dark:placeholder:text-foreground/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500"
               />
             </div>
           </div>
@@ -340,10 +299,10 @@ export default function NotificationsInboxPage() {
               <ListSkeleton rows={6} />
             </div>
           ) : !Array.isArray(notifications) || notifications.length === 0 ? (
-            <Card className="border border-card-border bg-card-bg p-16 text-center">
+            <Card className="border border-slate-200 dark:border-card-border bg-white dark:bg-card-bg p-16 text-center shadow-sm">
               <Check className="h-10 w-10 text-emerald-500 bg-emerald-500/10 p-2 rounded-full mx-auto mb-3" />
-              <h3 className="text-sm font-bold text-[#1A1A1E] dark:text-white">Inbox Clean</h3>
-              <p className="text-xs text-foreground/50 mt-1">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Inbox Clean</h3>
+              <p className="text-xs text-slate-500 dark:text-foreground/50 mt-1">
                 You have no active alerts matching this filter configuration.
               </p>
             </Card>
@@ -356,8 +315,8 @@ export default function NotificationsInboxPage() {
                     key={notif.id}
                     className={`border transition-all hover:shadow-md text-left flex flex-col sm:flex-row items-start gap-4 p-5 ${
                       notif.read
-                        ? 'border-card-border bg-card-bg/40 opacity-75'
-                        : 'border-hq-blue/20 bg-card-bg shadow-[var(--card-shadow)]'
+                        ? 'border-slate-200 dark:border-card-border bg-slate-50 dark:bg-card-bg/40 opacity-75'
+                        : 'border-cyan-500/30 bg-white dark:bg-card-bg shadow-sm'
                     }`}
                   >
                     <Avatar
@@ -369,78 +328,21 @@ export default function NotificationsInboxPage() {
 
                     <div className="flex-1 space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">
+                        <span className="text-xs font-extrabold text-slate-900 dark:text-white">
                           {sender.name}
                         </span>
-                        <span className="text-xs text-foreground/50 font-bold uppercase tracking-wider">
+                        <span className="text-xs text-slate-500 dark:text-foreground/50 font-bold uppercase tracking-wider">
                           {sender.role}
                         </span>
                         {getPriorityBadge(notif.priority)}
-                        <span className="text-xs text-foreground/40 ml-auto font-semibold">
+                        <span className="text-xs text-slate-400 dark:text-foreground/40 ml-auto font-semibold">
                           {new Date(notif.createdAt).toLocaleDateString()} at{' '}
-                          {new Date(notif.createdAt).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
 
-                      <div>
-                        <h4 className="text-xs font-extrabold text-[#1A1A1E] dark:text-white flex items-center gap-2">
-                          {!notif.read && (
-                            <span className="h-2 w-2 rounded-full bg-hq-blue shrink-0 animate-pulse"></span>
-                          )}
-                          {notif.title}
-                        </h4>
-                        <p className="text-xs text-foreground/75 leading-relaxed mt-1">
-                          {notif.message}
-                        </p>
-                      </div>
-
-                      {/* Display action URLs directly */}
-                      {notif.actionUrl && (
-                        <div className="pt-2">
-                          <Button
-                            onClick={() => router.push(notif.actionUrl!)}
-                            size="sm"
-                            className="text-xs font-bold text-white h-7 px-3.5 flex items-center gap-1.5 shadow-sm"
-                            style={{ backgroundColor: brandColor }}
-                          >
-                            Execute Strategic Order
-                            <ArrowRight className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Toolbar controllers */}
-                    <div className="flex sm:flex-col gap-1 shrink-0 self-end sm:self-start">
-                      <button
-                        onClick={() => handleTogglePin(notif.id)}
-                        className={`p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/5 ${
-                          notif.isPinned ? 'text-hq-cyan' : 'text-foreground/45'
-                        }`}
-                      >
-                        <Pin className="h-3.5 w-3.5 fill-current" />
-                      </button>
-                      <button
-                        onClick={() => handleToggleRead(notif.id, notif.read)}
-                        className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/5 text-foreground/45 hover:text-hq-blue"
-                      >
-                        <Check className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleToggleArchive(notif.id)}
-                        className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/5 text-foreground/45 hover:text-yellow-500"
-                      >
-                        <Archive className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(notif.id)}
-                        className="p-1.5 rounded hover:bg-black/5 dark:hover:bg-white/5 text-foreground/45 hover:text-red-500"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">{notif.title}</h4>
+                      <p className="text-xs text-slate-600 dark:text-foreground/70 leading-relaxed">{notif.message}</p>
                     </div>
                   </Card>
                 );
@@ -449,77 +351,47 @@ export default function NotificationsInboxPage() {
           )}
         </div>
 
-        {/* Sidebar Preferences */}
-        <div className="space-y-6 text-left">
-          <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)]">
-            <CardHeader className="p-0 pb-4 border-b border-card-border flex items-center space-x-2">
-              <Sliders className="h-4 w-4 text-hq-blue" />
-              <CardTitle className="text-xs font-bold uppercase tracking-wider text-foreground/80">
-                Alert Preferences
-              </CardTitle>
-            </CardHeader>
+        {/* Notifications Preference Panel */}
+        <div className="space-y-4 text-left">
+          <Card className="border border-slate-200 dark:border-card-border bg-white dark:bg-card-bg p-5 shadow-sm space-y-4">
+            <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+              <Sliders className="h-4 w-4 text-cyan-500" /> Dispatch Rules
+            </h3>
 
-            <form onSubmit={handleSavePreferences} className="space-y-4 pt-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-foreground/75 flex items-center gap-1.5">
-                    <Mail className="h-3.5 w-3.5 text-foreground/40" />
-                    Email Summaries
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={emailAlerts}
-                    onChange={(e) => setEmailAlerts(e.target.checked)}
-                    className="h-4.5 w-4.5 rounded border-card-border accent-hq-blue"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-foreground/75 flex items-center gap-1.5">
-                    <Smartphone className="h-3.5 w-3.5 text-foreground/40" />
-                    Mobile Push Alerts
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={pushAlerts}
-                    onChange={(e) => setPushAlerts(e.target.checked)}
-                    className="h-4.5 w-4.5 rounded border-card-border accent-hq-blue"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-foreground/75 flex items-center gap-1.5">
-                    <Activity className="h-3.5 w-3.5 text-foreground/40 animate-pulse" />
-                    Enforce Quiet Hours
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={quietHours}
-                    onChange={(e) => setQuietHours(e.target.checked)}
-                    className="h-4.5 w-4.5 rounded border-card-border accent-hq-blue"
-                  />
-                </div>
+            <div className="space-y-3.5 text-xs font-semibold text-slate-700 dark:text-foreground/75">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Mail className="h-4 w-4 text-slate-400" /> Resend Digest Email
+                </span>
+                <input
+                  type="checkbox"
+                  checked={emailAlerts}
+                  onChange={(e) => setEmailAlerts(e.target.checked)}
+                  className="accent-cyan-500 h-4 w-4 rounded cursor-pointer"
+                />
               </div>
 
-              <div className="pt-2">
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="w-full text-xs font-bold text-white shadow-sm"
-                  style={{ backgroundColor: brandColor }}
-                >
-                  Save Inbox Preferences
-                </Button>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Smartphone className="h-4 w-4 text-slate-400" /> Push Notifications
+                </span>
+                <input
+                  type="checkbox"
+                  checked={pushAlerts}
+                  onChange={(e) => setPushAlerts(e.target.checked)}
+                  className="accent-cyan-500 h-4 w-4 rounded cursor-pointer"
+                />
               </div>
-            </form>
-          </Card>
-
-          {/* Preferences updated toast alert */}
-          {prefSavedToast && (
-            <div className="border border-green-500/25 bg-green-500/5 text-green-500 p-3 rounded-xl text-center text-xs font-bold">
-              ✓ Preferences updated successfully!
             </div>
-          )}
+
+            <Button
+              onClick={handleSavePreferences}
+              size="sm"
+              className="w-full text-xs font-bold h-8.5 text-white bg-cyan-500 hover:bg-cyan-400 mt-2"
+            >
+              Save Dispatch Preferences
+            </Button>
+          </Card>
         </div>
       </div>
     </div>

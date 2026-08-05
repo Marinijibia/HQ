@@ -25,6 +25,18 @@ interface AuthContextType {
   refetchUser: () => Promise<void>;
 }
 
+function isJwtExpired(tokenString: string): boolean {
+  try {
+    const payloadBase64 = tokenString.split('.')[1];
+    if (!payloadBase64) return false;
+    const decodedJson = JSON.parse(atob(payloadBase64));
+    if (decodedJson && decodedJson.exp) {
+      return Date.now() / 1000 >= decodedJson.exp - 60;
+    }
+  } catch { /* ignore */ }
+  return false;
+}
+
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -58,7 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const orgName = data.organization?.name || 'HQ Organization';
 
         try {
-          const existingDraft = JSON.parse(localStorage.getItem('hq_onboarding_draft') || '{}');
+          const rawDraft = localStorage.getItem('hq_onboarding_draft');
+          const existingDraft = rawDraft && rawDraft.trim() ? JSON.parse(rawDraft) : {};
           localStorage.setItem(
             'hq_onboarding_draft',
             JSON.stringify({
@@ -87,7 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const orgName = meData.organization?.name || meData.company?.name || 'HQ Organization';
 
           try {
-            const existingDraft = JSON.parse(localStorage.getItem('hq_onboarding_draft') || '{}');
+            const rawDraft = localStorage.getItem('hq_onboarding_draft');
+            const existingDraft = rawDraft && rawDraft.trim() ? JSON.parse(rawDraft) : {};
             localStorage.setItem(
               'hq_onboarding_draft',
               JSON.stringify({
@@ -106,114 +120,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   React.useEffect(() => {
-    const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
+    const unsubscribe = onIdTokenChanged(auth, (currentUser) => {
       setUser(currentUser);
+      setLoading(false); // Unblock UI instantly on auth state resolution
       if (currentUser) {
-        await syncBackendSession(currentUser);
+        syncBackendSession(currentUser);
       } else {
         setToken(null);
         setDbUser(null);
         setOrganization(null);
         setPermissions([]);
       }
-      setLoading(false);
     });
 
     let originalFetch: typeof window.fetch | null = null;
     if (typeof window !== 'undefined') {
       originalFetch = window.fetch;
       window.fetch = async (input, init) => {
-        let response = await originalFetch!(input, init);
-
         const urlString = typeof input === 'string' ? input : (input as any)?.url || '';
-        if (urlString.includes('/api/auth/') || urlString.includes('/organizations/onboard')) {
-          return response;
-        }
+        const isSelfApi = urlString.startsWith('/api') || urlString.startsWith('http://localhost') || urlString.startsWith('https://');
 
-        if (response.status === 401) {
-          const currentUser = auth.currentUser;
-          if (currentUser) {
-            try {
-              const newToken = await currentUser.getIdToken(true);
-              setToken(newToken);
-
-              const headers = new Headers((init && init.headers) || {});
-              headers.set('Authorization', `Bearer ${newToken}`);
-
-              response = await originalFetch!(input, {
-                ...(init || {}),
-                headers,
-              });
-
-              if (response.status === 401) {
-                await signOut(auth);
-                if (
-                  typeof window !== 'undefined' &&
-                  !window.location.pathname.startsWith('/login') &&
-                  !window.location.pathname.startsWith('/onboarding')
-                ) {
-                  window.location.href = '/login';
-                }
-              }
-            } catch (refreshError) {
-              console.error('Token refresh interceptor error:', refreshError);
-              await signOut(auth);
-              if (
-                typeof window !== 'undefined' &&
-                !window.location.pathname.startsWith('/login') &&
-                !window.location.pathname.startsWith('/onboarding')
-              ) {
-                window.location.href = '/login';
-              }
+        if (isSelfApi && auth.currentUser) {
+          try {
+            let currentToken = token;
+            if (!currentToken || isJwtExpired(currentToken)) {
+              currentToken = await auth.currentUser.getIdToken(true);
+              setToken(currentToken);
             }
-          } else {
-            if (
-              typeof window !== 'undefined' &&
-              !window.location.pathname.startsWith('/login') &&
-              !window.location.pathname.startsWith('/onboarding') &&
-              !window.location.pathname.startsWith('/forgot-password') &&
-              !window.location.pathname.startsWith('/reset-password')
-            ) {
-              window.location.href = '/login';
+            init = init || {};
+            const headers = new Headers(init.headers || {});
+            if (!headers.has('Authorization')) {
+              headers.set('Authorization', `Bearer ${currentToken}`);
             }
+            init.headers = headers;
+          } catch (e) {
+            console.warn('Failed to refresh Firebase token for fetch:', e);
           }
         }
-        return response;
+        return originalFetch!(input, init);
       };
     }
 
-    const tokenRefreshInterval = setInterval(async () => {
-      if (auth.currentUser) {
-        try {
-          const freshToken = await auth.currentUser.getIdToken(false);
-          setToken(freshToken);
-        } catch (e) {
-          console.warn('Interval refresh: token update warning:', e);
-        }
-      }
-    }, 10 * 60 * 1000);
-
     return () => {
       unsubscribe();
-      clearInterval(tokenRefreshInterval);
-      if (typeof window !== 'undefined' && originalFetch) {
+      if (originalFetch && typeof window !== 'undefined') {
         window.fetch = originalFetch;
       }
     };
   }, []);
 
-  const refetchUser = async () => {
-    if (auth.currentUser) {
-      await syncBackendSession(auth.currentUser);
-    }
-  };
-
   const signInWithGoogle = async () => {
     setLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      setUser(result.user);
+      await syncBackendSession(result.user);
     } catch (error) {
-      console.error('Firebase Google sign in error:', error);
+      console.error('Google sign-in error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -223,9 +186,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithEmail = async (email: string, pass: string) => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
+      const res = await signInWithEmailAndPassword(auth, email, pass);
+      setUser(res.user);
+      await syncBackendSession(res.user);
     } catch (error) {
-      console.error('Firebase Email sign in error:', error);
+      console.error('Email sign-in error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -235,9 +200,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUpWithEmail = async (email: string, pass: string) => {
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, pass);
+      const res = await createUserWithEmailAndPassword(auth, email, pass);
+      setUser(res.user);
+      await syncBackendSession(res.user);
     } catch (error) {
-      console.error('Firebase Email sign up error:', error);
+      console.error('Email sign-up error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -248,11 +215,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       await signOut(auth);
-      await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+      setUser(null);
+      setToken(null);
+      setDbUser(null);
+      setOrganization(null);
+      setPermissions([]);
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error('Sign-out error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refetchUser = async () => {
+    if (auth.currentUser) {
+      await syncBackendSession(auth.currentUser);
     }
   };
 
@@ -279,7 +256,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = React.useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

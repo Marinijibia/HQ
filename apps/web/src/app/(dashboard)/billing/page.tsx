@@ -38,9 +38,82 @@ interface CostCenter {
 
 export default function BillingPage() {
   const { token } = useAuth();
-  const [activeTab, setActiveTab] = React.useState<'usage' | 'subscription' | 'budgets' | 'invoices'>('usage');
+  const [activeTab, setActiveTab] = React.useState<'usage' | 'subscription' | 'budgets' | 'invoices' | 'circle'>('usage');
   const [loading, setLoading] = React.useState(false);
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
+
+  // Circle Agentic Payments State
+  const [usdcBalance, setUsdcBalance] = React.useState(25000.0);
+  const [usdcCap] = React.useState(500.0);
+  const [circleLoading, setCircleLoading] = React.useState(false);
+  const [circleTransactions, setCircleTransactions] = React.useState<any[]>([
+    {
+      id: 'ctx_circle_001',
+      txHash: '0xa4e98f7210b9d88a1c903ef88d011f01c9b2e652a',
+      amountUsdc: 150.0,
+      vendorName: 'AWS Compute Cluster Proxy',
+      serviceDescription: 'Auto-scaled GPU cluster allocation for CMO Campaign Rendering',
+      executiveRole: 'Julian Vance (CFO)',
+      status: 'COMPLETED',
+      timestamp: '2 hours ago',
+    },
+    {
+      id: 'ctx_circle_002',
+      txHash: '0x3f1a9d82e401b9a7c88d012e543b1109a8f7612c',
+      amountUsdc: 45.5,
+      vendorName: 'SerpAPI Data Oracle',
+      serviceDescription: 'Market intelligence data feed query settlement',
+      executiveRole: 'Marcus Sterling (CTO)',
+      status: 'COMPLETED',
+      timestamp: '8 hours ago',
+    },
+  ]);
+
+  const handleSimulateCirclePayment = async () => {
+    setCircleLoading(true);
+    toast.info('⚡ Initiating Circle Agentic USDC Autonomous Settlement...');
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch('/api/billing/circle/execute-payment', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          amountUsdc: 85.0,
+          vendorName: 'Vercel Edge Network Node',
+          serviceDescription: 'Instant serverless bandwidth allocation for AI Boardroom API',
+          executiveRole: 'Julian Vance (CFO)',
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setUsdcBalance((prev) => prev - 85.0);
+        setCircleTransactions((prev) => [
+          {
+            id: data.transactionId,
+            txHash: data.txHash,
+            amountUsdc: data.amountUsdc,
+            vendorName: data.vendorName,
+            serviceDescription: data.serviceDescription,
+            executiveRole: data.executiveRole,
+            status: data.status,
+            timestamp: 'Just now',
+          },
+          ...prev,
+        ]);
+        toast.success(`🎉 Circle USDC Agentic Payment Settled! Tx: ${data.txHash.slice(0, 10)}...`);
+      } else {
+        const errData = await res.json();
+        toast.error(`❌ Circle Payment Failed: ${errData.message || 'Error executing payment'}`);
+      }
+    } catch {
+      toast.error('❌ Failed to execute Circle Agentic payment.');
+    } finally {
+      setCircleLoading(false);
+    }
+  };
 
   // Budget settings state
   const [monthlyCap, setMonthlyCap] = React.useState('500.00');
@@ -87,9 +160,9 @@ export default function BillingPage() {
     });
   };
 
-  const handleUpgrade = async (gateway: 'stripe' | 'paystack') => {
+  const handleUpgrade = async (planCode: string = 'growth', gateway: 'stripe' | 'paystack' = 'paystack') => {
     setLoading(true);
-    toast.success(`💳 Initializing Paystack Checkout overlay session...`);
+    toast.success(`💳 Initializing checkout session for ${planCode.toUpperCase()} ($)...`);
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -100,7 +173,7 @@ export default function BillingPage() {
       const response = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ planCode: 'growth' }),
+        body: JSON.stringify({ planCode }),
       });
       const data = await response.json();
 
@@ -181,10 +254,11 @@ export default function BillingPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1.5 border-b border-card-border">
+      <div className="flex gap-1.5 border-b border-card-border overflow-x-auto">
         {[
           { id: 'usage', label: 'Credit Usage', icon: Activity },
           { id: 'subscription', label: 'Plans & Subscriptions', icon: Sparkles },
+          { id: 'circle', label: 'Circle USDC Agentic Treasury', icon: DollarSign },
           { id: 'budgets', label: 'Budget Controls', icon: Sliders },
           { id: 'invoices', label: 'Invoice History', icon: FileText },
         ].map((tab) => {
@@ -193,7 +267,7 @@ export default function BillingPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'border-current text-white'
                   : 'border-transparent text-foreground/55 hover:text-foreground'
@@ -202,6 +276,11 @@ export default function BillingPage() {
             >
               <Icon className="h-3.5 w-3.5" />
               {tab.label}
+              {tab.id === 'circle' && (
+                <Badge variant="outline" className="ml-1 text-[9px] bg-emerald-500/10 border-emerald-500/30 text-emerald-400">
+                  50K Prize Ready
+                </Badge>
+              )}
             </button>
           );
         })}
@@ -209,6 +288,128 @@ export default function BillingPage() {
 
       {/* ─── Tab Content ────────────────────────────────────────────────────── */}
       <div className="space-y-6">
+
+        {/* Circle USDC Agentic Treasury Tab */}
+        {activeTab === 'circle' && (
+          <div className="space-y-6 text-left animate-in fade-in duration-300">
+            {/* Header Banner */}
+            <Card className="border border-emerald-500/30 bg-gradient-to-r from-emerald-950/20 via-card-bg to-cyan-950/20 p-6 shadow-xl relative overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/40 text-[10px] uppercase tracking-widest font-black">
+                      CIRCLE AGENTIC PAYMENTS PROTOCOL
+                    </Badge>
+                    <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/40 text-[10px] uppercase tracking-widest font-black">
+                      BUILD WITH GEMINI XPRIZE
+                    </Badge>
+                  </div>
+                  <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                    <DollarSign className="h-6 w-6 text-emerald-400" />
+                    USDC Autonomous Executive Treasury
+                  </h2>
+                  <p className="text-xs text-foreground/70 max-w-2xl leading-relaxed">
+                    Empowers C-Suite AI Executives (CFO Julian Vance & CTO Marcus Sterling) to autonomously negotiate, sign, and settle vendor transactions in USDC without human friction.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={handleSimulateCirclePayment}
+                  disabled={circleLoading}
+                  className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-5 py-3 rounded-xl shadow-lg shadow-emerald-500/20 transition-all shrink-0 flex items-center gap-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {circleLoading ? 'Executing Settlement...' : 'Simulate Agentic USDC Settlement ($85.00)'}
+                </Button>
+              </div>
+            </Card>
+
+            {/* Treasury KPI Grid */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)]">
+                <span className="text-[11px] font-bold text-foreground/50 uppercase tracking-widest block">USDC Treasury Vault</span>
+                <div className="text-3xl font-black text-white mt-1 flex items-baseline gap-1">
+                  ${usdcBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })} <span className="text-sm font-bold text-emerald-400">USDC</span>
+                </div>
+                <p className="text-[11px] text-foreground/45 mt-2 flex items-center gap-1 font-semibold">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" /> Circle Programmable Wallet Vault
+                </p>
+              </Card>
+
+              <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)]">
+                <span className="text-[11px] font-bold text-foreground/50 uppercase tracking-widest block">CFO Autonomous Ceiling Limit</span>
+                <div className="text-3xl font-black text-white mt-1">
+                  ${usdcCap.toFixed(2)} <span className="text-sm font-bold text-cyan-400">USDC / Tx</span>
+                </div>
+                <p className="text-[11px] text-foreground/45 mt-2 font-semibold">
+                  Requires Human Board Approval for &gt; $500.00 USDC
+                </p>
+              </Card>
+
+              <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)]">
+                <span className="text-[11px] font-bold text-foreground/50 uppercase tracking-widest block">Network Settlement Layer</span>
+                <div className="text-base font-black text-white mt-2">
+                  Circle Agentic Protocol
+                </div>
+                <p className="text-[11px] text-emerald-400 mt-2 font-mono flex items-center gap-1">
+                  ● Polygon / Solana / Arbitrum Testnet
+                </p>
+              </Card>
+            </div>
+
+            {/* Transaction Ledger Table */}
+            <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-extrabold text-white">Agent-to-Agent Autonomous USDC Ledger</h3>
+                  <p className="text-xs text-foreground/50 font-semibold mt-0.5">Real-time audit record of autonomous transactions initiated by AI Directors.</p>
+                </div>
+                <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-mono">
+                  Circle Webhook Verified
+                </Badge>
+              </div>
+
+              <div className="border border-card-border rounded-2xl overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-background/60 text-foreground/60 border-b border-card-border uppercase font-bold text-[10px]">
+                    <tr>
+                      <th className="py-3 px-4">Transaction Hash</th>
+                      <th className="py-3 px-4">Vendor / Service</th>
+                      <th className="py-3 px-4">Executive Director</th>
+                      <th className="py-3 px-4 text-right">Amount (USDC)</th>
+                      <th className="py-3 px-4 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-card-border font-medium">
+                    {circleTransactions.map((tx) => (
+                      <tr key={tx.id} className="hover:bg-white/5 transition-colors">
+                        <td className="py-3.5 px-4 font-mono text-cyan-400 flex items-center gap-1.5">
+                          <span>{tx.txHash.slice(0, 14)}...</span>
+                          <ArrowUpRight className="h-3 w-3 opacity-60" />
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="font-bold text-white block">{tx.vendorName}</span>
+                          <span className="text-[11px] text-foreground/50 block">{tx.serviceDescription}</span>
+                        </td>
+                        <td className="py-3.5 px-4 text-foreground/80 font-semibold">
+                          {tx.executiveRole}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-black text-emerald-400">
+                          ${tx.amountUsdc.toFixed(2)} USDC
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
+                            {tx.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* 1. Credit Usage Tab */}
         {activeTab === 'usage' && (
@@ -313,32 +514,130 @@ export default function BillingPage() {
 
               {/* Plans side-by-side comparison */}
               <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
-                <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Select Execution Tier</h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Global Execution Tiers (USD $)</h3>
+                    <p className="text-xs text-foreground/50 font-semibold mt-0.5">Select a subscription tier to expand your organization's monthly token quota.</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
+                    USD Global Pricing
+                  </Badge>
+                </div>
 
-                <div className="grid gap-4 sm:grid-cols-2 text-xs">
-                  <div className="p-4 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 rounded-xl space-y-3">
-                    <div>
-                      <Badge variant="neutral" className="text-sm font-bold">CURRENT PLAN</Badge>
-                      <h4 className="text-sm font-black text-white mt-1.5">Free Starter Tier</h4>
+                <div className="grid gap-4 sm:grid-cols-3 text-xs">
+                  {/* Starter Tier */}
+                  <div className="p-4 border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/40 rounded-2xl space-y-3 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <Badge variant="neutral" className="text-[10px] font-extrabold uppercase">STARTER TIER</Badge>
+                      <h4 className="text-xl font-black text-white">$0.00 <span className="text-xs font-bold text-foreground/50">/ month</span></h4>
+                      <p className="text-[11px] text-cyan-400 font-bold">5,000 AI Tokens / mo</p>
+                      <ul className="space-y-1 text-[11px] font-medium text-foreground/60 leading-snug pt-1">
+                        <li>· 1 Active Boardroom WBS</li>
+                        <li>· Standard C-Suite Directors</li>
+                        <li>· 1GB Indexed Memory Vault</li>
+                      </ul>
                     </div>
-                    <ul className="space-y-1.5 font-semibold text-foreground/60 leading-tight">
-                      <li>· 1 Active mission WBS</li>
-                      <li>· Basic AI Executives access</li>
-                      <li>· 1GB indexed storage</li>
-                    </ul>
+                    <Button variant="outline" size="sm" className="w-full text-xs font-bold border-card-border mt-3" disabled>
+                      Current Plan
+                    </Button>
                   </div>
 
-                  <div className="p-4 border border-hq-cyan/40 bg-hq-cyan/5 rounded-xl space-y-3">
-                    <div>
-                      <Badge variant="premium" className="text-sm font-bold">RECOMMENDED</Badge>
-                      <h4 className="text-sm font-black text-white mt-1.5">Professional Scale</h4>
-                      <p className="text-xs text-hq-cyan font-black mt-0.5">$150.00/month</p>
+                  {/* Growth Tier */}
+                  <div className="p-4 border border-cyan-500/40 bg-cyan-500/5 rounded-2xl space-y-3 flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-cyan-500 text-slate-950 text-[9px] font-black uppercase px-2.5 py-0.5 rounded-bl-lg">
+                      POPULAR
                     </div>
-                    <ul className="space-y-1.5 font-semibold text-white/80 leading-tight">
-                      <li>· Unlimited active missions</li>
-                      <li>· Fully Custom AI C-Suite</li>
-                      <li>· 10GB indexed storage</li>
-                    </ul>
+                    <div className="space-y-2">
+                      <Badge variant="premium" className="text-[10px] font-extrabold uppercase bg-cyan-500/20 text-cyan-300 border-cyan-500/40">GROWTH SCALE</Badge>
+                      <h4 className="text-xl font-black text-white">$10.00 <span className="text-xs font-bold text-foreground/50">/ month</span></h4>
+                      <p className="text-[11px] text-emerald-400 font-bold">50,000 AI Tokens / mo</p>
+                      <ul className="space-y-1 text-[11px] font-medium text-white/80 leading-snug pt-1">
+                        <li>· 5 Parallel Boardroom WBS</li>
+                        <li>· Full C-Suite AI Roster</li>
+                        <li>· 10GB Indexed Storage</li>
+                        <li>· Circle USDC Agentic Wallet</li>
+                      </ul>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full text-xs font-extrabold bg-cyan-500 hover:bg-cyan-400 text-slate-950 mt-3 shadow-md shadow-cyan-500/20"
+                      disabled={loading}
+                      onClick={() => handleUpgrade('growth')}
+                    >
+                      Upgrade to Growth ($10)
+                    </Button>
+                  </div>
+
+                  {/* Enterprise Tier */}
+                  <div className="p-4 border border-purple-500/40 bg-purple-500/5 rounded-2xl space-y-3 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <Badge className="text-[10px] font-extrabold uppercase bg-purple-500/20 text-purple-300 border-purple-500/40">ENTERPRISE OS</Badge>
+                      <h4 className="text-xl font-black text-white">$20.00 <span className="text-xs font-bold text-foreground/50">/ month</span></h4>
+                      <p className="text-[11px] text-purple-400 font-bold">200,000 AI Tokens / mo</p>
+                      <ul className="space-y-1 text-[11px] font-medium text-white/80 leading-snug pt-1">
+                        <li>· Unlimited WBS Missions</li>
+                        <li>· Custom AI C-Suite Board</li>
+                        <li>· 100GB Storage Vault</li>
+                        <li>· 6-Tier Autonomy Killswitch</li>
+                      </ul>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full text-xs font-extrabold bg-purple-600 hover:bg-purple-500 text-white mt-3 shadow-md shadow-purple-600/20"
+                      disabled={loading}
+                      onClick={() => handleUpgrade('enterprise')}
+                    >
+                      Upgrade Enterprise ($20)
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Extra Token Packs Section */}
+              <Card className="border border-emerald-500/30 bg-emerald-950/10 p-5 shadow-[var(--card-shadow)] space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-white flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4 text-emerald-400" />
+                      Buy Extra AI Token Packs
+                    </h3>
+                    <p className="text-xs text-foreground/60 font-semibold mt-0.5">Need additional capacity? Top up your token balance instantly with non-expiring extra credits.</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2 text-xs">
+                  {/* Small Pack */}
+                  <div className="p-4 border border-card-border bg-card-bg/60 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <span className="text-base font-black text-white block">+25,000 AI Tokens</span>
+                      <span className="text-xs text-emerald-400 font-bold">$5.00 USD</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs font-extrabold border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                      disabled={loading}
+                      onClick={() => handleUpgrade('token_pack_small')}
+                    >
+                      Buy $5 Pack
+                    </Button>
+                  </div>
+
+                  {/* Large Pack */}
+                  <div className="p-4 border border-card-border bg-card-bg/60 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <span className="text-base font-black text-white block">+100,000 AI Tokens</span>
+                      <span className="text-xs text-emerald-400 font-bold">$15.00 USD</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs font-extrabold border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                      disabled={loading}
+                      onClick={() => handleUpgrade('token_pack_large')}
+                    >
+                      Buy $15 Pack
+                    </Button>
                   </div>
                 </div>
               </Card>
@@ -348,28 +647,27 @@ export default function BillingPage() {
             <div className="space-y-6">
               <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
                 <div>
-                  <h4 className="text-xs font-black text-[#1A1A1E] dark:text-white uppercase tracking-widest">Activate Scale plan</h4>
-                  <p className="text-[9.5px] text-foreground/45 mt-0.5 font-semibold">Deploy payment session keys</p>
+                  <h4 className="text-xs font-black text-[#1A1A1E] dark:text-white uppercase tracking-widest">Global USD Payment Gateway</h4>
+                  <p className="text-[10px] text-foreground/45 mt-0.5 font-semibold">Select preferred payment provider</p>
                 </div>
 
                 <div className="space-y-2.5">
                   <Button
                     size="sm"
-                    className="w-full text-white text-xs font-bold h-8.5"
-                    style={{ backgroundColor: brandColor }}
+                    className="w-full text-white text-xs font-extrabold h-9 bg-hq-blue hover:bg-hq-blue/90"
                     disabled={loading}
-                    onClick={() => handleUpgrade('stripe')}
+                    onClick={() => handleUpgrade('growth')}
                   >
-                    Stripe checkout
+                    Stripe USD Card Checkout
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="w-full text-xs font-bold border-card-border h-8.5 text-hq-cyan"
+                    className="w-full text-xs font-extrabold border-card-border h-9 text-hq-cyan hover:bg-cyan-500/10"
                     disabled={loading}
-                    onClick={() => handleUpgrade('paystack')}
+                    onClick={() => handleUpgrade('growth')}
                   >
-                    Paystack (Africa / NGN)
+                    Paystack Global USD ($) Checkout
                   </Button>
                 </div>
               </Card>

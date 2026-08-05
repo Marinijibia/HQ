@@ -101,4 +101,19 @@ export class SettingsController {
   ) {
     return this.settingsService.revokeApiKey(req.user.companyId, id);
   }
+
+  @Get('voice-profile')
+  @ApiOperation({ summary: 'Get user Asad voice training profile' })
+  getVoiceProfile(@Req() req: types.AuthenticatedRequest) {
+    return this.settingsService.getVoiceProfile(req.user.uid);
+  }
+
+  @Post('voice-profile')
+  @ApiOperation({ summary: 'Save calibrated Asad voice profile & voice print' })
+  saveVoiceProfile(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() dto: any,
+  ) {
+    return this.settingsService.saveVoiceProfile(req.user.uid, dto);
+  }
 }

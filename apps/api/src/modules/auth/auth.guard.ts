@@ -32,7 +32,11 @@ export class AuthGuard implements CanActivate {
     try {
       const payload = await this.firebaseService.verifyIdToken(token);
       
-      const user = await this.userRepository.findById(payload.uid);
+      let user = await this.userRepository.findById(payload.uid);
+      if (!user && payload.email) {
+        user = await this.userRepository.findByEmail(payload.email);
+      }
+
       if (user) {
         if (user.deletedAt) {
           this.logger.warn(`Rejected request from soft-deleted user ${user.id}`);
@@ -40,11 +44,22 @@ export class AuthGuard implements CanActivate {
         }
         payload.companyId = user.companyId || payload.companyId;
         payload.role = user.role || payload.role;
-      } else {
-        const defaultCompany = await this.userRepository.findDefaultCompany();
-        if (defaultCompany) {
-          payload.companyId = defaultCompany.id;
+      } else if (payload.email) {
+        let defaultCompany = await this.userRepository.findDefaultCompany();
+        if (!defaultCompany) {
+          defaultCompany = await this.userRepository.createDefaultCompany();
         }
+        const newUser = await this.userRepository.create({
+          id: payload.uid,
+          firebaseUid: payload.uid,
+          email: payload.email,
+          name: payload.email.split('@')[0] || 'HQ User',
+          displayName: payload.email.split('@')[0] || 'HQ User',
+          companyId: defaultCompany.id,
+          role: payload.role || 'MEMBER',
+        });
+        payload.companyId = newUser.companyId;
+        payload.role = newUser.role;
       }
 
       request.user = payload;

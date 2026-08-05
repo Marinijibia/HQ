@@ -25,6 +25,7 @@ import { AssetModule } from './modules/asset/asset.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { IntelligenceModule } from './modules/intelligence/intelligence.module';
+import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
@@ -66,6 +67,7 @@ import { EmailModule } from './modules/email/email.module';
     AnalyticsModule,
     SettingsModule,
     IntelligenceModule,
+    MarketplaceModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

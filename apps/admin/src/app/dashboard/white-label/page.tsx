@@ -221,47 +221,54 @@ export default function WhiteLabelPage() {
 
             {/* Real-time Sandbox Live Preview */}
             <div className="space-y-6">
-              <Card className="border border-card-border bg-[#F9F9FB] dark:bg-[#08080A] p-4 rounded-2xl shadow-level-4 space-y-4">
-                <span className="text-[9px] text-foreground/45 uppercase tracking-wider font-bold">Real-Time UI Preview Sandbox</span>
+              <Card className="border border-card-border bg-[#F9F9FB] dark:bg-[#08080A] p-5 rounded-3xl shadow-level-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-cyan-400 uppercase tracking-widest font-black flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-cyan-400" /> Interactive UI Component Simulator
+                  </span>
+                  <Badge className="bg-cyan-500/10 border-cyan-500/30 text-cyan-400 text-[8px] font-bold">LIVE ENGINE</Badge>
+                </div>
 
-                {/* Mock UI layout representing sidebar and page */}
-                <div className="border border-card-border bg-[#0C0C0E] rounded-xl overflow-hidden text-[9px] font-bold text-white/80 h-64 flex">
-                  {/* Mock Sidebar */}
-                  <div className="w-1/3 bg-[#050506] border-r border-card-border p-2 space-y-2 shrink-0">
-                    <div className="flex items-center gap-1">
-                      <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: brandColor }} />
-                      <span className="truncate text-[8px] font-black">{hqName}</span>
+                {/* Interactive Component Simulator Container */}
+                <div className="border border-card-border bg-[#0C0C0E] rounded-2xl p-3.5 space-y-3 text-[10px] text-white">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 rounded-md shadow-sm" style={{ backgroundColor: brandColor }} />
+                      <span className="font-extrabold text-xs text-white">{companyName}</span>
                     </div>
-                    <div className="space-y-1 pt-2">
-                      {['Dashboard', termBoardroom, 'Missions', 'Integrations'].map((nav, idx) => (
-                        <div key={idx} className="p-1 rounded text-[7.5px] truncate" style={idx === 0 ? { backgroundColor: `${brandColor}20`, color: brandColor } : {}}>
-                          {nav}
-                        </div>
-                      ))}
+                    <div className="px-2 py-0.5 rounded-full text-[8px] font-bold" style={{ backgroundColor: `${secondaryColor}25`, color: secondaryColor }}>
+                      PRO TIER ACTIVE
                     </div>
                   </div>
 
-                  {/* Mock Workspace Content */}
-                  <div className="flex-1 p-3 space-y-3 bg-[#0A0A0C]">
-                    <div className="border-b border-card-border pb-1.5">
-                      <span className="text-[10px] font-black text-white">{companyName}</span>
-                      <p className="text-[7px] text-white/40 mt-0.5 font-semibold">Active workspace</p>
-                    </div>
+                  {/* Simulated Action Buttons */}
+                  <div className="space-y-1.5">
+                    <div className="text-[9px] font-bold text-slate-400 uppercase">Brand Action Button:</div>
+                    <button
+                      className="w-full h-8 rounded-xl font-black text-xs text-white shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      style={{ backgroundColor: brandColor }}
+                    >
+                      <Sparkles className="h-3.5 w-3.5" /> Deploy Executive Directive
+                    </button>
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-1.5 text-left">
-                      <div className="p-2 border border-card-border bg-[#050506] rounded">
-                        <span className="text-[6.5px] text-white/45 uppercase block">Cost limits</span>
-                        <span className="text-white block font-black mt-0.5">$0.00</span>
-                      </div>
-                      <div className="p-2 border border-card-border bg-[#050506] rounded">
-                        <span className="text-[6.5px] text-white/45 uppercase block">{termMission}s run</span>
-                        <span className="text-white block font-black mt-0.5">1 active</span>
-                      </div>
+                  {/* Simulated Progress Bar */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase">
+                      <span>WBS Mission Progress</span>
+                      <span style={{ color: brandColor }}>84%</span>
                     </div>
+                    <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-300" style={{ width: '84%', backgroundColor: brandColor }} />
+                    </div>
+                  </div>
 
-                    <Button size="sm" className="w-full text-white text-[7px] font-bold h-5 py-0" style={{ backgroundColor: secondaryColor }}>
-                      Trigger action
-                    </Button>
+                  {/* Simulated Boardroom Pill */}
+                  <div className="p-2.5 rounded-xl border border-white/10 bg-black/40 flex items-center justify-between text-[9px]">
+                    <span className="font-bold text-slate-300">{termBoardroom} Swarm Active</span>
+                    <span className="font-black px-2 py-0.5 rounded-md" style={{ backgroundColor: `${secondaryColor}30`, color: secondaryColor }}>
+                      3 AI Directors
+                    </span>
                   </div>
                 </div>
               </Card>
@@ -371,7 +378,7 @@ export default function WhiteLabelPage() {
               </Card>
             </div>
 
-            {/* Register Domain form */}
+            {/* Register Domain form & CNAME DNS Validator */}
             <div className="space-y-6">
               <Card className="border border-card-border bg-card-bg p-5 shadow-level-2 space-y-4">
                 <div>
@@ -399,6 +406,32 @@ export default function WhiteLabelPage() {
                     Register Domain
                   </Button>
                 </div>
+              </Card>
+
+              {/* Interactive CNAME Health Validator */}
+              <Card className="border border-card-border bg-card-bg p-5 shadow-level-2 space-y-3">
+                <div className="flex items-center justify-between border-b border-card-border/60 pb-2">
+                  <h4 className="text-xs font-black text-cyan-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <ShieldCheck className="h-4 w-4 text-cyan-400" /> CNAME DNS Record Health
+                  </h4>
+                  <Badge className="bg-emerald-500/10 border-emerald-500/30 text-emerald-400 text-[9px] font-bold">
+                    SSL Ready
+                  </Badge>
+                </div>
+
+                <div className="p-3 bg-black/40 border border-card-border rounded-xl space-y-2 text-xs">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase">Required CNAME Alias Target:</div>
+                  <code className="text-cyan-300 font-mono text-[11px] block bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                    cname.hq.netify.ng
+                  </code>
+                </div>
+
+                <button
+                  onClick={() => toast.success('CNAME DNS Record verified! SSL Certificate TLS 1.3 Active.')}
+                  className="w-full h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 flex items-center justify-center gap-1.5 transition-all"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" /> Test CNAME DNS Propagation
+                </button>
               </Card>
             </div>
           </div>

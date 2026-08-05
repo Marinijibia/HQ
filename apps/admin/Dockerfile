@@ -57,11 +57,11 @@ RUN groupadd --system nodejs \
     && useradd --system --gid nodejs --create-home nextjs
 
 # Copy standalone server and static assets
-COPY --from=installer --chown=nestjs:nodejs /app/apps/admin/.next/standalone ./
-COPY --from=installer --chown=nestjs:nodejs /app/apps/admin/.next/static ./apps/admin/.next/static
-COPY --from=installer --chown=nestjs:nodejs /app/apps/admin/public ./apps/admin/public
+COPY --from=installer --chown=nextjs:nodejs /app/apps/admin/.next/standalone ./
+COPY --from=installer --chown=nextjs:nodejs /app/apps/admin/.next/static ./apps/admin/.next/static
+COPY --from=installer --chown=nextjs:nodejs /app/apps/admin/public ./apps/admin/public
 
-USER nestjs
+USER nextjs
 
 EXPOSE 3000
 

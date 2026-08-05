@@ -231,11 +231,24 @@ export default function CompliancePage() {
             Enforce organization policies, configure decision authority scopes, delegate credentials, and audit resolution logs.
           </p>
         </div>
-        {emergencyPaused && (
-          <Badge variant="error" className="animate-pulse py-1 px-3 text-[10px] font-black uppercase">
-            🚨 Emergency Stop Active
-          </Badge>
-        )}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+            <Input
+              type="text"
+              placeholder="Search governance policies & decisions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-black/50 border border-white/10 text-white pl-9 h-10 text-xs rounded-xl focus-visible:ring-cyan-500 w-72 font-bold"
+            />
+          </div>
+
+          {emergencyPaused && (
+            <Badge variant="error" className="animate-pulse py-1 px-3 text-[10px] font-black uppercase">
+              🚨 Emergency Stop Active
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}

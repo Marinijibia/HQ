@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-const DEFAULT_API_HOST = Platform.OS === 'android' ? 'http://10.0.2.2:3001' : 'http://localhost:3001';
+const DEFAULT_API_HOST = process.env.EXPO_PUBLIC_API_URL || (Platform.OS === 'android' ? 'http://10.0.2.2:3001' : 'http://localhost:3001');
 
 export class ApiClient {
   private baseUrl: string;

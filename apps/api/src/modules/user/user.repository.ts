@@ -53,6 +53,15 @@ export class UserRepository {
     });
   }
 
+  async createDefaultCompany(): Promise<Company> {
+    return this.prisma.company.create({
+      data: {
+        name: 'HQ Organization',
+        slug: `hq-org-${Date.now()}`,
+      },
+    });
+  }
+
   async create(data: {
     id: string;
     firebaseUid?: string;

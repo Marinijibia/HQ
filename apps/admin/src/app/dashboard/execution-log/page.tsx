@@ -148,6 +148,27 @@ export default function CoreKernelConsolePage() {
       ];
 
   const [expandedTraceId, setExpandedTraceId] = React.useState<string | null>(null);
+  const [selectedLogJson, setSelectedLogJson] = React.useState<any | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [statusFilter, setStatusFilter] = React.useState<string>('ALL');
+
+  const handleExportLogsCsv = () => {
+    try {
+      const headers = ['ID', 'Agent Name', 'Role', 'Action', 'Model', 'Status', 'Timestamp'];
+      const rows = traces.map(t => [t.id, t.agentName, t.agentRole, `"${t.action}"`, t.model, t.status, t.timestamp]);
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `execution-logs-${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('📊 Audit Logs exported to CSV successfully');
+    } catch {
+      toast.error('Failed to export audit logs');
+    }
+  };
 
   React.useEffect(() => {
     try {
@@ -183,6 +204,15 @@ export default function CoreKernelConsolePage() {
           <p className="text-foreground/60 text-sm mt-1">
             HQ Core Kernel system console. Monitor AI scheduler threads, event routers, memory buffers, and multi-model gateway telemetry.
           </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleExportLogsCsv}
+            className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs h-10 px-4 rounded-xl border border-slate-700 flex items-center gap-1.5"
+          >
+            📊 Export Audit Logs CSV
+          </Button>
         </div>
       </div>
 

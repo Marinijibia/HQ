@@ -3,6 +3,7 @@ import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://hq.netify.ng'),
   title: 'HQ — AI Executive Operating System',
   description:
     'HQ orchestrates your entire organization through intelligent AI executives. Delegate strategy, operations, finance and marketing to a full C-Suite AI board.',
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
     apple: '/logo.png',
   },
+  manifest: '/manifest.json',
   openGraph: {
     title: 'HQ — AI Executive Operating System',
     description: 'Run your organization with a full C-Suite AI board.',
