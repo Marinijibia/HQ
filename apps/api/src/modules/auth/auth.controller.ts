@@ -15,6 +15,7 @@ import {
   VerifyOtpDto,
   ForgotPasswordDto,
   ResetPasswordDto,
+  RegisterSuperAdminDto,
 } from './dto/auth.dto';
 import { AuthGuard } from './auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -23,6 +24,20 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('setup-status')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Check if initial Super Admin setup is required' })
+  async checkSetupStatus() {
+    return this.authService.checkSetupStatus();
+  }
+
+  @Post('register-super-admin')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Register the initial Super Administrator (Allowed only when 0 Super Admins exist)' })
+  async registerSuperAdmin(@Body() dto: RegisterSuperAdminDto) {
+    return this.authService.registerSuperAdmin(dto.name, dto.email, dto.password);
+  }
 
   @Post('firebase')
   @HttpCode(HttpStatus.OK)

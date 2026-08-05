@@ -67,3 +67,30 @@ export class ResetPasswordDto {
   @MinLength(8)
   newPassword!: string;
 }
+
+export class RegisterSuperAdminDto {
+  @ApiProperty({
+    description: 'Full name of initial Super Administrator',
+    example: 'Platform Super Admin',
+  })
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @ApiProperty({
+    description: 'Staff email address',
+    example: 'admin@hq-corp.com',
+  })
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
+
+  @ApiProperty({
+    description: 'Staff password (min 8 characters)',
+    example: 'SuperAdminPassword123!',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  password!: string;
+}

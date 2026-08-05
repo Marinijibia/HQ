@@ -24,6 +24,76 @@ export class AuthService {
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
   ) {}
 
+  async checkSetupStatus() {
+    const superAdminCount = await this.prisma.user.count({
+      where: {
+        role: 'SUPER_ADMINISTRATOR',
+        deletedAt: null,
+      },
+    });
+
+    const isSetupRequired = superAdminCount === 0;
+    return {
+      isSetupRequired,
+      message: isSetupRequired
+        ? 'Initial Super Admin registration is required.'
+        : 'Initial Super Admin setup is complete.',
+    };
+  }
+
+  async registerSuperAdmin(name: string, email: string, password: string) {
+    const superAdminCount = await this.prisma.user.count({
+      where: {
+        role: 'SUPER_ADMINISTRATOR',
+        deletedAt: null,
+      },
+    });
+
+    if (superAdminCount > 0) {
+      throw new BadRequestException(
+        'Initial Super Admin setup has already been completed. Registration is locked.',
+      );
+    }
+
+    let defaultCompany = await this.userRepository.findDefaultCompany();
+    if (!defaultCompany) {
+      defaultCompany = await this.userRepository.createDefaultCompany();
+    }
+
+    const existingUser = await this.userRepository.findByEmail(email);
+    if (existingUser) {
+      const updatedUser = await this.userRepository.update(existingUser.id, {
+        role: 'SUPER_ADMINISTRATOR',
+        name,
+        displayName: name,
+        companyId: defaultCompany.id,
+      });
+      return {
+        success: true,
+        message: 'Existing account elevated to Super Administrator successfully.',
+        user: this.sanitizeUser(updatedUser),
+      };
+    }
+
+    const newUserId = `admin_${Date.now()}`;
+    const user = await this.userRepository.create({
+      id: newUserId,
+      firebaseUid: newUserId,
+      email,
+      name,
+      displayName: name,
+      emailVerified: true,
+      companyId: defaultCompany.id,
+      role: 'SUPER_ADMINISTRATOR',
+    });
+
+    return {
+      success: true,
+      message: 'Super Administrator registered successfully.',
+      user: this.sanitizeUser(user),
+    };
+  }
+
   async authenticateFirebase(idToken: string) {
     let firebasePayload: {
       uid: string;
@@ -76,7 +146,6 @@ export class AuthService {
       isNewUser = true;
       this.logger.log(`Created new HQ user for ${email} (UID: ${uid})`);
 
-      // Trigger Welcome Email via Resend asynchronously
       this.emailService
         .sendWelcomeEmail(user.email, user.displayName || user.name || 'HQ User')
         .catch((err) =>
@@ -117,11 +186,9 @@ export class AuthService {
     const user = await this.userRepository.findByEmail(email);
     const recipientName = user ? user.displayName || user.name || 'HQ User' : email.split('@')[0];
 
-    // Generate secure 6-digit OTP code
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const redisKey = `otp:${email.toLowerCase()}`;
 
-    // Store in Redis with 10-minute expiration (600 seconds)
     await this.redis.set(redisKey, otpCode, 'EX', 600);
 
     this.logger.log(`🔑 [Auth Service] OTP Code generated for ${email}: ${otpCode}`);
@@ -143,7 +210,6 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired verification code');
     }
 
-    // Delete used code from Redis
     await this.redis.del(redisKey);
 
     let user = await this.userRepository.findByEmail(email);
@@ -164,11 +230,9 @@ export class AuthService {
     const user = await this.userRepository.findByEmail(email);
     const recipientName = user ? user.displayName || user.name || 'HQ User' : email.split('@')[0];
 
-    // Generate password reset token
     const resetToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
     const redisKey = `pwd_reset:${resetToken}`;
 
-    // Store in Redis with 1-hour expiration (3600 seconds)
     await this.redis.set(redisKey, email.toLowerCase(), 'EX', 3600);
 
     const resetLink = `https://hq.netify.ng/reset-password?token=${resetToken}`;
