@@ -183,6 +183,15 @@ export class AuthService {
   }
 
   async sendOtp(email: string) {
+    const rateKey = `ratelimit:otp:${email.toLowerCase()}`;
+    const attempts = await this.redis.incr(rateKey);
+    if (attempts === 1) {
+      await this.redis.expire(rateKey, 60); // 1-minute window
+    }
+    if (attempts > 3) {
+      throw new BadRequestException('Too many OTP verification requests. Please wait 60 seconds.');
+    }
+
     const user = await this.userRepository.findByEmail(email);
     const recipientName = user ? user.displayName || user.name || 'HQ User' : email.split('@')[0];
 
@@ -203,14 +212,31 @@ export class AuthService {
   }
 
   async verifyOtp(email: string, code: string) {
+    const lockKey = `lockout:otp:${email.toLowerCase()}`;
+    const isLocked = await this.redis.get(lockKey);
+    if (isLocked) {
+      throw new BadRequestException('Too many failed verification attempts. Account locked for 15 minutes.');
+    }
+
     const redisKey = `otp:${email.toLowerCase()}`;
     const storedCode = await this.redis.get(redisKey);
 
     if (!storedCode || storedCode !== code.trim()) {
-      throw new BadRequestException('Invalid or expired verification code');
+      const failKey = `failed_attempts:otp:${email.toLowerCase()}`;
+      const failedCount = await this.redis.incr(failKey);
+      if (failedCount === 1) {
+        await this.redis.expire(failKey, 900); // 15-minute window
+      }
+      if (failedCount >= 5) {
+        await this.redis.set(lockKey, '1', 'EX', 900);
+        await this.redis.del(redisKey);
+        throw new BadRequestException('Maximum verification attempts exceeded. Account locked for 15 minutes.');
+      }
+      throw new BadRequestException(`Invalid or expired verification code. ${5 - failedCount} attempts remaining.`);
     }
 
     await this.redis.del(redisKey);
+    await this.redis.del(`failed_attempts:otp:${email.toLowerCase()}`);
 
     let user = await this.userRepository.findByEmail(email);
     if (user) {

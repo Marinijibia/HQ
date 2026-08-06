@@ -71,26 +71,25 @@ export class FirebaseService implements OnModuleInit {
     role: string;
     companyId: string;
   }> {
-    // Mock validation logic for local development
-    if (token === 'development_mock_token_owner' || token === 'mock_token_owner') {
-      return {
-        uid: stringToUuid('mock-owner-uid'),
-        email: 'owner@hq.dev',
-        role: 'ORGANIZATION_OWNER',
-        companyId: 'fc47c1d5-fe5c-452c-a88b-0c4d6970d254',
-      };
-    }
-    if (token.startsWith('mock_token_')) {
-      const role = token.replace('mock_token_', '').toUpperCase();
-      return {
-        uid: stringToUuid(`mock-uid-${role}`),
-        email: `${role.toLowerCase()}@hq.dev`,
-        role,
-        companyId: 'fc47c1d5-fe5c-452c-a88b-0c4d6970d254',
-      };
-    }
 
     if (!this.firebaseApp) {
+      try {
+        const payloadBase64 = token.split('.')[1];
+        if (payloadBase64) {
+          const decoded = JSON.parse(Buffer.from(payloadBase64, 'base64').toString());
+          const uid = decoded.sub || decoded.user_id || decoded.uid;
+          if (uid) {
+            return {
+              uid: stringToUuid(uid),
+              email: decoded.email || '',
+              role: decoded.role || 'MEMBER',
+              companyId: decoded.companyId || '',
+            };
+          }
+        }
+      } catch (err) {
+        this.logger.warn(`JWT decode fallback failed: ${err}`);
+      }
       throw new Error('Firebase SDK not initialized and invalid mock token');
     }
 
@@ -109,7 +108,7 @@ export class FirebaseService implements OnModuleInit {
   ) {
     if (!this.firebaseApp) {
       this.logger.log(
-        `Mock: setting claims for ${uid}: ${JSON.stringify(claims)}`,
+        `[Firebase Service] Local SDK: skipping claims update for ${uid}: ${JSON.stringify(claims)}`,
       );
       return;
     }
@@ -118,7 +117,7 @@ export class FirebaseService implements OnModuleInit {
 
   async updateUserPassword(uid: string, newPassword: string) {
     if (!this.firebaseApp) {
-      this.logger.log(`Mock: updating password for ${uid}`);
+      this.logger.log(`[Firebase Service] Local SDK: skipping password update for ${uid}`);
       return;
     }
     await admin.auth().updateUser(uid, { password: newPassword });

@@ -23,8 +23,12 @@ async function bootstrap() {
 
       const allowedDomains = [
         'https://hq.netify.ng',
+        'http://hq.netify.ng',
+        'https://www.hq.netify.ng',
         'https://admin.hq.netify.ng',
+        'http://admin.hq.netify.ng',
         'https://api.hq.netify.ng',
+        'http://api.hq.netify.ng',
         'http://localhost:3000',
         'http://localhost:3001',
         'http://localhost:3002',
@@ -35,8 +39,10 @@ async function bootstrap() {
 
       if (
         allowedDomains.includes(origin) ||
-        /\.netify\.ng$/.test(origin) ||
-        /\.run\.app$/.test(origin)
+        /netify\.ng$/.test(origin) ||
+        /\.run\.app$/.test(origin) ||
+        origin.startsWith('http://localhost') ||
+        origin.startsWith('http://127.0.0.1')
       ) {
         return callback(null, true);
       }
@@ -44,7 +50,7 @@ async function bootstrap() {
     },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
+    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With, X-Company-Id, X-User-Id',
   });
 
   app.useGlobalPipes(

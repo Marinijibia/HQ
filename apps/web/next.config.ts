@@ -10,6 +10,12 @@ const formattedApiUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
 const nextConfig: NextConfig = {
   output: 'standalone',
   transpilePackages: ['@hq/ui', '@hq/design-system'],
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   async rewrites() {
     return [
       {

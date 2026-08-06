@@ -34,16 +34,21 @@ import {
 import { useAuth } from '../../../contexts/auth-context';
 import { toast } from '../../../components/toast';
 
+interface MissionTask {
+  id: string;
+  status: string;
+}
+
 interface Mission {
   id: string;
   objective: string;
-  status: 'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+  status: 'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'EXECUTING';
   progress?: number;
   assignedLead?: string;
   createdAt: string;
   updatedAt: string;
   deadline?: string;
-  stepLogsCount?: number;
+  tasks?: MissionTask[];
 }
 
 export default function MissionsCommandCenterPage() {
@@ -58,7 +63,7 @@ export default function MissionsCommandCenterPage() {
   // New Mission Modal State
   const [showLaunchModal, setShowLaunchModal] = React.useState(false);
   const [objective, setObjective] = React.useState('');
-  const [selectedExecRole, setSelectedExecRole] = React.useState('cto');
+  const [selectedExecRole, setSelectedExecRole] = React.useState('asad');
   const [launching, setLaunching] = React.useState(false);
 
   const fetchMissions = React.useCallback(async () => {
@@ -99,7 +104,7 @@ export default function MissionsCommandCenterPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ objective }),
+        body: JSON.stringify({ objective, assignedLead: selectedExecRole }),
       });
 
       if (!res.ok) {
@@ -108,7 +113,7 @@ export default function MissionsCommandCenterPage() {
       }
 
       const newMission = await res.json();
-      toast.success('🚀 Autonomous Mission Deployed! Executive Agents assigned.');
+      toast.success('🚀 Autonomous Mission Deployed! Executive Board assigned.');
       setShowLaunchModal(false);
       setObjective('');
       fetchMissions();
@@ -128,13 +133,32 @@ export default function MissionsCommandCenterPage() {
     const matchesTab =
       activeTab === 'ALL'
         ? true
-        : m.status === activeTab;
+        : m.status === activeTab || (activeTab === 'IN_PROGRESS' && m.status === 'EXECUTING');
     const matchesSearch = m.objective.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
-  const activeCount = missions.filter((m) => m.status === 'IN_PROGRESS' || m.status === 'QUEUED').length;
+  const activeCount = missions.filter((m) => m.status === 'IN_PROGRESS' || m.status === 'EXECUTING' || m.status === 'QUEUED').length;
   const completedCount = missions.filter((m) => m.status === 'COMPLETED').length;
+  const successRate = missions.length > 0
+    ? Math.min(100, Math.round(((completedCount + activeCount * 0.95) / missions.length) * 100))
+    : 100;
+
+  const getLeadTitle = (leadKey?: string) => {
+    switch (leadKey) {
+      case 'legal':
+        return 'Legal (Compliance Director)';
+      case 'teema':
+        return 'Teema (Operations & CoS)';
+      case 'resource':
+        return 'Resource Director (HR)';
+      case 'mr_intelligence':
+        return 'Mr. Intelligence (Research)';
+      case 'asad':
+      default:
+        return 'Asad (CEO) & Teema (Ops)';
+    }
+  };
 
   return (
     <div className="space-y-8 select-none text-foreground pb-12 animate-in fade-in duration-500">
@@ -162,7 +186,7 @@ export default function MissionsCommandCenterPage() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border border-card-border bg-card-bg/80 backdrop-blur-xl p-5 rounded-2xl text-left">
           <div className="flex items-center justify-between text-foreground/50 mb-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider">Active Missions</span>
@@ -186,17 +210,17 @@ export default function MissionsCommandCenterPage() {
             <span className="text-[11px] font-extrabold uppercase tracking-wider">Execution Success Rate</span>
             <TrendingUp className="h-4 w-4 text-purple-400" />
           </div>
-          <div className="text-2xl font-black text-foreground">98.4%</div>
+          <div className="text-2xl font-black text-foreground">{successRate}%</div>
           <div className="text-[10px] text-purple-400 font-bold mt-1">Multi-Agent Deliberation Verified</div>
         </Card>
 
         <Card className="border border-card-border bg-card-bg/80 backdrop-blur-xl p-5 rounded-2xl text-left">
           <div className="flex items-center justify-between text-foreground/50 mb-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider">Active AI Agents</span>
+            <span className="text-[11px] font-extrabold uppercase tracking-wider">Active AI Board</span>
             <Cpu className="h-4 w-4 text-blue-400" />
           </div>
-          <div className="text-2xl font-black text-foreground">6 Executive Leads</div>
-          <div className="text-[10px] text-blue-400 font-bold mt-1">CEO, CTO, CMO, CFO, CRO, COO</div>
+          <div className="text-2xl font-black text-foreground">5 Directors</div>
+          <div className="text-[10px] text-blue-400 font-bold mt-1">Asad, Teema, Legal, HR & Research</div>
         </Card>
       </div>
 
@@ -262,8 +286,17 @@ export default function MissionsCommandCenterPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
           {filteredMissions.map((m) => {
             const isDone = m.status === 'COMPLETED';
-            const isInProg = m.status === 'IN_PROGRESS';
-            const progressPct = isDone ? 100 : isInProg ? 65 : 15;
+            const isInProg = m.status === 'IN_PROGRESS' || m.status === 'EXECUTING';
+
+            const totalTasks = m.tasks?.length || 0;
+            const completedTasks = m.tasks?.filter((t) => t.status === 'COMPLETED').length || 0;
+            const progressPct = totalTasks > 0
+              ? Math.round((completedTasks / totalTasks) * 100)
+              : isDone
+              ? 100
+              : isInProg
+              ? 50
+              : 0;
 
             return (
               <Card
@@ -314,8 +347,8 @@ export default function MissionsCommandCenterPage() {
 
                   <div className="flex items-center justify-between pt-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider">Assigned Lead:</span>
-                      <span className="text-xs font-black text-cyan-400">Chief Executive Officer (CEO)</span>
+                      <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider">Executive Lead:</span>
+                      <span className="text-xs font-black text-cyan-400">{getLeadTitle(m.assignedLead)}</span>
                     </div>
 
                     <span className="text-xs text-cyan-400 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
@@ -352,6 +385,51 @@ export default function MissionsCommandCenterPage() {
             </div>
 
             <form onSubmit={handleLaunchMission} className="space-y-5 text-left">
+              {/* 1-Tap Enterprise Presets */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-cyan-400">
+                  <Sparkles className="h-3.5 w-3.5" /> 1-Tap Enterprise Templates
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    {
+                      label: '🛡️ SOC2 Security Audit',
+                      text: 'Audit infrastructure security, API token rotation, and compile SOC2 compliance readiness brief.',
+                      lead: 'legal',
+                    },
+                    {
+                      label: '🚀 Product Launch Campaign',
+                      text: 'Draft Q3 product launch copy for Twitter, LinkedIn, and compile press announcement.',
+                      lead: 'teema',
+                    },
+                    {
+                      label: '📊 VC Valuation & Pitch',
+                      text: 'Perform unit economics audit, calculate gross margin (>85%), and build VC pitch deck outline.',
+                      lead: 'asad',
+                    },
+                    {
+                      label: '⚡ API Webhook Hardening',
+                      text: 'Refactor billing webhooks, add Redis rate-limiting, and verify lockout resilience.',
+                      lead: 'mr_intelligence',
+                    },
+                  ].map((preset, idx) => (
+                    <button
+                      type="button"
+                      key={idx}
+                      onClick={() => {
+                        setObjective(preset.text);
+                        setSelectedExecRole(preset.lead);
+                      }}
+                      className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/40 text-left transition-all hover:bg-cyan-500/10 group"
+                    >
+                      <div className="text-[11px] font-extrabold text-slate-200 group-hover:text-cyan-300">
+                        {preset.label}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Mission Objective / Key Deliverable *</label>
                 <Input
@@ -370,12 +448,11 @@ export default function MissionsCommandCenterPage() {
                   onChange={(e) => setSelectedExecRole(e.target.value)}
                   className="w-full bg-black/50 border border-white/10 text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-500"
                 >
-                  <option value="ceo">Elena Rostova — Chief Executive Officer (CEO)</option>
-                  <option value="cto">Marcus Vance — Chief Technology Officer (CTO)</option>
-                  <option value="cmo">Sophia Chen — Chief Marketing Officer (CMO)</option>
-                  <option value="cfo">Arthur Pendelton — Chief Financial Officer (CFO)</option>
-                  <option value="cro">Victor Vance — Chief Revenue Officer (CRO)</option>
-                  <option value="coo">Diane Sterling — Chief Operating Officer (COO)</option>
+                  <option value="asad">Asad — Chief Executive Officer (CEO)</option>
+                  <option value="teema">Teema — Operations Director & Chief of Staff</option>
+                  <option value="legal">Legal — Legal & Compliance Director</option>
+                  <option value="resource">Resource Director — Human Resources Director</option>
+                  <option value="mr_intelligence">Mr. Intelligence — Public Web Research Agent</option>
                 </select>
               </div>
 

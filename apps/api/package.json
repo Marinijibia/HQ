@@ -45,6 +45,7 @@
     "@hq/executives": "1.0.0",
     "@hq/database": "*",
     "@google/generative-ai": "^0.21.0",
+    "@google-cloud/vertexai": "^1.15.0",
     "stripe": "^14.25.0"
   },
   "devDependencies": {

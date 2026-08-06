@@ -4,12 +4,15 @@ import * as React from 'react';
 import {
   User,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onIdTokenChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
+import { toast } from '../components/toast';
 
 interface AuthContextType {
   user: User | null;
@@ -24,6 +27,8 @@ interface AuthContextType {
   token: string | null;
   refetchUser: () => Promise<void>;
 }
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.hq.netify.ng';
 
 function isJwtExpired(tokenString: string): boolean {
   try {
@@ -52,15 +57,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const idToken = await currentUser.getIdToken(false);
       setToken(idToken);
 
-      const res = await fetch('/api/auth/firebase', {
+      // Attempt 1: Relative proxy path
+      let res = await fetch('/api/auth/firebase', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),
-      });
+      }).catch(() => null);
 
-      if (res.ok) {
+      // Attempt 2: Direct API base URL fallback (/auth/firebase)
+      if (!res || !res.ok) {
+        res = await fetch(`${API_BASE_URL}/auth/firebase`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken }),
+        }).catch(() => null);
+      }
+
+      // Attempt 3: Direct API base URL fallback (/api/auth/firebase)
+      if (!res || !res.ok) {
+        res = await fetch(`${API_BASE_URL}/api/auth/firebase`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken }),
+        }).catch(() => null);
+      }
+
+      if (res && res.ok) {
         const data = await res.json();
         setDbUser(data.user);
         setOrganization(data.organization || null);
@@ -84,13 +106,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           );
         } catch { /* ignore */ }
       } else {
-        const meRes = await fetch('/api/auth/me', {
+        // Direct fetch to /me endpoint
+        let meRes = await fetch('/api/auth/me', {
           headers: {
             Authorization: `Bearer ${idToken}`,
             'Content-Type': 'application/json',
           },
-        });
-        if (meRes.ok) {
+        }).catch(() => null);
+
+        if (!meRes || !meRes.ok) {
+          meRes = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${idToken}`,
+              'Content-Type': 'application/json',
+            },
+          }).catch(() => null);
+        }
+
+        if (meRes && meRes.ok) {
           const meData = await meRes.json();
           setDbUser(meData.user);
           setOrganization(meData.organization || meData.company || null);
@@ -120,6 +153,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   React.useEffect(() => {
+    // 1. Process redirect result for mobile devices (iOS Safari & Android Chrome)
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          setUser(result.user);
+          syncBackendSession(result.user);
+        }
+      })
+      .catch((err) => {
+        console.warn('Firebase redirect result resolution notice:', err);
+      });
+
+    // 2. Main auth state listener
     const unsubscribe = onIdTokenChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false); // Unblock UI instantly on auth state resolution
@@ -172,11 +218,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     setLoading(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      setUser(result.user);
-      await syncBackendSession(result.user);
-    } catch (error) {
+      const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        setUser(result.user);
+        await syncBackendSession(result.user);
+      } catch (popupError: any) {
+        if (
+          popupError?.code === 'auth/popup-closed-by-user' ||
+          popupError?.code === 'auth/cancelled-popup-request'
+        ) {
+          // Gracefully handle user closing or dismissing the popup
+          return;
+        }
+        if (popupError?.code === 'auth/popup-blocked') {
+          toast.info('Switching to mobile authentication redirect...');
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        }
+        toast.error(popupError?.message || 'Google authentication failed.');
+        throw popupError;
+      }
+    } catch (error: any) {
+      if (
+        error?.code === 'auth/popup-closed-by-user' ||
+        error?.code === 'auth/cancelled-popup-request'
+      ) {
+        return;
+      }
       console.error('Google sign-in error:', error);
+      toast.error(error?.message || 'Google sign-in failed.');
       throw error;
     } finally {
       setLoading(false);
@@ -189,8 +265,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await signInWithEmailAndPassword(auth, email, pass);
       setUser(res.user);
       await syncBackendSession(res.user);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Email sign-in error:', error);
+      toast.error(error?.message || 'Email authentication failed.');
       throw error;
     } finally {
       setLoading(false);
@@ -203,8 +280,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await createUserWithEmailAndPassword(auth, email, pass);
       setUser(res.user);
       await syncBackendSession(res.user);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Email sign-up error:', error);
+      toast.error(error?.message || 'Email registration failed.');
       throw error;
     } finally {
       setLoading(false);

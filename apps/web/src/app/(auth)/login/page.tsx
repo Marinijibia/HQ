@@ -178,8 +178,17 @@ export default function LoginPage() {
       await signInWithGoogle();
       await refetchUser();
       setLoadingHq(true);
-    } catch (err) {
+    } catch (err: any) {
+      if (
+        err?.code === 'auth/popup-closed-by-user' ||
+        err?.code === 'auth/cancelled-popup-request'
+      ) {
+        // User voluntarily closed the popup window — reset loading state gracefully
+        setAuthLoading(false);
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Google authentication failed.');
+    } finally {
       setAuthLoading(false);
     }
   };

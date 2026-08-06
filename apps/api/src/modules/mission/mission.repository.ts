@@ -24,6 +24,14 @@ export class MissionRepository {
   async findByCompanyId(companyId: string): Promise<Mission[]> {
     return this.prisma.mission.findMany({
       where: { companyId, deletedAt: null },
+      include: {
+        tasks: {
+          select: {
+            id: true,
+            status: true,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
   }

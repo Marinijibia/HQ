@@ -11,9 +11,11 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ExecutiveRepository } from './executive.repository';
 import { CeoService } from './ceo.service';
 import { QaService } from './qa.service';
+import { ResourceService } from './resource.service';
+import { FinanceService } from './finance.service';
 import { AiService } from '../ai/ai.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 
 export class ChatExecutiveDto {
   @IsString()
@@ -41,6 +43,11 @@ export class EvaluateDeliverableDto {
   tone?: string;
 }
 
+export class ToggleExecutiveStatusDto {
+  @IsBoolean()
+  isActive!: boolean;
+}
+
 @ApiTags('Executives')
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
@@ -50,6 +57,8 @@ export class ExecutiveController {
     private readonly executiveRepository: ExecutiveRepository,
     private readonly ceoService: CeoService,
     private readonly qaService: QaService,
+    private readonly resourceService: ResourceService,
+    private readonly financeService: FinanceService,
     private readonly aiService: AiService,
   ) {}
 
@@ -57,6 +66,36 @@ export class ExecutiveController {
   @ApiOperation({ summary: 'Get all active C-Suite AI executives' })
   async findAll() {
     return this.executiveRepository.findAll();
+  }
+
+  @Get('roster/capacity')
+  @ApiOperation({ summary: 'Audit workspace executive roster capacity & domain coverage' })
+  async getRosterCapacity() {
+    return this.resourceService.auditRosterCapacity();
+  }
+
+  @Get('finance/health')
+  @ApiOperation({ summary: 'Run CFO financial health audit and runway calculations' })
+  async getFinancialHealth() {
+    return this.financeService.auditFinancialHealth('default-workspace-company-id');
+  }
+
+  @Get('finance/forecast')
+  @ApiOperation({ summary: 'Generate CFO financial runway projection forecast' })
+  async getFinancialForecast() {
+    return this.financeService.forecastRunway('default-workspace-company-id');
+  }
+
+  @Get('finance/unit-economics')
+  @ApiOperation({ summary: 'Calculate CFO Unit Economics (LTV:CAC ratio & payback months)' })
+  async getUnitEconomics() {
+    return this.financeService.calculateUnitEconomics();
+  }
+
+  @Get('finance/cap-table')
+  @ApiOperation({ summary: 'Simulate Cap Table equity dilution scenario' })
+  async getCapTableScenario() {
+    return this.financeService.simulateCapTableDilution();
   }
 
   @Get('ceo/welcome')
@@ -81,6 +120,12 @@ export class ExecutiveController {
       dto.content,
       dto.tone,
     );
+  }
+
+  @Post(':id/activate')
+  @ApiOperation({ summary: 'Toggle AI executive active status in workspace' })
+  async toggleActivation(@Param('id') id: string, @Body() dto: ToggleExecutiveStatusDto) {
+    return this.resourceService.activateExecutive(id, dto.isActive);
   }
 
   @Get(':id')

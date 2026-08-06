@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../contexts/auth-context';
 import { ThemeProvider } from '../contexts/theme-context';
 
+import { PWAInstallBanner } from '../components/pwa-install-banner';
+
 export function Providers({ children }: { children: React.ReactNode }) {
   // Prevent sharing query client instance between requests under SSR
   const [queryClient] = React.useState(
@@ -22,7 +24,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+          <PWAInstallBanner />
+        </QueryClientProvider>
       </AuthProvider>
     </ThemeProvider>
   );

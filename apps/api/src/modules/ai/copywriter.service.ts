@@ -15,7 +15,7 @@ export class CopywriterService {
   private readonly logger = new Logger(CopywriterService.name);
 
   private readonly copywriterSystemPrompt = `
-    You are Alistair Thorne, the Chief Copywriting Director at HQ Corporation.
+    You are Alistair Thorne, Chief Copywriting Director at HQ Corporation.
     Your mandate is to craft high-conversion B2B/B2C marketing campaigns, blog drafts, templates, and social copy.
     Ensure all copy is engaging, grammatically flawless, and strictly aligned with designated brand guidelines.
     Always provide recommended SEO title tags and meta descriptions along with campaign copy.
@@ -29,11 +29,11 @@ export class CopywriterService {
     lengthLimit = 500,
   ): Promise<GeneratedCopyResult> {
     this.logger.log(
-      `[Copywriter Engine] Spawning copywriting request. Tone: ${tone}, Limit: ${lengthLimit}`,
+      `[Copywriter Engine] Spawning copywriting request via AI Engine. Tone: ${tone}, Limit: ${lengthLimit}`,
     );
 
     const compiledPrompt = `
-      Write marketing copy for this prompt: "${prompt}".
+      Write high-converting marketing copy for this directive: "${prompt}".
       Tone style guideline: "${tone}".
       Character limit boundary: ${lengthLimit} characters.
 
@@ -45,47 +45,31 @@ export class CopywriterService {
       }
     `;
 
+    const response = await this.aiService.executePrompt({
+      prompt: compiledPrompt,
+      systemPrompt: this.copywriterSystemPrompt,
+    });
+
+    let text = response.text;
+    let seoTitle = 'HQ Enterprise Campaign';
+    let seoDescription = 'HQ AI Operating System strategic marketing asset.';
+
     try {
-      const response = await this.aiService.executePrompt({
-        prompt: compiledPrompt,
-        systemPrompt: this.copywriterSystemPrompt,
-        provider: 'gemini',
-        temperature: 0.7,
-      });
-
       const parsed = JSON.parse(response.text);
-      const text = parsed.text || response.text;
-
-      return {
-        text,
-        charCount: text.length,
-        wordCount: text.split(/\s+/).filter(Boolean).length,
-        seoTitle: parsed.seoTitle || 'HQ Campaign Deliverable',
-        seoDescription:
-          parsed.seoDescription || 'HQ enterprise strategic marketing asset.',
-        tone,
-      };
-    } catch (error) {
-      this.logger.warn(
-        `[Copywriter Engine] Failed to parse JSON copywriter response. Falling back to default copy formats...`,
-      );
-      return this.getFallbackCopy(prompt, tone);
+      if (parsed.text) text = parsed.text;
+      if (parsed.seoTitle) seoTitle = parsed.seoTitle;
+      if (parsed.seoDescription) seoDescription = parsed.seoDescription;
+    } catch {
+      // If output is raw string, use live AI completion text directly
+      this.logger.log('[Copywriter Engine] Live response format parsed as raw text completion.');
     }
-  }
-
-  private getFallbackCopy(prompt: string, tone: string): GeneratedCopyResult {
-    const text = `[Campaign Copywriting Draft - Tone: ${tone}]
-Objective: "${prompt}"
-
-Welcome to HQ Enterprise. Our strategic execution frameworks help C-Suite executives automate alignment checks, design compliance gates, and monitor task queue flows in real-time. Contact our advisory board to schedule your corporate walkthrough today.`;
 
     return {
       text,
       charCount: text.length,
       wordCount: text.split(/\s+/).filter(Boolean).length,
-      seoTitle: 'HQ Corporation: Enterprise Orchestration Platforms',
-      seoDescription:
-        'Scale your team output with autonomous C-Suite routing agents.',
+      seoTitle,
+      seoDescription,
       tone,
     };
   }

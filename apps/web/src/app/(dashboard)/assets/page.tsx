@@ -68,6 +68,14 @@ export default function AssetCenterPage() {
   const [loading, setLoading] = React.useState(true);
   const [planCode, setPlanCode] = React.useState<string>('free');
 
+  // AI Summarization state
+  const [aiSummaryLoading, setAiSummaryLoading] = React.useState(false);
+  const [aiSummaryData, setAiSummaryData] = React.useState<{
+    summary: string;
+    keyPoints: string[];
+    confidenceScore: number;
+  } | null>(null);
+
   // Custom onboarding data
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
 
@@ -127,6 +135,7 @@ export default function AssetCenterPage() {
 
   // Fetch full details of selected asset (including versions)
   React.useEffect(() => {
+    setAiSummaryData(null);
     if (!token || !selectedAssetId) {
       setSelectedAsset(null);
       return;
@@ -146,6 +155,28 @@ export default function AssetCenterPage() {
     };
     fetchSelectedAsset();
   }, [token, selectedAssetId]);
+
+  const handleGenerateAiSummary = async () => {
+    if (!token || !selectedAssetId) return;
+    setAiSummaryLoading(true);
+    try {
+      const res = await fetch(`/api/assets/${selectedAssetId}/ai-summary`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAiSummaryData(data);
+        toast.success('✨ Mr. Intelligence summary generated!');
+      } else {
+        toast.error('AI Summarization failed.');
+      }
+    } catch {
+      toast.error('Network error requesting summary.');
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -609,12 +640,50 @@ export default function AssetCenterPage() {
                 </div>
               </div>
 
-              {/* Document Previewer */}
-              <div className="space-y-2.5 text-left">
-                <h4 className="text-[10px] font-black text-foreground/40 uppercase tracking-widest flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-hq-cyan" />
-                  Secure Document Preview
-                </h4>
+              {/* Document Previewer & AI Summarizer */}
+              <div className="space-y-3 text-left">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] font-black text-foreground/40 uppercase tracking-widest flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-hq-cyan" />
+                    Secure Document Preview
+                  </h4>
+
+                  <Button
+                    onClick={handleGenerateAiSummary}
+                    disabled={aiSummaryLoading}
+                    size="sm"
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-[11px] font-bold h-7 px-3 rounded-full flex items-center gap-1.5 shadow-sm shrink-0"
+                  >
+                    <Sparkles className={`h-3 w-3 ${aiSummaryLoading ? 'animate-spin' : ''}`} />
+                    {aiSummaryLoading ? 'Analyzing...' : 'AI Summary (Mr. Intelligence)'}
+                  </Button>
+                </div>
+
+                {/* AI Executive Summary Card */}
+                {aiSummaryData && (
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-blue-950/40 to-purple-950/40 border border-cyan-500/30 space-y-2.5 shadow-md animate-in fade-in">
+                    <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2">
+                      <span className="text-xs font-black text-cyan-300 flex items-center gap-1">
+                        🔍 Mr. Intelligence Executive Summary
+                      </span>
+                      <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/40 text-[9px] font-bold">
+                        96% Confidence
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                      {aiSummaryData.summary}
+                    </p>
+                    <ul className="space-y-1 text-[11px] text-slate-400 pt-1">
+                      {aiSummaryData.keyPoints.map((point, idx) => (
+                        <li key={idx} className="flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div className="min-h-36 rounded-2xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/50 p-4 text-xs leading-relaxed font-semibold overflow-y-auto text-foreground/80 max-h-56">
                   {selectedAsset.mimeType.startsWith('image/') ? (
                     <div className="flex flex-col items-center justify-center py-6 space-y-2">

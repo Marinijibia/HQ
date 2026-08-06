@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/auth-context';
+import { auth } from '../../lib/firebase';
 import { useSidebarStore } from '../../stores/sidebarStore';
 import { useCommandPaletteStore } from '../../stores/commandPaletteStore';
 import { GuideModeProvider } from '../../contexts/guide-mode-context';
@@ -36,6 +37,7 @@ import {
   Bot,
   ArrowRight,
   ShieldCheck,
+  FolderOpen,
 } from 'lucide-react';
 import { Button, Badge } from '@hq/ui';
 
@@ -65,9 +67,9 @@ const navGroups: NavGroup[] = [
   {
     label: 'Operations & Strategy',
     items: [
-      { name: 'Departments', href: '/departments', icon: Layers },
+      { name: 'Asset Center', href: '/assets', icon: FolderOpen, badge: 'Vault' },
+      { name: 'Departments', href: '/settings?tab=organization', icon: Layers },
       { name: 'Marketplace', href: '/marketplace', icon: ShoppingBag, badge: '5 Core Active' },
-      { name: 'Deliverables', href: '/deliverables', icon: FileCheck },
       { name: 'Intelligence', href: '/intelligence', icon: Brain },
     ],
   },
@@ -75,8 +77,8 @@ const navGroups: NavGroup[] = [
     label: 'Administration',
     items: [
       { name: 'Settings', href: '/settings', icon: Settings },
-      { name: 'Billing', href: '/billing', icon: CreditCard },
-      { name: 'Integrations', href: '/integrations', icon: Plug2 },
+      { name: 'Billing & Finance', href: '/billing', icon: CreditCard, badge: 'CFO Engine' },
+      { name: 'Integration Hub', href: '/integration-hub', icon: Plug2 },
       { name: 'Trust Center', href: '/trust-center', icon: Shield },
     ],
   },
@@ -105,17 +107,17 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const [orgName, setOrgName] = React.useState('HQ CORPORATION');
   const [isTimedOut, setIsTimedOut] = React.useState(false);
 
-  // Safety loading timeout - prevents screen from hanging indefinitely on "Verifying Boardroom Credentials"
+  // Safety loading timeout - prevents screen from hanging indefinitely
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setIsTimedOut(true);
-    }, 2500);
+    }, 5000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Automatic login redirect if authentication completes and user is null
+  // Robust login redirect: Only redirect if authentication has resolved AND no Firebase currentUser exists
   React.useEffect(() => {
-    if (!loading && !user && isTimedOut) {
+    if (!loading && !user && !auth.currentUser && isTimedOut) {
       router.push('/login');
     }
   }, [loading, user, isTimedOut, router]);
@@ -157,7 +159,10 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (token) {
       fetchNotifications();
-      const interval = setInterval(fetchNotifications, 15000);
+      const interval = setInterval(() => {
+        if (typeof document !== 'undefined' && document.hidden) return;
+        fetchNotifications();
+      }, 30000);
       return () => clearInterval(interval);
     }
   }, [token, fetchNotifications]);
@@ -257,7 +262,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-cyan-500 via-blue-600 via-purple-600 to-emerald-500 z-50" />
 
       {/* Top Banner / Luxury Executive Navigation Header */}
-      <header className="relative z-40 flex h-16 items-center justify-between border-b border-slate-200/80 dark:border-white/10 px-4 sm:px-8 bg-white/85 dark:bg-[#070709]/85 backdrop-blur-3xl transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+      <header className="relative z-40 flex h-16 items-center justify-between border-b border-slate-200/80 dark:border-white/10 px-4 sm:px-8 bg-white/95 dark:bg-[#070709]/95 backdrop-blur-md transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
         <div className="flex items-center space-x-3 sm:space-x-5">
           {/* Mobile Drawer Hamburger Button */}
           <Button

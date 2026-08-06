@@ -13,12 +13,15 @@ import {
   Badge,
 } from '@hq/ui';
 import { ArrowRight, Loader2, CheckCircle, Twitter, Linkedin, Sparkles } from 'lucide-react';
+import { useAuth } from '../../../../contexts/auth-context';
 
 export default function FirstMissionPage() {
+  const { token } = useAuth();
   const [progress, setProgress] = React.useState(0);
   const [currentStep, setCurrentStep] = React.useState(1); // 1: Strategy, 2: Writing, 3: Legal, 4: Finished
   const [missionTitle, setMissionTitle] = React.useState('Guided Launch Campaign');
   const [missionObjective, setMissionObjective] = React.useState('Compose Q3 Social Launch Copy');
+  const [savedToDb, setSavedToDb] = React.useState(false);
 
   React.useEffect(() => {
     const recommended = sessionStorage.getItem('hq_recommended_mission');
@@ -76,6 +79,23 @@ export default function FirstMissionPage() {
       clearInterval(timer);
     };
   }, []);
+
+  React.useEffect(() => {
+    if (progress === 100 && token && !savedToDb) {
+      setSavedToDb(true);
+      fetch('/api/missions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          objective: missionObjective,
+          assignedLead: 'asad',
+        }),
+      }).catch((e) => console.error('First mission save notice:', e));
+    }
+  }, [progress, token, savedToDb, missionObjective]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col justify-between font-sans select-none">

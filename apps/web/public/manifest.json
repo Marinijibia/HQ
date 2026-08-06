@@ -1,12 +1,14 @@
 {
   "name": "HQ — AI Executive Operating System",
   "short_name": "HQ AI OS",
-  "description": "Autonomous C-Suite Executive Command System",
+  "description": "Autonomous C-Suite Executive Command System & AI Boardroom",
+  "id": "https://hq.netify.ng",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#030303",
+  "background_color": "#050508",
   "theme_color": "#06b6d4",
-  "orientation": "any",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
       "src": "/logo.png",
@@ -19,6 +21,29 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chat with CEO Asad",
+      "short_name": "CEO Chat",
+      "description": "Direct hotline to Chief Executive Officer Asad",
+      "url": "/ceo-chat",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Launch New Mission",
+      "short_name": "New Mission",
+      "description": "Dispatch strategic mission to C-Suite Board",
+      "url": "/missions?new=true",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Executive Boardroom",
+      "short_name": "Boardroom",
+      "description": "View live AI executive telemetry",
+      "url": "/boardroom",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
     }
   ]
 }

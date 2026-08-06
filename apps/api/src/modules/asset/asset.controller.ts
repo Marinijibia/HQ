@@ -157,6 +157,12 @@ export class AssetController {
     return this.assetService.toggleLegalHold(id);
   }
 
+  @Post(':id/ai-summary')
+  @ApiOperation({ summary: 'Generate instant AI document executive summary with Mr. Intelligence' })
+  async summarizeWithAI(@Param('id') id: string) {
+    return this.assetService.summarizeAssetWithAI(id);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Soft delete/archive an asset entry' })
   async remove(@Param('id') id: string) {

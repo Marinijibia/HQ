@@ -23,4 +23,8 @@ export class ExecutePromptDto {
   @IsBoolean()
   @IsOptional()
   simulateFailure?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  jsonMode?: boolean;
 }

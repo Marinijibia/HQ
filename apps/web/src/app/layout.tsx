@@ -1,6 +1,14 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Providers } from './providers';
 import './globals.css';
+
+export const viewport: Viewport = {
+  themeColor: '#06b6d4',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://hq.netify.ng'),
@@ -14,6 +22,11 @@ export const metadata: Metadata = {
     apple: '/logo.png',
   },
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'HQ AI OS',
+  },
   openGraph: {
     title: 'HQ — AI Executive Operating System',
     description: 'Run your organization with a full C-Suite AI board.',

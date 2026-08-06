@@ -67,6 +67,30 @@ interface ChatMessage {
     status: string;
   };
   assignedExecutives?: string[];
+  webResearchBriefing?: {
+    topic: string;
+    summary: string;
+    keyTakeaways: string[];
+    marketSentiment: string;
+    newsHighlights: string[];
+    socialSignals: string[];
+    confidenceScore?: number;
+    scrapedUrl?: string;
+    sources?: { title: string; snippet: string; url: string; source: string }[];
+  };
+  strategicScorecard?: {
+    strategicImpact: number;
+    operationalEffort: string;
+    regulatoryRisk: string;
+    targetCompletionDays: number;
+  };
+  delegationMatrix?: {
+    directorName: string;
+    roleTitle: string;
+    responsibility: string;
+    confidenceScore: number;
+  }[];
+  dispatchActionReady?: boolean;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -334,6 +358,10 @@ Tell me more about your vision — what outcome or milestone are we targeting?`,
           recommendedListing: data.recommendedMarketplaceListing,
           missionPlan: data.missionPlan,
           assignedExecutives: data.assignedExecutives,
+          webResearchBriefing: data.webResearchBriefing,
+          strategicScorecard: data.strategicScorecard,
+          delegationMatrix: data.delegationMatrix,
+          dispatchActionReady: data.dispatchActionReady,
         };
 
         setThreads((prev) =>
@@ -411,10 +439,11 @@ I have verified domain intelligence for **FuelOS**:
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      await fetch(`${API_BASE_URL}/marketplace/listings/${listing.id || 'm1'}/install`, {
+      const departmentKey = listing.departmentKey || 'technology';
+      await fetch(`${API_BASE_URL}/missions/marketplace/install`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ companyId }),
+        body: JSON.stringify({ departmentKey, companyId }),
       }).catch(() => null);
 
       toast.success(`🎉 Installed "${listing.title}" into your active workspace roster!`);

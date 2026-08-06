@@ -7,11 +7,13 @@ import { MoeService } from './moe.service';
 import { CeoOrchestratorService } from './ceo-orchestrator.service';
 import { AiModule } from '../ai/ai.module';
 import { DatabaseModule } from '../database/database.module';
+import { ExecutiveModule } from '../executive/executive.module';
 
 @Module({
   imports: [
     AiModule,
     DatabaseModule,
+    ExecutiveModule,
     BullModule.registerQueue({
       name: 'mission-tasks',
     }),
@@ -21,4 +23,3 @@ import { DatabaseModule } from '../database/database.module';
   exports: [MissionRepository, CosService, MoeService, CeoOrchestratorService, BullModule],
 })
 export class MissionModule {}
-

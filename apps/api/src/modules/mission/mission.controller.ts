@@ -8,8 +8,10 @@ import {
   Body,
   UseGuards,
   Req,
+  Res,
   NotFoundException,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { MissionRepository } from './mission.repository';
 import { CosService } from './cos.service';
@@ -27,11 +29,16 @@ import {
 } from 'class-validator';
 import { MissionStatus } from '@prisma/client';
 import * as types from '../../common/interfaces/request.interface';
+import { PrismaService } from '../database/prisma.service';
 
 export class CreateMissionDto {
   @IsString()
   @IsNotEmpty()
   objective!: string;
+
+  @IsString()
+  @IsOptional()
+  assignedLead?: string;
 
   @IsDateString()
   @IsOptional()
@@ -52,6 +59,15 @@ export class ScopeMissionPromptDto {
   mode?: 'CONVERSATION' | 'JOB_ASSIGNMENT';
 }
 
+export class InstallSuiteDto {
+  @IsString()
+  @IsNotEmpty()
+  departmentKey!: string;
+
+  @IsString()
+  @IsOptional()
+  companyId?: string;
+}
 
 export class UpdateMissionDto {
   @IsString()
@@ -76,6 +92,7 @@ export class MissionController {
     private readonly cosService: CosService,
     private readonly moeService: MoeService,
     private readonly ceoOrchestrator: CeoOrchestratorService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Post('ceo/scope')
@@ -84,7 +101,120 @@ export class MissionController {
     return this.ceoOrchestrator.scopeMission(dto.companyId, dto.message, dto.mode);
   }
 
+  @Post('ceo/stream')
+  @ApiOperation({ summary: 'Real-time Server-Sent Events (SSE) streaming for CEO Asad dialogue' })
+  async streamWithCeo(
+    @Body() dto: ScopeMissionPromptDto,
+    @Res() res: Response,
+  ) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
+    try {
+      const scopeResult = await this.ceoOrchestrator.scopeMission(dto.companyId, dto.message, dto.mode);
+      const text = scopeResult.ceoResponse;
+
+      const chunkSize = 20;
+      for (let i = 0; i < text.length; i += chunkSize) {
+        const chunk = text.slice(i, i + chunkSize);
+        res.write(`data: ${JSON.stringify({ text: chunk, scopeResult })}\n\n`);
+        await new Promise((r) => setTimeout(r, 25));
+      }
+
+      res.write('data: [DONE]\n\n');
+      res.end();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.write(`data: ${JSON.stringify({ error: msg })}\n\n`);
+      res.write('data: [DONE]\n\n');
+      res.end();
+    }
+  }
+
+  @Post('marketplace/install')
+  @ApiOperation({ summary: '1-Click installation of missing department suite into active workspace roster' })
+  async installDepartmentSuite(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() dto: InstallSuiteDto,
+  ) {
+    const companyId = dto.companyId || req.user.companyId;
+
+    const listing = await this.prisma.marketplaceListing.findFirst({
+      where: {
+        OR: [
+          { departmentKey: dto.departmentKey },
+          { category: { contains: dto.departmentKey, mode: 'insensitive' } },
+        ],
+      },
+    });
+
+    const listingId = listing?.id;
+
+    if (listingId) {
+      await this.prisma.marketplaceInstallation.upsert({
+        where: {
+          companyId_listingId: {
+            companyId,
+            listingId,
+          },
+        },
+        create: {
+          companyId,
+          listingId,
+          installedBy: req.user.uid,
+        },
+        update: {
+          installedBy: req.user.uid,
+        },
+      });
+    }
+
+    let department = await this.prisma.department.findFirst({
+      where: {
+        companyId,
+        name: { contains: dto.departmentKey, mode: 'insensitive' },
+      },
+    });
+
+    if (!department) {
+      department = await this.prisma.department.create({
+        data: {
+          companyId,
+          name: `${dto.departmentKey.toUpperCase()} Department`,
+          description: `Specialized ${dto.departmentKey.toUpperCase()} operational department suite`,
+        },
+      });
+    }
+
+    let executive = await this.prisma.executive.findFirst({
+      where: { departmentId: department.id },
+    });
+
+    if (executive) {
+      await this.prisma.executive.update({
+        where: { id: executive.id },
+        data: { isActiveInWorkspace: true },
+      });
+    } else {
+      executive = await this.prisma.executive.create({
+        data: {
+          name: `${dto.departmentKey.toUpperCase()} Director`,
+          roleKey: `${dto.departmentKey}_director`,
+          title: `Chief ${dto.departmentKey.toUpperCase()} Officer`,
+          departmentId: department.id,
+          isActiveInWorkspace: true,
+        },
+      });
+    }
+
+    return {
+      success: true,
+      message: `Successfully installed ${dto.departmentKey.toUpperCase()} suite into workspace roster.`,
+      department,
+      executive,
+    };
+  }
 
   @Post()
   @UseGuards(EntitlementGuard)
@@ -93,12 +223,24 @@ export class MissionController {
     @Req() req: types.AuthenticatedRequest,
     @Body() createDto: CreateMissionDto,
   ) {
-    return this.missionRepository.create({
+    const mission = await this.missionRepository.create({
       objective: createDto.objective,
       companyId: req.user.companyId,
+      status: MissionStatus.EXECUTING,
       deadline: createDto.deadline ? new Date(createDto.deadline) : undefined,
       createdBy: req.user.uid,
     });
+
+    try {
+      const wbs = await this.cosService.generateTaskDAG(createDto.objective);
+      if (wbs && wbs.tasks && wbs.tasks.length > 0) {
+        await this.missionRepository.createTasks(mission.id, wbs.tasks);
+      }
+    } catch (e) {
+      // Resilient fallback if AI execution encounters throttling
+    }
+
+    return this.missionRepository.findById(mission.id);
   }
 
   @Get()
@@ -163,7 +305,6 @@ export class MissionController {
 
     await this.moeService.transitionState(id, MissionStatus.EXECUTING, req.user.uid);
 
-    // Auto-generate WBS tasks via AI Chief of Staff (COS) if none exist yet
     if (!mission.tasks || mission.tasks.length === 0) {
       try {
         const wbs = await this.cosService.generateTaskDAG(mission.objective);
@@ -171,7 +312,7 @@ export class MissionController {
           await this.missionRepository.createTasks(id, wbs.tasks);
         }
       } catch (e) {
-        // Fallback resilient log output
+        // Resilient fallback
       }
     }
 

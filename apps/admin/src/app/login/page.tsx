@@ -100,7 +100,7 @@ export default function AdminLoginPage() {
             <img src="/logo.png" alt="HQ Admin Logo" className="h-7 w-7 rounded-[10px] object-cover" />
           </div>
           <span className="font-extrabold tracking-tight text-foreground text-sm flex items-center gap-1.5">
-            HQ <span className="text-rose-500 text-xs font-bold font-mono">| Admin Console Gateway</span>
+            HQ <span className="text-rose-500 text-xs font-bold font-mono hidden sm:inline">| Admin Console Gateway</span>
           </span>
         </div>
       </header>
@@ -141,7 +141,15 @@ export default function AdminLoginPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-foreground/75 font-bold">Password</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-foreground/75 font-bold">Password</label>
+                    <a
+                      href="/forgot-password"
+                      className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 transition-colors"
+                    >
+                      Forgot password?
+                    </a>
+                  </div>
                   <Input
                     type="password"
                     placeholder="••••••••••••"
@@ -199,7 +207,7 @@ export default function AdminLoginPage() {
 
             <CardFooter className="py-4 text-center flex flex-col gap-2">
               <a
-                href="http://localhost:3000/login"
+                href={`${process.env.NEXT_PUBLIC_WEB_URL || 'https://hq.netify.ng'}/login`}
                 className="mx-auto text-xs font-bold text-foreground/45 hover:text-cyan-400 transition-colors"
               >
                 Return to Executive Tenant Login

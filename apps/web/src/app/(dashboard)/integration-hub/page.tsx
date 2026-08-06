@@ -73,9 +73,9 @@ export default function IntegrationsHubPage() {
 
   // Connected Apps State
   const [connectedApps, setConnectedApps] = React.useState<ConnectedApp[]>([
-    { id: 'slack', name: 'Slack', category: 'Communication', logo: '💬', status: 'Healthy', lastSync: '10 mins ago', dataTransferred: '420 KB', executives: ['CEO Elena', 'CMO Amara'] },
-    { id: 'gdrive', name: 'Google Drive', category: 'Storage', logo: '📁', status: 'Healthy', lastSync: '1 hour ago', dataTransferred: '12.4 MB', executives: ['CEO Elena', 'CTO Hiroshi'] },
-    { id: 'github', name: 'GitHub', category: 'Development', logo: '🐙', status: 'Syncing', lastSync: 'Just now', dataTransferred: '1.8 MB', executives: ['CTO Hiroshi'] },
+    { id: 'slack', name: 'Slack', category: 'Communication', logo: '💬', status: 'Healthy', lastSync: '10 mins ago', dataTransferred: '420 KB', executives: ['Asad (CEO)', 'Teema (Ops)'] },
+    { id: 'gdrive', name: 'Google Drive', category: 'Storage', logo: '📁', status: 'Healthy', lastSync: '1 hour ago', dataTransferred: '12.4 MB', executives: ['Asad (CEO)', 'Mr. Intelligence'] },
+    { id: 'github', name: 'GitHub', category: 'Development', logo: '🐙', status: 'Syncing', lastSync: 'Just now', dataTransferred: '1.8 MB', executives: ['Teema (Ops)', 'Legal (Compliance)'] },
   ]);
 
   // Catalog State

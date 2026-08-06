@@ -64,7 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.fetch = async (input, init) => {
         let response = await originalFetch!(input, init);
         
-        if (response.status === 401) {
+        const urlString = typeof input === 'string' ? input : (input as any)?.url || '';
+        const isInternalApi = urlString.startsWith('/api') || urlString.includes('/api/') || urlString.includes('localhost');
+
+        if (response.status === 401 && isInternalApi) {
           const currentUser = auth.currentUser;
           if (currentUser) {
             try {
@@ -79,14 +82,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 headers,
               });
               
-              if (response.status === 401) {
+              if (response.status === 401 && isInternalApi) {
                 await signOut(auth);
-                window.location.href = '/login';
+                if (!window.location.pathname.startsWith('/login')) {
+                  window.location.href = '/login';
+                }
               }
             } catch (refreshError) {
               console.error('Fetch interceptor: failed refreshing token:', refreshError);
               await signOut(auth);
-              window.location.href = '/login';
+              if (!window.location.pathname.startsWith('/login')) {
+                window.location.href = '/login';
+              }
             }
           } else {
             if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
