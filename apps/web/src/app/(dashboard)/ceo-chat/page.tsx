@@ -475,20 +475,54 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
     }
   };
 
-  const speakMessage = (id: string, text: string) => {
-    if (!('speechSynthesis' in window)) {
-      toast.error('Text-to-speech is not supported in this browser.');
+  const speakMessage = async (id: string, text: string) => {
+    if (speakingMsgId === id) {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      setSpeakingMsgId(null);
       return;
     }
 
-    if (speakingMsgId === id) {
-      window.speechSynthesis.cancel();
+    const cleanText = text.replace(/[*#_`\[\]()]/g, '');
+
+    // 1. High-definition backend voice synthesis
+    try {
+      if (token) {
+        setSpeakingMsgId(id);
+        const res = await fetch('/api/voice/synthesize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ text: cleanText, persona: 'asad' }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.audioBase64) {
+            const audio = new Audio(data.audioBase64);
+            audio.onplay = () => setSpeakingMsgId(id);
+            audio.onended = () => setSpeakingMsgId(null);
+            audio.onerror = () => setSpeakingMsgId(null);
+            await audio.play();
+            return;
+          }
+        }
+      }
+    } catch {
+      /* Fallback to local browser SpeechSynthesis */
+    }
+
+    // 2. Native Web Speech Synthesis Fallback
+    if (!('speechSynthesis' in window)) {
+      toast.error('Text-to-speech is not supported in this browser.');
       setSpeakingMsgId(null);
       return;
     }
 
     window.speechSynthesis.cancel();
-    const cleanText = text.replace(/[*#]/g, '');
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.rate = 1.0;
     utterance.pitch = 1.0;

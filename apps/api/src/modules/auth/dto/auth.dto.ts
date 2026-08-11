@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEmail, MinLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, MinLength, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SendOtpDto {
@@ -56,6 +56,71 @@ export class ResetPasswordDto {
   @IsNotEmpty()
   @MinLength(8)
   newPassword!: string;
+}
+
+export class LoginDto {
+  @ApiProperty({
+    description: 'Executive email address',
+    example: 'user@netify.ng',
+  })
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
+
+  @ApiProperty({
+    description: 'Account password',
+    example: 'SecurePassword123!',
+  })
+  @IsString()
+  @IsNotEmpty()
+  password!: string;
+}
+
+export class RegisterDto {
+  @ApiProperty({
+    description: 'Executive email address',
+    example: 'user@netify.ng',
+  })
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
+
+  @ApiProperty({
+    description: 'Account password (min 6 characters)',
+    example: 'SecurePassword123!',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  password!: string;
+
+  @ApiProperty({
+    description: 'Full name (optional)',
+    example: 'Sophia Adams',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  name?: string;
+}
+
+export class SetPasswordDto {
+  @ApiProperty({
+    description: 'Onboarding session token from verify-otp',
+    example: 'eyJhbGci...',
+  })
+  @IsString()
+  @IsNotEmpty()
+  sessionToken!: string;
+
+  @ApiProperty({
+    description: 'New account password (min 6 characters)',
+    example: 'SecurePassword123!',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  password!: string;
 }
 
 export class RegisterSuperAdminDto {

@@ -54,9 +54,13 @@ export class BillingController {
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify Paystack transaction reference' })
-  async verify(@Body() dto: VerifyDto) {
+  async verify(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() dto: VerifyDto,
+  ) {
     const success = await this.billingService.verifyPaystackPayment(
       dto.reference,
+      req.user.companyId,
     );
     return { success };
   }
@@ -69,8 +73,8 @@ export class BillingController {
     @Headers('x-paystack-signature') signature: string,
     @Req() req: any,
   ) {
-    // stringify the body to match raw signature validation
-    const rawBody = JSON.stringify(req.body);
+    // Prefer rawBody buffer if available for HMAC-SHA512 verification
+    const rawBody = req.rawBody ? req.rawBody.toString('utf8') : JSON.stringify(req.body);
     const isValid = this.billingService.verifyPaystackSignature(
       rawBody,
       signature,

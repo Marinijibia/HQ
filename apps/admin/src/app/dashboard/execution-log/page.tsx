@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge, Button } from '@hq/ui';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge, Button, Input } from '@hq/ui';
 import {
   Terminal,
   Zap,
@@ -18,6 +18,7 @@ import {
   Layers,
   ChevronDown,
   ChevronRight,
+  Search,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { toast } from '../../../components/toast';
@@ -473,84 +474,132 @@ export default function CoreKernelConsolePage() {
           </div>
         )}
 
-        {/* Tab 5: Traces Logs */}
+        {/* Tab 5: Agent Trace Logs */}
         {activeTab === 'logs' && (
           <div className="space-y-5 text-left">
             <Card className="border border-card-border bg-card-bg p-5 shadow-level-2 space-y-4">
-              <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-3">
+              <div className="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-4">
                 <div>
-                  <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Agent Thread Traces</h3>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">Chronological execution history and tool parameters.</p>
+                  <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white flex items-center gap-2">
+                    <Terminal className="h-4 w-4 text-rose-500" />
+                    Agent Thread Execution Traces
+                  </h3>
+                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">
+                    Real-time execution DAG hierarchy, reasoning chains, and invoked OS tools.
+                  </p>
+                </div>
+
+                {/* Filter & Search Bar */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                    <Input
+                      type="text"
+                      placeholder="Filter traces by keyword..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-black/50 border border-white/10 text-white pl-8 h-9 text-xs rounded-xl focus-visible:ring-rose-500 w-60 font-bold"
+                    />
+                  </div>
+
+                  {/* Status Pills */}
+                  <div className="flex items-center gap-1 bg-black/50 border border-white/10 p-1 rounded-xl">
+                    {['ALL', 'SUCCESS', 'RUNNING', 'QUEUED', 'ERROR'].map((st) => (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => setStatusFilter(st)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                          statusFilter === st ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
               <div className="space-y-2.5">
-                {traces.map((trace) => {
-                  const isExpanded = expandedTraceId === trace.id;
-                  const status = STATUS_CONFIG[trace.status];
-                  const StatusIcon = status.icon;
-                  return (
-                    <div key={trace.id} className="border border-card-border rounded-xl bg-[#F9F9FB] dark:bg-[#0A0A0C]/10 overflow-hidden text-xs">
-                      {/* Header */}
-                      <div
-                        onClick={() => setExpandedTraceId(isExpanded ? null : trace.id)}
-                        className="p-3.5 flex items-center justify-between gap-4 cursor-pointer hover:bg-foreground/5 transition-all"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-extrabold text-white">{trace.agentName}</span>
-                            <span className="text-foreground/45 font-semibold text-[10px]">{trace.agentRole}</span>
-                          </div>
-                          <span className="text-[10.5px] text-foreground/75 font-semibold mt-0.5 block">{trace.action}</span>
-                        </div>
-
-                        <div className="flex items-center gap-3 shrink-0">
-                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded border text-[9.5px] font-bold ${status.bg}`}>
-                            <StatusIcon className="h-3 w-3 shrink-0" />
-                            <span>{status.label}</span>
-                          </div>
-                          {isExpanded ? <ChevronDown className="h-4 w-4 text-foreground/40" /> : <ChevronRight className="h-4 w-4 text-foreground/40" />}
-                        </div>
-                      </div>
-
-                      {/* Expanded Section */}
-                      {isExpanded && (
-                        <div className="border-t border-card-border p-4 bg-[#F9F9FB] dark:bg-[#070709]/30 space-y-4 text-xs font-semibold leading-relaxed text-foreground/80">
-                          {trace.reasoning && (
-                            <div className="space-y-1.5">
-                              <span className="text-[9.5px] text-foreground/40 font-bold uppercase tracking-wider block">AI Reasoning Log</span>
-                              <p className="p-3 rounded-lg border border-card-border bg-card-bg font-mono text-[10.5px] text-white/90">{trace.reasoning}</p>
+                {traces
+                  .filter((t) => {
+                    const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
+                    const matchesQuery =
+                      !searchQuery ||
+                      t.agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      t.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      t.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      t.id.toLowerCase().includes(searchQuery.toLowerCase());
+                    return matchesStatus && matchesQuery;
+                  })
+                  .map((trace) => {
+                    const isExpanded = expandedTraceId === trace.id;
+                    const status = STATUS_CONFIG[trace.status];
+                    const StatusIcon = status.icon;
+                    return (
+                      <div key={trace.id} className="border border-card-border rounded-xl bg-[#F9F9FB] dark:bg-[#0A0A0C]/10 overflow-hidden text-xs">
+                        {/* Header */}
+                        <div
+                          onClick={() => setExpandedTraceId(isExpanded ? null : trace.id)}
+                          className="p-3.5 flex items-center justify-between gap-4 cursor-pointer hover:bg-foreground/5 transition-all"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-white">{trace.agentName}</span>
+                              <span className="text-foreground/45 font-semibold text-[10px]">{trace.agentRole}</span>
+                              <Badge variant="neutral" className="text-[8px] font-mono font-bold px-1.5 py-0.2">{trace.model}</Badge>
                             </div>
-                          )}
+                            <span className="text-[10.5px] text-foreground/75 font-semibold mt-0.5 block">{trace.action}</span>
+                          </div>
 
-                          {trace.toolsUsed && trace.toolsUsed.length > 0 && (
-                            <div className="space-y-1.5">
-                              <span className="text-[9.5px] text-foreground/40 font-bold uppercase tracking-wider block">Invoked OS Tools</span>
-                              <div className="flex flex-wrap gap-1.5">
-                                {trace.toolsUsed.map(t => (
-                                  <Badge key={t} variant="neutral" className="text-[9px] font-mono font-bold px-2 py-0.5 bg-card-bg border border-card-border">
-                                    {t}
-                                  </Badge>
-                                ))}
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-[10px] font-mono text-cyan-400 font-bold">{trace.latencyMs} ms</span>
+                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded border text-[9.5px] font-bold ${status.bg}`}>
+                              <StatusIcon className="h-3 w-3 shrink-0" />
+                              <span>{status.label}</span>
+                            </div>
+                            {isExpanded ? <ChevronDown className="h-4 w-4 text-foreground/40" /> : <ChevronRight className="h-4 w-4 text-foreground/40" />}
+                          </div>
+                        </div>
+
+                        {/* Expanded Section */}
+                        {isExpanded && (
+                          <div className="border-t border-card-border p-4 bg-[#F9F9FB] dark:bg-[#070709]/30 space-y-4 text-xs font-semibold leading-relaxed text-foreground/80">
+                            {trace.reasoning && (
+                              <div className="space-y-1.5">
+                                <span className="text-[9.5px] text-rose-400 font-bold uppercase tracking-wider block">AI Reasoning Log</span>
+                                <p className="p-3 rounded-lg border border-white/10 bg-black/60 font-mono text-[10.5px] text-slate-200">{trace.reasoning}</p>
+                              </div>
+                            )}
+
+                            {trace.toolsUsed && trace.toolsUsed.length > 0 && (
+                              <div className="space-y-1.5">
+                                <span className="text-[9.5px] text-cyan-400 font-bold uppercase tracking-wider block">Invoked OS Tools</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {trace.toolsUsed.map((t) => (
+                                    <Badge key={t} variant="neutral" className="text-[9px] font-mono font-bold px-2.5 py-1 bg-black/60 border border-cyan-500/30 text-cyan-300">
+                                      ⚡ {t}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="grid gap-4 grid-cols-2 pt-2 text-[10px] font-bold border-t border-card-border/40 text-foreground/50">
+                              <div>
+                                <span>Latency: <span className="text-white font-mono">{trace.latencyMs} ms</span></span>
+                                <span className="block mt-1">Tokens: <span className="text-white font-mono">In: {trace.inputTokens} / Out: {trace.outputTokens}</span></span>
+                              </div>
+                              <div>
+                                <span>Time: <span className="text-white">{trace.timestamp}</span></span>
+                                {trace.missionId && <span className="block mt-1">Mission ID: <span className="text-rose-400 font-mono">{trace.missionId}</span></span>}
                               </div>
                             </div>
-                          )}
-
-                          <div className="grid gap-4 grid-cols-2 pt-2 text-[10px] font-bold border-t border-card-border/40 text-foreground/50">
-                            <div>
-                              <span>Latency: <span className="text-white">{trace.latencyMs} ms</span></span>
-                              <span className="block mt-1">Tokens: <span className="text-white">In: {trace.inputTokens} / Out: {trace.outputTokens}</span></span>
-                            </div>
-                            <div>
-                              <span>Time: <span className="text-white">{trace.timestamp}</span></span>
-                              {trace.missionId && <span className="block mt-1">Mission ID: <span className="text-hq-cyan font-mono">{trace.missionId}</span></span>}
-                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
             </Card>
           </div>

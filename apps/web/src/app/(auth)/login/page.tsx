@@ -19,7 +19,7 @@ import {
 import { Lock, Mail, ArrowLeft, CheckCircle2, Sparkles, Cpu, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
-  const { user, token, signInWithEmail } = useAuth();
+  const { user, token, signInWithEmail, setSession } = useAuth();
   const router = useRouter();
 
   const [authMode, setAuthMode] = React.useState<'password' | 'otp'>('password');
@@ -44,12 +44,12 @@ export default function LoginPage() {
   const [loadingHq, setLoadingHq] = React.useState(false);
   const [loadProgress, setLoadProgress] = React.useState(0);
 
-  // Auto-redirect authenticated user to /dashboard — only once auth context confirms session
+  // Auto-redirect authenticated user to /dashboard — only once auth context confirms session and not in middle of OTP form
   React.useEffect(() => {
-    if (user && token && !loadingHq) {
+    if (user && token && !loadingHq && !authLoading && !otpSent) {
       router.push('/dashboard');
     }
-  }, [user, token, loadingHq, router]);
+  }, [user, token, loadingHq, authLoading, otpSent, router]);
 
   React.useEffect(() => {
     if (resendCountdown > 0) {
@@ -170,18 +170,24 @@ export default function LoginPage() {
         body: JSON.stringify({ email, code: otpCode }),
       });
 
-      // Read response body once — used for both error message and customToken
       const data = await res.json();
 
       if (!res.ok) {
         throw new Error(data.message || 'Invalid or expired OTP code');
       }
 
-      // Store the server session token — auth context will pick it up on next fetch
-      if (data.sessionToken) {
-        localStorage.setItem('hq_auth_token', data.sessionToken);
+      if (data.token) {
+        // Full auth token for existing registered user -> log in immediately
+        setSession(data.token);
+        setLoadingHq(true);
+      } else if (data.sessionToken) {
+        // Unregistered user -> onboarding session token
+        localStorage.setItem('hq_session_token', data.sessionToken);
+        setSuccessMsg('Email verified! Redirecting to setup your workspace...');
+        setTimeout(() => router.push('/onboarding'), 800);
+      } else {
+        throw new Error('Authentication token not received.');
       }
-      setLoadingHq(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'OTP Verification failed.');
     } finally {
@@ -445,10 +451,24 @@ export default function LoginPage() {
                           required
                           className="bg-slate-100 dark:bg-black/50 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl placeholder:text-slate-400 dark:placeholder:text-slate-600"
                         />
+                        {otpSent && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOtpSent(false);
+                              setOtpCode('');
+                              setError(null);
+                              setSuccessMsg(null);
+                            }}
+                            className="text-[11px] text-cyan-600 dark:text-cyan-400 hover:underline font-semibold pt-1 block"
+                          >
+                            ← Change email address or request new code
+                          </button>
+                        )}
                       </div>
 
                       {otpSent && (
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5 animate-in fade-in">
                           <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">6-Digit Verification Code</label>
                           <Input
                             type="text"
@@ -457,6 +477,7 @@ export default function LoginPage() {
                             value={otpCode}
                             onChange={(e) => setOtpCode(e.target.value)}
                             required
+                            autoFocus
                             className="bg-slate-100 dark:bg-black/50 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white h-11 text-center font-mono text-lg tracking-[8px] focus-visible:ring-cyan-500 rounded-xl"
                           />
                         </div>

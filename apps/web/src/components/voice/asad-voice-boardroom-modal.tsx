@@ -66,8 +66,69 @@ export function AsadVoiceBoardroomModal({
     }
   }, [initialQuery]);
 
-  const speakTextTTS = (textToSpeak: string, executiveName: string = 'CEO Elena') => {
-    if (!('speechSynthesis' in window)) return;
+  // Unmount cleanup for active speech synthesis
+  React.useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const speakTextTTS = async (
+    textToSpeak: string,
+    executiveName: string = 'CEO Elena',
+    onSpeakingFinished?: () => void,
+  ) => {
+    const handleEnd = () => {
+      setIsSpeakingTTS(false);
+      if (onSpeakingFinished) {
+        setTimeout(onSpeakingFinished, 1200);
+      }
+    };
+
+    // 1. Try high-definition backend voice synthesis API
+    try {
+      const token = localStorage.getItem('hq_auth_token');
+      const personaKey = executiveName.includes('Sophia')
+        ? 'sophia'
+        : executiveName.includes('Hiroshi')
+        ? 'hiroshi'
+        : executiveName.includes('Elena')
+        ? 'elena'
+        : 'asad';
+
+      if (token) {
+        const res = await fetch('/api/voice/synthesize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ text: textToSpeak, persona: personaKey }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.audioBase64) {
+            const audio = new Audio(data.audioBase64);
+            audio.onplay = () => setIsSpeakingTTS(true);
+            audio.onended = handleEnd;
+            audio.onerror = handleEnd;
+            await audio.play();
+            return;
+          }
+        }
+      }
+    } catch {
+      /* fallback to local browser SpeechSynthesis */
+    }
+
+    // 2. Fallback to native Web Speech Synthesis API
+    if (!('speechSynthesis' in window)) {
+      handleEnd();
+      return;
+    }
 
     const persona = localStorage.getItem('hq_asad_voice_persona') || 'Asad Male Executive';
 
@@ -86,8 +147,8 @@ export function AsadVoiceBoardroomModal({
     }
 
     utterance.onstart = () => setIsSpeakingTTS(true);
-    utterance.onend = () => setIsSpeakingTTS(false);
-    utterance.onerror = () => setIsSpeakingTTS(false);
+    utterance.onend = handleEnd;
+    utterance.onerror = handleEnd;
 
     window.speechSynthesis.speak(utterance);
   };
@@ -208,7 +269,10 @@ export function AsadVoiceBoardroomModal({
             responseText = `Okay, ${userSalutation}, Executive Boardroom convened for "${textText}". Deliberations underway.`;
           }
         }
-        speakTextTTS(responseText, 'CEO Elena');
+        speakTextTTS(responseText, 'CEO Elena', () => {
+          toast.info('🌙 Asad returning to Sleep Mode...');
+          onClose();
+        });
       }
 
       const aiMsg: VoiceMessage = {
@@ -258,7 +322,7 @@ export function AsadVoiceBoardroomModal({
         </div>
 
         {/* 3D Glowing Audio Orb Visualizer */}
-        <div className="py-6 flex flex-col items-center justify-center bg-slate-950/80 rounded-3xl border border-slate-800/80 relative overflow-hidden">
+        <div className="py-6 flex flex-col items-center justify-center bg-slate-100/90 dark:bg-slate-950/80 rounded-3xl border border-slate-200 dark:border-slate-800/80 relative overflow-hidden">
           <div className="relative flex items-center justify-center">
             {/* Outer Pulsing Wave Rings */}
             <div
@@ -282,18 +346,18 @@ export function AsadVoiceBoardroomModal({
             </div>
           </div>
 
-          <p className="text-xs font-black text-white mt-4 uppercase tracking-widest">
+          <p className="text-xs font-black text-slate-900 dark:text-white mt-4 uppercase tracking-widest flex items-center gap-1.5">
             {isSpeakingTTS
-              ? 'Asad Executive TTS Speaking...'
+              ? 'Asad Executive Natural Voice Speaking...'
               : isProcessing
               ? 'Routing Voice Intent Across HQ...'
-              : 'Asad Listening for Spoken Commands...'}
+              : 'Asad Active — Will Sleep When Response Completes 🌙'}
           </p>
         </div>
 
         {/* Live Universal Intent Shortcut Chips */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-[11px] font-bold">
-          <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider flex-shrink-0">
+          <span className="text-[10px] font-black uppercase text-cyan-600 dark:text-cyan-400 tracking-wider flex-shrink-0">
             Voice Shortcuts:
           </span>
           {[
@@ -307,7 +371,7 @@ export function AsadVoiceBoardroomModal({
             <button
               key={cmd}
               onClick={() => handleDispatchVoiceQuery(cmd)}
-              className="px-3 py-1 rounded-full bg-slate-900 hover:bg-cyan-500/20 border border-slate-800 hover:border-cyan-400/50 text-slate-300 hover:text-cyan-300 text-[10px] font-bold flex-shrink-0 transition-all"
+              className="px-3 py-1 rounded-full bg-slate-100 hover:bg-cyan-500/20 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 hover:border-cyan-400/50 text-slate-700 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-300 text-[10px] font-bold flex-shrink-0 transition-all"
             >
               🎤 "{cmd}"
             </button>
@@ -321,11 +385,11 @@ export function AsadVoiceBoardroomModal({
               key={msg.id}
               className={`p-3.5 rounded-2xl border text-xs leading-relaxed ${
                 msg.sender === 'User'
-                  ? 'bg-cyan-500/10 border-cyan-500/30 text-right text-cyan-200 ml-8'
-                  : 'bg-slate-900 border-slate-800 text-left text-slate-100 mr-8'
+                  ? 'bg-cyan-500/10 border-cyan-500/30 text-right text-cyan-700 dark:text-cyan-200 ml-8'
+                  : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-left text-slate-900 dark:text-slate-100 mr-8'
               }`}
             >
-              <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-400 mb-1">
+              <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 mb-1">
                 <span>{msg.sender}</span>
                 <span>{msg.timestamp}</span>
               </div>
@@ -342,7 +406,7 @@ export function AsadVoiceBoardroomModal({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleDispatchVoiceQuery(query)}
             placeholder="Say or type a command for Asad (e.g. 'Open Analytics', 'Deploy Mission')..."
-            className="flex-1 bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+            className="flex-1 bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
           />
           <Button
             onClick={() => handleDispatchVoiceQuery(query)}

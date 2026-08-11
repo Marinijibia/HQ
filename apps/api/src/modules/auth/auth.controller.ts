@@ -16,6 +16,9 @@ import {
   ForgotPasswordDto,
   ResetPasswordDto,
   RegisterSuperAdminDto,
+  LoginDto,
+  RegisterDto,
+  SetPasswordDto,
 } from './dto/auth.dto';
 import { AuthGuard } from './auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -42,21 +45,21 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Sign in with email and password — returns HQ session token' })
-  async login(@Body() dto: { email: string; password: string }) {
+  async login(@Body() dto: LoginDto) {
     return this.authService.login(dto.email, dto.password);
   }
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new HQ account with email and password' })
-  async register(@Body() dto: { email: string; password: string; name?: string }) {
+  async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto.email, dto.password, dto.name);
   }
 
   @Post('set-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Set account password using an OTP session token — upgrades to full auth token' })
-  async setPassword(@Body() dto: { sessionToken: string; password: string }) {
+  async setPassword(@Body() dto: SetPasswordDto) {
     return this.authService.setPassword(dto.sessionToken, dto.password);
   }
 

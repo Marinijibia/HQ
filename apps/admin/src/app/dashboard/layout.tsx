@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/auth-context';
 import { useTheme } from '../../contexts/theme-context';
+import { AsadVoiceCommand } from '../../components/asad-voice-command';
 import { Card, CardTitle, CardDescription, Button } from '@hq/ui';
 import {
   Activity,
@@ -186,6 +187,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center space-x-3">
+            <AsadVoiceCommand />
             <AsadAdminVoiceButton onOpenInviteModal={() => setInviteModalOpen(true)} />
             <Button
               onClick={() => setInviteModalOpen(true)}

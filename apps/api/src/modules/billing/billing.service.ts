@@ -128,11 +128,11 @@ export class BillingService {
     };
   }
 
-  async verifyPaystackPayment(reference: string): Promise<boolean> {
+  async verifyPaystackPayment(reference: string, reqCompanyId?: string): Promise<boolean> {
     const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
     this.logger.log(`[Billing Service] Verifying transaction reference: ${reference}`);
 
-    let companyId = '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba'; // default fallback
+    let companyId = reqCompanyId || null;
     let planCode = 'growth';
     let verifySuccess = false;
 
@@ -146,23 +146,35 @@ export class BillingService {
         });
         const result = (await response.json()) as any;
         if (result.status && result.data?.status === 'success') {
+          const metaCompanyId = result.data.metadata?.companyId;
+          if (reqCompanyId && metaCompanyId && metaCompanyId !== reqCompanyId) {
+            this.logger.warn(`[Billing Service] Reference ${reference} company mismatch (req: ${reqCompanyId}, meta: ${metaCompanyId})`);
+            return false;
+          }
           verifySuccess = true;
-          companyId = result.data.metadata?.companyId || companyId;
+          companyId = metaCompanyId || companyId;
           planCode = result.data.metadata?.planCode || planCode;
-          this.logger.log(`[Billing Service] Paystack verified reference ${reference} successfully.`);
+          this.logger.log(`[Billing Service] Paystack verified reference ${reference} successfully for company ${companyId}.`);
         } else {
           this.logger.warn(`[Billing Service] Paystack reference verification failed: ${JSON.stringify(result)}`);
         }
       } catch (err) {
         this.logger.error(`[Billing Service] Paystack verification error: ${err}`);
       }
-    } else {
-      // Mock sandbox verification
-      this.logger.log('[Billing Service] Simulating verified reference verification.');
+    } else if (process.env.NODE_ENV !== 'production') {
+      // Sandbox mock verification only allowed in non-production environments
+      if (!companyId) {
+        this.logger.warn('[Billing Service] Mock verification failed: Missing company ID');
+        return false;
+      }
+      this.logger.log('[Billing Service] Simulating verified transaction for dev environment.');
       verifySuccess = true;
+    } else {
+      this.logger.warn('[Billing Service] Rejected mock transaction reference in production mode.');
+      return false;
     }
 
-    if (verifySuccess) {
+    if (verifySuccess && companyId) {
       await this.activateSubscription(companyId, planCode, reference);
       return true;
     }
@@ -241,7 +253,11 @@ export class BillingService {
 
   verifyPaystackSignature(rawBody: string, signature: string): boolean {
     const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
-    if (!paystackSecret) return true; // mock bypass
+    if (!paystackSecret) {
+      if (process.env.NODE_ENV !== 'production') return true;
+      this.logger.error('[Billing Service] PAYSTACK_SECRET_KEY missing in production webhook verification');
+      return false;
+    }
 
     const hash = crypto
       .createHmac('sha512', paystackSecret)

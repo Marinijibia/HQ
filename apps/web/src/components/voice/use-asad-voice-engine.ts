@@ -102,6 +102,8 @@ export function useAsadVoiceEngine() {
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
+      toast.warning('🎙️ Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari for voice commands.');
+      setState((prev) => ({ ...prev, isEnabled: false }));
       return;
     }
 

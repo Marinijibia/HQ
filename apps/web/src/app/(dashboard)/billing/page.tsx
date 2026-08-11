@@ -160,6 +160,38 @@ export default function BillingPage() {
     });
   };
 
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const reference = urlParams.get('reference');
+    const status = urlParams.get('status');
+
+    if (reference && status === 'success') {
+      toast.info('💳 Verifying payment transaction reference...');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      fetch('/api/billing/verify', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ reference }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            toast.success('🎉 Subscription active! Entitlement verified successfully.');
+            // Clean URL query parameters
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else {
+            toast.error('⚠️ Transaction verification failed.');
+          }
+        })
+        .catch(() => {
+          toast.error('Failed to verify payment reference.');
+        });
+    }
+  }, [token]);
+
   const handleUpgrade = async (planCode: string = 'growth', gateway: 'stripe' | 'paystack' = 'paystack') => {
     setLoading(true);
     toast.success(`💳 Initializing checkout session for ${planCode.toUpperCase()} ($)...`);
@@ -177,8 +209,14 @@ export default function BillingPage() {
       });
       const data = await response.json();
 
+      if (data.url && !data.reference?.startsWith('pay_mock_')) {
+        toast.success('💳 Redirecting to Paystack payment gateway...');
+        window.location.href = data.url;
+        return;
+      }
+
       if (data.reference?.startsWith('pay_mock_')) {
-        toast.info('🧪 Simulating Paystack inline card checkout popup...');
+        toast.info('🧪 Simulating Paystack checkout popup...');
         setTimeout(async () => {
           const verifyRes = await fetch('/api/billing/verify', {
             method: 'POST',
@@ -186,7 +224,7 @@ export default function BillingPage() {
             body: JSON.stringify({ reference: data.reference }),
           });
           if (verifyRes.ok) {
-            toast.success('🎉 Subscription active! Growth plan entitlement verified.');
+            toast.success('🎉 Subscription active! Entitlement verified.');
           }
           setLoading(false);
         }, 1500);
@@ -204,7 +242,7 @@ export default function BillingPage() {
       const handler = paystackPop.setup({
         key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_mock_keys',
         email: 'billing@hq-corp.com',
-        amount: 2500000,
+        amount: planCode === 'enterprise' ? 3000000 : 1500000,
         ref: data.reference,
         onClose: () => {
           toast.warning('⚠️ Checkout closed.');

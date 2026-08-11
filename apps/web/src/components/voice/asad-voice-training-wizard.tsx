@@ -38,28 +38,69 @@ export function AsadVoiceTrainingWizard({
     { stepNum: 4, text: 'Asad, deploy autonomous mission' },
   ];
 
-  // Audio frequency simulation for visualizer
-  React.useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isRecording) {
-      interval = setInterval(() => {
-        setAudioLevel(Math.floor(Math.random() * 65) + 30);
-      }, 100);
-    } else {
-      setAudioLevel(0);
-    }
-    return () => clearInterval(interval);
-  }, [isRecording]);
+  const audioCtxRef = React.useRef<AudioContext | null>(null);
+  const mediaStreamRef = React.useRef<MediaStream | null>(null);
+  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  const handleStartPhraseRecording = (targetStep: number) => {
+  // Unmount cleanup for Web Audio API & MediaStream
+  React.useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      }
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {});
+      }
+    };
+  }, []);
+
+  const handleStartPhraseRecording = async (targetStep: number) => {
     setIsRecording(true);
-    toast.info(`Listening... Speak: "${samplePhrases[targetStep - 2].text}"`);
+    toast.info(`🎙️ Listening... Speak: "${samplePhrases[targetStep - 2].text}"`);
+
+    // Request microphone stream for Web Audio API frequency analysis
+    try {
+      if (navigator.mediaDevices?.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaStreamRef.current = stream;
+
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioCtxRef.current = audioCtx;
+
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64;
+        source.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const updateLevel = () => {
+          if (!mediaStreamRef.current) return;
+          analyser.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+          const avg = Math.round(sum / dataArray.length);
+          setAudioLevel(Math.min(100, avg * 1.5));
+          if (audioCtx.state !== 'closed') {
+            requestAnimationFrame(updateLevel);
+          }
+        };
+        updateLevel();
+      }
+    } catch {
+      /* Fall back to simulated audio levels if mic denied */
+    }
 
     // Auto-advance after 3.2 seconds recording
-    setTimeout(() => {
+    timerRef.current = setTimeout(() => {
+      // Stop recording mic stream
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+        mediaStreamRef.current = null;
+      }
       setIsRecording(false);
       setPhrasesCompleted((prev) => [...prev, targetStep]);
-      toast.success(`Phrase ${targetStep - 1} Voice Print Calibrated!`);
+      toast.success(`✅ Phrase ${targetStep - 1} Voice Print Calibrated!`);
       if (targetStep < 4) {
         setStep((targetStep + 1) as any);
       } else {
@@ -189,17 +230,17 @@ export function AsadVoiceTrainingWizard({
               Phrase {step - 1} of 3
             </Badge>
 
-            <div className="p-4 rounded-2xl bg-slate-950 border border-cyan-500/30 space-y-2">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+            <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-cyan-500/30 space-y-2">
+              <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-widest">
                 Speak Clear & Distinctly:
               </span>
-              <p className="text-lg font-black text-cyan-300 leading-snug">
+              <p className="text-lg font-black text-cyan-600 dark:text-cyan-300 leading-snug">
                 "{samplePhrases[step - 2].text}"
               </p>
             </div>
 
             {/* Simulated Live Audio Waveform */}
-            <div className="h-16 flex items-center justify-center gap-1.5 bg-slate-950/60 rounded-2xl border border-slate-800 px-4">
+            <div className="h-16 flex items-center justify-center gap-1.5 bg-slate-100/90 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 px-4">
               {[...Array(16)].map((_, idx) => (
                 <div
                   key={idx}

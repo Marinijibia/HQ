@@ -8,6 +8,7 @@ import { useSidebarStore } from '../../stores/sidebarStore';
 import { useCommandPaletteStore } from '../../stores/commandPaletteStore';
 import { GuideModeProvider } from '../../contexts/guide-mode-context';
 import { useTheme } from '../../contexts/theme-context';
+import { AsadVoiceButton } from '../../components/voice/asad-voice-button';
 import {
   LayoutDashboard,
   Users,
@@ -297,6 +298,9 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
         {/* Global Action Tools */}
         <div className="flex items-center space-x-2 sm:space-x-4">
+          {/* Asad Universal AI Voice Controls */}
+          <AsadVoiceButton />
+
           {/* Global Search Command Bar Trigger */}
           <button
             onClick={() => setCommandPaletteOpen(true)}

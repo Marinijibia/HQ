@@ -408,18 +408,42 @@ export class AuthService {
 
     await this.safeRedisDel(redisKey);
 
-    // Mark email verified if user already exists
+    // Check if user already exists in DB
+    let existingUser: any = null;
     try {
-      const user = await this.userRepository.findByEmail(cleanEmail);
-      if (user) await this.userRepository.update(user.id, { emailVerified: true });
+      existingUser = await this.userRepository.findByEmail(cleanEmail);
+      if (existingUser) {
+        await this.userRepository.update(existingUser.id, {
+          emailVerified: true,
+          lastLoginAt: new Date(),
+        });
+      }
     } catch (err) {
       this.logger.warn(`User verification update notice (${cleanEmail}): ${(err as Error).message}`);
     }
 
-    // Derive a stable uid for the session token subject
-    const uid = `otp_${crypto.createHash('sha256').update(cleanEmail).digest('hex').slice(0, 24)}`;
+    if (existingUser) {
+      // Existing user -> return full auth token to log in directly
+      const token = this.signJwt({
+        uid: existingUser.id,
+        email: existingUser.email,
+        companyId: existingUser.companyId,
+        role: existingUser.role,
+      });
 
-    // Issue a server-signed onboarding session token (30 days)
+      return {
+        success: true,
+        message: 'Email verified and authenticated successfully',
+        emailVerified: true,
+        token,
+        user: this.sanitizeUser(existingUser),
+        organization: existingUser.company || null,
+        permissions: this.resolveUserPermissions(existingUser.role),
+      };
+    }
+
+    // New user (onboarding) -> issue temporary onboarding session token
+    const uid = `otp_${crypto.createHash('sha256').update(cleanEmail).digest('hex').slice(0, 24)}`;
     const sessionToken = this.signJwt({
       uid,
       email: cleanEmail,

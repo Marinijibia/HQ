@@ -504,22 +504,25 @@ model Entitlement {
 }
 
 model Subscription {
-  id                 String             @id @default(uuid()) @db.Uuid
-  status             SubscriptionStatus @default(TRIAL)
-  currentPeriodStart DateTime           @map("current_period_start")
-  currentPeriodEnd   DateTime           @map("current_period_end")
-  trialStart         DateTime?          @map("trial_start")
-  trialEnd           DateTime?          @map("trial_end")
-  createdAt          DateTime           @default(now()) @map("created_at")
-  updatedAt          DateTime           @updatedAt @map("updated_at")
+  id                     String             @id @default(uuid()) @db.Uuid
+  status                 SubscriptionStatus @default(TRIAL)
+  paymentGateway         String?            @map("payment_gateway")
+  externalCustomerId     String?            @map("external_customer_id")
+  externalSubscriptionId String?            @map("external_subscription_id")
+  currentPeriodStart     DateTime           @map("current_period_start")
+  currentPeriodEnd       DateTime           @map("current_period_end")
+  trialStart             DateTime?          @map("trial_start")
+  trialEnd               DateTime?          @map("trial_end")
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
 
-  companyId          String             @unique @db.Uuid @map("company_id")
-  company            Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId              String             @unique @db.Uuid @map("company_id")
+  company                Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  planId             String             @db.Uuid @map("plan_id")
-  plan               Plan               @relation(fields: [planId], references: [id])
+  planId                 String             @db.Uuid @map("plan_id")
+  plan                   Plan               @relation(fields: [planId], references: [id])
 
-  invoices           Invoice[]
+  invoices               Invoice[]
 
   @@index([companyId])
   @@index([planId])
@@ -536,18 +539,20 @@ enum SubscriptionStatus {
 }
 
 model Invoice {
-  id             String       @id @default(uuid()) @db.Uuid
-  amount         Float
-  currency       String       @default("USD")
-  status         String
-  invoiceUrl     String?      @map("invoice_url")
-  createdAt      DateTime     @default(now()) @map("created_at")
+  id                String       @id @default(uuid()) @db.Uuid
+  amount            Float
+  currency          String       @default("USD")
+  status            String
+  externalReference String?      @map("external_reference")
+  gatewayStatus     String?      @map("gateway_status")
+  invoiceUrl        String?      @map("invoice_url")
+  createdAt         DateTime     @default(now()) @map("created_at")
 
-  companyId      String       @db.Uuid @map("company_id")
-  company        Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId         String       @db.Uuid @map("company_id")
+  company           Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  subscriptionId String       @db.Uuid @map("subscription_id")
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  subscriptionId    String       @db.Uuid @map("subscription_id")
+  subscription      Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@index([companyId])
   @@index([subscriptionId])
