@@ -3,12 +3,16 @@
 import * as React from 'react';
 import { Card, Badge, Button, Input } from '@hq/ui';
 import { Calendar as CalendarIcon, Clock, Users, CheckCircle, Sparkles } from 'lucide-react';
+import { toast } from '../../../components/toast';
 
 export default function BookDemoPage() {
   const [selectedDate, setSelectedDate] = React.useState('2026-07-13');
   const [selectedTime, setSelectedTime] = React.useState('');
-  const [booked, setBooked] = React.useState(false);
+  const [name, setName] = React.useState('');
+  const [companyName, setCompanyName] = React.useState('');
   const [email, setEmail] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [booked, setBooked] = React.useState(false);
 
   const timeSlots = ['09:00 AM', '10:30 AM', '01:00 PM', '03:30 PM'];
   const dates = [
@@ -18,10 +22,32 @@ export default function BookDemoPage() {
     { label: 'Thu, Jul 16', value: '2026-07-16' },
   ];
 
-  const handleBooking = (e: React.FormEvent) => {
+  const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedTime && email) {
-      setBooked(true);
+    if (!selectedTime || !email) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/public/demo-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name || 'Executive Guest',
+          email,
+          companyName,
+          selectedDate,
+          selectedTime,
+        }),
+      });
+      if (res.ok) {
+        setBooked(true);
+        toast.success(`📅 Demo meeting confirmed! Email sent to ${email}`);
+      } else {
+        toast.error('Booking failed. Please try again.');
+      }
+    } catch {
+      toast.error('Network error booking demo.');
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -254,7 +254,7 @@ export default function SettingsPage() {
           createdAt: m.createdAt,
           department: m.role === 'ORGANIZATION_OWNER' ? 'Executive Office' : 'Technology & Engineering',
           team: m.role === 'ORGANIZATION_OWNER' ? 'Boardroom' : 'Backend Devs',
-          assignedExecutives: m.role === 'ORGANIZATION_OWNER' ? ['Elena Rostova (CEO)'] : ['Dr. Aris Thorne'],
+          assignedExecutives: m.role === 'ORGANIZATION_OWNER' ? ['Asad (CEO)', 'Teema (Ops)'] : ['Legal (Compliance)'],
         }));
         setTeamMembers(mappedTeam);
         setApiKeys(keys || []);
@@ -350,7 +350,7 @@ export default function SettingsPage() {
       id: `br-${Date.now()}`,
       name: newBranchName,
       region: newBranchRegion || 'Global',
-      manager: newBranchManager || 'Elena Rostova',
+      manager: newBranchManager || 'Asad (CEO)',
       memberCount: 1,
     };
     setBranches((prev) => [...prev, newBr]);

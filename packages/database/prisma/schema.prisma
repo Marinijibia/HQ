@@ -171,6 +171,8 @@ model User {
   photoUrl        String?          @map("photo_url")
   lastLoginAt     DateTime?        @map("last_login_at")
   emailVerified   Boolean          @default(false) @map("email_verified")
+  passwordHash    String?          @map("password_hash")
+
   createdBy       String?          @db.Uuid @map("created_by")
   updatedBy       String?          @db.Uuid @map("updated_by")
   deletedBy       String?          @db.Uuid @map("deleted_by")

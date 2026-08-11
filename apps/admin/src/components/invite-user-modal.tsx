@@ -58,7 +58,7 @@ export function InviteUserModal({ onClose, onSuccess }: InviteUserModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-in fade-in duration-300 select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-in fade-in duration-300">
       <Card className="w-full max-w-md border border-card-border bg-[#0A0B10]/95 backdrop-blur-3xl p-6 rounded-3xl space-y-6 shadow-2xl text-left relative overflow-hidden">
         {/* Top Glow Bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600" />
@@ -93,7 +93,7 @@ export function InviteUserModal({ onClose, onSuccess }: InviteUserModalProps) {
               <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
               <Input
                 type="email"
-                placeholder="admin.member@company.com"
+                placeholder="admin@netify.ng"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

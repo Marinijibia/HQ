@@ -78,16 +78,16 @@ export default function TrustCenterPage() {
 
   // Security Incident Alerts
   const [alerts, setAlerts] = React.useState<SecurityAlert[]>([
-    { id: 'al-1', event: 'Privileged audit log export', actor: 'Sophia Sterling (CFO)', ip: '197.210.64.12', timestamp: '10 mins ago', severity: 'Low' },
-    { id: 'al-2', event: 'New device authentication handshake', actor: 'Elena Rostova (CEO)', ip: '102.89.34.88', timestamp: '1 hour ago', severity: 'Medium' },
+    { id: 'al-1', event: 'Privileged audit log export', actor: 'Teema (Ops Director)', ip: '197.210.64.12', timestamp: '10 mins ago', severity: 'Low' },
+    { id: 'al-2', event: 'New device authentication handshake', actor: 'Asad (CEO)', ip: '102.89.34.88', timestamp: '1 hour ago', severity: 'Medium' },
     { id: 'al-3', event: 'Automatic secrets rotation completed', actor: 'Secrets Service', ip: 'localhost', timestamp: '3 hours ago', severity: 'Low' },
   ]);
 
   // Active Sessions
   const [sessions, setSessions] = React.useState<ActiveSession[]>([
-    { id: 'sess-1', identity: 'Elena Rostova (CEO)', type: 'Human', device: 'macOS · Chrome 126', ip: '102.89.34.88', location: 'Lagos, Nigeria', lastActive: 'Just now' },
-    { id: 'sess-2', identity: 'CFO Sophia', type: 'AI Executive', device: 'HQ Sandbox Container v4', ip: '10.0.4.12', location: 'Cloud Node EU-West', lastActive: '3 mins ago' },
-    { id: 'sess-3', identity: 'Marcus Vance (COO)', type: 'Human', device: 'Windows 11 · Firefox 128', ip: '82.44.12.90', location: 'London, UK', lastActive: '12 mins ago' },
+    { id: 'sess-1', identity: 'Asad (CEO)', type: 'Human', device: 'macOS · Chrome 126', ip: '102.89.34.88', location: 'Lagos, Nigeria', lastActive: 'Just now' },
+    { id: 'sess-2', identity: 'Teema (Ops Director)', type: 'AI Executive', device: 'HQ Sandbox Container v4', ip: '10.0.4.12', location: 'Cloud Node EU-West', lastActive: '3 mins ago' },
+    { id: 'sess-3', identity: 'Legal (Compliance Director)', type: 'AI Executive', device: 'HQ Guardrail Validator', ip: '82.44.12.90', location: 'Cloud Node US-East', lastActive: '12 mins ago' },
     { id: 'sess-4', identity: 'GitHub Connector', type: 'Service', device: 'Webhook Receiver Gateway', ip: '140.82.115.4', location: 'GitHub IP Range', lastActive: 'Just now' },
   ]);
 

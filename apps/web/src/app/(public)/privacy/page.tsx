@@ -5,7 +5,7 @@ import { Card, Badge } from '@hq/ui';
 
 export default function PrivacyPage() {
   return (
-    <div className="py-12 max-w-3xl mx-auto px-6 space-y-8 text-left select-none animate-in fade-in duration-300">
+    <div className="py-12 max-w-3xl mx-auto px-6 space-y-8 text-left animate-in fade-in duration-300">
       <div className="text-center space-y-2">
         <Badge variant="ai" className="px-3.5 py-1 rounded-full text-xs font-bold">
           LEGAL & COMPLIANCE

@@ -102,7 +102,7 @@ export default function AdminRegisterPage() {
 
   if (checkingSetup) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070709] text-white p-4 select-none">
+      <div className="min-h-screen flex items-center justify-center bg-[#070709] text-white p-4">
         <div className="flex flex-col items-center space-y-3">
           <div className="w-8 h-8 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
           <p className="text-xs text-slate-400 font-semibold">Checking Super Admin Setup Status...</p>
@@ -113,7 +113,7 @@ export default function AdminRegisterPage() {
 
   if (isSetupRequired === false) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070709] text-white p-4 select-none">
+      <div className="min-h-screen flex items-center justify-center bg-[#070709] text-white p-4">
         <Card className="max-w-md w-full border border-slate-800 bg-slate-950 p-8 rounded-3xl space-y-6 text-center shadow-2xl">
           <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto">
             <ShieldAlert size={28} />
@@ -136,7 +136,7 @@ export default function AdminRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#070709] text-white p-4 select-none relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[#070709] text-white p-4 relative overflow-hidden">
       {/* Background Ambient Glow */}
       <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/10 via-blue-500/5 to-purple-600/10 blur-3xl pointer-events-none" />
 

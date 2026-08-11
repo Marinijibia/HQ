@@ -91,7 +91,7 @@ export default function AdminCmsPage() {
     setLoading(true);
     try {
       // Mock API fallbacks & fetch
-      const execRes = await fetch('http://localhost:3001/cms/executives').catch(() => null);
+      const execRes = await fetch('/api/cms/executives').catch(() => null);
       if (execRes && execRes.ok) {
         const data = await execRes.json();
         setExecutives(data);
@@ -107,7 +107,7 @@ export default function AdminCmsPage() {
         ]);
       }
 
-      const mktRes = await fetch('http://localhost:3001/marketplace/listings').catch(() => null);
+      const mktRes = await fetch('/api/marketplace/listings').catch(() => null);
       if (mktRes && mktRes.ok) {
         const mktData = await mktRes.json();
         setMarketplaceListings(mktData);
@@ -140,7 +140,7 @@ export default function AdminCmsPage() {
     if (!selectedExec) return;
     setLoading(true);
     try {
-      await fetch(`http://localhost:3001/cms/executives/${selectedExec.id}`, {
+      await fetch(`/api/cms/executives/${selectedExec.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -169,7 +169,7 @@ export default function AdminCmsPage() {
     if (!selectedExec || !trainFileName || !trainContent) return;
     setLoading(true);
     try {
-      await fetch(`http://localhost:3001/cms/executives/${selectedExec.id}/train`, {
+      await fetch(`/api/cms/executives/${selectedExec.id}/train`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -191,7 +191,7 @@ export default function AdminCmsPage() {
   const handleTriggerResearch = async () => {
     setResearchStatus(`Mr. Intelligence is searching public web data for "${researchCompany}"...`);
     try {
-      await fetch('http://localhost:3001/intelligence/research', {
+      await fetch('/api/intelligence/research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companyName: researchCompany }),
@@ -222,7 +222,7 @@ export default function AdminCmsPage() {
         rating: 5.0,
       };
 
-      await fetch('http://localhost:3001/marketplace/publish', {
+      await fetch('/api/marketplace/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newListing),

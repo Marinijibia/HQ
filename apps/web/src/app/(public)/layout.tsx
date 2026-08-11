@@ -36,7 +36,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#060608] text-slate-900 dark:text-foreground flex flex-col justify-between font-sans relative overflow-hidden select-none animate-in fade-in duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#060608] text-slate-900 dark:text-foreground flex flex-col justify-between font-sans relative overflow-hidden animate-in fade-in duration-300">
       {/* Decorative Dot Grid Background */}
       <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] dark:bg-[radial-gradient(#1e1e24_1px,transparent_1px)] [background-size:20px_20px] opacity-15 dark:opacity-20 pointer-events-none"></div>
 

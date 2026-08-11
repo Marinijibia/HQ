@@ -94,4 +94,24 @@ export class OnboardCompanyDto {
   @IsString()
   @IsOptional()
   brandColor?: string;
+
+  @ApiProperty({ example: 'Founder & CEO' })
+  @IsString()
+  @IsOptional()
+  userTitle?: string;
+
+  @ApiProperty({ example: 'Alex Mercer' })
+  @IsString()
+  @IsOptional()
+  userDisplayName?: string;
+
+  @ApiProperty({ example: 'Visionary & Strategic' })
+  @IsString()
+  @IsOptional()
+  voicePersona?: string;
+
+  @ApiProperty({ example: 'https://netify.ng' })
+  @IsString()
+  @IsOptional()
+  website?: string;
 }

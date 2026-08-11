@@ -72,8 +72,8 @@ export default function WhiteLabelPage() {
 
   // Reseller Partner Portal State
   const [clients, setClients] = React.useState<ClientTenant[]>([
-    { id: 'ten-1', name: 'Chevron Corridors', plan: 'Enterprise Scale', status: 'Active', usersCount: 42, domain: 'chevron.hq.corp' },
-    { id: 'ten-2', name: 'Apex Petroleum', plan: 'Starter Pack', status: 'Active', usersCount: 8, domain: 'apex.hq.corp' },
+    { id: 'ten-1', name: 'Chevron Corridors', plan: 'Enterprise Scale', status: 'Active', usersCount: 42, domain: 'chevron.netify.ng' },
+    { id: 'ten-2', name: 'Apex Petroleum', plan: 'Starter Pack', status: 'Active', usersCount: 8, domain: 'apex.netify.ng' },
   ]);
   const [newClientName, setNewClientName] = React.useState('');
   const [newClientDomain, setNewClientDomain] = React.useState('');
@@ -127,7 +127,7 @@ export default function WhiteLabelPage() {
   };
 
   return (
-    <div className="space-y-8 select-none text-foreground pb-12">
+    <div className="space-y-8 text-foreground pb-12">
       {/* Title */}
       <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-4">
         <div>
@@ -491,7 +491,7 @@ export default function WhiteLabelPage() {
                   <div className="space-y-1.5">
                     <label className="text-foreground/75">Assigned Domain</label>
                     <Input
-                      placeholder="e.g. apex.hq.corp"
+                      placeholder="e.g. apex.netify.ng"
                       value={newClientDomain}
                       onChange={e => setNewClientDomain(e.target.value)}
                     />

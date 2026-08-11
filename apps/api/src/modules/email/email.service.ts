@@ -26,7 +26,7 @@ export class EmailService {
     this.apiKey = this.configService.get<string>('RESEND_API_KEY') || null;
     this.fromEmail =
       this.configService.get<string>('RESEND_FROM_EMAIL') ||
-      'HQ AI OS <onboarding@resend.dev>';
+      'HQ AI OS <onboarding@netify.ng>';
   }
 
   async sendRawEmail(options: SendEmailOptions): Promise<boolean> {

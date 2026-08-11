@@ -94,7 +94,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = React.useState(true);
   const [exporting, setExporting] = React.useState(false);
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
-  const [ceoName, setCeoName] = React.useState('Elena Rostova');
+  const [ceoName, setCeoName] = React.useState('Asad');
 
   // Filters & Sorting state
   const [activeCategory, setActiveCategory] = React.useState<string>('all');
@@ -104,9 +104,9 @@ export default function AnalyticsPage() {
   // Selected Graph Node details state
   const [selectedNode, setSelectedNode] = React.useState<{ id: string; type: string; label: string; description: string } | null>({
     id: 'org',
-    type: 'Organization Twin',
-    label: 'Acme Corporation Twin',
-    description: 'Living organizational graph containing 8 layers. Serves as corporate memory.',
+    type: 'Knowledge Node',
+    label: 'Org Twin',
+    description: 'Central organizational intelligence graph storing facts and cross-department vectors.',
   });
 
   React.useEffect(() => {
@@ -153,7 +153,7 @@ export default function AnalyticsPage() {
               impact: 'High',
               effort: 'Medium',
               description: 'Operations analysis indicates ₦4.2M gross potential yield if shipping corridor proposals scale up.',
-              executives: ['CEO Elena', 'CFO Sophia'],
+              executives: ['Asad (CEO)', 'Teema (Ops)'],
             },
             {
               id: 'rec-2',
@@ -663,8 +663,8 @@ export default function AnalyticsPage() {
                       { id: 'org', label: 'Org Twin', x: 250, y: 175, color: brandColor, desc: 'Central organization brain and memory layers.' },
                       { id: 'dept-exec', label: 'Exec Dept', x: 120, y: 80, color: '#8B5CF6', desc: 'Executive department orchestrating operations.' },
                       { id: 'dept-fin', label: 'Finance Dept', x: 380, y: 80, color: '#30D158', desc: 'Finance & margins appraisal bounds.' },
-                      { id: 'ceo', label: 'CEO Elena', x: 80, y: 180, color: brandColor, desc: 'CEO Director. Manages final reviews.' },
-                      { id: 'cfo', label: 'CFO Sophia', x: 420, y: 180, color: '#30D158', desc: 'Finance Director. Analyzes credit outflow budgets.' },
+                      { id: 'ceo', label: 'Asad (CEO)', x: 80, y: 180, color: brandColor, desc: 'CEO Director. Manages final reviews.' },
+                      { id: 'cos', label: 'Teema (Ops)', x: 420, y: 180, color: '#30D158', desc: 'Operations Director & CoS. Manages task velocity.' },
                       { id: 'mission-strat', label: 'Strategy Mission', x: 160, y: 280, color: '#0EA5E9', desc: 'Active shipping outreach strategy campaign WBS.' },
                       { id: 'asset-policy', label: 'SOP Policy', x: 340, y: 280, color: '#EC4899', desc: 'GDP compliance SOP document in Knowledge Layer.' },
                     ].map(node => (

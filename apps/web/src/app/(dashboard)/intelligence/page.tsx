@@ -623,11 +623,11 @@ export default function IntelligencePage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {[
-                { role: 'CEO (Elena)', desc: 'Strategic & KPIs', layers: [1, 2, 3, 4, 5, 8], color: '#0A84FF' },
-                { role: 'Finance (Sophia)', desc: 'Ledgers & margins', layers: [1, 2, 7], color: '#22C55E' },
-                { role: 'Marketing (Amara)', desc: 'Brand & guidelines', layers: [1, 2, 5], color: '#EC4899' },
-                { role: 'CTO (Hiroshi)', desc: 'Architecture & tech', layers: [1, 3, 6], color: '#0EA5E9' },
-                { role: 'Success (Yuki)', desc: 'Feedback & support', layers: [1, 2, 7], color: '#F59E0B' },
+                { role: 'Asad (CEO)', desc: 'Strategic & Board KPIs', layers: [1, 2, 3, 4, 5, 8], color: '#0A84FF' },
+                { role: 'Teema (Ops)', desc: 'Operations & Execution', layers: [1, 2, 4, 6], color: '#22C55E' },
+                { role: 'Legal (Compliance)', desc: 'Guardrails & Risk', layers: [1, 2, 7], color: '#EC4899' },
+                { role: 'Resource Dir (HR)', desc: 'Team & Talent Sync', layers: [1, 3, 6], color: '#0EA5E9' },
+                { role: 'Mr. Intelligence', desc: 'Web Search & Signals', layers: [1, 2, 5, 8], color: '#F59E0B' },
               ].map(exec => (
                 <div key={exec.role} className="border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/50 rounded-xl p-3 space-y-2">
                   <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{exec.role}</p>

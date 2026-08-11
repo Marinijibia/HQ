@@ -1,84 +1,80 @@
 'use client';
 
 import * as React from 'react';
-import { Card, Badge } from '@hq/ui';
-import { TrendingUp, Cpu, Globe, HardHat } from 'lucide-react';
+import Link from 'next/link';
+import { Card, Badge, Button } from '@hq/ui';
+import { TrendingUp, Cpu, Globe, Building2, ArrowRight } from 'lucide-react';
 
 export default function SolutionsPage() {
+  const solutions = [
+    {
+      title: 'Technology & SaaS',
+      desc: 'Coordinate automated engineering releases, run code security checks, and execute growth marketing campaigns with CEO Asad & Teema (Operations Director).',
+      icon: Cpu,
+      color: 'bg-hq-blue/10 text-hq-blue border-hq-blue/20',
+      tag: 'High Velocity',
+    },
+    {
+      title: 'Finance & Venture Strategy',
+      desc: 'Evaluate investment cap tables, simulate runway projections, track CAC:LTV economics, and model dilution for fundraising rounds with our CFO Engine.',
+      icon: TrendingUp,
+      color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+      tag: 'CFO Suite',
+    },
+    {
+      title: 'Enterprise & Multi-National',
+      desc: 'Verify regulatory compliance, audit international contract webhooks, and log SHA-256 cryptographic audit trails with Legal Compliance & HR Directors.',
+      icon: Building2,
+      color: 'bg-hq-purple/10 text-hq-purple border-hq-purple/20',
+      tag: 'Zero-Trust Security',
+    },
+    {
+      title: 'Consulting & Agency Operations',
+      desc: 'Synthesize live market web signals with Mr. Intelligence, generate executive client proposals, and orchestrate deliverables seamlessly.',
+      icon: Globe,
+      color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+      tag: 'Market Research',
+    },
+  ];
+
   return (
-    <div className="py-12 max-w-6xl mx-auto px-6 space-y-16">
+    <div className="py-12 max-w-6xl mx-auto px-6 space-y-16 text-left">
       {/* Header */}
-      <div className="text-center space-y-3">
-        <Badge
-          variant="premium"
-          className="px-3.5 py-1 rounded-full text-xs tracking-widest font-bold"
-        >
-          TAILORED INDUSTRY BLUEPRINTS
+      <div className="text-center space-y-4">
+        <Badge variant="premium" className="px-4 py-1.5 rounded-full text-xs tracking-widest font-bold">
+          TAILORED INDUSTRY SOLUTIONS
         </Badge>
-        <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1A1E] dark:text-white sm:text-5xl">
+        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
           Designed for Your Domain
         </h1>
-        <p className="text-foreground/50 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-          HQ seeds distinct executive profiles and workflows to address specific sector complexities
-          and compliance guidelines.
+        <p className="text-slate-600 dark:text-foreground/60 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium">
+          HQ seeds distinct executive profiles and workflows to address specific sector complexities, financial structures, and compliance rules.
         </p>
       </div>
 
       {/* Solutions list */}
       <div className="grid gap-8 md:grid-cols-2">
-        <Card className="p-7 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
-          <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-lg bg-hq-blue/10 flex items-center justify-center text-hq-blue border border-hq-blue/20">
-              <Cpu className="h-5 w-5" />
+        {solutions.map((s, idx) => (
+          <Card key={idx} className="p-8 space-y-4 border border-slate-200 dark:border-card-border bg-white dark:bg-card-bg shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className={`h-12 w-12 rounded-2xl flex items-center justify-center border ${s.color}`}>
+                  <s.icon className="h-6 w-6" />
+                </div>
+                <Badge variant="outline" className="text-[10px] uppercase font-bold">{s.tag}</Badge>
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">{s.title}</h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-foreground/60 leading-relaxed font-medium">{s.desc}</p>
             </div>
-            <h3 className="text-lg font-bold text-[#1A1A1E] dark:text-white">Technology & SaaS</h3>
-          </div>
-          <p className="text-sm text-foreground/50 leading-relaxed">
-            Configure automated git releases, run package checks via Linus Kovacs (Eng. Director),
-            and coordinate marketing outreach strategies under Alistair Thorne.
-          </p>
-        </Card>
-
-        <Card className="p-7 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
-          <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-lg bg-hq-purple/10 flex items-center justify-center text-hq-purple border border-hq-purple/20">
-              <HardHat className="h-5 w-5" />
+            <div className="pt-4 border-t border-slate-100 dark:border-card-border/50 flex justify-end">
+              <Link href="/onboarding">
+                <Button size="sm" className="bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs h-9 px-4 rounded-xl flex items-center gap-1.5">
+                  Launch Solution <ArrowRight size={14} />
+                </Button>
+              </Link>
             </div>
-            <h3 className="text-lg font-bold text-[#1A1A1E] dark:text-white">Energy & Petroleum</h3>
-          </div>
-          <p className="text-sm text-foreground/50 leading-relaxed">
-            Verify international logistics pipelines, audit safety reports, and review compliance
-            parameters guided by Rashid Al-Mansoori (Petroleum Director).
-          </p>
-        </Card>
-
-        <Card className="p-7 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
-          <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-lg bg-hq-cyan/10 flex items-center justify-center text-hq-cyan border border-hq-cyan/20">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-            <h3 className="text-lg font-bold text-[#1A1A1E] dark:text-white">Venture & Finance</h3>
-          </div>
-          <p className="text-sm text-foreground/50 leading-relaxed">
-            Evaluate investment pipelines, check asset valuations, track weekly budget expenditures,
-            and plan scaling rounds.
-          </p>
-        </Card>
-
-        <Card className="p-7 space-y-4 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition backdrop-blur-md text-left">
-          <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-lg bg-[#E0F2FE]/10 flex items-center justify-center text-sky-400 border border-sky-400/20">
-              <Globe className="h-5 w-5" />
-            </div>
-            <h3 className="text-lg font-bold text-[#1A1A1E] dark:text-white">
-              Consulting & Agency
-            </h3>
-          </div>
-          <p className="text-sm text-foreground/50 leading-relaxed">
-            Generate proposal pitches, audit client deliverables, summarize strategic research data,
-            and manage client communications efficiently.
-          </p>
-        </Card>
+          </Card>
+        ))}
       </div>
     </div>
   );

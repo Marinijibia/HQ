@@ -25,14 +25,11 @@ import {
   Globe,
   Settings,
   Cpu,
-  Flame,
   TrendingUp,
-  Briefcase,
   Search,
   CheckCircle2,
   Plus,
   ShieldAlert,
-  Zap,
   Shield,
   Rocket,
   Palette,
@@ -42,13 +39,15 @@ import {
   Share2,
   FileText,
   Compass,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { HQLogo } from '../../../components/hq-logo';
 import { toast } from '../../../components/toast';
 
 export default function OnboardingPage() {
-  const { user, token, refetchUser, signInWithGoogle } = useAuth();
+  const { user, token, refetchUser, signInWithEmail, signUpWithEmail } = useAuth();
   const router = useRouter();
 
   // Core step state (1 to 11)
@@ -76,142 +75,13 @@ export default function OnboardingPage() {
   const [otpCode, setOtpCode] = React.useState('');
   const [emailVerified, setEmailVerified] = React.useState(false);
   const [otpLoading, setOtpLoading] = React.useState(false);
+  const [onboardingPassword, setOnboardingPassword] = React.useState('');
+  const [showOnboardingPassword, setShowOnboardingPassword] = React.useState(false);
+  const [authProcessing, setAuthProcessing] = React.useState(false);
 
-  // Step 8: Mr. Intelligence Live Company Discovery State
-  const [discoveryLoading, setDiscoveryLoading] = React.useState(false);
-  const [discoveryData, setDiscoveryData] = React.useState<{
-    summary: string;
-    keyTakeaways: string[];
-    marketSentiment: string;
-    webHandleStatus: string;
-    socialHandleStatus: string;
-    learningNote: string;
-  } | null>(null);
-
-  React.useEffect(() => {
-    if (user?.email) {
-      setEmail(user.email);
-      setEmailVerified(true);
-    }
-  }, [user]);
-
-  // Fetch Live Mr. Intelligence Pre-Onboarding Research when reaching Step 8
-  const triggerPreOnboardingIntelligence = React.useCallback(async () => {
-    setDiscoveryLoading(true);
-    const targetName = orgName || 'Enterprise Workspace';
-    try {
-      const promptText = `Provide high level pre-onboarding picture for organization: "${targetName}", Industry: "${industry}". Website: "${website}".`;
-      const res = await fetch('/api/ai/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: promptText,
-          systemPrompt: 'You are Mr. Intelligence. Conduct rapid pre-onboarding web & social media discovery.',
-          jsonMode: true,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        let parsed: any = {};
-        try {
-          parsed = JSON.parse(data.text);
-        } catch {
-          parsed = {};
-        }
-
-        setDiscoveryData({
-          summary: parsed.summary || `Mr. Intelligence gathered live web signals for ${targetName}. Operating in ${industry}, key digital presence and domain indicators verified.`,
-          keyTakeaways: parsed.keyTakeaways || [
-            `Verified digital footprint and enterprise domain status for ${targetName}.`,
-            `Market positioning aligned with scalable ${industry} operations.`,
-            `Social media handles & public web presence indexed for continuous corporate memory.`
-          ],
-          marketSentiment: parsed.marketSentiment || 'INNOVATIVE',
-          webHandleStatus: website ? `Active Website Indexed: ${website}` : `Web Domain Indexed for ${targetName}`,
-          socialHandleStatus: `Social Media Handles Scanned for ${targetName}`,
-          learningNote: `Owner, Mr. Intelligence has indexed this high-level picture of ${targetName}. As your workspace provisions, our AI engine will continuously learn, index, and update corporate memory on ${targetName} in your background.`,
-        });
-      } else {
-        throw new Error('API notice');
-      }
-    } catch {
-      setDiscoveryData({
-        summary: `Mr. Intelligence gathered live web signals for ${targetName}. Operating in ${industry}, digital presence and domain indicators verified.`,
-        keyTakeaways: [
-          `Verified digital footprint and enterprise domain status for ${targetName}.`,
-          `Market positioning aligned with scalable ${industry} operations.`,
-          `Social media handles & public web presence indexed for continuous corporate memory.`
-        ],
-        marketSentiment: 'INNOVATIVE',
-        webHandleStatus: website ? `Active Website Indexed: ${website}` : `Web Domain Indexed for ${targetName}`,
-        socialHandleStatus: `Social Media Handles Scanned for ${targetName}`,
-        learningNote: `Owner, Mr. Intelligence has indexed this high-level picture of ${targetName}. As your workspace provisions, our AI engine will continuously learn, index, and update corporate memory on ${targetName} in your background.`,
-      });
-    } finally {
-      setDiscoveryLoading(false);
-    }
-  }, [orgName, industry, website]);
-
-  React.useEffect(() => {
-    if (step === 8 && !discoveryData && !discoveryLoading) {
-      triggerPreOnboardingIntelligence();
-    }
-  }, [step, discoveryData, discoveryLoading, triggerPreOnboardingIntelligence]);
-
-  const handleSendOtp = async () => {
-    if (!email || !email.includes('@')) {
-      setError('Please enter a valid executive email address.');
-      return;
-    }
-    setError(null);
-    setOtpLoading(true);
-    try {
-      const res = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      if (res.ok) {
-        setOtpSent(true);
-        toast.success(`🔑 Verification code sent to ${email}`);
-      } else {
-        const d = await res.json();
-        setError(d.message || 'Failed to send OTP code.');
-      }
-    } catch {
-      setError('Network error sending OTP code.');
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otpCode || otpCode.length < 4) {
-      setError('Please enter your verification code.');
-      return;
-    }
-    setError(null);
-    setOtpLoading(true);
-    try {
-      const res = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code: otpCode }),
-      });
-      if (res.ok) {
-        setEmailVerified(true);
-        toast.success('✅ Email address verified successfully!');
-      } else {
-        const d = await res.json();
-        setError(d.message || 'Invalid verification code.');
-      }
-    } catch {
-      setError('Failed to verify OTP code.');
-    } finally {
-      setOtpLoading(false);
-    }
-  };
+  // Step 1: Email existence check
+  const [emailCheckLoading, setEmailCheckLoading] = React.useState(false);
+  const [emailAlreadyExists, setEmailAlreadyExists] = React.useState(false);
 
   // Step 2: Plain-English Target Market
   const [targetMarket, setTargetMarket] = React.useState('B2B');
@@ -284,6 +154,316 @@ export default function OnboardingPage() {
   // Step 11: Submission State
   const [submitting, setSubmitting] = React.useState(false);
   const [submitProgress, setSubmitProgress] = React.useState(0);
+
+  // Step 8: Mr. Intelligence Live Company Discovery State
+  const [discoveryLoading, setDiscoveryLoading] = React.useState(false);
+  const [discoveryData, setDiscoveryData] = React.useState<{
+    summary: string;
+    keyTakeaways: string[];
+    marketSentiment: string;
+    webHandleStatus: string;
+    socialHandleStatus: string;
+    learningNote: string;
+  } | null>(null);
+
+  // Restores saved onboarding draft & step on mount
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const rawDraft = localStorage.getItem('hq_onboarding_draft');
+      if (rawDraft && rawDraft.trim()) {
+        const draft = JSON.parse(rawDraft);
+        if (draft.orgName) setOrgName(draft.orgName);
+        if (draft.slogan) setSlogan(draft.slogan);
+        if (draft.orgSlug) setOrgSlug(draft.orgSlug);
+        if (draft.website) setWebsite(draft.website);
+        if (draft.industry) setIndustry(draft.industry);
+        if (draft.companySize) setCompanySize(draft.companySize);
+        if (draft.userTitle) setUserTitle(draft.userTitle);
+        if (draft.userDisplayName) setUserDisplayName(draft.userDisplayName);
+        if (draft.voicePersona) setVoicePersona(draft.voicePersona);
+        if (draft.targetMarket) setTargetMarket(draft.targetMarket);
+        if (draft.businessDesc) setBusinessDesc(draft.businessDesc);
+        if (draft.selectedGoals) setSelectedGoals(draft.selectedGoals);
+        if (draft.selectedDepts) setSelectedDepts(draft.selectedDepts);
+        if (draft.executives) setExecutives(draft.executives);
+        if (draft.aiStyle) setAiStyle(draft.aiStyle);
+        if (draft.brandColor) setBrandColor(draft.brandColor);
+        if (draft.email) {
+          setEmail(draft.email);
+          // Restore persistent email verification — valid across sessions
+          if (draft.emailVerified && draft.verifiedEmail === draft.email) {
+            setEmailVerified(true);
+          }
+        }
+        if (draft.step && typeof draft.step === 'number' && draft.step > 1 && draft.step <= 10) {
+          // Cap at step 10 — step 11 (launch) must always be reached through the live flow
+          setStep(draft.step);
+        }
+        toast.info('⚡ Restored your saved onboarding progress!');
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email);
+      setEmailVerified(true);
+      if (user.displayName && !userDisplayName) {
+        setUserDisplayName(user.displayName);
+      }
+    }
+  }, [user, userDisplayName]);
+
+  // Saves onboarding progress and pings backend lead tracker with INCOMPLETE_ONBOARDING tag
+  const persistOnboardingProgress = React.useCallback(
+    async (nextStep?: number) => {
+      const targetStep = nextStep ?? step;
+      const draft = {
+        step: targetStep,
+        orgName,
+        slogan,
+        orgSlug,
+        website,
+        industry,
+        companySize,
+        userTitle,
+        userDisplayName,
+        voicePersona,
+        targetMarket,
+        businessDesc,
+        selectedGoals,
+        selectedDepts,
+        executives,
+        aiStyle,
+        brandColor,
+        email,
+        // Persist email verification so it survives sessions (e.g. user returns after a month)
+        emailVerified,
+        verifiedEmail: emailVerified ? email : null,
+        savedAt: new Date().toISOString(),
+      };
+
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('hq_onboarding_draft', JSON.stringify(draft));
+        }
+      } catch {
+        /* ignore */
+      }
+
+      if (email && email.includes('@')) {
+        // Debounce: only call track-incomplete max once per 10s to avoid 429
+        const now = Date.now();
+        const lastTrack = (window as any).__hqLastTrackIncomplete || 0;
+        if (now - lastTrack > 10000) {
+          (window as any).__hqLastTrackIncomplete = now;
+          fetch('/api/auth/track-incomplete-onboarding', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, step: targetStep, orgName, completed: false }),
+          }).catch(() => null);
+        }
+      }
+    },
+    [step, orgName, slogan, orgSlug, website, industry, companySize, userTitle, userDisplayName, voicePersona, targetMarket, businessDesc, selectedGoals, selectedDepts, executives, aiStyle, brandColor, email, emailVerified],
+  );
+
+  // Fetch Live Mr. Intelligence Pre-Onboarding Research when reaching Step 8
+  const triggerPreOnboardingIntelligence = React.useCallback(async () => {
+    setDiscoveryLoading(true);
+    const targetName = orgName || 'Enterprise Workspace';
+    try {
+      const promptText = `Provide high level pre-onboarding picture for organization: "${targetName}", Industry: "${industry}". Website: "${website}".`;
+      const res = await fetch('/api/ai/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: promptText,
+          systemPrompt: 'You are Mr. Intelligence. Conduct rapid pre-onboarding web & social media discovery.',
+          jsonMode: true,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        let parsed: any = {};
+        try {
+          parsed = JSON.parse(data.text);
+        } catch {
+          parsed = {};
+        }
+
+        setDiscoveryData({
+          summary: parsed.summary || `Mr. Intelligence gathered live web signals for ${targetName}. Operating in ${industry}, key digital presence and domain indicators verified.`,
+          keyTakeaways: parsed.keyTakeaways || [
+            `Verified digital footprint and enterprise domain status for ${targetName}.`,
+            `Market positioning aligned with scalable ${industry} operations.`,
+            `Social media handles & public web presence indexed for continuous corporate memory.`
+          ],
+          marketSentiment: parsed.marketSentiment || 'INNOVATIVE',
+          webHandleStatus: website ? `Active Website Indexed: ${website}` : `Web Domain Indexed for ${targetName}`,
+          socialHandleStatus: `Social Media Handles Scanned for ${targetName}`,
+          learningNote: `Owner, Mr. Intelligence has indexed this high-level picture of ${targetName}. As your workspace provisions, our AI engine will continuously learn, index, and update corporate memory on ${targetName} in your background.`,
+        });
+      } else {
+        throw new Error('API notice');
+      }
+    } catch {
+      setDiscoveryData({
+        summary: `Mr. Intelligence gathered live web signals for ${targetName}. Operating in ${industry}, digital presence and domain indicators verified.`,
+        keyTakeaways: [
+          `Verified digital footprint and enterprise domain status for ${targetName}.`,
+          `Market positioning aligned with scalable ${industry} operations.`,
+          `Social media handles & public web presence indexed for continuous corporate memory.`
+        ],
+        marketSentiment: 'INNOVATIVE',
+        webHandleStatus: website ? `Active Website Indexed: ${website}` : `Web Domain Indexed for ${targetName}`,
+        socialHandleStatus: `Social Media Handles Scanned for ${targetName}`,
+        learningNote: `Owner, Mr. Intelligence has indexed this high-level picture of ${targetName}. As your workspace provisions, our AI engine will continuously learn, index, and update corporate memory on ${targetName} in your background.`,
+      });
+    } finally {
+      setDiscoveryLoading(false);
+    }
+  }, [orgName, industry, website]);
+
+  React.useEffect(() => {
+    if (step === 8 && !discoveryData && !discoveryLoading) {
+      triggerPreOnboardingIntelligence();
+    }
+  }, [step, discoveryData, discoveryLoading, triggerPreOnboardingIntelligence]);
+
+  // Step 1: Check if email is already registered
+  const handleCheckEmail = React.useCallback(async (emailValue: string) => {
+    const trimmed = emailValue.trim().toLowerCase();
+    if (!trimmed || !trimmed.includes('@')) return;
+    setEmailCheckLoading(true);
+    setEmailAlreadyExists(false);
+    setError(null);
+    try {
+      const res = await fetch(`/api/auth/check-email?email=${encodeURIComponent(trimmed)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.exists) {
+          setEmailAlreadyExists(true);
+          setError('This email is already registered. Please log in to your account instead.');
+        }
+      }
+    } catch {
+      /* ignore — non-blocking check */
+    } finally {
+      setEmailCheckLoading(false);
+    }
+  }, []);
+
+  const handleSendOtp = async () => {
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid executive email address.');
+      return;
+    }
+    setError(null);
+    setOtpLoading(true);
+    try {
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        setOtpSent(true);
+        toast.success(`🔑 Verification code sent to ${email}`);
+      } else {
+        const d = await res.json();
+        setError(d.message || 'Failed to send OTP code.');
+      }
+    } catch {
+      setError('Network error sending OTP code.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleCreateAccountWithPassword = async () => {
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid executive email address.');
+      return;
+    }
+    if (!onboardingPassword || onboardingPassword.length < 6) {
+      setError('Please enter an account password with at least 6 characters.');
+      return;
+    }
+    setError(null);
+    setAuthProcessing(true);
+    try {
+      const sessionToken = localStorage.getItem('hq_session_token');
+      if (!sessionToken) {
+        setError('Session expired. Please verify your email again.');
+        return;
+      }
+      const res = await fetch('/api/auth/set-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionToken, password: onboardingPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to set password.');
+      // Store full auth token — user is now fully authenticated
+      localStorage.setItem('hq_auth_token', data.token);
+      await refetchUser();
+      setEmailVerified(true);
+      toast.success('🔒 Account credentials registered successfully!');
+      const nextStep = 10;
+      setStep(nextStep);
+      persistOnboardingProgress(nextStep);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to register account credentials.');
+    } finally {
+      setAuthProcessing(false);
+    }
+  };
+
+
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode || otpCode.length < 4) {
+      setError('Please enter your verification code.');
+      return;
+    }
+    setError(null);
+    setOtpLoading(true);
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code: otpCode }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEmailVerified(true);
+        toast.success('✅ Email address verified successfully!');
+
+        // Store server session token first (works without network access to Google)
+        // This is our reliable fallback — always available
+        if (data.sessionToken) {
+          localStorage.setItem('hq_session_token', data.sessionToken);
+        }
+
+        // Persist verified state to draft (survives sessions)
+        persistOnboardingProgress();
+      } else {
+        const d = await res.json();
+        setError(d.message || 'Invalid verification code.');
+      }
+    } catch {
+      setError('Failed to verify OTP code.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // Step 2: Target Markets, Catalogs & Handlers
 
   // Auto-generate slug from Organization Name
   React.useEffect(() => {
@@ -405,22 +585,54 @@ export default function OnboardingPage() {
   const handleNextStep = () => {
     setError(null);
     if (step === 1) {
+      if (!email.trim() || !email.includes('@')) {
+        setError('Please enter a valid executive email address.');
+        return;
+      }
+      if (emailAlreadyExists) {
+        setError('This email is already registered. Please log in to your account instead.');
+        return;
+      }
       if (!orgName.trim()) {
         setError('Please enter your Organization Name.');
         return;
       }
     }
-    setStep((prev) => Math.min(prev + 1, 11));
+    if (step === 9) {
+      // Accept: context user or server auth/session token
+      const hasAuthToken = !!localStorage.getItem('hq_auth_token') || !!localStorage.getItem('hq_session_token');
+      const isAuthenticated = !!user || hasAuthToken;
+      if (!isAuthenticated) {
+        setError('Please secure your account first: enter a password and click "Register Password".');
+        return;
+      }
+    }
+    const nextStep = Math.min(step + 1, 11);
+    setStep(nextStep);
+    persistOnboardingProgress(nextStep);
   };
 
   const handlePrevStep = () => {
     setError(null);
-    setStep((prev) => Math.max(prev - 1, 1));
+    const prevStep = Math.max(step - 1, 1);
+    setStep(prevStep);
+    persistOnboardingProgress(prevStep);
   };
 
   const handleCompleteOnboarding = async () => {
+    // Prevent double submission
+    if (submitting) return;
     setError(null);
     setSubmitting(true);
+
+    // Hard guard: user MUST be authenticated — context user or server session token
+    const serverAuthToken = localStorage.getItem('hq_auth_token') || localStorage.getItem('hq_session_token');
+    if (!user && !serverAuthToken) {
+      setError('Please complete account setup (set a password) before launching your HQ workspace.');
+      setSubmitting(false);
+      setStep(9);
+      return;
+    }
 
     const activeExecs = executives
       .filter((e) => e.enabled)
@@ -449,34 +661,65 @@ export default function OnboardingPage() {
       brandColor,
     };
 
-    localStorage.setItem('hq_user_title', userTitle);
     localStorage.setItem('hq_user_display_name', userDisplayName || 'Executive');
     localStorage.setItem('hq_asad_voice_persona', voicePersona);
 
     try {
-      setSubmitProgress(30);
+      setSubmitProgress(15);
+
+      // Get auth token: prefer context token, fall back to stored auth/session token
+      const authToken = token || serverAuthToken;
+
+      if (!authToken) {
+        setError('Authentication session expired. Please complete account setup again.');
+        setSubmitting(false);
+        setStep(9);
+        return;
+      }
+
+      setSubmitProgress(40);
+
       const res = await fetch('/api/organizations/onboard', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify(payload),
       });
 
-      setSubmitProgress(70);
+      setSubmitProgress(75);
 
+      const resData = await res.json();
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Workspace provisioning failed.');
+        throw new Error(resData.message || 'Workspace provisioning failed.');
       }
 
       setSubmitProgress(100);
+      try {
+        if (typeof window !== 'undefined') {
+          if (resData.token) {
+            localStorage.setItem('hq_auth_token', resData.token);
+          }
+          localStorage.removeItem('hq_session_token');
+          localStorage.removeItem('hq_onboarding_draft');
+        }
+        if (email) {
+          fetch('/api/auth/track-incomplete-onboarding', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, step: 11, orgName, completed: true }),
+          }).catch(() => null);
+        }
+      } catch {
+        /* ignore */
+      }
+
       await refetchUser();
 
       setTimeout(() => {
         router.push('/dashboard');
-      }, 500);
+      }, 300);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Onboarding failed.');
       setSubmitting(false);
@@ -484,18 +727,16 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050508] text-foreground flex flex-col justify-between font-sans relative overflow-x-hidden select-none animate-in fade-in duration-500">
-      {/* Luxury Ambient Lighting Glows */}
-      <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-radial from-cyan-500/15 via-blue-600/10 to-transparent blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-radial from-purple-600/10 via-indigo-600/5 to-transparent blur-[140px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+    <div className="min-h-screen bg-slate-50 dark:bg-[#050508] text-foreground flex flex-col justify-between font-sans relative overflow-x-hidden animate-in fade-in duration-500">
+      {/* Background Mesh Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(#1e1e24_1px,transparent_1px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
 
-      {/* Header Bar */}
-      <header className="flex h-20 items-center justify-between border-b border-white/10 px-6 sm:px-12 bg-[#0A0B10]/60 backdrop-blur-2xl relative z-10">
+      {/* Top Header */}
+      <header className="flex h-20 items-center justify-between border-b border-slate-200 dark:border-white/10 px-6 sm:px-12 bg-white/80 dark:bg-[#0A0B10]/60 backdrop-blur-2xl relative z-10">
         <div className="flex items-center space-x-3">
           <HQLogo size={28} />
           <div className="flex flex-col">
-            <span className="font-black tracking-tight text-white text-base flex items-center gap-2">
+            <span className="font-black tracking-tight text-slate-900 dark:text-white text-base flex items-center gap-2">
               HQ <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent text-xs font-bold uppercase tracking-widest">PROVISIONING</span>
             </span>
             <span className="text-[10px] text-slate-400 font-medium tracking-wide">Enterprise Setup Engine</span>
@@ -504,8 +745,8 @@ export default function OnboardingPage() {
 
         {/* Step Indicator Pill */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 bg-black/50 border border-white/10 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-300">
-            <span className="text-cyan-400">Step {step}</span> of 11
+          <div className="hidden sm:flex items-center gap-1.5 bg-slate-100 dark:bg-black/50 border border-slate-200 dark:border-white/10 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 dark:text-slate-300">
+            <span className="text-cyan-600 dark:text-cyan-400">Step {step}</span> of 11
           </div>
           <Badge variant="outline" className="border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
@@ -525,7 +766,7 @@ export default function OnboardingPage() {
       {/* Main Container */}
       <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative z-10 my-6">
         <div className="w-full max-w-3xl">
-          <Card className="border border-white/10 bg-[#0A0B10]/90 backdrop-blur-3xl shadow-[0_0_60px_rgba(6,182,212,0.12)] text-foreground p-4 sm:p-8 rounded-3xl relative overflow-hidden transition-all duration-300">
+          <Card className="border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0A0B10]/90 backdrop-blur-3xl shadow-lg dark:shadow-[0_0_60px_rgba(6,182,212,0.12)] text-foreground p-4 sm:p-8 rounded-3xl relative overflow-hidden transition-all duration-300">
             {error && (
               <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs p-3.5 mb-6 rounded-2xl text-center font-semibold flex items-center justify-center gap-2 animate-in fade-in">
                 <ShieldAlert className="h-4 w-4 text-rose-400" /> {error}
@@ -535,150 +776,179 @@ export default function OnboardingPage() {
             {/* STEP 1: Identity, Slogan & URL */}
             {step === 1 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-2 text-left border-b border-white/10 pb-5">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
+                <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
                     <Building className="h-3.5 w-3.5" />
                     STEP 1: CORPORATE IDENTITY
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     Name Your Executive Workspace
                   </h2>
-                  <p className="text-slate-400 text-xs leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
                     Set up your organization's official name, slogan, industry, and workspace subdomain URL.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
                   <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Executive Email Address *</label>
-                    <Input
-                      type="email"
-                      placeholder="e.g. director@company.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="bg-black/50 border-white/10 text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl"
-                    />
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Executive Email Address *</label>
+                    <div className="relative">
+                      <Input
+                        type="email"
+                        placeholder="e.g. director@company.com"
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          setEmailAlreadyExists(false);
+                          setError(null);
+                          // Reset verification state when email changes — prior OTP is now invalid
+                          setEmailVerified(false);
+                          setOtpSent(false);
+                          setOtpCode('');
+                        }}
+                        onBlur={() => handleCheckEmail(email)}
+                        className={`bg-white dark:bg-black/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl pr-10 ${
+                          emailAlreadyExists ? 'border-rose-500/60 focus-visible:ring-rose-500' : ''
+                        }`}
+                      />
+                      {emailCheckLoading && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 dark:text-slate-400 animate-pulse">Checking...</span>
+                      )}
+                      {!emailCheckLoading && emailAlreadyExists && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-rose-500 dark:text-rose-400 font-bold">Registered</span>
+                      )}
+                      {!emailCheckLoading && !emailAlreadyExists && email.includes('@') && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-emerald-500 dark:text-emerald-400 font-bold">✓</span>
+                      )}
+                    </div>
+                    {emailAlreadyExists && (
+                      <p className="text-[11px] text-rose-500 dark:text-rose-400 flex items-center gap-1.5 pt-0.5">
+                        <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                        This email is already registered.
+                        <a href="/login" className="underline text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 font-semibold">Log in instead →</a>
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Organization / Company Name *</label>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Organization / Company Name *</label>
                     <Input
                       placeholder="e.g. Netify Global Inc."
                       value={orgName}
                       onChange={(e) => setOrgName(e.target.value)}
-                      className="bg-black/50 border-white/10 text-white h-12 text-sm focus-visible:ring-cyan-500 rounded-xl"
+                      className="bg-white dark:bg-black/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-12 text-sm focus-visible:ring-cyan-500 rounded-xl"
                     />
                   </div>
 
                   <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Company Website / URL (Optional)</label>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Company Website / URL (Optional)</label>
                     <Input
                       placeholder="e.g. https://company.com"
                       value={website}
                       onChange={(e) => setWebsite(e.target.value)}
-                      className="bg-black/50 border-white/10 text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl"
+                      className="bg-white dark:bg-black/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl"
                     />
                   </div>
 
                   <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Company Slogan / Mission Statement</label>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Company Slogan / Mission Statement</label>
                     <Input
                       placeholder="e.g. Empowering Enterprise Autonomy through AI"
                       value={slogan}
                       onChange={(e) => setSlogan(e.target.value)}
-                      className="bg-black/50 border-white/10 text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl"
+                      className="bg-white dark:bg-black/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl"
                     />
                   </div>
 
                   <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Workspace Subdomain URL</label>
-                    <div className="flex items-center gap-2 bg-black/60 border border-white/10 rounded-xl px-3.5 h-11 overflow-hidden">
-                      <Globe className="h-4 w-4 text-cyan-400 shrink-0" />
-                      <span className="text-slate-500 text-xs font-mono shrink-0">hq.netify.ng/</span>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Workspace Subdomain URL</label>
+                    <div className="flex items-center gap-2 bg-slate-100 dark:bg-black/60 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 h-11 overflow-hidden">
+                      <Globe className="h-4 w-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                      <span className="text-slate-500 dark:text-slate-400 text-xs font-mono shrink-0">hq.netify.ng/</span>
                       <Input
                         value={orgSlug}
                         onChange={(e) => setOrgSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                        className="bg-transparent border-0 p-0 text-cyan-300 font-mono text-xs focus-visible:ring-0 h-auto min-w-0"
+                        className="bg-transparent border-0 p-0 text-cyan-600 dark:text-cyan-300 font-mono text-xs focus-visible:ring-0 h-auto min-w-0"
                       />
                       {checkingSlug ? (
-                        <span className="text-[11px] text-slate-400 animate-pulse shrink-0">Checking...</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 animate-pulse shrink-0">Checking...</span>
                       ) : slugAvailable === true ? (
-                        <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1 shrink-0">
+                        <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 shrink-0">
                           <Check className="h-3.5 w-3.5" /> Available
                         </span>
                       ) : slugAvailable === false ? (
-                        <span className="text-[11px] text-rose-400 font-bold shrink-0">Taken</span>
+                        <span className="text-[11px] text-rose-600 dark:text-rose-400 font-bold shrink-0">Taken</span>
                       ) : null}
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Industry Sector</label>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Industry Sector</label>
                     <select
                       value={industry}
                       onChange={(e) => setIndustry(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-white dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-500"
                     >
-                      <option value="Technology">Software & Technology</option>
-                      <option value="Finance">Finance & Banking</option>
-                      <option value="Healthcare">Healthcare & Biotech</option>
-                      <option value="E-Commerce">E-Commerce & Retail</option>
-                      <option value="Real Estate">Real Estate & PropTech</option>
-                      <option value="Agency">Agency & Marketing</option>
+                      <option value="Technology" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Software & Technology</option>
+                      <option value="Finance" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Finance & Banking</option>
+                      <option value="Healthcare" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Healthcare & Biotech</option>
+                      <option value="E-Commerce" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">E-Commerce & Retail</option>
+                      <option value="Real Estate" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Real Estate & PropTech</option>
+                      <option value="Agency" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Agency & Marketing</option>
                     </select>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Company Size</label>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Company Size</label>
                     <select
                       value={companySize}
                       onChange={(e) => setCompanySize(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-white dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-500"
                     >
-                      <option value="1-5">1-5 Employees</option>
-                      <option value="6-20">6-20 Employees</option>
-                      <option value="21-100">21-100 Employees</option>
-                      <option value="100+">100+ Enterprise</option>
+                      <option value="1-5" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">1-5 Employees</option>
+                      <option value="6-20" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">6-20 Employees</option>
+                      <option value="21-100" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">21-100 Employees</option>
+                      <option value="100+" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">100+ Enterprise</option>
                     </select>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:col-span-2 pt-4 border-t border-white/10 mt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:col-span-2 pt-4 border-t border-slate-200 dark:border-white/10 mt-2">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-cyan-400">Executive Title *</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Executive Title *</label>
                       <select
                         value={userTitle}
                         onChange={(e) => setUserTitle(e.target.value)}
-                        className="w-full bg-black/50 border border-cyan-500/40 text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-400 font-bold"
+                        className="w-full bg-white dark:bg-black/50 border border-cyan-500/40 text-slate-900 dark:text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-400 font-bold"
                       >
-                        <option value="Alh">Alhaji / Hajjia (Alh)</option>
-                        <option value="Dr">Doctor (Dr)</option>
-                        <option value="Prof">Professor (Prof)</option>
-                        <option value="Engr">Engineer (Engr)</option>
-                        <option value="Surv">Surveyor (Surv)</option>
-                        <option value="Arc">Architect (Arc)</option>
-                        <option value="Barr">Barrister (Barr)</option>
-                        <option value="Chief">Chief</option>
-                        <option value="Mr">Mr</option>
-                        <option value="Mrs">Mrs</option>
-                        <option value="Ms">Ms</option>
-                        <option value="Sir">Sir</option>
-                        <option value="Lady">Lady</option>
+                        <option value="Alh" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Alhaji / Hajjia (Alh)</option>
+                        <option value="Dr" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Doctor (Dr)</option>
+                        <option value="Prof" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Professor (Prof)</option>
+                        <option value="Engr" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Engineer (Engr)</option>
+                        <option value="Surv" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Surveyor (Surv)</option>
+                        <option value="Arc" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Architect (Arc)</option>
+                        <option value="Barr" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Barrister (Barr)</option>
+                        <option value="Chief" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Chief</option>
+                        <option value="Mr" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Mr</option>
+                        <option value="Mrs" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Mrs</option>
+                        <option value="Ms" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Ms</option>
+                        <option value="Sir" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Sir</option>
+                        <option value="Lady" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Lady</option>
                       </select>
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-cyan-400">Executive Name *</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Executive Name *</label>
                       <Input
                         placeholder="e.g. Umar / Sophia"
                         value={userDisplayName}
                         onChange={(e) => setUserDisplayName(e.target.value)}
-                        className="bg-black/50 border-cyan-500/40 text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl font-bold"
+                        className="bg-white dark:bg-black/50 border-cyan-500/40 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl font-bold"
                       />
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-3">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-purple-400">Preferred Asad AI Voice Persona</label>
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Preferred Asad AI Voice Persona</label>
                         <button
                           type="button"
                           onClick={() => {
@@ -689,20 +959,20 @@ export default function OnboardingPage() {
                               window.speechSynthesis.speak(sample);
                             }
                           }}
-                          className="text-[10px] font-black text-cyan-300 uppercase tracking-widest hover:underline flex items-center gap-1"
+                          className="text-[10px] font-black text-cyan-600 dark:text-cyan-300 uppercase tracking-widest hover:underline flex items-center gap-1"
                         >
-                          <Volume2 className="h-3.5 w-3.5 text-cyan-400" /> Test Voice Sound
+                          <Volume2 className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" /> Test Voice Sound
                         </button>
                       </div>
                       <select
                         value={voicePersona}
                         onChange={(e) => setVoicePersona(e.target.value)}
-                        className="w-full bg-black/50 border border-purple-500/40 text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-purple-400 font-bold"
+                        className="w-full bg-white dark:bg-black/50 border border-purple-500/40 text-slate-900 dark:text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-purple-400 font-bold"
                       >
-                        <option value="Asad Male Executive">Asad Male Executive (Resonant & Confident)</option>
-                        <option value="Asad Female Executive">Asad Female Executive (Articulate & Polished)</option>
-                        <option value="Asad Neural British">Asad Neural British (Refined & Crisp)</option>
-                        <option value="Asad System Default">Asad System Default</option>
+                        <option value="Asad Male Executive" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Asad Male Executive (Resonant & Confident)</option>
+                        <option value="Asad Female Executive" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Asad Female Executive (Articulate & Polished)</option>
+                        <option value="Asad Neural British" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Asad Neural British (Refined & Crisp)</option>
+                        <option value="Asad System Default" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Asad System Default</option>
                       </select>
                     </div>
                   </div>
@@ -713,15 +983,15 @@ export default function OnboardingPage() {
             {/* STEP 2: Plain-English Target Market */}
             {step === 2 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-2 text-left border-b border-white/10 pb-5">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-purple-400 uppercase tracking-widest bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-md w-fit">
+                <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-md w-fit">
                     <Users className="h-3.5 w-3.5" />
                     STEP 2: TARGET CUSTOMER AUDIENCE
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     Who does your business serve?
                   </h2>
-                  <p className="text-slate-400 text-xs leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
                     Select your primary customer focus so your AI Executives tailor market positioning.
                   </p>
                 </div>
@@ -734,20 +1004,20 @@ export default function OnboardingPage() {
                       className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                         targetMarket === tm.id
                           ? 'bg-gradient-to-r from-cyan-500/15 via-blue-500/10 to-purple-500/15 border-cyan-400/50 shadow-[0_0_20px_rgba(6,182,212,0.15)]'
-                          : 'bg-black/40 border-white/10 hover:border-white/20'
+                          : 'bg-white dark:bg-black/40 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
                       }`}
                     >
                       <div className="space-y-1">
-                        <div className="text-sm font-extrabold text-white flex items-center gap-2">
+                        <div className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                           {tm.title}
                         </div>
-                        <div className="text-slate-400 text-xs">{tm.desc}</div>
+                        <div className="text-slate-600 dark:text-slate-400 text-xs">{tm.desc}</div>
                       </div>
                       <div
                         className={`h-5 w-5 rounded-full border flex items-center justify-center transition-all ${
                           targetMarket === tm.id
                             ? 'border-cyan-400 bg-cyan-400 text-black'
-                            : 'border-white/20 bg-transparent'
+                            : 'border-slate-300 dark:border-white/20 bg-transparent'
                         }`}
                       >
                         {targetMarket === tm.id && <Check className="h-3 w-3 stroke-[3]" />}
@@ -761,27 +1031,27 @@ export default function OnboardingPage() {
             {/* STEP 3: Searchable Strategic Goals Catalog */}
             {step === 3 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-2 text-left border-b border-white/10 pb-5">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
+                <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
                     <TrendingUp className="h-3.5 w-3.5" />
                     STEP 3: STRATEGIC OBJECTIVES
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     Select Corporate Goals
                   </h2>
-                  <p className="text-slate-400 text-xs leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
                     Search and pick your company's active strategic goals for your AI Boardroom.
                   </p>
                 </div>
 
                 <div className="space-y-4 text-left">
                   <div className="relative">
-                    <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                    <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
                     <Input
                       placeholder="Search strategic goals..."
                       value={goalSearch}
                       onChange={(e) => setGoalSearch(e.target.value)}
-                      className="bg-black/50 border-white/10 text-white pl-10 h-11 text-xs focus-visible:ring-cyan-500 rounded-xl"
+                      className="bg-white dark:bg-black/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 h-11 text-xs focus-visible:ring-cyan-500 rounded-xl"
                     />
                   </div>
 
@@ -795,29 +1065,29 @@ export default function OnboardingPage() {
                           onClick={() => toggleGoal(goal)}
                           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${
                             isSelected
-                              ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-400/50 shadow-sm'
-                              : 'bg-black/40 text-slate-300 border-white/10 hover:border-white/20'
+                              ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-400/50 shadow-sm'
+                              : 'bg-white dark:bg-black/40 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
                           }`}
                         >
-                          {isSelected ? <CheckCircle className="h-3.5 w-3.5 text-cyan-400" /> : <Plus className="h-3.5 w-3.5 text-slate-500" />}
+                          {isSelected ? <CheckCircle className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> : <Plus className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />}
                           {goal}
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
                     <Input
                       placeholder="Add custom strategic goal..."
                       value={customGoalInput}
                       onChange={(e) => setCustomGoalInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomGoal())}
-                      className="bg-black/50 border-white/10 text-white h-10 text-xs focus-visible:ring-cyan-500 rounded-xl"
+                      className="bg-white dark:bg-black/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-10 text-xs focus-visible:ring-cyan-500 rounded-xl"
                     />
                     <Button
                       type="button"
                       onClick={addCustomGoal}
-                      className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold h-10 px-4 rounded-xl"
+                      className="bg-slate-900 dark:bg-white/10 hover:bg-slate-800 dark:hover:bg-white/20 text-white text-xs font-bold h-10 px-4 rounded-xl"
                     >
                       Add Goal
                     </Button>
@@ -829,27 +1099,27 @@ export default function OnboardingPage() {
             {/* STEP 4: Searchable Departments Catalog */}
             {step === 4 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-2 text-left border-b border-white/10 pb-5">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-purple-400 uppercase tracking-widest bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-md w-fit">
+                <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-md w-fit">
                     <Layers className="h-3.5 w-3.5" />
                     STEP 4: DEPARTMENT STRUCTURE
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     Configure Active Departments
                   </h2>
-                  <p className="text-slate-400 text-xs leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
                     Choose which departments your AI Executive Board will oversee.
                   </p>
                 </div>
 
                 <div className="space-y-4 text-left">
                   <div className="relative">
-                    <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                    <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
                     <Input
                       placeholder="Search departments..."
                       value={deptSearch}
                       onChange={(e) => setDeptSearch(e.target.value)}
-                      className="bg-black/50 border-white/10 text-white pl-10 h-11 text-xs focus-visible:ring-purple-500 rounded-xl"
+                      className="bg-white dark:bg-black/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 h-11 text-xs focus-visible:ring-purple-500 rounded-xl"
                     />
                   </div>
 
@@ -863,29 +1133,29 @@ export default function OnboardingPage() {
                           onClick={() => toggleDept(dept)}
                           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${
                             isSelected
-                              ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-300 border-purple-400/50 shadow-sm'
-                              : 'bg-black/40 text-slate-300 border-white/10 hover:border-white/20'
+                              ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 border-purple-400/50 shadow-sm'
+                              : 'bg-white dark:bg-black/40 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
                           }`}
                         >
-                          {isSelected ? <CheckCircle className="h-3.5 w-3.5 text-purple-400" /> : <Plus className="h-3.5 w-3.5 text-slate-500" />}
+                          {isSelected ? <CheckCircle className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" /> : <Plus className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />}
                           {dept}
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
                     <Input
                       placeholder="Add custom department name..."
                       value={customDeptInput}
                       onChange={(e) => setCustomDeptInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomDept())}
-                      className="bg-black/50 border-white/10 text-white h-10 text-xs focus-visible:ring-purple-500 rounded-xl"
+                      className="bg-white dark:bg-black/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-10 text-xs focus-visible:ring-purple-500 rounded-xl"
                     />
                     <Button
                       type="button"
                       onClick={addCustomDept}
-                      className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold h-10 px-4 rounded-xl"
+                      className="bg-slate-900 dark:bg-white/10 hover:bg-slate-800 dark:hover:bg-white/20 text-white text-xs font-bold h-10 px-4 rounded-xl"
                     >
                       Add Dept
                     </Button>
@@ -894,18 +1164,19 @@ export default function OnboardingPage() {
               </div>
             )}
 
+
             {/* STEP 5: Role-First AI Executive Board */}
             {step === 5 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-2 text-left border-b border-white/10 pb-5">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
+                <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
                     <Cpu className="h-3.5 w-3.5" />
                     STEP 5: AI EXECUTIVE BOARDROOM
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     Assign AI Executive Board
                   </h2>
-                  <p className="text-slate-400 text-xs leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
                     Executives are assigned by rank. Customize default names or keep their executive titles.
                   </p>
                 </div>
@@ -916,12 +1187,12 @@ export default function OnboardingPage() {
                       key={exec.roleKey}
                       className={`p-3.5 rounded-2xl border transition-all ${
                         exec.enabled
-                          ? 'bg-black/60 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]'
-                          : 'bg-black/20 border-white/5 opacity-50'
+                          ? 'bg-slate-50 dark:bg-black/60 border-cyan-500/30 shadow-sm'
+                          : 'bg-slate-100/50 dark:bg-black/20 border-slate-200 dark:border-white/5 opacity-50'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px] font-extrabold uppercase text-cyan-400 tracking-wider">
+                        <span className="text-[11px] font-extrabold uppercase text-cyan-600 dark:text-cyan-400 tracking-wider">
                           {exec.title}
                         </span>
                         <input
@@ -933,7 +1204,7 @@ export default function OnboardingPage() {
                               prev.map((item, i) => (i === idx ? { ...item, enabled: val } : item)),
                             );
                           }}
-                          className="h-4 w-4 rounded bg-black border-white/20 text-cyan-500 focus:ring-cyan-500"
+                          className="h-4 w-4 rounded bg-white dark:bg-black border-slate-300 dark:border-white/20 text-cyan-500 focus:ring-cyan-500"
                         />
                       </div>
                       <Input
@@ -946,9 +1217,9 @@ export default function OnboardingPage() {
                         }}
                         disabled={!exec.enabled}
                         placeholder={exec.defaultName}
-                        className="bg-black/40 border-white/10 text-white h-9 text-xs focus-visible:ring-cyan-500 rounded-lg"
+                        className="bg-white dark:bg-black/40 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-9 text-xs focus-visible:ring-cyan-500 rounded-lg"
                       />
-                      <div className="text-[10px] text-slate-500 mt-1.5 font-medium">
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
                         Dept: {exec.dept}
                       </div>
                     </div>
@@ -960,15 +1231,15 @@ export default function OnboardingPage() {
             {/* STEP 6: AI Governance Operating Style */}
             {step === 6 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-2 text-left border-b border-white/10 pb-5">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-purple-400 uppercase tracking-widest bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-md w-fit">
+                <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-md w-fit">
                     <Sparkles className="h-3.5 w-3.5" />
                     STEP 6: BOARDROOM OPERATING STYLE
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     Select AI Decision Directive
                   </h2>
-                  <p className="text-slate-400 text-xs leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
                     Set the strategic priority for your AI Executives when executing tasks and advising.
                   </p>
                 </div>
@@ -1002,11 +1273,11 @@ export default function OnboardingPage() {
                       className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                         aiStyle === style.id
                           ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-400/50 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
-                          : 'bg-black/40 border-white/10 hover:border-white/20'
+                          : 'bg-white dark:bg-black/40 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
                       }`}
                     >
-                      <div className="text-sm font-extrabold text-white mb-1">{style.title}</div>
-                      <div className="text-slate-400 text-xs">{style.desc}</div>
+                      <div className="text-sm font-extrabold text-slate-900 dark:text-white mb-1">{style.title}</div>
+                      <div className="text-slate-600 dark:text-slate-400 text-xs">{style.desc}</div>
                     </div>
                   ))}
                 </div>
@@ -1016,15 +1287,15 @@ export default function OnboardingPage() {
             {/* STEP 7: Workspace Branding Accent */}
             {step === 7 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-2 text-left border-b border-white/10 pb-5">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
+                <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
                     <Palette className="h-3.5 w-3.5" />
                     STEP 7: WORKSPACE BRANDING
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     Select Brand Accent Color
                   </h2>
-                  <p className="text-slate-400 text-xs leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
                     Personalize your executive dashboard with your corporate brand theme.
                   </p>
                 </div>
@@ -1056,24 +1327,24 @@ export default function OnboardingPage() {
             {/* STEP 8 (NEW STEP): Mr. Intelligence Live Web & Social Media Discovery */}
             {step === 8 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-2 text-left border-b border-white/10 pb-5">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
+                <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
                     <Search className="h-3.5 w-3.5" />
                     STEP 8: INSTANT COMPANY INTELLIGENCE DISCOVERY
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     Mr. Intelligence Discovery Report
                   </h2>
-                  <p className="text-slate-400 text-xs leading-relaxed">
-                    Mr. Intelligence searched public web and social media signals for <strong className="text-cyan-300">{orgName || 'your organization'}</strong>.
+                  <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
+                    Mr. Intelligence searched public web and social media signals for <strong className="text-cyan-600 dark:text-cyan-300">{orgName || 'your organization'}</strong>.
                   </p>
                 </div>
 
                 {discoveryLoading ? (
                   <div className="py-12 space-y-4 text-center">
                     <div className="w-12 h-12 border-2 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin mx-auto" />
-                    <div className="text-sm font-bold text-white">Mr. Intelligence searching web, news & social handles...</div>
-                    <div className="text-xs text-slate-400 font-mono">Gathering public intelligence for {orgName || 'your company'}...</div>
+                    <div className="text-sm font-bold text-slate-900 dark:text-white">Mr. Intelligence searching web, news & social handles...</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">Gathering public intelligence for {orgName || 'your company'}...</div>
                   </div>
                 ) : (
                   <div className="space-y-4 text-left">
@@ -1094,33 +1365,33 @@ export default function OnboardingPage() {
 
                     {/* Web & Social Media Handles Status */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                          <Globe className="h-3.5 w-3.5 text-cyan-400" /> Web Domain Signals
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-black/50 border border-slate-200 dark:border-white/10 space-y-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                          <Globe className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> Web Domain Signals
                         </span>
-                        <div className="text-xs font-semibold text-emerald-300 truncate">
+                        <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-300 truncate">
                           {discoveryData?.webHandleStatus}
                         </div>
                       </div>
-                      <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                          <Share2 className="h-3.5 w-3.5 text-purple-400" /> Social Media Signals
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-black/50 border border-slate-200 dark:border-white/10 space-y-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                          <Share2 className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" /> Social Media Signals
                         </span>
-                        <div className="text-xs font-semibold text-purple-300 truncate">
+                        <div className="text-xs font-semibold text-purple-600 dark:text-purple-300 truncate">
                           {discoveryData?.socialHandleStatus}
                         </div>
                       </div>
                     </div>
 
                     {/* Key Market Takeaways */}
-                    <div className="p-4 rounded-xl bg-black/40 border border-white/10 space-y-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                    <div className="p-4 rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 space-y-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                         KEY MARKET OBSERVATIONS
                       </span>
-                      <ul className="space-y-1.5 text-xs text-slate-300">
+                      <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                         {discoveryData?.keyTakeaways.map((takeaway, idx) => (
                           <li key={idx} className="flex items-start gap-2">
-                            <CheckCircle className="h-3.5 w-3.5 text-cyan-400 shrink-0 mt-0.5" />
+                            <CheckCircle className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5" />
                             <span>{takeaway}</span>
                           </li>
                         ))}
@@ -1142,32 +1413,32 @@ export default function OnboardingPage() {
             {/* STEP 9: Email Verification & Account Credentials */}
             {step === 9 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-2 text-left border-b border-white/10 pb-5">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
+                <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
                     <Lock className="h-3.5 w-3.5" />
                     STEP 9: ACCOUNT VERIFICATION & CREDENTIALS
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     Verify Account & Set Credentials
                   </h2>
-                  <p className="text-slate-400 text-xs leading-relaxed">
-                    Verify the email address collected during Step 1 using OTP, set an account password, or continue with Google.
+                  <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
+                    Verify the email address collected during Step 1 using OTP and set your account password.
                   </p>
                 </div>
 
                 <div className="space-y-4 text-left">
-                  <div className="p-4 border border-white/10 bg-black/40 rounded-2xl space-y-3">
+                  <div className="p-4 border border-slate-200 dark:border-white/10 bg-white dark:bg-black/40 rounded-2xl space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-white flex items-center gap-1.5">
-                        <CheckCircle2 className="h-4 w-4 text-cyan-400" />
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <CheckCircle2 className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                         Option A: 6-Digit Email OTP Verification
                       </span>
                       {emailVerified ? (
-                        <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px] font-bold">
+                        <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/40 text-[10px] font-bold">
                           Verified ✅
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-500/30">
+                        <Badge variant="outline" className="text-[10px] text-amber-600 dark:text-amber-400 border-amber-500/30">
                           Pending Verification
                         </Badge>
                       )}
@@ -1180,7 +1451,7 @@ export default function OnboardingPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={emailVerified}
-                        className="bg-black/60 border-white/10 text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl"
+                        className="bg-white dark:bg-black/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-cyan-500 rounded-xl"
                       />
                       {!emailVerified && (
                         <Button
@@ -1200,7 +1471,7 @@ export default function OnboardingPage() {
                           placeholder="Enter 6-digit OTP code"
                           value={otpCode}
                           onChange={(e) => setOtpCode(e.target.value)}
-                          className="bg-black/80 border-cyan-500/40 text-cyan-300 h-11 text-xs font-mono text-center tracking-widest rounded-xl"
+                          className="bg-white dark:bg-black/80 border-cyan-500/40 text-cyan-700 dark:text-cyan-300 h-11 text-xs font-mono text-center tracking-widest rounded-xl"
                         />
                         <Button
                           type="button"
@@ -1214,32 +1485,44 @@ export default function OnboardingPage() {
                     )}
                   </div>
 
-                  <div className="p-4 border border-white/10 bg-black/40 rounded-2xl space-y-2">
-                    <label className="text-xs font-extrabold text-white flex items-center gap-1.5">
-                      <Lock className="h-4 w-4 text-purple-400" />
-                      Option B: Set Workspace Account Password
+                  <div className="p-4 border border-slate-200 dark:border-white/10 bg-white dark:bg-black/40 rounded-2xl space-y-3">
+                    <label className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Lock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                        Option B: Set Workspace Account Password
+                      </span>
+                      {emailVerified && user && (
+                        <Badge className="bg-purple-500/20 text-purple-600 dark:text-purple-300 border-purple-500/40 text-[10px] font-bold">
+                          Authenticated 🔒
+                        </Badge>
+                      )}
                     </label>
-                    <Input
-                      type="password"
-                      placeholder="Enter secure account password..."
-                      className="bg-black/60 border-white/10 text-white h-11 text-xs focus-visible:ring-purple-500 rounded-xl"
-                    />
-                  </div>
-
-                  <div className="pt-2">
-                    <Button
-                      type="button"
-                      onClick={() => signInWithGoogle()}
-                      className="w-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs h-11 rounded-xl flex items-center justify-center gap-2 border border-white/10"
-                    >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24">
-                        <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z" />
-                        <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z" />
-                        <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.8s.7 5.1 1.9 7.5l3.7-2.9z" />
-                        <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z" />
-                      </svg>
-                      Continue with Google SSO
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          type={showOnboardingPassword ? 'text' : 'password'}
+                          placeholder="Enter secure account password..."
+                          value={onboardingPassword}
+                          onChange={(e) => setOnboardingPassword(e.target.value)}
+                          className="bg-white dark:bg-black/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-purple-500 rounded-xl pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowOnboardingPassword(!showOnboardingPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                        >
+                          {showOnboardingPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={handleCreateAccountWithPassword}
+                        disabled={authProcessing || !onboardingPassword || onboardingPassword.length < 6}
+                        className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs h-11 px-4 rounded-xl shrink-0"
+                      >
+                        {authProcessing ? 'Registering...' : 'Register Password'}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1248,32 +1531,32 @@ export default function OnboardingPage() {
             {/* STEP 10: Executive Review */}
             {step === 10 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-2 text-left border-b border-white/10 pb-5">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-purple-400 uppercase tracking-widest bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-md w-fit">
+                <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-md w-fit">
                     <FileText className="h-3.5 w-3.5" />
                     STEP 10: EXECUTIVE BOARD REVIEW
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     Review Workspace Parameters
                   </h2>
-                  <p className="text-slate-400 text-xs leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
                     Confirm corporate identity, AI board configuration, and governance settings before deployment.
                   </p>
                 </div>
 
                 <div className="space-y-4 text-left">
-                  <div className="p-4 rounded-2xl bg-black/50 border border-white/10 space-y-2">
+                  <div className="p-4 rounded-2xl bg-white dark:bg-black/50 border border-slate-200 dark:border-white/10 space-y-2">
                     <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">WORKSPACE IDENTITY</div>
-                    <div className="text-base font-black text-white">{orgName || 'HQ Workspace'}</div>
-                    {slogan && <div className="text-xs text-cyan-400 italic font-medium">"{slogan}"</div>}
-                    <div className="text-xs text-slate-400 font-mono">URL: hq.netify.ng/{orgSlug}</div>
+                    <div className="text-base font-black text-slate-900 dark:text-white">{orgName || 'HQ Workspace'}</div>
+                    {slogan && <div className="text-xs text-cyan-600 dark:text-cyan-400 italic font-medium">"{slogan}"</div>}
+                    <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">URL: hq.netify.ng/{orgSlug}</div>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-black/50 border border-white/10 space-y-2">
+                  <div className="p-4 rounded-2xl bg-white dark:bg-black/50 border border-slate-200 dark:border-white/10 space-y-2">
                     <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">5 CORE AI EXECUTIVE DIRECTORS</div>
                     <div className="flex flex-wrap gap-2 pt-1">
                       {executives.filter((e) => e.enabled).map((e) => (
-                        <span key={e.roleKey} className="px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-semibold">
+                        <span key={e.roleKey} className="px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-300 text-xs font-semibold">
                           {e.customName} ({e.title})
                         </span>
                       ))}
@@ -1286,15 +1569,15 @@ export default function OnboardingPage() {
             {/* STEP 11: Final Provisioning & Redirection */}
             {step === 11 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-2 text-left border-b border-white/10 pb-5">
-                  <div className="flex items-center gap-2 text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md w-fit">
+                <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md w-fit">
                     <Rocket className="h-3.5 w-3.5" />
                     STEP 11: PROVISION WORKSPACE & DASHBOARD LAUNCH
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     Launch Executive Headquarters
                   </h2>
-                  <p className="text-slate-400 text-xs leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
                     Finalize settings and deploy your autonomous C-Suite command center.
                   </p>
                 </div>
@@ -1303,15 +1586,15 @@ export default function OnboardingPage() {
                   <div className="py-12 space-y-6 text-center">
                     <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
                       <div className="absolute inset-0 rounded-full border-2 border-cyan-500/20 border-t-cyan-400 animate-spin" />
-                      <Cpu className="h-7 w-7 text-cyan-400 animate-pulse" />
+                      <Cpu className="h-7 w-7 text-cyan-500 dark:text-cyan-400 animate-pulse" />
                     </div>
                     <div className="space-y-1.5">
-                      <div className="text-xl font-bold text-white">Provisioning Executive HQ...</div>
-                      <div className="text-slate-400 text-xs">
+                      <div className="text-xl font-bold text-slate-900 dark:text-white">Provisioning Executive HQ...</div>
+                      <div className="text-slate-500 dark:text-slate-400 text-xs">
                         Configuring database schema, assigning AI Boardroom, and deploying workspace...
                       </div>
                     </div>
-                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/10">
+                    <div className="w-full h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden p-0.5 border border-slate-300 dark:border-white/10">
                       <div
                         className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 rounded-full transition-all duration-300 shadow-[0_0_12px_rgba(6,182,212,0.8)]"
                         style={{ width: `${submitProgress}%` }}
@@ -1320,11 +1603,11 @@ export default function OnboardingPage() {
                   </div>
                 ) : (
                   <div className="space-y-4 text-left">
-                    <div className="p-4 rounded-2xl bg-black/50 border border-white/10 space-y-2">
+                    <div className="p-4 rounded-2xl bg-white dark:bg-black/50 border border-slate-200 dark:border-white/10 space-y-2">
                       <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">WORKSPACE OVERVIEW</div>
-                      <div className="text-base font-black text-white">{orgName || 'HQ Workspace'}</div>
-                      {slogan && <div className="text-xs text-cyan-400 italic font-medium">"{slogan}"</div>}
-                      <div className="text-xs text-slate-400 font-mono">URL: hq.netify.ng/{orgSlug}</div>
+                      <div className="text-base font-black text-slate-900 dark:text-white">{orgName || 'HQ Workspace'}</div>
+                      {slogan && <div className="text-xs text-cyan-600 dark:text-cyan-400 italic font-medium">"{slogan}"</div>}
+                      <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">URL: hq.netify.ng/{orgSlug}</div>
                     </div>
                   </div>
                 )}
@@ -1333,13 +1616,13 @@ export default function OnboardingPage() {
 
             {/* Footer Navigation Controls */}
             {!submitting && (
-              <CardFooter className="flex items-center justify-between border-t border-white/10 pt-6 mt-6">
+              <CardFooter className="flex items-center justify-between border-t border-slate-200 dark:border-white/10 pt-6 mt-6">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={handlePrevStep}
                   disabled={step === 1}
-                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 font-bold disabled:opacity-30"
+                  className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 font-bold disabled:opacity-30"
                 >
                   <ArrowLeft className="h-4 w-4" /> Back
                 </Button>
@@ -1348,7 +1631,7 @@ export default function OnboardingPage() {
                   <Button
                     type="button"
                     onClick={handleNextStep}
-                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs h-11 px-6 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center gap-2"
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs h-11 px-6 rounded-xl shadow-md flex items-center gap-2"
                   >
                     Continue to Step {step + 1} <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -1356,7 +1639,7 @@ export default function OnboardingPage() {
                   <Button
                     type="button"
                     onClick={handleCompleteOnboarding}
-                    className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs h-11 px-8 rounded-xl shadow-[0_0_25px_rgba(16,185,129,0.5)] flex items-center gap-2"
+                    className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs h-11 px-8 rounded-xl shadow-md flex items-center gap-2"
                   >
                     Provision & Launch HQ Boardroom <Rocket className="h-4 w-4" />
                   </Button>

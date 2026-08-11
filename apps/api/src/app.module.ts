@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as path from 'path';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { LoggerModule } from 'nestjs-pino';
 import { BullModule } from '@nestjs/bullmq';
@@ -33,11 +34,18 @@ import { HttpCacheInterceptor } from './common/interceptors/cache.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 import { EmailModule } from './modules/email/email.module';
+import { PublicModule } from './modules/public/public.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      // Explicitly resolve the .env path relative to this file so it loads correctly
+      // regardless of which directory Turbo/Node starts the process from
+      envFilePath: [
+        path.resolve(__dirname, '..', '.env'),        // dist/../.env = apps/api/.env
+        path.resolve(__dirname, '..', '..', '.env'),  // fallback: monorepo root .env
+      ],
     }),
     LoggerModule.forRoot({
       pinoHttp: {
@@ -50,6 +58,7 @@ import { EmailModule } from './modules/email/email.module';
     EventEmitterModule.forRoot(),
     RedisModule,
     EmailModule,
+    PublicModule,
     AuthModule,
     DatabaseModule,
     HealthModule,
@@ -84,7 +93,7 @@ import { EmailModule } from './modules/email/email.module';
       {
         name: 'short',
         ttl: 1000,
-        limit: 3,
+        limit: 20, // 20 req/s — 3 was too tight for onboarding multi-call flows
       },
       {
         name: 'medium',
@@ -99,7 +108,7 @@ import { EmailModule } from './modules/email/email.module';
       {
         name: 'auth',
         ttl: 60000,
-        limit: 5,
+        limit: 20, // raised from 5 — onboarding has legitimate auth calls per step
       },
     ]),
   ],

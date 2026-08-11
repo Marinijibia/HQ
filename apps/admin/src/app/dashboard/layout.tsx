@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!hasAccess) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-6 text-left relative overflow-hidden select-none">
+      <div className="flex min-h-screen items-center justify-center bg-background p-6 text-left relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(#1e1e24_1px,transparent_1px)] [background-size:16px_16px] opacity-10 dark:opacity-20 pointer-events-none"></div>
         <Card className="max-w-md w-full border border-rose-500/20 bg-card-bg/60 backdrop-blur-xl rounded-[2rem] p-8 shadow-2xl space-y-6 text-foreground">
           <div className="flex items-center gap-4">
@@ -87,7 +87,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </p>
 
           <div className="flex gap-4 pt-2">
-            <a href="http://localhost:3000/dashboard" className="w-full">
+            <a href="https://hq.netify.ng/dashboard" className="w-full">
               <Button className="w-full bg-[#0A84FF] hover:bg-blue-600 text-white rounded-xl text-xs font-bold py-2.5 flex items-center justify-center gap-2">
                 <ArrowLeft size={14} /> Back to User Workspace
               </Button>
@@ -104,21 +104,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="absolute inset-0 bg-[radial-gradient(#1e1e24_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none"></div>
 
       {/* Glassmorphic left sidebar */}
-      <aside className="w-64 border-r border-white/10 bg-[#06070B]/95 backdrop-blur-2xl flex flex-col justify-between shrink-0 relative z-20 shadow-2xl">
+      <aside className="w-64 border-r border-slate-200 dark:border-white/10 bg-white/90 dark:bg-[#06070B]/95 backdrop-blur-2xl flex flex-col justify-between shrink-0 relative z-20 shadow-2xl">
         <div>
           {/* Header logo */}
-          <div className="h-16 px-6 border-b border-white/10 flex items-center justify-between">
+          <div className="h-16 px-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="p-[1.5px] bg-gradient-to-tr from-cyan-500 via-blue-600 to-purple-600 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)]">
                 <img src="/logo.png" alt="HQ Admin Logo" className="h-7 w-7 rounded-md object-cover" />
               </div>
-              <span className="font-black text-sm tracking-tight text-white flex items-center gap-1.5">
-                SUPER ADMIN <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent text-[9px] font-black uppercase">CORE</span>
+              <span className="font-black text-sm tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                SUPER ADMIN <span className="bg-gradient-to-r from-cyan-500 to-purple-500 dark:from-cyan-400 dark:to-purple-400 bg-clip-text text-transparent text-[9px] font-black uppercase">CORE</span>
               </span>
             </div>
             <button
               onClick={toggleTheme}
-              className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
             >
               {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
             </button>
@@ -126,7 +126,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Nav list */}
           <nav className="p-4 space-y-1.5 text-left">
-            <div className="text-[9px] font-black text-cyan-400/80 uppercase tracking-widest px-3 mb-2 flex items-center justify-between">
+            <div className="text-[9px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest px-3 mb-2 flex items-center justify-between">
               <span>ADMIN CONTROL</span>
               <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
             </div>
@@ -139,11 +139,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   href={item.href}
                   className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     isActive
-                      ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.15)] font-black'
-                      : 'text-slate-400 border border-transparent hover:bg-white/5 hover:text-white'
+                      ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.15)] font-black'
+                      : 'text-slate-600 dark:text-slate-400 border border-transparent hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <Icon size={16} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-cyan-400' : ''} />
+                  <Icon size={16} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-cyan-500 dark:text-cyan-400' : ''} />
                   {item.name}
                 </Link>
               );

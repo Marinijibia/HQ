@@ -41,6 +41,16 @@ RUN yarn workspace @hq/database prisma:generate
 
 RUN yarn workspace @hq/api build
 
+
+# Migration image: retains Prisma CLI
+FROM installer AS migrator
+
+CMD ["yarn", "workspace", "@hq/database", "prisma:migrate:deploy"]
+
+
+# Production dependencies only
+FROM installer AS production-installer
+
 RUN yarn install --production=true --ignore-scripts
 
 ############################################################
@@ -67,9 +77,13 @@ COPY --from=installer --chown=nestjs:nodejs /app/apps/api/node_modules ./apps/ap
 COPY --from=installer --chown=nestjs:nodejs /app/packages/database ./packages/database
 COPY --from=installer --chown=nestjs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=installer --chown=nestjs:nodejs /app/apps/api/package.json ./apps/api/package.json
+COPY --chown=nestjs:nodejs apps/api/docker-entrypoint.sh ./docker-entrypoint.sh
+
+RUN chmod +x ./docker-entrypoint.sh
 
 USER nestjs
 
 EXPOSE 5000
 
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "apps/api/dist/main.js"]

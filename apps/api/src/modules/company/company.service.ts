@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { UserRepository } from '../user/user.repository';
+import { AuthService } from '../auth/auth.service';
 import { OnboardCompanyDto } from './dto/onboard-company.dto';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class CompanyService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userRepository: UserRepository,
+    private readonly authService: AuthService,
   ) {}
 
   async checkSlugAvailability(slug: string): Promise<{ available: boolean; slug: string }> {
@@ -118,6 +120,7 @@ export class CompanyService {
             data: {
               companyId: company.id,
               role: 'ORGANIZATION_OWNER',
+              ...(dto.userDisplayName && { displayName: dto.userDisplayName, name: dto.userDisplayName }),
             },
             include: {
               company: true,
@@ -133,7 +136,15 @@ export class CompanyService {
           };
         }
 
+        const token = this.authService.signJwt({
+          uid: user.id,
+          email: user.email,
+          companyId: company.id,
+          role: 'ORGANIZATION_OWNER',
+        });
+
         return {
+          token,
           company,
           departments: createdDepartments,
           executives: createdExecutives,

@@ -72,22 +72,22 @@ function AdminResetPasswordForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0C] text-foreground flex flex-col justify-between font-sans relative overflow-hidden select-none animate-in fade-in duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0A0A0C] text-foreground flex flex-col justify-between font-sans relative overflow-hidden animate-in fade-in duration-300">
       {/* Background Decorative Grid */}
       <div className="absolute inset-0 bg-[radial-gradient(#f43f5e_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
 
       {/* Header */}
-      <header className="flex h-16 items-center justify-between border-b border-rose-500/20 px-6 sm:px-12 bg-black/40 backdrop-blur-xl relative z-10">
+      <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-rose-500/20 px-6 sm:px-12 bg-white/80 dark:bg-black/40 backdrop-blur-xl relative z-10">
         <div className="flex items-center space-x-2.5">
           <div className="p-[1.5px] bg-gradient-to-tr from-rose-600 via-rose-500 to-rose-900 rounded-xl shadow-[0_0_15px_rgba(244,63,94,0.25)]">
             <img src="/logo.png" alt="HQ Admin Logo" className="h-7 w-7 rounded-[10px] object-cover" />
           </div>
-          <span className="font-extrabold tracking-tight text-foreground text-sm flex items-center gap-1.5">
-            HQ <span className="text-rose-500 text-xs font-bold font-mono hidden sm:inline">| Admin Security Gateway</span>
+          <span className="font-extrabold tracking-tight text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
+            HQ <span className="text-rose-600 dark:text-rose-500 text-xs font-bold font-mono hidden sm:inline">| Admin Security Gateway</span>
           </span>
         </div>
 
-        <Badge variant="outline" className="border-rose-500/30 bg-rose-500/10 text-rose-400 text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+        <Badge variant="outline" className="border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-ping" />
           TOKEN VALIDATED
         </Badge>
@@ -96,31 +96,31 @@ function AdminResetPasswordForm() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10 my-8">
         <div className="w-full max-w-md">
-          <Card className="border border-rose-500/30 bg-[#0D0D12]/90 backdrop-blur-2xl shadow-[0_0_40px_rgba(244,63,94,0.15)] text-foreground p-4 rounded-3xl relative overflow-hidden transition-all duration-300">
+          <Card className="border border-slate-200 dark:border-rose-500/30 bg-white dark:bg-[#0D0D12]/90 backdrop-blur-2xl shadow-xl dark:shadow-[0_0_40px_rgba(244,63,94,0.15)] text-foreground p-4 rounded-3xl relative overflow-hidden transition-all duration-300">
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-rose-500 via-purple-500 to-amber-500" />
 
             {error && (
-              <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs p-3.5 m-2 mb-0 rounded-2xl text-center font-semibold flex items-center justify-center gap-2">
-                <ShieldAlert className="h-4 w-4 text-rose-400 shrink-0" /> {error}
+              <div className="bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs p-3.5 m-2 mb-0 rounded-2xl text-center font-semibold flex items-center justify-center gap-2">
+                <ShieldAlert className="h-4 w-4 text-rose-500 shrink-0" /> {error}
               </div>
             )}
 
             {success && (
-              <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs p-3.5 m-2 mb-0 rounded-2xl text-center font-semibold flex items-center justify-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" /> {success}
+              <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs p-3.5 m-2 mb-0 rounded-2xl text-center font-semibold flex items-center justify-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" /> {success}
               </div>
             )}
 
             <CardHeader className="text-left space-y-2 pt-2">
-              <div className="flex items-center gap-2 text-[10px] font-black text-rose-400 uppercase tracking-widest bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-md w-fit">
+              <div className="flex items-center gap-2 text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-md w-fit">
                 <Sparkles className="h-3 w-3" />
                 STAFF CREDENTIAL UPDATE
               </div>
-              <CardTitle className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+              <CardTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
                 <KeyRound className="h-6 w-6 text-rose-500" />
                 Set New Admin Password
               </CardTitle>
-              <CardDescription className="text-slate-400 text-xs leading-relaxed">
+              <CardDescription className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
                 Choose a strong new password for your admin staff account.
               </CardDescription>
             </CardHeader>
@@ -128,26 +128,26 @@ function AdminResetPasswordForm() {
             <CardContent className="space-y-4 pt-2">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">New Password</label>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">New Password</label>
                   <Input
                     type="password"
                     placeholder="••••••••••••"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
-                    className="bg-black/50 border-rose-500/20 text-white h-11 text-xs focus-visible:ring-rose-500 rounded-xl"
+                    className="bg-slate-50 dark:bg-black/50 border-slate-200 dark:border-rose-500/20 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-rose-500 rounded-xl placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Confirm New Password</label>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Confirm New Password</label>
                   <Input
                     type="password"
                     placeholder="••••••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    className="bg-black/50 border-rose-500/20 text-white h-11 text-xs focus-visible:ring-rose-500 rounded-xl"
+                    className="bg-slate-50 dark:bg-black/50 border-slate-200 dark:border-rose-500/20 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-rose-500 rounded-xl placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   />
                 </div>
 

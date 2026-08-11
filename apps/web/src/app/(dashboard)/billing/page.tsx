@@ -52,8 +52,8 @@ export default function BillingPage() {
       txHash: '0xa4e98f7210b9d88a1c903ef88d011f01c9b2e652a',
       amountUsdc: 150.0,
       vendorName: 'AWS Compute Cluster Proxy',
-      serviceDescription: 'Auto-scaled GPU cluster allocation for CMO Campaign Rendering',
-      executiveRole: 'Julian Vance (CFO)',
+      serviceDescription: 'Auto-scaled GPU cluster allocation for campaign rendering',
+      executiveRole: 'Teema (Ops Director & CoS)',
       status: 'COMPLETED',
       timestamp: '2 hours ago',
     },
@@ -63,7 +63,7 @@ export default function BillingPage() {
       amountUsdc: 45.5,
       vendorName: 'SerpAPI Data Oracle',
       serviceDescription: 'Market intelligence data feed query settlement',
-      executiveRole: 'Marcus Sterling (CTO)',
+      executiveRole: 'Legal (Compliance Director)',
       status: 'COMPLETED',
       timestamp: '8 hours ago',
     },
@@ -83,7 +83,7 @@ export default function BillingPage() {
           amountUsdc: 85.0,
           vendorName: 'Vercel Edge Network Node',
           serviceDescription: 'Instant serverless bandwidth allocation for AI Boardroom API',
-          executiveRole: 'Julian Vance (CFO)',
+          executiveRole: 'Teema (Ops Director & CoS)',
         }),
       });
 
@@ -309,7 +309,7 @@ export default function BillingPage() {
                     USDC Autonomous Executive Treasury
                   </h2>
                   <p className="text-xs text-foreground/70 max-w-2xl leading-relaxed">
-                    Empowers C-Suite AI Executives (CFO Julian Vance & CTO Marcus Sterling) to autonomously negotiate, sign, and settle vendor transactions in USDC without human friction.
+                    Empowers C-Suite AI Executives (Teema Operations & Legal Director) to autonomously negotiate, sign, and settle vendor transactions in USDC without human friction.
                   </p>
                 </div>
 
@@ -506,7 +506,7 @@ export default function BillingPage() {
                   <div>
                     <span className="text-xs text-yellow-500 font-bold uppercase tracking-wider block">Contextual Upgrade Alert</span>
                     <p className="text-xs text-white font-semibold leading-relaxed mt-1">
-                      Elena (CEO): &ldquo;Your Technology team has reached today&apos;s mission capacity on the Starter plan. Upgrading to Professional unlocks unlimited parallel executions.&rdquo;
+                      Asad (CEO): &ldquo;Your team has reached today&apos;s mission capacity on the Starter plan. Upgrading to Growth unlocks unlimited parallel executions.&rdquo;
                     </p>
                   </div>
                 </div>

@@ -128,7 +128,7 @@ export default function IntegrationsHubPage() {
           status: 'Healthy',
           lastSync: 'Just now',
           dataTransferred: '0 KB',
-          executives: ['CEO Elena'],
+          executives: ['Asad (CEO)', 'Teema (Ops)'],
         };
         setConnectedApps(prev => [...prev, newApp]);
         setCatalog(prev => prev.filter(c => c.id !== selectedCatalogItem.id));
@@ -488,7 +488,7 @@ export default function IntegrationsHubPage() {
                 <span className="text-foreground/45 text-xs uppercase tracking-wider block">Assigned AI Co-Pilots</span>
                 <p className="text-[9.5px] text-foreground/50 leading-relaxed font-semibold mt-0.5">Toggle which AI Executives are authorized to query datasets from this service.</p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  {['CEO Elena', 'CTO Hiroshi', 'CFO Sophia', 'CMO Amara'].map(exec => {
+                  {['Asad (CEO)', 'Teema (Ops)', 'Legal (Compliance)', 'Mr. Intelligence'].map(exec => {
                     const active = selectedApp.executives.includes(exec);
                     return (
                       <button

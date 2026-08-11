@@ -88,7 +88,7 @@ export default function NotFound() {
             </div>
             <div>
               <p className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                Elena Rostova (CEO) <span className="text-[10px] text-cyan-500 font-semibold">• Direct Assistance</span>
+                Asad (CEO) <span className="text-[10px] text-cyan-500 font-semibold">• Direct Assistance</span>
               </p>
               <p className="text-xs text-slate-600 dark:text-foreground/70 mt-1 leading-normal font-normal">
                 "No worries! I've routed you back to HQ. Use the search bar below or pick a core boardroom section."

@@ -163,19 +163,19 @@ export default function PricingPage() {
       {/* Extra Token Pack Store */}
       <Card className="p-8 border border-emerald-500/30 bg-gradient-to-r from-emerald-950/20 via-card-bg to-cyan-950/20 rounded-2xl shadow-xl text-left space-y-6">
         <div>
-          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/40 text-[10px] uppercase font-black tracking-widest">
+          <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 text-[10px] uppercase font-black tracking-widest">
             NON-EXPIRING TOP-UPS
           </Badge>
-          <h2 className="text-2xl font-black text-white mt-1">Extra AI Token Credit Packs</h2>
-          <p className="text-xs text-foreground/60 leading-relaxed mt-1">
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">Extra AI Token Credit Packs</h2>
+          <p className="text-xs text-slate-600 dark:text-foreground/60 leading-relaxed mt-1">
             Ran out of monthly tokens? Purchase instant extra token packs that never expire and add capacity directly to your AI Executives.
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <div className="p-5 border border-card-border bg-card-bg rounded-xl flex items-center justify-between">
+          <div className="p-5 border border-slate-200 dark:border-card-border bg-white dark:bg-card-bg rounded-xl flex items-center justify-between shadow-xs">
             <div>
-              <span className="text-lg font-black text-white block">+25,000 Extra AI Tokens</span>
+              <span className="text-lg font-black text-slate-900 dark:text-white block">+25,000 Extra AI Tokens</span>
               <span className="text-xs text-emerald-400 font-bold">$5.00 USD</span>
             </div>
             <Link href={user ? '/billing' : '/login'}>

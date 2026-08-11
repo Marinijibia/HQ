@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Body,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -10,7 +11,6 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import {
-  FirebaseLoginDto,
   SendOtpDto,
   VerifyOtpDto,
   ForgotPasswordDto,
@@ -39,11 +39,25 @@ export class AuthController {
     return this.authService.registerSuperAdmin(dto.name, dto.email, dto.password);
   }
 
-  @Post('firebase')
+  @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Authenticate with Firebase ID Token and resolve HQ user context' })
-  async authenticateFirebase(@Body() dto: FirebaseLoginDto) {
-    return this.authService.authenticateFirebase(dto.idToken);
+  @ApiOperation({ summary: 'Sign in with email and password — returns HQ session token' })
+  async login(@Body() dto: { email: string; password: string }) {
+    return this.authService.login(dto.email, dto.password);
+  }
+
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a new HQ account with email and password' })
+  async register(@Body() dto: { email: string; password: string; name?: string }) {
+    return this.authService.register(dto.email, dto.password, dto.name);
+  }
+
+  @Post('set-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Set account password using an OTP session token — upgrades to full auth token' })
+  async setPassword(@Body() dto: { sessionToken: string; password: string }) {
+    return this.authService.setPassword(dto.sessionToken, dto.password);
   }
 
   @Post('send-otp')
@@ -55,7 +69,7 @@ export class AuthController {
 
   @Post('verify-otp')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Verify 6-digit OTP code' })
+  @ApiOperation({ summary: 'Verify 6-digit OTP code — returns server session token' })
   async verifyOtp(@Body() dto: VerifyOtpDto) {
     return this.authService.verifyOtp(dto.email, dto.code);
   }
@@ -74,11 +88,25 @@ export class AuthController {
     return this.authService.resetPassword(dto.token, dto.newPassword);
   }
 
+  @Post('track-incomplete-onboarding')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Log incomplete onboarding lead with INCOMPLETE_ONBOARDING tag for re-engagement' })
+  async trackIncompleteOnboarding(@Body() dto: { email: string; step?: number; orgName?: string; completed?: boolean }) {
+    return this.authService.trackIncompleteOnboarding(dto.email, dto.step, dto.orgName, dto.completed);
+  }
+
+  @Get('check-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Check if an email address is already registered in HQ' })
+  async checkEmail(@Query('email') email: string) {
+    return this.authService.checkEmail(email || '');
+  }
+
   @Get('me')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current authenticated user profile and permissions' })
   async getProfile(@CurrentUser() user: any) {
-    return this.authService.getProfile(user.uid);
+    return this.authService.getMe(user.uid);
   }
 }

@@ -2,20 +2,39 @@
 
 import * as React from 'react';
 import { Card, Badge, Button, Input } from '@hq/ui';
-import { Mail, Calendar } from 'lucide-react';
+import { Mail, Calendar, Sparkles } from 'lucide-react';
+import { toast } from '../../../components/toast';
 
 export default function ContactPage() {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [message, setMessage] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccess(true);
-    setName('');
-    setEmail('');
-    setMessage('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/public/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message }),
+      });
+      if (res.ok) {
+        setSuccess(true);
+        toast.success(`✉️ Contact message sent! Dispatched to sales@netify.ng`);
+        setName('');
+        setEmail('');
+        setMessage('');
+      } else {
+        toast.error('Failed sending message. Please try again.');
+      }
+    } catch {
+      toast.error('Network error submitting contact request.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,7 +68,7 @@ export default function ContactPage() {
           <div className="space-y-4">
             <div className="flex items-center space-x-3 text-sm text-foreground/75">
               <Mail className="h-5 w-5 text-hq-blue" />
-              <span>sales@hq.corp</span>
+              <span>sales@netify.ng</span>
             </div>
             <div className="flex items-center space-x-3 text-sm text-foreground/75">
               <Calendar className="h-5 w-5 text-hq-purple" />

@@ -701,6 +701,3 @@ ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_created_by_id_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "org_intelligence" ADD CONSTRAINT "org_intelligence_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-Done in 37.10s.
-Done in 39.23s.

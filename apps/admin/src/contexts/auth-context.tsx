@@ -1,190 +1,173 @@
 'use client';
 
 import * as React from 'react';
-import {
-  User,
-  signInWithPopup,
-  signOut,
-  onIdTokenChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface DbUser {
+  id: string;
+  email: string;
+  name?: string;
+  displayName?: string;
+  role: string;
+  companyId?: string;
+}
 
 interface AuthContextType {
-  user: User | null;
-  dbUser: any | null;
+  user: DbUser | null;
+  dbUser: DbUser | null;
   loading: boolean;
+  token: string | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
-  signUpWithEmail: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
-  token: string | null;
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const TOKEN_KEY = 'hq_admin_token';
+
+function isTokenExpired(token: string): boolean {
+  try {
+    const payloadB64 = token.split('.')[0];
+    const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+    if (!payload?.exp) return true;
+    return Date.now() / 1000 >= payload.exp - 60;
+  } catch {
+    return true;
+  }
+}
+
+function getStoredToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token || isTokenExpired(token)) {
+    if (token) localStorage.removeItem(TOKEN_KEY);
+    return null;
+  }
+  return token;
+}
+
+// ─── Context ──────────────────────────────────────────────────────────────────
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = React.useState<User | null>(null);
-  const [dbUser, setDbUser] = React.useState<any | null>(null);
+  const [user, setUser] = React.useState<DbUser | null>(null);
+  const [dbUser, setDbUser] = React.useState<DbUser | null>(null);
   const [token, setToken] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => {
-    const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        try {
-          const idToken = await currentUser.getIdToken(false);
-          setToken(idToken);
-          const res = await fetch('/api/users/me', {
-            headers: {
-              'Authorization': `Bearer ${idToken}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          if (res.ok) {
-            const dbUserData = await res.json();
-            setDbUser(dbUserData);
-            console.log('PostgreSQL User Profile Synced:', dbUserData);
-          }
-        } catch (err) {
-          console.warn('Error lazy-syncing user profile with postgres backend:', err);
-        }
-      } else {
+  const fetchMe = React.useCallback(async (authToken: string) => {
+    try {
+      const res = await fetch('/api/users/me', {
+        headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const loaded = data.user || data.profile || (data.id ? data : null);
+        setUser(loaded);
+        setDbUser(loaded);
+      } else if (res.status === 401) {
+        // Token rejected — clear session
+        localStorage.removeItem(TOKEN_KEY);
         setToken(null);
+        setUser(null);
         setDbUser(null);
       }
+    } catch (err) {
+      console.warn('Admin fetchMe notice:', err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const stored = getStoredToken();
+    if (stored) {
+      setToken(stored);
+      fetchMe(stored).finally(() => setLoading(false));
+    } else {
       setLoading(false);
-    });
+    }
 
-    let originalFetch: typeof window.fetch | null = null;
+    // Fetch interceptor: auto-attach Bearer token + handle 401 redirect
     if (typeof window !== 'undefined') {
-      originalFetch = window.fetch;
-      window.fetch = async (input, init) => {
-        let response = await originalFetch!(input, init);
-        
-        const urlString = typeof input === 'string' ? input : (input as any)?.url || '';
-        const isInternalApi = urlString.startsWith('/api') || urlString.includes('/api/') || urlString.includes('localhost');
+      const originalFetch = window.fetch.bind(window);
+      window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+        const urlString = typeof input === 'string' ? input : (input as Request)?.url || String(input);
+        const isInternalApi =
+          urlString.startsWith('/api') ||
+          urlString.includes('localhost') ||
+          urlString.includes('hq.netify.ng');
 
-        if (response.status === 401 && isInternalApi) {
-          const currentUser = auth.currentUser;
-          if (currentUser) {
-            try {
-              const newToken = await currentUser.getIdToken(true);
-              setToken(newToken);
-              
-              const headers = new Headers((init && init.headers) || {});
-              headers.set('Authorization', `Bearer ${newToken}`);
-              
-              response = await originalFetch!(input, {
-                ...(init || {}),
-                headers,
-              });
-              
-              if (response.status === 401 && isInternalApi) {
-                await signOut(auth);
-                if (!window.location.pathname.startsWith('/login')) {
-                  window.location.href = '/login';
-                }
-              }
-            } catch (refreshError) {
-              console.error('Fetch interceptor: failed refreshing token:', refreshError);
-              await signOut(auth);
-              if (!window.location.pathname.startsWith('/login')) {
-                window.location.href = '/login';
-              }
+        if (isInternalApi) {
+          const currentToken = localStorage.getItem(TOKEN_KEY);
+          if (currentToken && !isTokenExpired(currentToken)) {
+            init = init || {};
+            const headers = new Headers(init.headers || {});
+            if (!headers.has('Authorization')) {
+              headers.set('Authorization', `Bearer ${currentToken}`);
             }
-          } else {
-            if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
-              window.location.href = '/login';
-            }
+            init = { ...init, headers };
           }
         }
+
+        const response = await originalFetch(input, init);
+
+        // On 401: clear session and redirect to login
+        if (
+          response.status === 401 &&
+          isInternalApi &&
+          !window.location.pathname.startsWith('/login')
+        ) {
+          localStorage.removeItem(TOKEN_KEY);
+          window.location.href = '/login';
+        }
+
         return response;
       };
     }
-
-    const tokenRefreshInterval = setInterval(async () => {
-      if (auth.currentUser) {
-        try {
-          const freshToken = await auth.currentUser.getIdToken(false);
-          setToken(freshToken);
-        } catch (e) {
-          console.warn('Interval refresh: token update failed:', e);
-        }
-      }
-    }, 10 * 60 * 1000);
-
-    return () => {
-      unsubscribe();
-      clearInterval(tokenRefreshInterval);
-      if (typeof window !== 'undefined' && originalFetch) {
-        window.fetch = originalFetch;
-      }
-    };
-  }, []);
-
-  const signInWithGoogle = async () => {
-    setLoading(true);
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error('Firebase Auth sign in failed:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchMe]);
 
   const signInWithEmail = async (email: string, pass: string) => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Login failed');
+      localStorage.setItem(TOKEN_KEY, data.token);
+      setToken(data.token);
+      setUser(data.user);
+      setDbUser(data.user);
+      await fetchMe(data.token);
     } catch (error) {
-      console.error('Firebase Auth sign in with email failed:', error);
+      console.error('Admin sign-in error:', error);
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const signUpWithEmail = async (email: string, pass: string) => {
-    setLoading(true);
-    try {
-      await createUserWithEmailAndPassword(auth, email, pass);
-    } catch (error) {
-      console.error('Firebase Auth sign up with email failed:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
+  const signInWithGoogle = async () => {
+    // Google SSO removed — Firebase dependency removed
+    throw new Error('Google sign-in is not available. Please use email and password.');
   };
 
   const logout = async () => {
-    setLoading(true);
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Firebase Auth sign out failed:', error);
-    } finally {
-      setLoading(false);
+    localStorage.removeItem(TOKEN_KEY);
+    setToken(null);
+    setUser(null);
+    setDbUser(null);
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+      window.location.href = '/login';
     }
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        dbUser,
-        loading,
-        signInWithGoogle,
-        signInWithEmail,
-        signUpWithEmail,
-        logout,
-        token,
-      }}
-    >
+    <AuthContext.Provider value={{ user, dbUser, loading, token, signInWithGoogle, signInWithEmail, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -192,8 +175,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = React.useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 }

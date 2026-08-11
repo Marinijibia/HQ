@@ -58,7 +58,7 @@ export default function NotificationsInboxPage() {
   const [prefSavedToast, setPrefSavedToast] = React.useState(false);
 
   // Dynamic branding
-  const [ceoName, setCeoName] = React.useState('Elena Rostova');
+  const [ceoName, setCeoName] = React.useState('Asad');
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
 
   const [notifications, setNotifications] = React.useState<Notification[]>([]);

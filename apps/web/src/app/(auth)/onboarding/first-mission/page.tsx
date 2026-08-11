@@ -229,10 +229,10 @@ export default function FirstMissionPage() {
                   <Loader2 className="h-4 w-4 animate-spin text-hq-blue" />
                   <span>
                     {currentStep === 1
-                      ? 'CEO Elena is compiling strategical bounds...'
+                      ? 'Asad (CEO) is compiling strategic bounds...'
                       : currentStep === 2
-                        ? 'Copywriter Linus is drafting social posts copy...'
-                        : 'Legal Director Fiona is auditing compliance guidelines...'}
+                        ? 'Teema (Ops Director) is structuring execution nodes...'
+                        : 'Legal (Compliance Director) is auditing compliance guidelines...'}
                   </span>
                 </div>
               )}

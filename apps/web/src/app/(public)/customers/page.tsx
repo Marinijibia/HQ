@@ -10,14 +10,14 @@ export default function CustomersPage() {
       company: 'Logix Energy UK',
       industry: 'Logistics & Supply Chain',
       quote:
-        'HQ restructured our regional distribution planning pipelines in under 3 hours, achieving a 14% improvement in dispatch accuracy.',
+        'HQ restructured our regional distribution planning pipelines in under 3 hours, achieving a 14% improvement in dispatch accuracy with Teema (Ops Director).',
       author: 'David Vance, Chief Logistics Officer',
     },
     {
       company: 'Veloce Software',
       industry: 'SaaS & Development',
       quote:
-        'Having Linus Kovacs as our virtual Engineering Director allowed our startup to continuously verify packages checks, avoiding critical build failures.',
+        'Having CEO Asad and our AI Resource Director allowed our team to continuously verify release packages and compliance checks.',
       author: 'Sarah Jenkins, Founder & CTO',
     },
   ];
@@ -48,7 +48,7 @@ export default function CustomersPage() {
             key={idx}
             className="p-7 space-y-6 border border-card-border bg-card-bg shadow-[var(--card-shadow)] card-transition relative text-left"
           >
-            <Quote className="absolute top-6 right-6 h-8 w-8 text-hq-blue/10" />
+            <Quote className="absolute top-6 right-6 h-8 w-8 text-hq-blue/10 pointer-events-none" />
             <div className="space-y-1.5">
               <span className="text-[10px] text-hq-cyan font-bold tracking-wider uppercase">
                 {t.company} — {t.industry}

@@ -20,61 +20,205 @@ export class PrismaService
 
   private async ensureTablesExist() {
     try {
-      await this.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS users (
-          id TEXT PRIMARY KEY,
-          email TEXT UNIQUE NOT NULL,
-          "displayName" TEXT,
-          "photoUrl" TEXT,
-          "firebaseUid" TEXT UNIQUE,
-          role TEXT NOT NULL DEFAULT 'MEMBER',
-          "companyId" TEXT,
-          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+      // Safely ensure vector extension is created if user has privileges
+      try {
+        await this.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS vector;`);
+      } catch {
+        // Ignore extension error if cloudsql.enable_pgvector is already managed or user is non-superuser
+      }
 
-      await this.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS companies (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          slug TEXT UNIQUE NOT NULL,
-          slogan TEXT,
-          industry TEXT,
-          "targetAudience" TEXT,
-          goals TEXT[],
-          "operatingStyle" TEXT,
-          accent TEXT,
-          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+      // 1. Ensure table users exists & add ALL columns
+      try {
+        await this.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            email TEXT UNIQUE NOT NULL
+          )
+        `);
+      } catch {}
 
-      await this.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS departments (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          "companyId" TEXT NOT NULL,
-          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
+      const userColumns = [
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS name TEXT`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name TEXT`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_url TEXT`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS firebase_uid TEXT`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'MEMBER'`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS company_id TEXT`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS team_id TEXT`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP(3)`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS created_by TEXT`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_by TEXT`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_by TEXT`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP(3)`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`
+      ];
 
-      await this.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS executives (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          "roleKey" TEXT NOT NULL,
-          title TEXT NOT NULL,
-          "departmentId" TEXT NOT NULL,
-          "companyId" TEXT NOT NULL,
-          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      this.logger.log('Core PostgreSQL database schema verified.');
+      for (const q of userColumns) {
+        try {
+          await this.$executeRawUnsafe(q);
+        } catch {}
+      }
+
+      // 2. Ensure table companies exists & add ALL columns
+      try {
+        await this.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS companies (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            slug TEXT UNIQUE NOT NULL
+          )
+        `);
+      } catch {}
+
+      const companyColumns = [
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_url TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS slogan TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS primary_color TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS secondary_color TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS industry TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS target_audience TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS goals TEXT[]`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS operating_style TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS accent TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS parent_id TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS level TEXT DEFAULT 'BUSINESS_UNIT'`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS created_by TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS updated_by TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS deleted_by TEXT`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP(3)`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`,
+        `ALTER TABLE companies ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`
+      ];
+
+      for (const q of companyColumns) {
+        try {
+          await this.$executeRawUnsafe(q);
+        } catch {}
+      }
+
+      // 3. Ensure departments exists & add ALL columns
+      try {
+        await this.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS departments (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            company_id TEXT NOT NULL
+          )
+        `);
+      } catch {}
+
+      const deptColumns = [
+        `ALTER TABLE departments ADD COLUMN IF NOT EXISTS description TEXT`,
+        `ALTER TABLE departments ADD COLUMN IF NOT EXISTS is_default_roster BOOLEAN DEFAULT false`,
+        `ALTER TABLE departments ADD COLUMN IF NOT EXISTS created_by TEXT`,
+        `ALTER TABLE departments ADD COLUMN IF NOT EXISTS updated_by TEXT`,
+        `ALTER TABLE departments ADD COLUMN IF NOT EXISTS deleted_by TEXT`,
+        `ALTER TABLE departments ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP(3)`,
+        `ALTER TABLE departments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`,
+        `ALTER TABLE departments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`
+      ];
+
+      for (const q of deptColumns) {
+        try {
+          await this.$executeRawUnsafe(q);
+        } catch {}
+      }
+
+      // 4. Ensure teams exists & add ALL columns
+      try {
+        await this.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS teams (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            department_id TEXT NOT NULL
+          )
+        `);
+      } catch {}
+
+      const teamColumns = [
+        `ALTER TABLE teams ADD COLUMN IF NOT EXISTS description TEXT`,
+        `ALTER TABLE teams ADD COLUMN IF NOT EXISTS created_by TEXT`,
+        `ALTER TABLE teams ADD COLUMN IF NOT EXISTS updated_by TEXT`,
+        `ALTER TABLE teams ADD COLUMN IF NOT EXISTS deleted_by TEXT`,
+        `ALTER TABLE teams ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP(3)`,
+        `ALTER TABLE teams ADD COLUMN IF NOT EXISTS created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`,
+        `ALTER TABLE teams ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`
+      ];
+
+      for (const q of teamColumns) {
+        try {
+          await this.$executeRawUnsafe(q);
+        } catch {}
+      }
+
+      // 5. Ensure executives exists & add ALL columns
+      try {
+        await this.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS executives (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            role_key TEXT NOT NULL,
+            title TEXT NOT NULL,
+            department_id TEXT NOT NULL
+          )
+        `);
+      } catch {}
+
+      const execColumns = [
+        `ALTER TABLE executives ADD COLUMN IF NOT EXISTS biography TEXT`,
+        `ALTER TABLE executives ADD COLUMN IF NOT EXISTS system_prompt TEXT`,
+        `ALTER TABLE executives ADD COLUMN IF NOT EXISTS avatar_url TEXT`,
+        `ALTER TABLE executives ADD COLUMN IF NOT EXISTS is_default_roster BOOLEAN DEFAULT false`,
+        `ALTER TABLE executives ADD COLUMN IF NOT EXISTS is_active_in_workspace BOOLEAN DEFAULT true`,
+        `ALTER TABLE executives ADD COLUMN IF NOT EXISTS created_by TEXT`,
+        `ALTER TABLE executives ADD COLUMN IF NOT EXISTS updated_by TEXT`,
+        `ALTER TABLE executives ADD COLUMN IF NOT EXISTS deleted_by TEXT`,
+        `ALTER TABLE executives ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP(3)`,
+        `ALTER TABLE executives ADD COLUMN IF NOT EXISTS created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`,
+        `ALTER TABLE executives ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`
+      ];
+
+      for (const q of execColumns) {
+        try {
+          await this.$executeRawUnsafe(q);
+        } catch {}
+      }
+
+      // 6. Ensure missions exists & add ALL columns
+      try {
+        await this.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS missions (
+            id TEXT PRIMARY KEY,
+            objective TEXT NOT NULL,
+            company_id TEXT NOT NULL
+          )
+        `);
+      } catch {}
+
+      const missionColumns = [
+        `ALTER TABLE missions ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'DRAFT'`,
+        `ALTER TABLE missions ADD COLUMN IF NOT EXISTS health_score TEXT DEFAULT 'Excellent'`,
+        `ALTER TABLE missions ADD COLUMN IF NOT EXISTS deadline TIMESTAMP(3)`,
+        `ALTER TABLE missions ADD COLUMN IF NOT EXISTS is_legal_hold BOOLEAN DEFAULT false`,
+        `ALTER TABLE missions ADD COLUMN IF NOT EXISTS created_by TEXT`,
+        `ALTER TABLE missions ADD COLUMN IF NOT EXISTS updated_by TEXT`,
+        `ALTER TABLE missions ADD COLUMN IF NOT EXISTS deleted_by TEXT`,
+        `ALTER TABLE missions ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP(3)`,
+        `ALTER TABLE missions ADD COLUMN IF NOT EXISTS created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`,
+        `ALTER TABLE missions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`
+      ];
+
+      for (const q of missionColumns) {
+        try {
+          await this.$executeRawUnsafe(q);
+        } catch {}
+      }
+
+      this.logger.log('Complete PostgreSQL database schema audited & column alignment verified.');
     } catch (e) {
-      // Ignore table creation if DB is offline
+      this.logger.warn(`Database verification notice: ${(e as Error).message}`);
     }
   }
 

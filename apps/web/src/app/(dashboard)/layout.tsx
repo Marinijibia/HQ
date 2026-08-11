@@ -4,7 +4,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/auth-context';
-import { auth } from '../../lib/firebase';
 import { useSidebarStore } from '../../stores/sidebarStore';
 import { useCommandPaletteStore } from '../../stores/commandPaletteStore';
 import { GuideModeProvider } from '../../contexts/guide-mode-context';
@@ -115,9 +114,9 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer);
   }, []);
 
-  // Robust login redirect: Only redirect if authentication has resolved AND no Firebase currentUser exists
+  // Robust login redirect: Only redirect if authentication has resolved AND no user exists
   React.useEffect(() => {
-    if (!loading && !user && !auth.currentUser && isTimedOut) {
+    if (!loading && !user && isTimedOut) {
       router.push('/login');
     }
   }, [loading, user, isTimedOut, router]);

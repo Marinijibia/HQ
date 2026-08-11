@@ -1,16 +1,6 @@
 import { IsString, IsNotEmpty, IsEmail, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class FirebaseLoginDto {
-  @ApiProperty({
-    description: 'Firebase ID Token obtained from client-side Firebase Auth',
-    example: 'eyJhbGciOiJSUzI1NiIsImtpZCI6...',
-  })
-  @IsString()
-  @IsNotEmpty()
-  idToken!: string;
-}
-
 export class SendOtpDto {
   @ApiProperty({
     description: 'Email address to send verification OTP',

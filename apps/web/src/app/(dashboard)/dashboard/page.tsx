@@ -24,6 +24,7 @@ import {
   ShieldAlert,
   Loader2,
   CheckCircle2,
+  Bot,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { useGuideMode } from '../../../contexts/guide-mode-context';
@@ -171,7 +172,7 @@ export default function DashboardPage() {
   }, [token]);
 
   // Derived Values
-  const ceoExec = executives.find(e => e.title?.toLowerCase().includes('ceo') || e.name?.includes('Asad') || e.name?.includes('Elena'));
+  const ceoExec = executives.find(e => e.title?.toLowerCase().includes('ceo') || e.name?.includes('Asad'));
   const ceoName = ceoExec ? ceoExec.name : 'Asad (CEO)';
   const ownerName = user?.displayName || user?.email?.split('@')[0] || 'Executive Owner';
   const hqName = orgSettings.companyName;

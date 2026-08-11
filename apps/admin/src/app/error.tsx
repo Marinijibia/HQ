@@ -17,7 +17,7 @@ export default function AdminError({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-background text-foreground flex items-center justify-center p-6 select-none animate-in fade-in duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-background text-foreground flex items-center justify-center p-6 animate-in fade-in duration-300">
       <Card className="max-w-md w-full border border-rose-500/20 bg-white dark:bg-card-bg p-8 rounded-3xl shadow-xl text-center space-y-6">
         <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center mx-auto border border-rose-500/20 shadow-inner">
           <ShieldAlert size={32} />

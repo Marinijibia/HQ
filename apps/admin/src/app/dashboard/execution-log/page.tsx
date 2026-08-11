@@ -193,7 +193,7 @@ export default function CoreKernelConsolePage() {
   };
 
   return (
-    <div className="space-y-8 select-none text-foreground pb-12">
+    <div className="space-y-8 text-foreground pb-12">
       {/* Title */}
       <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 border-b border-card-border pb-4">
         <div>

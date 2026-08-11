@@ -228,7 +228,7 @@ export default function DiscussionThreadWorkspacePage() {
       };
     }
     return {
-      name: 'Elena Rostova (Chief Executive Officer)',
+      name: 'Asad (Chief Executive Officer)',
       title: 'Chief Executive Officer (CEO)',
       roleKey: 'ceo',
     };
@@ -456,9 +456,9 @@ export default function DiscussionThreadWorkspacePage() {
 
             <div className="flex flex-wrap gap-1.5">
               {[
-                { name: 'Elena Rostova (Chief Executive Officer)', role: 'ceo' },
-                { name: 'Marcus Vance (Chief Technology Officer)', role: 'cto' },
-                { name: 'Arthur Pendelton (Chief Financial Officer)', role: 'cfo' },
+                { name: 'Asad (Chief Executive Officer)', role: 'ceo' },
+                { name: 'Teema (Operations Director & CoS)', role: 'cos' },
+                { name: 'Legal (Compliance Director)', role: 'legal' },
               ].map((lead) => {
                 const accent = getRoleAccent(lead.role);
                 return (

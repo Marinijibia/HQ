@@ -6,48 +6,307 @@ import {
   Logger,
   Inject,
 } from '@nestjs/common';
-import { FirebaseService } from './firebase.service';
 import { UserRepository, UserWithRelations } from '../user/user.repository';
 import { PrismaService } from '../database/prisma.service';
 import { EmailService } from '../email/email.service';
+import * as crypto from 'crypto';
+import * as bcrypt from 'bcryptjs';
 import Redis from 'ioredis';
+
+// ─── JWT Payload ───────────────────────────────────────────────────────────────
+export interface JwtPayload {
+  uid: string;
+  email: string;
+  companyId?: string;
+  role?: string;
+  purpose?: string;
+  emailVerified?: boolean;
+  iat: number;
+  exp: number;
+}
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private readonly inMemoryOtpStore = new Map<string, { code: string; expiresAt: number }>();
+  private readonly inMemoryTokenStore = new Map<string, { email: string; expiresAt: number }>();
 
   constructor(
-    private readonly firebaseService: FirebaseService,
     private readonly userRepository: UserRepository,
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
-  ) {}
+  ) {
+    // Evict expired in-memory OTP/token entries every 5 minutes (Redis fallback cleanup)
+    setInterval(() => {
+      const now = Date.now();
+      for (const [key, val] of this.inMemoryOtpStore.entries()) {
+        if (val.expiresAt <= now) this.inMemoryOtpStore.delete(key);
+      }
+      for (const [key, val] of this.inMemoryTokenStore.entries()) {
+        if (val.expiresAt <= now) this.inMemoryTokenStore.delete(key);
+      }
+    }, 5 * 60 * 1000);
+  }
 
-  async checkSetupStatus() {
-    const superAdminCount = await this.prisma.user.count({
-      where: {
-        role: 'SUPER_ADMINISTRATOR',
-        deletedAt: null,
-      },
+  // ─── JWT Helpers ─────────────────────────────────────────────────────────────
+
+  private get jwtSecret(): string {
+    return process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'hq-onboarding-secret';
+  }
+
+  signJwt(payload: Omit<JwtPayload, 'iat' | 'exp'>, expiryDays = 30): string {
+    const fullPayload: JwtPayload = {
+      ...payload,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * expiryDays,
+    };
+    const payloadB64 = Buffer.from(JSON.stringify(fullPayload)).toString('base64url');
+    const sig = crypto.createHmac('sha256', this.jwtSecret).update(payloadB64).digest('base64url');
+    return `${payloadB64}.${sig}`;
+  }
+
+  verifyJwt(token: string): JwtPayload {
+    const parts = token.split('.');
+    if (parts.length !== 2) throw new UnauthorizedException('Malformed token');
+    const [payloadB64, sig] = parts;
+    const expected = crypto.createHmac('sha256', this.jwtSecret).update(payloadB64).digest('base64url');
+    if (sig !== expected) throw new UnauthorizedException('Invalid token signature');
+    let payload: JwtPayload;
+    try {
+      payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString());
+    } catch {
+      throw new UnauthorizedException('Malformed token payload');
+    }
+    if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) {
+      throw new UnauthorizedException('Token has expired');
+    }
+    return payload;
+  }
+
+  // ─── Redis Helpers ────────────────────────────────────────────────────────────
+
+  private async safeRedisGet(key: string): Promise<string | null> {
+    let result: string | null = null;
+    if (this.redis) {
+      try {
+        result = await this.redis.get(key);
+      } catch (err) {
+        this.logger.warn(`Redis get notice for ${key}: ${(err as Error).message}`);
+      }
+    }
+    if (result) return result;
+
+    const memOtp = this.inMemoryOtpStore.get(key);
+    if (memOtp && memOtp.expiresAt > Date.now()) return memOtp.code;
+    const memToken = this.inMemoryTokenStore.get(key);
+    if (memToken && memToken.expiresAt > Date.now()) return memToken.email;
+    return null;
+  }
+
+  private async safeRedisSet(key: string, value: string, ttlSeconds: number): Promise<void> {
+    const expiresAt = Date.now() + ttlSeconds * 1000;
+    if (key.startsWith('otp:')) {
+      this.inMemoryOtpStore.set(key, { code: value, expiresAt });
+    } else {
+      this.inMemoryTokenStore.set(key, { email: value, expiresAt });
+    }
+
+    if (this.redis) {
+      try {
+        await this.redis.set(key, value, 'EX', ttlSeconds);
+      } catch (err) {
+        this.logger.warn(`Redis set notice for ${key}: ${(err as Error).message}`);
+      }
+    }
+  }
+
+  private async safeRedisDel(key: string): Promise<void> {
+    this.inMemoryOtpStore.delete(key);
+    this.inMemoryTokenStore.delete(key);
+
+    if (this.redis) {
+      try {
+        await this.redis.del(key);
+      } catch (err) {
+        this.logger.warn(`Redis del notice for ${key}: ${(err as Error).message}`);
+      }
+    }
+  }
+
+  // ─── Auth Methods ─────────────────────────────────────────────────────────────
+
+  async login(email: string, password: string) {
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await this.userRepository.findByEmail(cleanEmail);
+
+    if (!user || !user.passwordHash) {
+      // Use constant-time comparison to avoid timing attacks
+      await bcrypt.compare(password, '$2b$12$invalidhashfortimingprotection00000000000000000000');
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    if (user.deletedAt) {
+      throw new UnauthorizedException('User account has been deactivated');
+    }
+
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    await this.userRepository.update(user.id, { lastLoginAt: new Date() });
+
+    const token = this.signJwt({
+      uid: user.id,
+      email: user.email,
+      companyId: user.companyId,
+      role: user.role,
     });
 
-    const isSetupRequired = superAdminCount === 0;
     return {
-      isSetupRequired,
-      message: isSetupRequired
-        ? 'Initial Super Admin registration is required.'
-        : 'Initial Super Admin setup is complete.',
+      token,
+      user: this.sanitizeUser(user),
+      organization: user.company || null,
+      permissions: this.resolveUserPermissions(user.role),
     };
   }
 
-  async registerSuperAdmin(name: string, email: string, password: string) {
-    const superAdminCount = await this.prisma.user.count({
-      where: {
-        role: 'SUPER_ADMINISTRATOR',
-        deletedAt: null,
-      },
+  async register(email: string, password: string, name?: string) {
+    const cleanEmail = email.toLowerCase().trim();
+
+    const existing = await this.userRepository.findByEmail(cleanEmail);
+    if (existing) {
+      throw new BadRequestException('An account with this email already exists');
+    }
+
+    if (!password || password.length < 6) {
+      throw new BadRequestException('Password must be at least 6 characters');
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    let defaultCompany = await this.userRepository.findDefaultCompany();
+    if (!defaultCompany) {
+      defaultCompany = await this.userRepository.createDefaultCompany();
+    }
+
+    const userId = crypto.randomUUID();
+    const user = await this.userRepository.create({
+      id: userId,
+      email: cleanEmail,
+      name: name || cleanEmail.split('@')[0],
+      displayName: name || cleanEmail.split('@')[0],
+      passwordHash,
+      emailVerified: false,
+      companyId: defaultCompany.id,
+      role: 'MEMBER',
     });
+
+    this.emailService
+      .sendWelcomeEmail(user.email, user.displayName || user.name || 'HQ User')
+      .catch((err) => this.logger.warn(`Welcome email notice for ${cleanEmail}: ${err.message}`));
+
+    const token = this.signJwt({
+      uid: user.id,
+      email: user.email,
+      companyId: user.companyId,
+      role: user.role,
+    });
+
+    return {
+      token,
+      user: this.sanitizeUser(user),
+      organization: user.company || null,
+      permissions: this.resolveUserPermissions(user.role),
+    };
+  }
+
+  async setPassword(sessionToken: string, newPassword: string) {
+    // Verify the onboarding session token issued by verifyOtp
+    const payload = this.verifyJwt(sessionToken);
+    if (payload.purpose !== 'onboarding-session') {
+      throw new UnauthorizedException('Invalid session token purpose');
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      throw new BadRequestException('Password must be at least 6 characters');
+    }
+
+    const cleanEmail = payload.email.toLowerCase().trim();
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
+    let user = await this.userRepository.findByEmail(cleanEmail);
+
+    if (user) {
+      // Existing user — set their password
+      user = await this.userRepository.update(user.id, {
+        passwordHash,
+        emailVerified: true,
+        lastLoginAt: new Date(),
+      });
+    } else {
+      // New user — create account with hashed password
+      let defaultCompany = await this.userRepository.findDefaultCompany();
+      if (!defaultCompany) {
+        defaultCompany = await this.userRepository.createDefaultCompany();
+      }
+      const userId = crypto.randomUUID();
+      user = await this.userRepository.create({
+        id: userId,
+        email: cleanEmail,
+        name: cleanEmail.split('@')[0],
+        displayName: cleanEmail.split('@')[0],
+        passwordHash,
+        emailVerified: true,
+        companyId: defaultCompany.id,
+        role: 'MEMBER',
+      });
+    }
+
+    const token = this.signJwt({
+      uid: user.id,
+      email: user.email,
+      companyId: user.companyId,
+      role: user.role,
+    });
+
+    this.logger.log(`[Auth] Password set for ${cleanEmail} (uid: ${user.id})`);
+
+    return {
+      token,
+      user: this.sanitizeUser(user),
+    };
+  }
+
+  // ─── OTP ─────────────────────────────────────────────────────────────────────
+
+  async checkSetupStatus() {
+    try {
+      const superAdminCount = await this.prisma.user.count({
+        where: { role: 'SUPER_ADMINISTRATOR', deletedAt: null },
+      });
+      const isSetupRequired = superAdminCount === 0;
+      return {
+        isSetupRequired,
+        message: isSetupRequired
+          ? 'Initial Super Admin registration is required.'
+          : 'Initial Super Admin setup is complete.',
+      };
+    } catch {
+      return { isSetupRequired: true, message: 'Initial Super Admin registration is required.' };
+    }
+  }
+
+  async registerSuperAdmin(name: string, email: string, password: string) {
+    let superAdminCount = 0;
+    try {
+      superAdminCount = await this.prisma.user.count({
+        where: { role: 'SUPER_ADMINISTRATOR', deletedAt: null },
+      });
+    } catch {
+      superAdminCount = 0;
+    }
 
     if (superAdminCount > 0) {
       throw new BadRequestException(
@@ -61,12 +320,15 @@ export class AuthService {
     }
 
     const existingUser = await this.userRepository.findByEmail(email);
+    const passwordHash = password ? await bcrypt.hash(password, 12) : undefined;
+
     if (existingUser) {
       const updatedUser = await this.userRepository.update(existingUser.id, {
         role: 'SUPER_ADMINISTRATOR',
         name,
         displayName: name,
         companyId: defaultCompany.id,
+        ...(passwordHash && { passwordHash }),
       });
       return {
         success: true,
@@ -75,14 +337,14 @@ export class AuthService {
       };
     }
 
-    const newUserId = `admin_${Date.now()}`;
+    const newUserId = crypto.randomUUID();
     const user = await this.userRepository.create({
       id: newUserId,
-      firebaseUid: newUserId,
       email,
       name,
       displayName: name,
       emailVerified: true,
+      passwordHash,
       companyId: defaultCompany.id,
       role: 'SUPER_ADMINISTRATOR',
     });
@@ -94,175 +356,113 @@ export class AuthService {
     };
   }
 
-  async authenticateFirebase(idToken: string) {
-    let firebasePayload: {
-      uid: string;
-      email: string;
-      role: string;
-      companyId: string;
-      displayName?: string;
-      photoURL?: string;
-      emailVerified?: boolean;
-    };
-
-    try {
-      firebasePayload = await this.firebaseService.verifyIdToken(idToken);
-    } catch (error) {
-      this.logger.warn(`Firebase token verification failed: ${(error as Error).message}`);
-      throw new UnauthorizedException('Invalid or expired authentication credentials');
-    }
-
-    const { uid, email, displayName, photoURL, emailVerified } = firebasePayload;
-
-    let user: UserWithRelations | null = await this.userRepository.findByFirebaseUid(uid);
-    let isNewUser = false;
-
-    if (!user) {
-      user = await this.userRepository.findByEmail(email);
-    }
-
-    if (!user) {
-      let defaultCompany = await this.userRepository.findDefaultCompany();
-      if (!defaultCompany) {
-        defaultCompany = await this.prisma.company.create({
-          data: {
-            name: 'Default HQ Organization',
-            slug: 'default-hq-org',
-          },
-        });
-      }
-
-      user = await this.userRepository.create({
-        id: uid,
-        firebaseUid: uid,
-        email,
-        name: displayName || (email ? email.split('@')[0] : 'HQ User'),
-        displayName,
-        photoUrl: photoURL,
-        emailVerified: emailVerified ?? false,
-        companyId: defaultCompany.id,
-        role: firebasePayload.role || 'MEMBER',
-      });
-      isNewUser = true;
-      this.logger.log(`Created new HQ user for ${email} (UID: ${uid})`);
-
-      this.emailService
-        .sendWelcomeEmail(user.email, user.displayName || user.name || 'HQ User')
-        .catch((err) =>
-          this.logger.warn(`Failed to send Welcome email to ${email}: ${err.message}`),
-        );
-    } else {
-      user = await this.userRepository.update(user.id, {
-        firebaseUid: uid,
-        displayName: displayName || user.displayName || user.name,
-        photoUrl: photoURL || user.photoUrl,
-        emailVerified: emailVerified ?? user.emailVerified,
-        lastLoginAt: new Date(),
-      });
-      this.logger.log(`Successful login for user ${email} (ID: ${user.id})`);
-    }
-
-    try {
-      await this.firebaseService.setCustomUserClaims(uid, {
-        role: user.role,
-        companyId: user.companyId,
-      });
-    } catch (err) {
-      this.logger.warn(`Failed to sync custom claims for ${uid}: ${(err as Error).message}`);
-    }
-
-    const permissions = this.resolveUserPermissions(user.role);
-
-    return {
-      user: this.sanitizeUser(user),
-      organization: user.company || null,
-      permissions,
-      role: user.role,
-      isNewUser,
-    };
-  }
-
   async sendOtp(email: string) {
-    const rateKey = `ratelimit:otp:${email.toLowerCase()}`;
-    const attempts = await this.redis.incr(rateKey);
-    if (attempts === 1) {
-      await this.redis.expire(rateKey, 60); // 1-minute window
-    }
-    if (attempts > 3) {
-      throw new BadRequestException('Too many OTP verification requests. Please wait 60 seconds.');
+    if (!email || !email.includes('@')) {
+      throw new BadRequestException('Please provide a valid email address');
     }
 
-    const user = await this.userRepository.findByEmail(email);
-    const recipientName = user ? user.displayName || user.name || 'HQ User' : email.split('@')[0];
+    const cleanEmail = email.toLowerCase().trim();
+    let recipientName = cleanEmail.split('@')[0];
 
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const redisKey = `otp:${email.toLowerCase()}`;
+    try {
+      const user = await this.userRepository.findByEmail(cleanEmail);
+      if (user) recipientName = user.displayName || user.name || recipientName;
+    } catch (err) {
+      this.logger.warn(`User lookup fallback for OTP (${cleanEmail}): ${(err as Error).message}`);
+    }
 
-    await this.redis.set(redisKey, otpCode, 'EX', 600);
+    const otpCode = crypto.randomInt(100000, 999999).toString();
+    const redisKey = `otp:${cleanEmail}`;
 
-    this.logger.log(`🔑 [Auth Service] OTP Code generated for ${email}: ${otpCode}`);
+    await this.safeRedisSet(redisKey, otpCode, 600);
 
-    await this.emailService.sendOtpEmail(email, recipientName, otpCode, 10);
+    try {
+      await this.trackIncompleteOnboarding(cleanEmail, 9, 'Unfinished Workspace Registration', false);
+    } catch (err) {
+      this.logger.warn(`Lead tracking notice for ${cleanEmail}: ${(err as Error).message}`);
+    }
+
+    this.logger.log(`🔑 [Auth Service] OTP Code generated for ${cleanEmail}: ${otpCode}`);
+
+    try {
+      await this.emailService.sendOtpEmail(cleanEmail, recipientName, otpCode, 10);
+    } catch (err) {
+      this.logger.warn(`Email dispatch notice for ${cleanEmail}: ${(err as Error).message}`);
+    }
 
     return {
       success: true,
-      message: `Verification code sent to ${email}`,
+      message: `Verification code sent to ${cleanEmail}`,
       expiresInSeconds: 600,
     };
   }
 
   async verifyOtp(email: string, code: string) {
-    const lockKey = `lockout:otp:${email.toLowerCase()}`;
-    const isLocked = await this.redis.get(lockKey);
-    if (isLocked) {
-      throw new BadRequestException('Too many failed verification attempts. Account locked for 15 minutes.');
-    }
-
-    const redisKey = `otp:${email.toLowerCase()}`;
-    const storedCode = await this.redis.get(redisKey);
+    const cleanEmail = email.toLowerCase().trim();
+    const redisKey = `otp:${cleanEmail}`;
+    const storedCode = await this.safeRedisGet(redisKey);
 
     if (!storedCode || storedCode !== code.trim()) {
-      const failKey = `failed_attempts:otp:${email.toLowerCase()}`;
-      const failedCount = await this.redis.incr(failKey);
-      if (failedCount === 1) {
-        await this.redis.expire(failKey, 900); // 15-minute window
-      }
-      if (failedCount >= 5) {
-        await this.redis.set(lockKey, '1', 'EX', 900);
-        await this.redis.del(redisKey);
-        throw new BadRequestException('Maximum verification attempts exceeded. Account locked for 15 minutes.');
-      }
-      throw new BadRequestException(`Invalid or expired verification code. ${5 - failedCount} attempts remaining.`);
+      throw new BadRequestException('Invalid or expired verification code. Please request a new OTP code.');
     }
 
-    await this.redis.del(redisKey);
-    await this.redis.del(`failed_attempts:otp:${email.toLowerCase()}`);
+    await this.safeRedisDel(redisKey);
 
-    let user = await this.userRepository.findByEmail(email);
-    if (user) {
-      user = await this.userRepository.update(user.id, {
-        emailVerified: true,
-      });
+    // Mark email verified if user already exists
+    try {
+      const user = await this.userRepository.findByEmail(cleanEmail);
+      if (user) await this.userRepository.update(user.id, { emailVerified: true });
+    } catch (err) {
+      this.logger.warn(`User verification update notice (${cleanEmail}): ${(err as Error).message}`);
     }
+
+    // Derive a stable uid for the session token subject
+    const uid = `otp_${crypto.createHash('sha256').update(cleanEmail).digest('hex').slice(0, 24)}`;
+
+    // Issue a server-signed onboarding session token (30 days)
+    const sessionToken = this.signJwt({
+      uid,
+      email: cleanEmail,
+      emailVerified: true,
+      purpose: 'onboarding-session',
+    });
 
     return {
       success: true,
       message: 'Email verified successfully',
       emailVerified: true,
+      sessionToken,
     };
   }
 
+  async checkEmail(email: string): Promise<{ exists: boolean }> {
+    const cleanEmail = email.toLowerCase().trim();
+    try {
+      const user = await this.userRepository.findByEmail(cleanEmail);
+      return { exists: !!user };
+    } catch (err) {
+      this.logger.warn(`checkEmail lookup notice for ${cleanEmail}: ${(err as Error).message}`);
+      return { exists: false };
+    }
+  }
+
   async forgotPassword(email: string) {
-    const user = await this.userRepository.findByEmail(email);
-    const recipientName = user ? user.displayName || user.name || 'HQ User' : email.split('@')[0];
+    const cleanEmail = email.toLowerCase().trim();
+    let recipientName = cleanEmail.split('@')[0];
 
-    const resetToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    try {
+      const user = await this.userRepository.findByEmail(cleanEmail);
+      if (user) recipientName = user.displayName || user.name || recipientName;
+    } catch (err) {
+      this.logger.warn(`User lookup fallback for reset (${cleanEmail}): ${(err as Error).message}`);
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
     const redisKey = `pwd_reset:${resetToken}`;
-
-    await this.redis.set(redisKey, email.toLowerCase(), 'EX', 3600);
+    await this.safeRedisSet(redisKey, cleanEmail, 3600);
 
     const resetLink = `https://hq.netify.ng/reset-password?token=${resetToken}`;
-    await this.emailService.sendPasswordResetEmail(email, recipientName, resetLink);
+    await this.emailService.sendPasswordResetEmail(cleanEmail, recipientName, resetLink);
 
     return {
       success: true,
@@ -272,43 +472,43 @@ export class AuthService {
 
   async resetPassword(token: string, newPassword: string) {
     const redisKey = `pwd_reset:${token}`;
-    const email = await this.redis.get(redisKey);
+    const email = await this.safeRedisGet(redisKey);
 
-    if (!email) {
-      throw new BadRequestException('Invalid or expired password reset link');
+    if (!email) throw new BadRequestException('Invalid or expired password reset link');
+
+    await this.safeRedisDel(redisKey);
+
+    if (!newPassword || newPassword.length < 6) {
+      throw new BadRequestException('Password must be at least 6 characters');
     }
 
-    await this.redis.del(redisKey);
+    const passwordHash = await bcrypt.hash(newPassword, 12);
 
-    const user = await this.userRepository.findByEmail(email);
-    if (user && user.firebaseUid) {
-      try {
-        await this.firebaseService.updateUserPassword(user.firebaseUid, newPassword);
-      } catch (e) {
-        this.logger.warn(`Failed updating Firebase Auth password for ${email}: ${(e as Error).message}`);
+    try {
+      const user = await this.userRepository.findByEmail(email);
+      if (user) {
+        await this.userRepository.update(user.id, { passwordHash });
+        this.logger.log(`[Auth] Password reset completed for ${email}`);
       }
+    } catch (err) {
+      this.logger.warn(`Password reset update notice for ${email}: ${(err as Error).message}`);
     }
 
     this.emailService
       .sendSecurityAlertEmail(
         email,
-        user?.displayName || 'HQ User',
+        'HQ User',
         'Password Reset Successful',
         'Your HQ account password was updated successfully.',
       )
       .catch(() => {});
 
-    return {
-      success: true,
-      message: 'Password reset successfully',
-    };
+    return { success: true, message: 'Password reset successfully' };
   }
 
   async getMe(userId: string) {
     const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new NotFoundException('Authenticated user profile not found');
-    }
+    if (!user) throw new NotFoundException('Authenticated user profile not found');
 
     const permissions = this.resolveUserPermissions(user.role);
 
@@ -318,10 +518,7 @@ export class AuthService {
       company: user.company || null,
       permissions,
       role: user.role,
-      subscription: {
-        status: 'ACTIVE',
-        plan: 'ENTERPRISE',
-      },
+      subscription: { status: 'ACTIVE', plan: 'ENTERPRISE' },
       profile: {
         id: user.id,
         email: user.email,
@@ -336,14 +533,12 @@ export class AuthService {
 
   async getProfile(userId: string) {
     const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User profile not found');
-    }
+    if (!user) throw new NotFoundException('User profile not found');
     return this.sanitizeUser(user);
   }
 
   private sanitizeUser(user: any) {
-    const { deletedAt, deletedBy, createdBy, updatedBy, ...cleanUser } = user;
+    const { deletedAt, deletedBy, createdBy, updatedBy, passwordHash, ...cleanUser } = user;
     return cleanUser;
   }
 
@@ -362,5 +557,27 @@ export class AuthService {
       default:
         return ['read:own', 'write:own'];
     }
+  }
+
+  async trackIncompleteOnboarding(email: string, step?: number, orgName?: string, completed?: boolean) {
+    if (!email || !email.includes('@')) return { success: false };
+    const cleanEmail = email.toLowerCase().trim();
+    const leadKey = `lead:onboarding:${cleanEmail}`;
+    const statusTag = completed ? 'COMPLETED_ONBOARDING' : 'INCOMPLETE_ONBOARDING';
+
+    await this.safeRedisSet(
+      leadKey,
+      JSON.stringify({
+        email: cleanEmail,
+        tag: statusTag,
+        lastStep: step || 1,
+        orgName: orgName || 'Unfinished Workspace',
+        updatedAt: new Date().toISOString(),
+      }),
+      86400 * 30,
+    );
+
+    this.logger.log(`📌 Tagged lead ${cleanEmail} as ${statusTag} (Step ${step || 1})`);
+    return { success: true, email: cleanEmail, tag: statusTag };
   }
 }

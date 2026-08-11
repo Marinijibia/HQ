@@ -9,13 +9,13 @@ export default function CaseStudiesPage() {
     {
       company: 'AeroFreight Logistics',
       metric: '18% Fuel Savings',
-      desc: 'How AeroFreight leveraged Rashid Al-Mansoori (AI Supply Chain Director) to optimize regional dispatch pipeline configurations.',
+      desc: 'How AeroFreight leveraged Teema (Ops Director) and Legal Compliance to optimize regional dispatch pipeline configurations.',
       result: 'Audited 42 region depots under safety checks constraints in 40 seconds.',
     },
     {
       company: 'Zenith SaaS Studio',
       metric: '$40k Monthly Budget Saved',
-      desc: 'How Zenith configured Elena Rostova (CEO AI) to review and validate weekly campaign spending rate thresholds.',
+      desc: 'How Zenith configured CEO Asad and our CFO Engine to review and validate weekly campaign spending rate thresholds.',
       result: 'Automated Slack compliance alerts flag budget entitlement leaks instantly.',
     },
   ];
