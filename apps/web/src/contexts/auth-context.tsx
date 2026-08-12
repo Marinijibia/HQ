@@ -120,6 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearSession = React.useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem('hq_session_token');
+    localStorage.removeItem('hq_onboarding_draft');
     setToken(null);
     setUser(null);
     setDbUser(null);

@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   Zap,
 } from 'lucide-react';
+import { toast } from '../../../components/toast';
+import { useAuth } from '../../../contexts/auth-context';
 
 interface ExecutiveItem {
   id: string;
@@ -56,6 +58,7 @@ interface MarketplaceItem {
 }
 
 export default function AdminCmsPage() {
+  const { token } = useAuth();
   const [activeTab, setActiveTab] = React.useState<'executives' | 'departments' | 'research' | 'marketplace'>('executives');
   const [loading, setLoading] = React.useState(false);
   const [executives, setExecutives] = React.useState<ExecutiveItem[]>([]);
@@ -90,40 +93,36 @@ export default function AdminCmsPage() {
   const fetchCmsData = React.useCallback(async () => {
     setLoading(true);
     try {
-      // Mock API fallbacks & fetch
-      const execRes = await fetch('/api/cms/executives').catch(() => null);
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = {};
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+      const [execRes, deptRes, mktRes] = await Promise.all([
+        fetch('/api/cms/executives', { headers }).catch(() => null),
+        fetch('/api/cms/departments', { headers }).catch(() => null),
+        fetch('/api/marketplace/listings', { headers }).catch(() => null),
+      ]);
+
       if (execRes && execRes.ok) {
         const data = await execRes.json();
         setExecutives(data);
-      } else {
-        // Fallback default list for demo UI
-        setExecutives([
-          { id: '1', name: 'Asad', roleKey: 'ceo', title: 'Chief Executive Officer (CEO)', isDefaultRoster: true, isActiveInWorkspace: true, systemPrompt: 'You are Asad, Chief Executive Officer. Lead strategic decisions...' },
-          { id: '2', name: 'Teema', roleKey: 'operations_director', title: 'Operations Director', isDefaultRoster: true, isActiveInWorkspace: true, systemPrompt: 'You are Teema, Operations Director...' },
-          { id: '3', name: 'Legal', roleKey: 'legal_compliance_director', title: 'Legal & Compliance Director', isDefaultRoster: true, isActiveInWorkspace: true, systemPrompt: 'You are Legal, Legal Director...' },
-          { id: '4', name: 'Resource Director', roleKey: 'human_resources_director', title: 'Human Resources Director', isDefaultRoster: true, isActiveInWorkspace: true, systemPrompt: 'You are Resource Director...' },
-          { id: '5', name: 'Mr. Intelligence', roleKey: 'public_search_agent', title: 'Public Search Agent', isDefaultRoster: true, isActiveInWorkspace: true, systemPrompt: 'You are Mr. Intelligence...' },
-          { id: '6', name: 'Linus Kovacs', roleKey: 'software_engineering_director', title: 'Software Engineering Director', isDefaultRoster: false, isActiveInWorkspace: false, systemPrompt: 'You are Linus Kovacs...' },
-        ]);
       }
 
-      const mktRes = await fetch('/api/marketplace/listings').catch(() => null);
+      if (deptRes && deptRes.ok) {
+        const deptData = await deptRes.json();
+        setDepartments(deptData);
+      }
+
       if (mktRes && mktRes.ok) {
         const mktData = await mktRes.json();
         setMarketplaceListings(mktData);
-      } else {
-        setMarketplaceListings([
-          { id: 'm1', title: 'Technology & Software Engineering Suite', description: 'Complete Technology Department package featuring Dr. Hiroshi Tanaka (CTO), Linus Kovacs, and Dr. Sarah Ndiaye.', price: 0, currency: 'USD', category: 'Engineering', tags: ['software', 'mobile-app'], listingType: 'DEPARTMENT', downloadsCount: 1420, rating: 4.9 },
-          { id: 'm2', title: 'Sales & Growth Marketing Department', description: 'Comprehensive marketing and sales conversion engine.', price: 0, currency: 'USD', category: 'Marketing', tags: ['marketing', 'sales'], listingType: 'DEPARTMENT', downloadsCount: 980, rating: 4.8 },
-          { id: 'm3', title: 'Finance & Capital Strategy Suite', description: 'Financial forecasting, ledger accounting, and Stripe integration.', price: 29, currency: 'USD', category: 'Finance', tags: ['finance', 'cfo'], listingType: 'DEPARTMENT', downloadsCount: 512, rating: 5.0 },
-        ]);
       }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   React.useEffect(() => {
     fetchCmsData();
@@ -140,9 +139,13 @@ export default function AdminCmsPage() {
     if (!selectedExec) return;
     setLoading(true);
     try {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
       await fetch(`/api/cms/executives/${selectedExec.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           name: editName,
           title: editTitle,
@@ -158,31 +161,41 @@ export default function AdminCmsPage() {
         ),
       );
       setTrainStatus(`Updated prompt and settings for ${editName}!`);
+      toast.success(`Updated system prompt & persona for ${editName}`);
     } catch (e) {
-      console.error(e);
+      toast.error('Failed to update executive prompt');
     } finally {
       setLoading(false);
     }
   };
 
   const handleTrainExec = async () => {
-    if (!selectedExec || !trainFileName || !trainContent) return;
+    if (!selectedExec || !trainFileName || !trainContent) {
+      toast.error('Please provide both document title and knowledge content');
+      return;
+    }
     setLoading(true);
     try {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
       await fetch(`/api/cms/executives/${selectedExec.id}/train`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           filename: trainFileName,
           content: trainContent,
         }),
       }).catch(() => null);
 
-      setTrainStatus(`Vector embedding created for ${selectedExec.name} using "${trainFileName}"!`);
+      const msg = `Vector embedding created for ${selectedExec.name} using "${trainFileName}"!`;
+      setTrainStatus(msg);
+      toast.success(msg);
       setTrainFileName('');
       setTrainContent('');
     } catch (e) {
-      console.error(e);
+      toast.error('Failed to ingest vector embeddings');
     } finally {
       setLoading(false);
     }
@@ -190,15 +203,22 @@ export default function AdminCmsPage() {
 
   const handleTriggerResearch = async () => {
     setResearchStatus(`Mr. Intelligence is searching public web data for "${researchCompany}"...`);
+    toast.info(`Mr. Intelligence dispatched to scrape web research on ${researchCompany}`);
     try {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
       await fetch('/api/intelligence/research', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ companyName: researchCompany }),
       }).catch(() => null);
 
       setTimeout(() => {
-        setResearchStatus(`Public web research completed for "${researchCompany}"! Seeding into CEO Asad's memory bank...`);
+        const msg = `Public web research completed for "${researchCompany}"! Seeding into CEO Asad's memory bank...`;
+        setResearchStatus(msg);
+        toast.success(msg);
       }, 1500);
     } catch (e) {
       setResearchStatus('Research completed.');
@@ -209,6 +229,10 @@ export default function AdminCmsPage() {
     if (!mktTitle || !mktDesc) return;
     setLoading(true);
     try {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
       const newListing = {
         id: `m-${Date.now()}`,
         title: mktTitle,
@@ -224,7 +248,7 @@ export default function AdminCmsPage() {
 
       await fetch('/api/marketplace/publish', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(newListing),
       }).catch(() => null);
 

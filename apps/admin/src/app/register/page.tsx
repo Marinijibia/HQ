@@ -24,6 +24,7 @@ export default function AdminRegisterPage() {
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [checkingSetup, setCheckingSetup] = React.useState(true);
   const [isSetupRequired, setIsSetupRequired] = React.useState<boolean | null>(null);
@@ -53,12 +54,16 @@ export default function AdminRegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !confirmPassword) {
       setError('Please fill in all required fields.');
       return;
     }
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match. Please verify your confirm password.');
       return;
     }
 
@@ -202,6 +207,21 @@ export default function AdminRegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 8 characters..."
+              required
+              minLength={8}
+              className="bg-slate-900 border-slate-800 text-xs text-white h-11 rounded-2xl px-4 focus:border-cyan-500"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider block">
+              Confirm Super Admin Password
+            </label>
+            <Input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter password..."
               required
               minLength={8}
               className="bg-slate-900 border-slate-800 text-xs text-white h-11 rounded-2xl px-4 focus:border-cyan-500"

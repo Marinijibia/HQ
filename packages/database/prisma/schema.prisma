@@ -59,6 +59,9 @@ model Company {
   apiKeys            ApiKey[]
   orgIntelligence    OrgIntelligence?
   marketplaceInstallations MarketplaceInstallation[]
+  orgWallet          OrganizationWallet?
+  agentAllowances    AgentAllowance[]
+  walletTransactions WalletTransaction[]
 
   @@index([parentId])
   @@index([slug])
@@ -571,6 +574,79 @@ model UsageRecord {
 
   @@index([companyId])
   @@map("usage_records")
+}
+
+// ==========================================
+// 8B. HQ WALLET-AS-A-SERVICE & AUTONOMOUS USCS PAYMENTS
+// ==========================================
+
+model HqMasterWallet {
+  id               String   @id @default(uuid()) @db.Uuid
+  circleWalletId   String   @map("circle_wallet_id")
+  circleAddress    String   @map("circle_address")
+  totalUsdcReserve Float    @default(0.0) @map("total_usdc_reserve")
+  status           String   @default("ACTIVE")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("hq_master_wallets")
+}
+
+model OrganizationWallet {
+  id         String   @id @default(uuid()) @db.Uuid
+  balanceUsd Float    @default(0.0) @map("balance_usd")
+  currency   String   @default("USD")
+  status     String   @default("ACTIVE")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  companyId  String   @unique @db.Uuid @map("company_id")
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("organization_wallets")
+}
+
+model AgentAllowance {
+  id                   String   @id @default(uuid()) @db.Uuid
+  executiveId          String?  @map("executive_id") @db.Uuid
+  roleKey              String   @map("role_key")
+  monthlyLimit         Float    @default(500.0) @map("monthly_limit")
+  currentMonthSpent    Float    @default(0.0) @map("current_month_spent")
+  singleTxLimit        Float    @default(50.0) @map("single_tx_limit")
+  requireApprovalAbove Float    @default(50.0) @map("require_approval_above")
+  status               String   @default("ACTIVE")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  companyId            String   @db.Uuid @map("company_id")
+  company              Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, roleKey])
+  @@index([companyId])
+  @@map("agent_allowances")
+}
+
+model WalletTransaction {
+  id                String   @id @default(uuid()) @db.Uuid
+  type              String   // "DEPOSIT", "AGENT_PAYMENT", "WITHDRAWAL", "REFUND"
+  amountUsd         Float    @map("amount_usd")
+  amountUsdc        Float    @map("amount_usdc")
+  vendorAddress     String?  @map("vendor_address")
+  vendorName        String?  @map("vendor_name")
+  circleTxId        String?  @map("circle_tx_id")
+  blockchainTxHash  String?  @map("blockchain_tx_hash")
+  status            String   @default("COMPLETED") // "PENDING", "COMPLETED", "FAILED", "REJECTED_BY_POLICY"
+  description       String?  @map("description")
+  executiveRoleKey  String?  @map("executive_role_key")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  companyId         String   @db.Uuid @map("company_id")
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("wallet_transactions")
 }
 
 // ==========================================

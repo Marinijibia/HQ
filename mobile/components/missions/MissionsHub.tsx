@@ -49,7 +49,7 @@ export function MissionsHub({ onSelectMission }: MissionsHubProps) {
   // Deploy Mission Modal State
   const [showModal, setShowModal] = useState(false);
   const [objective, setObjective] = useState('');
-  const [selectedLead, setSelectedLead] = useState('cto');
+  const [selectedLead, setSelectedLead] = useState('ceo');
   const [deploying, setDeploying] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -400,10 +400,11 @@ export function MissionsHub({ onSelectMission }: MissionsHubProps) {
               </Text>
               <View className="flex-row flex-wrap gap-2">
                 {[
-                  { key: 'cto', name: 'Dr. Hiroshi (CTO)' },
-                  { key: 'cfo', name: 'Sophia (CFO)' },
-                  { key: 'cmo', name: 'Amara (CMO)' },
-                  { key: 'cpo', name: 'Marcus (CPO)' },
+                  { key: 'ceo', name: 'Asad (CEO)' },
+                  { key: 'operations_director', name: 'Teema (Operations)' },
+                  { key: 'legal_compliance_director', name: 'Legal (Compliance)' },
+                  { key: 'human_resources_director', name: 'Resource (HR)' },
+                  { key: 'public_search_agent', name: 'Mr. Intelligence' },
                 ].map((exec) => {
                   const isSelected = selectedLead === exec.key;
                   return (

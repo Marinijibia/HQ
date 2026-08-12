@@ -506,7 +506,7 @@ export default function AnalyticsPage() {
                           key={cat}
                           onClick={() => setActiveCategory(cat)}
                           className={`px-2.5 py-1 rounded text-xs font-bold uppercase ${
-                            activeCategory === cat ? 'bg-background text-white shadow-sm' : 'text-foreground/45 hover:text-foreground'
+                            activeCategory === cat ? 'bg-cyan-500 text-white shadow-sm' : 'text-foreground/45 hover:text-foreground'
                           }`}
                         >
                           {cat}
@@ -711,11 +711,11 @@ export default function AnalyticsPage() {
                         <p className="uppercase tracking-widest text-foreground/45 text-[8.5px]">Graph Relations</p>
                         <div className="flex justify-between">
                           <span className="text-foreground/40">Inbound Connections</span>
-                          <span className="text-white">2 edges</span>
+                          <span className="text-foreground">2 edges</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-foreground/40">Outbound Connections</span>
-                          <span className="text-white">3 edges</span>
+                          <span className="text-foreground">3 edges</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-foreground/40">Verification Confidence</span>

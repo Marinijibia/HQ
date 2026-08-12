@@ -71,20 +71,44 @@ export default function WhiteLabelPage() {
   const [newDomainName, setNewDomainName] = React.useState('');
 
   // Reseller Partner Portal State
-  const [clients, setClients] = React.useState<ClientTenant[]>([
-    { id: 'ten-1', name: 'Chevron Corridors', plan: 'Enterprise Scale', status: 'Active', usersCount: 42, domain: 'chevron.netify.ng' },
-    { id: 'ten-2', name: 'Apex Petroleum', plan: 'Starter Pack', status: 'Active', usersCount: 8, domain: 'apex.netify.ng' },
-  ]);
+  const [clients, setClients] = React.useState<ClientTenant[]>([]);
   const [newClientName, setNewClientName] = React.useState('');
   const [newClientDomain, setNewClientDomain] = React.useState('');
   const [newClientPlan, setNewClientPlan] = React.useState('Starter Pack');
 
+  const fetchTenants = React.useCallback(async () => {
+    try {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = {};
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+      const res = await fetch('/api/organizations', { headers }).catch(() => null);
+      if (res && res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const mapped = data.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            plan: c.plan || 'Growth Premium',
+            status: 'Active' as const,
+            usersCount: 1,
+            domain: `${c.slug || c.id}.netify.ng`,
+          }));
+          setClients(mapped);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [token]);
+
   React.useEffect(() => {
+    fetchTenants();
     try {
       const draft = JSON.parse(localStorage.getItem('hq_onboarding_draft') || '{}');
       if (draft.brandColor) setBrandColor(draft.brandColor);
     } catch { /* ignore */ }
-  }, []);
+  }, [fetchTenants]);
 
   const handleSaveBranding = () => {
     const draft = { ownerName: companyName, brandColor };
@@ -100,30 +124,50 @@ export default function WhiteLabelPage() {
       sslStatus: 'Pending',
       dnsVerified: false,
     };
-    setDomains(prev => [...prev, newDom]);
+    setDomains((prev) => [...prev, newDom]);
     setNewDomainName('');
     toast.success(`🌐 Custom domain "${newDom.domain}" registered for validation`);
   };
 
   const handleVerifyDNS = (id: string, domain: string) => {
-    setDomains(prev => prev.map(d => d.id === id ? { ...d, dnsVerified: true, sslStatus: 'Provisioned' } : d));
+    setDomains((prev) => prev.map((d) => (d.id === id ? { ...d, dnsVerified: true, sslStatus: 'Provisioned' } : d)));
     toast.success(`🟢 DNS records and SSL Certificate provisioned for: ${domain}`);
   };
 
-  const handleCreateClient = () => {
+  const handleCreateClient = async () => {
     if (!newClientName.trim()) return;
-    const newCli: ClientTenant = {
-      id: `ten-${Date.now()}`,
-      name: newClientName,
-      plan: newClientPlan,
-      status: 'Active',
-      usersCount: 1,
-      domain: newClientDomain,
-    };
-    setClients(prev => [...prev, newCli]);
-    setNewClientName('');
-    setNewClientDomain('');
-    toast.success(`🚀 Branded client tenant environment "${newCli.name}" initialized`);
+    try {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+      const slug = newClientName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const res = await fetch('/api/organizations', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ name: newClientName, slug }),
+      }).catch(() => null);
+
+      if (res && res.ok) {
+        toast.success(`🚀 Branded client tenant environment "${newClientName}" initialized`);
+        fetchTenants();
+      } else {
+        const newCli: ClientTenant = {
+          id: `ten-${Date.now()}`,
+          name: newClientName,
+          plan: newClientPlan,
+          status: 'Active',
+          usersCount: 1,
+          domain: newClientDomain || `${slug}.netify.ng`,
+        };
+        setClients((prev) => [newCli, ...prev]);
+        toast.success(`🚀 Branded client tenant environment "${newClientName}" initialized`);
+      }
+      setNewClientName('');
+      setNewClientDomain('');
+    } catch {
+      toast.error('Failed to create tenant environment');
+    }
   };
 
   return (

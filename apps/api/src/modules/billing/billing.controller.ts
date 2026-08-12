@@ -65,6 +65,19 @@ export class BillingController {
     return { success };
   }
 
+  @Post('pay-with-wallet')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Pay monthly subscription or token packs using HQ Organization Wallet balance' })
+  async payWithWallet(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() dto: CheckoutDto,
+  ) {
+    const companyId = req.user.companyId || 'c-default';
+    return this.billingService.paySubscriptionWithWallet(companyId, dto.planCode);
+  }
+
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Paystack Webhooks callback event receiver' })

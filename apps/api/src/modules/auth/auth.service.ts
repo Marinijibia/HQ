@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  InternalServerErrorException,
   Logger,
   Inject,
 } from '@nestjs/common';
@@ -185,22 +186,13 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-
-    let defaultCompany = await this.userRepository.findDefaultCompany();
-    if (!defaultCompany) {
-      defaultCompany = await this.userRepository.createDefaultCompany();
-    }
-
     const userId = crypto.randomUUID();
-    const user = await this.userRepository.create({
-      id: userId,
-      email: cleanEmail,
+
+    const user = await this.userRepository.createIsolatedUserWorkspace(userId, cleanEmail, 'ORGANIZATION_OWNER');
+    await this.userRepository.update(userId, {
+      passwordHash,
       name: name || cleanEmail.split('@')[0],
       displayName: name || cleanEmail.split('@')[0],
-      passwordHash,
-      emailVerified: false,
-      companyId: defaultCompany.id,
-      role: 'MEMBER',
     });
 
     this.emailService
@@ -246,22 +238,17 @@ export class AuthService {
         lastLoginAt: new Date(),
       });
     } else {
-      // New user — create account with hashed password
-      let defaultCompany = await this.userRepository.findDefaultCompany();
-      if (!defaultCompany) {
-        defaultCompany = await this.userRepository.createDefaultCompany();
-      }
+      // New user — create account with hashed password in an isolated workspace
       const userId = crypto.randomUUID();
-      user = await this.userRepository.create({
-        id: userId,
-        email: cleanEmail,
-        name: cleanEmail.split('@')[0],
-        displayName: cleanEmail.split('@')[0],
+      user = await this.userRepository.createIsolatedUserWorkspace(userId, cleanEmail, 'ORGANIZATION_OWNER');
+      user = await this.userRepository.update(userId, {
         passwordHash,
         emailVerified: true,
-        companyId: defaultCompany.id,
-        role: 'MEMBER',
       });
+    }
+
+    if (!user) {
+      throw new InternalServerErrorException('Failed to set password for user account');
     }
 
     const token = this.signJwt({
@@ -314,26 +301,28 @@ export class AuthService {
       );
     }
 
-    let defaultCompany = await this.userRepository.findDefaultCompany();
-    if (!defaultCompany) {
-      defaultCompany = await this.userRepository.createDefaultCompany();
+    if (!password || password.length < 8) {
+      throw new BadRequestException('Password must be at least 8 characters');
     }
 
+    const defaultCompany = await this.userRepository.createDefaultCompany();
+    const companyId = defaultCompany.id;
+
     const existingUser = await this.userRepository.findByEmail(email);
-    const passwordHash = password ? await bcrypt.hash(password, 12) : undefined;
+    const passwordHash = await bcrypt.hash(password, 12);
 
     if (existingUser) {
       const updatedUser = await this.userRepository.update(existingUser.id, {
-        role: 'SUPER_ADMINISTRATOR',
+        role: 'OWNER',
         name,
         displayName: name,
-        companyId: defaultCompany.id,
+        companyId,
         ...(passwordHash && { passwordHash }),
       });
       return {
         success: true,
-        message: 'Existing account elevated to Super Administrator successfully.',
-        user: this.sanitizeUser(updatedUser),
+        message: 'Existing account elevated successfully.',
+        user: this.sanitizeUser(updatedUser || existingUser),
       };
     }
 
@@ -345,13 +334,13 @@ export class AuthService {
       displayName: name,
       emailVerified: true,
       passwordHash,
-      companyId: defaultCompany.id,
-      role: 'SUPER_ADMINISTRATOR',
+      companyId,
+      role: 'OWNER',
     });
 
     return {
       success: true,
-      message: 'Super Administrator registered successfully.',
+      message: 'Administrator registered successfully.',
       user: this.sanitizeUser(user),
     };
   }

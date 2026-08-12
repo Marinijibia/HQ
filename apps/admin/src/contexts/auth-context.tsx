@@ -158,6 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem('hq_onboarding_draft');
+    localStorage.removeItem('hq_admin_user_rank');
     setToken(null);
     setUser(null);
     setDbUser(null);

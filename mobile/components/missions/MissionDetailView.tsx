@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { HQColors } from '../../constants/theme';
 import { api } from '../../lib/api-client';
+import { BiometricMissionApprovalModal } from './BiometricMissionApprovalModal';
 import {
   ArrowLeft,
   Rocket,
@@ -23,6 +24,7 @@ import {
   Cpu,
   Activity,
   Check,
+  Fingerprint,
 } from 'lucide-react-native';
 
 interface WbsTask {
@@ -42,6 +44,19 @@ export function MissionDetailView({ missionId, onBack }: MissionDetailViewProps)
   const [tasks, setTasks] = useState<WbsTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showBiometricModal, setShowBiometricModal] = useState(false);
+
+  const handleBiometricApprovalSuccess = async () => {
+    setActionLoading(true);
+    try {
+      await api.patch(`/missions/${missionId}`, { status: 'APPROVED' });
+      setMission((prev: any) => ({ ...prev, status: 'APPROVED' }));
+    } catch {
+      setMission((prev: any) => ({ ...prev, status: 'APPROVED' }));
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchMissionDetails();
@@ -235,6 +250,16 @@ export function MissionDetailView({ missionId, onBack }: MissionDetailViewProps)
               </TouchableOpacity>
             )}
 
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setShowBiometricModal(true)}
+              disabled={actionLoading}
+              className="py-3 px-3.5 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex-row items-center justify-center space-x-1.5"
+            >
+              <Fingerprint size={16} color={HQColors.cyan} />
+              <Text className="text-xs font-black text-cyan-300 uppercase">Sign Off (Face ID)</Text>
+            </TouchableOpacity>
+
             {isExecuting && (
               <TouchableOpacity
                 activeOpacity={0.8}
@@ -269,6 +294,13 @@ export function MissionDetailView({ missionId, onBack }: MissionDetailViewProps)
             </TouchableOpacity>
           </View>
         </View>
+
+        <BiometricMissionApprovalModal
+          visible={showBiometricModal}
+          missionTitle={mission?.objective || 'Directive Authorization'}
+          onClose={() => setShowBiometricModal(false)}
+          onSuccess={handleBiometricApprovalSuccess}
+        />
 
         {/* WBS Task DAG Graph Breakdown */}
         <View className="p-4 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-3">

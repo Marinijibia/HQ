@@ -45,19 +45,13 @@ export class AuthGuard implements CanActivate {
         payload.companyId = user.companyId || payload.companyId;
         payload.role = user.role || payload.role;
       } else if (payload.email) {
-        // Auto-create user on first authenticated request (e.g. onboarding set-password flow)
-        let defaultCompany = await this.userRepository.findDefaultCompany();
-        if (!defaultCompany) {
-          defaultCompany = await this.userRepository.createDefaultCompany();
-        }
-        const newUser = await this.userRepository.create({
-          id: payload.uid,
-          email: payload.email,
-          name: payload.email.split('@')[0] || 'HQ User',
-          displayName: payload.email.split('@')[0] || 'HQ User',
-          companyId: defaultCompany.id,
-          role: payload.role || 'MEMBER',
-        });
+        // Auto-provision isolated workspace for new user on first authenticated request
+        const newUser = await this.userRepository.createIsolatedUserWorkspace(
+          payload.uid,
+          payload.email,
+          (payload.role as any) || 'ORGANIZATION_OWNER',
+        );
+        payload.uid = newUser.id;
         payload.companyId = newUser.companyId;
         payload.role = newUser.role;
       }

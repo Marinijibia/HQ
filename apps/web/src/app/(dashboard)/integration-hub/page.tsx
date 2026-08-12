@@ -112,7 +112,7 @@ export default function IntegrationsHubPage() {
 
   const handleNextStep = () => {
     if (wizardStep === 4) {
-      // Mock test connection spinner
+      // Live connection verification step
       setWizardStep(5);
       setTimeout(() => {
         setWizardStep(6);

@@ -76,7 +76,9 @@ export default function OnboardingPage() {
   const [emailVerified, setEmailVerified] = React.useState(false);
   const [otpLoading, setOtpLoading] = React.useState(false);
   const [onboardingPassword, setOnboardingPassword] = React.useState('');
+  const [onboardingConfirmPassword, setOnboardingConfirmPassword] = React.useState('');
   const [showOnboardingPassword, setShowOnboardingPassword] = React.useState(false);
+  const [showOnboardingConfirmPassword, setShowOnboardingConfirmPassword] = React.useState(false);
   const [authProcessing, setAuthProcessing] = React.useState(false);
 
   // Step 1: Email existence check
@@ -392,6 +394,10 @@ export default function OnboardingPage() {
     }
     if (!onboardingPassword || onboardingPassword.length < 6) {
       setError('Please enter an account password with at least 6 characters.');
+      return;
+    }
+    if (onboardingPassword !== onboardingConfirmPassword) {
+      setError('Passwords do not match. Please verify your confirm password.');
       return;
     }
     setError(null);
@@ -726,6 +732,29 @@ export default function OnboardingPage() {
     }
   };
 
+  const handleResetOnboarding = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('hq_onboarding_draft');
+      localStorage.removeItem('hq_session_token');
+    }
+    setStep(1);
+    setOrgName('');
+    setSlogan('');
+    setOrgSlug('');
+    setWebsite('');
+    setIndustry('Technology & Software');
+    setCompanySize('11-50 employees');
+    setUserTitle('Chief Executive Officer (CEO)');
+    setUserDisplayName('');
+    setEmail('');
+    setEmailVerified(false);
+    setOtpSent(false);
+    setOtpCode('');
+    setOnboardingPassword('');
+    setOnboardingConfirmPassword('');
+    toast.info('Started fresh onboarding session!');
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#050508] text-foreground flex flex-col justify-between font-sans relative overflow-x-hidden animate-in fade-in duration-500">
       {/* Background Mesh Grid */}
@@ -743,8 +772,15 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        {/* Step Indicator Pill */}
+        {/* Step Indicator Pill & Reset Button */}
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleResetOnboarding}
+            className="text-[11px] font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors bg-slate-200/60 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 px-3 py-1.5 rounded-full"
+          >
+            Clear Draft & Start Fresh
+          </button>
           <div className="hidden sm:flex items-center gap-1.5 bg-slate-100 dark:bg-black/50 border border-slate-200 dark:border-white/10 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 dark:text-slate-300">
             <span className="text-cyan-600 dark:text-cyan-400">Step {step}</span> of 11
           </div>
@@ -1497,8 +1533,8 @@ export default function OnboardingPage() {
                         </Badge>
                       )}
                     </label>
-                    <div className="flex items-center gap-2">
-                      <div className="relative flex-1">
+                    <div className="space-y-3">
+                      <div className="relative">
                         <Input
                           type={showOnboardingPassword ? 'text' : 'password'}
                           placeholder="Enter secure account password..."
@@ -1514,13 +1550,37 @@ export default function OnboardingPage() {
                           {showOnboardingPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
+
+                      <div className="relative">
+                        <Input
+                          type={showOnboardingConfirmPassword ? 'text' : 'password'}
+                          placeholder="Confirm secure account password..."
+                          value={onboardingConfirmPassword}
+                          onChange={(e) => setOnboardingConfirmPassword(e.target.value)}
+                          className="bg-white dark:bg-black/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs focus-visible:ring-purple-500 rounded-xl pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowOnboardingConfirmPassword(!showOnboardingConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                        >
+                          {showOnboardingConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+
                       <Button
                         type="button"
                         onClick={handleCreateAccountWithPassword}
-                        disabled={authProcessing || !onboardingPassword || onboardingPassword.length < 6}
-                        className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs h-11 px-4 rounded-xl shrink-0"
+                        disabled={
+                          authProcessing ||
+                          !onboardingPassword ||
+                          onboardingPassword.length < 6 ||
+                          !onboardingConfirmPassword ||
+                          onboardingPassword !== onboardingConfirmPassword
+                        }
+                        className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs h-11 px-4 rounded-xl"
                       >
-                        {authProcessing ? 'Registering...' : 'Register Password'}
+                        {authProcessing ? 'Registering Account...' : 'Register Account & Credentials'}
                       </Button>
                     </div>
                   </div>

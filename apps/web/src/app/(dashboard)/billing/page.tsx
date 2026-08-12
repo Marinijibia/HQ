@@ -37,76 +37,106 @@ interface CostCenter {
 }
 
 export default function BillingPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [activeTab, setActiveTab] = React.useState<'usage' | 'subscription' | 'budgets' | 'invoices' | 'circle'>('usage');
   const [loading, setLoading] = React.useState(false);
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
 
   // Circle Agentic Payments State
-  const [usdcBalance, setUsdcBalance] = React.useState(25000.0);
-  const [usdcCap] = React.useState(500.0);
+  const [usdcBalance, setUsdcBalance] = React.useState(100.0);
+  const [usdcCap, setUsdcCap] = React.useState(100.0);
   const [circleLoading, setCircleLoading] = React.useState(false);
-  const [circleTransactions, setCircleTransactions] = React.useState<any[]>([
-    {
-      id: 'ctx_circle_001',
-      txHash: '0xa4e98f7210b9d88a1c903ef88d011f01c9b2e652a',
-      amountUsdc: 150.0,
-      vendorName: 'AWS Compute Cluster Proxy',
-      serviceDescription: 'Auto-scaled GPU cluster allocation for campaign rendering',
-      executiveRole: 'Teema (Ops Director & CoS)',
-      status: 'COMPLETED',
-      timestamp: '2 hours ago',
-    },
-    {
-      id: 'ctx_circle_002',
-      txHash: '0x3f1a9d82e401b9a7c88d012e543b1109a8f7612c',
-      amountUsdc: 45.5,
-      vendorName: 'SerpAPI Data Oracle',
-      serviceDescription: 'Market intelligence data feed query settlement',
-      executiveRole: 'Legal (Compliance Director)',
-      status: 'COMPLETED',
-      timestamp: '8 hours ago',
-    },
-  ]);
+  const [circleTransactions, setCircleTransactions] = React.useState<any[]>([]);
+
+  // Fetch real Organization Wallet Balance & Allowances on mount
+  React.useEffect(() => {
+    const fetchWalletData = async () => {
+      try {
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const [walletRes, allowancesRes, txRes] = await Promise.all([
+          fetch('/api/wallet/me', { headers }).catch(() => null),
+          fetch('/api/wallet/allowances', { headers }).catch(() => null),
+          fetch('/api/wallet/transactions', { headers }).catch(() => null),
+        ]);
+
+        if (walletRes && walletRes.ok) {
+          const w = await walletRes.json();
+          if (w.balanceUsd !== undefined) setUsdcBalance(w.balanceUsd);
+        }
+
+        if (allowancesRes && allowancesRes.ok) {
+          const a = await allowancesRes.json();
+          if (Array.isArray(a) && a.length > 0) {
+            const cto = a.find((x: any) => x.roleKey === 'CTO') || a[0];
+            if (cto?.singleTxLimit) setUsdcCap(cto.singleTxLimit);
+          }
+        }
+
+        if (txRes && txRes.ok) {
+          const txs = await txRes.json();
+          if (Array.isArray(txs)) {
+            setCircleTransactions(
+              txs.map((t: any) => ({
+                id: t.id,
+                txHash: t.blockchainTxHash || t.circleTxId || '0x' + Math.random().toString(16).substring(2),
+                amountUsdc: t.amountUsdc || t.amountUsd,
+                vendorName: t.vendorName || 'Autonomous Service Provider',
+                serviceDescription: t.description || 'HQ Agentic USDC Settlement',
+                executiveRole: `${t.executiveRoleKey || 'CTO'} (Executive Director)`,
+                status: t.status || 'COMPLETED',
+                timestamp: t.createdAt ? new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
+              })),
+            );
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+
+    fetchWalletData();
+  }, [token]);
 
   const handleSimulateCirclePayment = async () => {
     setCircleLoading(true);
-    toast.info('⚡ Initiating Circle Agentic USDC Autonomous Settlement...');
+    toast.info('⚡ Initiating Autonomous Circle USDC Settlement...');
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch('/api/billing/circle/execute-payment', {
+      const res = await fetch('/api/wallet/agent-payment', {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          amountUsdc: 85.0,
-          vendorName: 'Vercel Edge Network Node',
-          serviceDescription: 'Instant serverless bandwidth allocation for AI Boardroom API',
-          executiveRole: 'Teema (Ops Director & CoS)',
+          roleKey: 'CTO',
+          amountUsd: 45.0,
+          vendorName: 'Cloudflare Edge AI Oracle',
+          vendorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+          description: 'Instant autonomous serverless GPU bandwidth allocation for AI Boardroom',
         }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setUsdcBalance((prev) => prev - 85.0);
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setUsdcBalance(data.remainingBalanceUsd);
         setCircleTransactions((prev) => [
           {
             id: data.transactionId,
-            txHash: data.txHash,
-            amountUsdc: data.amountUsdc,
+            txHash: data.blockchainTxHash || data.circleTxId,
+            amountUsdc: data.amountUsd,
             vendorName: data.vendorName,
-            serviceDescription: data.serviceDescription,
-            executiveRole: data.executiveRole,
-            status: data.status,
+            serviceDescription: 'Instant autonomous serverless GPU bandwidth allocation for AI Boardroom',
+            executiveRole: `${data.executiveRoleKey} (Executive Director)`,
+            status: 'COMPLETED',
             timestamp: 'Just now',
           },
           ...prev,
         ]);
-        toast.success(`🎉 Circle USDC Agentic Payment Settled! Tx: ${data.txHash.slice(0, 10)}...`);
+        toast.success(`🎉 Circle USDC Payment Settled On-Chain! Tx: ${data.circleTxId.slice(0, 12)}...`);
       } else {
-        const errData = await res.json();
-        toast.error(`❌ Circle Payment Failed: ${errData.message || 'Error executing payment'}`);
+        toast.error(`❌ Payment Notice: ${data.message || 'Transaction rejected by spending policy'}`);
       }
     } catch {
       toast.error('❌ Failed to execute Circle Agentic payment.');
@@ -192,6 +222,33 @@ export default function BillingPage() {
     }
   }, [token]);
 
+  const handlePayWithWallet = async (planCode: string) => {
+    setLoading(true);
+    toast.info('⚡ Deducting subscription payment from HQ Wallet Balance...');
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch('/api/billing/pay-with-wallet', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ planCode }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setUsdcBalance(data.remainingBalanceUsd);
+        toast.success(`🎉 ${data.message}`);
+      } else {
+        toast.error(`❌ Payment Notice: ${data.message || 'Failed to pay with HQ Wallet balance'}`);
+      }
+    } catch {
+      toast.error('❌ Failed to process wallet payment.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUpgrade = async (planCode: string = 'growth', gateway: 'stripe' | 'paystack' = 'paystack') => {
     setLoading(true);
     toast.success(`💳 Initializing checkout session for ${planCode.toUpperCase()} ($)...`);
@@ -240,8 +297,8 @@ export default function BillingPage() {
 
       const paystackPop = (window as any).PaystackPop;
       const handler = paystackPop.setup({
-        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_mock_keys',
-        email: 'billing@hq-corp.com',
+        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+        email: user?.email || 'billing@netify.ng',
         amount: planCode === 'enterprise' ? 3000000 : 1500000,
         ref: data.reference,
         onClose: () => {
@@ -706,6 +763,15 @@ export default function BillingPage() {
                     onClick={() => handleUpgrade('growth')}
                   >
                     Paystack Global USD ($) Checkout
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full text-xs font-extrabold border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 h-9"
+                    disabled={loading || usdcBalance < 10}
+                    onClick={() => handlePayWithWallet('growth')}
+                  >
+                    Pay via HQ Wallet Balance (${usdcBalance.toFixed(2)} Available)
                   </Button>
                 </div>
               </Card>

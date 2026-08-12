@@ -50,4 +50,11 @@ export class CompanyRepository {
       },
     });
   }
+
+  async findAll(): Promise<Company[]> {
+    return this.prisma.company.findMany({
+      where: { deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

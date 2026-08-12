@@ -23,10 +23,20 @@ dist
 build
 **/build
 
+out
+**/out
+
 coverage
 **/coverage
 
 .turbo
+**/.turbo
+
+# ========================================
+# Dev Caches
+# ========================================
+DevCacheYarn
+**/DevCacheYarn
 
 # ========================================
 # Logs

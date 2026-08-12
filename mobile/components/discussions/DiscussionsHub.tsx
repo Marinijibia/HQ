@@ -47,17 +47,22 @@ export function DiscussionsHub({ onSelectDiscussion }: DiscussionsHubProps) {
   // New Discussion Modal State
   const [showModal, setShowModal] = useState(false);
   const [objective, setObjective] = useState('');
-  const [selectedExecs, setSelectedExecs] = useState<string[]>(['ceo', 'cto']);
+  const [selectedExecs, setSelectedExecs] = useState<string[]>([
+    'ceo',
+    'operations_director',
+    'legal_compliance_director',
+    'human_resources_director',
+    'public_search_agent',
+  ]);
   const [starting, setStarting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const availableExecutives = [
-    { key: 'ceo', name: 'Elena Rostova', title: 'Chief Executive Officer' },
-    { key: 'cto', name: 'Dr. Hiroshi Tanaka', title: 'Chief Technology Officer' },
-    { key: 'cmo', name: 'Amara Vance', title: 'Chief Marketing Officer' },
-    { key: 'cfo', name: 'Sophia Sterling', title: 'Chief Financial Officer' },
-    { key: 'cpo', name: 'Marcus Vance', title: 'Chief Product Officer' },
-    { key: 'csd', name: 'Yuki Sato', title: 'Customer Success Director' },
+    { key: 'ceo', name: 'Asad', title: 'Chief Executive Officer (CEO)' },
+    { key: 'operations_director', name: 'Teema', title: 'Operations Director' },
+    { key: 'legal_compliance_director', name: 'Legal', title: 'Legal & Compliance Director' },
+    { key: 'human_resources_director', name: 'Resource Director', title: 'Human Resources Director' },
+    { key: 'public_search_agent', name: 'Mr. Intelligence', title: 'Public Search & Research Agent' },
   ];
 
   useEffect(() => {

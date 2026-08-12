@@ -57,16 +57,23 @@ export default function CoreKernelConsolePage() {
 
   const fetchAuditLogs = React.useCallback(async () => {
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+      const [logRes, traceRes] = await Promise.all([
+        fetch('/api/settings/audit-logs', { headers }).catch(() => null),
+        fetch('/api/settings/kernel-traces', { headers }).catch(() => null),
+      ]);
+
+      if (logRes && logRes.ok) {
+        const data = await logRes.json();
+        if (Array.isArray(data)) setAuditLogs(data);
       }
-      const res = await fetch('/api/settings/audit-logs', { headers });
-      if (res.ok) {
-        const data = await res.json();
-        setAuditLogs(data);
+
+      if (traceRes && traceRes.ok) {
+        const traceData = await traceRes.json();
+        if (Array.isArray(traceData) && traceData.length > 0) setTraces(traceData);
       }
     } catch (e) {
       console.error('Failed to load audit logs:', e);
@@ -74,59 +81,17 @@ export default function CoreKernelConsolePage() {
   }, [token]);
 
   React.useEffect(() => {
-    if (token) {
-      fetchAuditLogs();
-    }
-  }, [token, fetchAuditLogs]);
+    fetchAuditLogs();
+  }, [fetchAuditLogs]);
 
   const [traces, setTraces] = React.useState<AgentTrace[]>([
     {
       id: 'tr-001', agentName: 'CEO Agent', agentRole: 'Strategic Orchestration', action: 'Decompose mission into DAG task hierarchy',
-      model: 'gemini-3.1-flash-lite', inputTokens: 1842, outputTokens: 743, latencyMs: 1240, status: 'SUCCESS',
-      missionId: 'mission-q3', timestamp: new Date(Date.now() - 120000).toISOString(),
+      model: 'gemini-2.0-flash', inputTokens: 1842, outputTokens: 743, latencyMs: 1240, status: 'SUCCESS',
+      missionId: 'mission-q3', timestamp: new Date().toISOString(),
       reasoning: 'Mission objective parsed. Identified 4 parallel workstreams: market analysis, budget review, legal clearance, tech feasibility.',
       toolsUsed: ['mission_decompose', 'agent_router', 'dag_builder'],
       memoryFootprintKb: 450,
-    },
-    {
-      id: 'tr-002', agentName: 'CMO Agent', agentRole: 'Marketing Intelligence', action: 'Draft Q3 campaign positioning brief',
-      model: 'gemini-3.1-flash-lite', inputTokens: 2310, outputTokens: 1102, latencyMs: 890, status: 'SUCCESS',
-      missionId: 'mission-q3', parentTraceId: 'tr-001', timestamp: new Date(Date.now() - 95000).toISOString(),
-      reasoning: 'Analysed brand voice, target segment, and competitor landscape. Drafted 3 positioning options.',
-      toolsUsed: ['brand_context_loader', 'asset_reader', 'draft_generator'],
-      memoryFootprintKb: 310,
-    },
-    {
-      id: 'tr-003', agentName: 'CFO Agent', agentRole: 'Financial Governance', action: 'Validate budget allocation thresholds',
-      model: 'gemini-3.1-flash-lite', inputTokens: 980, outputTokens: 412, latencyMs: 650, status: 'SUCCESS',
-      missionId: 'mission-q3', parentTraceId: 'tr-001', timestamp: new Date(Date.now() - 80000).toISOString(),
-      reasoning: 'Budget ceiling confirmed at $250K. Flagged 2 line items exceeding departmental caps.',
-      toolsUsed: ['budget_validator', 'compliance_check'],
-      memoryFootprintKb: 180,
-    },
-    {
-      id: 'tr-004', agentName: 'CTO Agent', agentRole: 'Technical Feasibility', action: 'Evaluate API integration requirements',
-      model: 'gemini-3.1-flash-lite', inputTokens: 1560, outputTokens: 830, latencyMs: 1100, status: 'RUNNING',
-      missionId: 'mission-q3', parentTraceId: 'tr-001', timestamp: new Date(Date.now() - 45000).toISOString(),
-      reasoning: 'Currently scanning system architecture for integration blockers...',
-      toolsUsed: ['schema_reader', 'api_validator'],
-      memoryFootprintKb: 520,
-    },
-    {
-      id: 'tr-005', agentName: 'Legal Agent', agentRole: 'Compliance & Risk', action: 'Pre-flight prompt injection sanitization',
-      model: 'gemini-3.1-flash-lite', inputTokens: 340, outputTokens: 95, latencyMs: 210, status: 'SUCCESS',
-      missionId: 'mission-q3', timestamp: new Date(Date.now() - 180000).toISOString(),
-      reasoning: 'All inputs sanitized. Zero injection vectors detected. RBAC roles verified.',
-      toolsUsed: ['prompt_sanitizer', 'rbac_check'],
-      memoryFootprintKb: 90,
-    },
-    {
-      id: 'tr-006', agentName: 'CEO Agent', agentRole: 'Strategic Orchestration', action: 'Compile executive board briefing',
-      model: 'gemini-3.1-flash-lite', inputTokens: 3200, outputTokens: 1840, latencyMs: 2100, status: 'QUEUED',
-      missionId: 'mission-q3', timestamp: new Date(Date.now() - 10000).toISOString(),
-      reasoning: 'Awaiting CTO feasibility report before compiling final briefing.',
-      toolsUsed: [],
-      memoryFootprintKb: 0,
     },
   ]);
 

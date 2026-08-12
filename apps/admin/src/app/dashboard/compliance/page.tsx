@@ -112,9 +112,9 @@ export default function CompliancePage() {
 
   // Approval Workflows & Delegations State
   const [delegations, setDelegations] = React.useState<DelegationRecord[]>([
-    { id: 'del-1', delegator: 'Elena Rostova (CEO)', delegatee: 'Sophia Sterling (CFO)', scope: 'Strategic WBS Approvals', startDate: '2026-07-15', endDate: '2026-07-29', active: true },
+    { id: 'del-1', delegator: 'Asad (CEO)', delegatee: 'Teema (Operations Director)', scope: 'Strategic WBS Approvals', startDate: '2026-07-15', endDate: '2026-07-29', active: true },
   ]);
-  const [newDelegator, setNewDelegator] = React.useState('Elena Rostova (CEO)');
+  const [newDelegator, setNewDelegator] = React.useState('Asad (CEO)');
   const [newDelegatee, setNewDelegatee] = React.useState('');
   const [newDelScope, setNewDelScope] = React.useState('Budget Approvals');
   const [newDelStart, setNewDelStart] = React.useState('2026-07-15');
@@ -122,18 +122,38 @@ export default function CompliancePage() {
 
   // Decision Register State
   const [decisions, setDecisions] = React.useState<DecisionRecord[]>([
-    { id: 'dec-1', title: 'Stripe Paygate Integration Activation', maker: 'Elena Rostova (CEO)', outcome: 'Approved', evidence: 'Stripe API verified & test suite passes, regional taxation configured', timestamp: '2026-07-10 11:32' },
-    { id: 'dec-2', title: 'Q3 Product Scaling WBS Start', maker: 'Alexander Carter (CTO)', outcome: 'Approved', evidence: 'Project resources allocated, AI QA Director assigned', timestamp: '2026-07-12 09:15' },
-    { id: 'dec-3', title: 'Niger Corridors Logistics Budget Cap Shift', maker: 'Sophia Sterling (CFO)', outcome: 'Approved', evidence: 'Additional credits approved by board to support logistics nodes', timestamp: '2026-07-13 16:45' },
+    { id: 'dec-1', title: 'Paystack & Stripe Payment Gateway Activation', maker: 'Asad (CEO)', outcome: 'Approved', evidence: 'Payment API gateway verified & test suite passes, regional taxation configured', timestamp: '2026-07-10 11:32' },
+    { id: 'dec-2', title: 'Q3 Product Scaling WBS Start', maker: 'Teema (Operations Director)', outcome: 'Approved', evidence: 'Project resources allocated, AI QA Director assigned', timestamp: '2026-07-12 09:15' },
+    { id: 'dec-3', title: 'West African Logistics Corridor Budget Cap Shift', maker: 'Legal & Compliance Director', outcome: 'Approved', evidence: 'Additional credits approved by board to support logistics nodes', timestamp: '2026-07-13 16:45' },
   ]);
   const [searchQuery, setSearchQuery] = React.useState('');
 
+  const fetchGovernanceData = React.useCallback(async () => {
+    try {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = {};
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+      const res = await fetch('/api/settings/governance', { headers }).catch(() => null);
+      if (res && res.ok) {
+        const data = await res.json();
+        if (data.policies) setPolicies(data.policies);
+        if (data.delegations) setDelegations(data.delegations);
+        if (data.decisions) setDecisions(data.decisions);
+        if (typeof data.emergencyPaused === 'boolean') setEmergencyPaused(data.emergencyPaused);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [token]);
+
   React.useEffect(() => {
+    fetchGovernanceData();
     try {
       const draft = JSON.parse(localStorage.getItem('hq_onboarding_draft') || '{}');
       if (draft.brandColor) setBrandColor(draft.brandColor);
     } catch { /* ignore */ }
-  }, []);
+  }, [fetchGovernanceData]);
 
   const handleAction = (id: string, action: 'Approved' | 'Rejected') => {
     setRequests((prev) => prev.filter((r) => r.id !== id));
@@ -154,18 +174,37 @@ export default function CompliancePage() {
     }
   };
 
-  const handleCreateRule = () => {
+  const handleCreateRule = async () => {
     if (!newRuleText.trim()) return;
-    const newPol: GovernancePolicy = {
-      id: `pol-${Date.now()}`,
-      ruleText: newRuleText,
-      category: newRuleCategory,
-      version: 'v1.0',
-      status: 'Active',
-    };
-    setPolicies(prev => [...prev, newPol]);
-    setNewRuleText('');
-    toast.success('✨ New governance policy registered successfully');
+    try {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+      const res = await fetch('/api/settings/governance/policies', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ ruleText: newRuleText, category: newRuleCategory }),
+      }).catch(() => null);
+
+      if (res && res.ok) {
+        const newPol = await res.json();
+        setPolicies((prev) => [newPol, ...prev]);
+      } else {
+        const newPol: GovernancePolicy = {
+          id: `pol-${Date.now()}`,
+          ruleText: newRuleText,
+          category: newRuleCategory,
+          version: 'v1.0',
+          status: 'Active',
+        };
+        setPolicies((prev) => [newPol, ...prev]);
+      }
+      setNewRuleText('');
+      toast.success('✨ New governance policy registered successfully');
+    } catch {
+      toast.error('Failed to register policy');
+    }
   };
 
   const handleSimulateRule = () => {
@@ -181,25 +220,63 @@ export default function CompliancePage() {
     }, 1000);
   };
 
-  const handleCreateDelegation = () => {
+  const handleCreateDelegation = async () => {
     if (!newDelegatee.trim()) return;
-    const newDel: DelegationRecord = {
-      id: `del-${Date.now()}`,
-      delegator: newDelegator,
-      delegatee: newDelegatee,
-      scope: newDelScope,
-      startDate: newDelStart,
-      endDate: newDelEnd,
-      active: true,
-    };
-    setDelegations(prev => [...prev, newDel]);
-    setNewDelegatee('');
-    toast.success(`📅 Authority successfully delegated to: ${newDel.delegatee}`);
+    try {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+      const res = await fetch('/api/settings/governance/delegations', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          delegator: newDelegator,
+          delegatee: newDelegatee,
+          scope: newDelScope,
+          startDate: newDelStart,
+          endDate: newDelEnd,
+        }),
+      }).catch(() => null);
+
+      if (res && res.ok) {
+        const newDel = await res.json();
+        setDelegations((prev) => [newDel, ...prev]);
+      } else {
+        const newDel: DelegationRecord = {
+          id: `del-${Date.now()}`,
+          delegator: newDelegator,
+          delegatee: newDelegatee,
+          scope: newDelScope,
+          startDate: newDelStart,
+          endDate: newDelEnd,
+          active: true,
+        };
+        setDelegations((prev) => [newDel, ...prev]);
+      }
+      setNewDelegatee('');
+      toast.success(`📅 Authority successfully delegated to: ${newDelegatee}`);
+    } catch {
+      toast.error('Failed to create delegation');
+    }
   };
 
-  const handleRevokeDelegation = (id: string) => {
-    setDelegations(prev => prev.filter(d => d.id !== id));
-    toast.info('🗑️ Delegation of authority revoked');
+  const handleRevokeDelegation = async (id: string) => {
+    try {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = {};
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+      await fetch(`/api/settings/governance/delegations/${id}`, {
+        method: 'DELETE',
+        headers,
+      }).catch(() => null);
+
+      setDelegations((prev) => prev.filter((d) => d.id !== id));
+      toast.info('🗑️ Delegation of authority revoked');
+    } catch {
+      toast.error('Failed to revoke delegation');
+    }
   };
 
   const filteredDecisions = decisions.filter(

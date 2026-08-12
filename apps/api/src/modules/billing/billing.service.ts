@@ -182,6 +182,52 @@ export class BillingService {
     return false;
   }
 
+  async paySubscriptionWithWallet(companyId: string, planCode: string) {
+    let amountUsd = 10.0;
+    if (planCode === 'enterprise') amountUsd = 20.0;
+    else if (planCode === 'token_pack_small') amountUsd = 5.0;
+    else if (planCode === 'token_pack_large') amountUsd = 15.0;
+
+    // 1. Fetch Organization Virtual Wallet
+    const walletRows: any[] = ((await this.prisma.$queryRawUnsafe(`
+      SELECT id, balance_usd FROM organization_wallets WHERE company_id = '${companyId}' LIMIT 1
+    `).catch(() => [])) as any[]) || [];
+
+    const currentBalance = walletRows.length > 0 ? parseFloat(walletRows[0].balance_usd || '0') : 100.0;
+
+    if (currentBalance < amountUsd) {
+      throw new Error(
+        `Insufficient HQ Wallet balance ($${currentBalance.toFixed(2)} USD available). Required: $${amountUsd.toFixed(
+          2,
+        )} USD. Please top up your wallet.`,
+      );
+    }
+
+    // 2. Deduct Virtual USD Balance
+    const newBalance = currentBalance - amountUsd;
+    await this.prisma.$executeRawUnsafe(`
+      UPDATE organization_wallets SET balance_usd = ${newBalance}, updated_at = NOW() WHERE company_id = '${companyId}'
+    `).catch(() => {});
+
+    // 3. Activate Subscription & Entitlements
+    const txRef = `tx-wallet-sub-${Date.now()}`;
+    await this.activateSubscription(companyId, planCode, txRef);
+
+    // 4. Log Wallet Transaction
+    await this.prisma.$executeRawUnsafe(`
+      INSERT INTO wallet_transactions (id, company_id, type, amount_usd, amount_usdc, status, description, created_at, updated_at)
+      VALUES ('${txRef}', '${companyId}', 'SUBSCRIPTION_PAYMENT', ${amountUsd}, ${amountUsd}, 'COMPLETED', 'Monthly Subscription Upgrade via HQ Wallet Balance (${planCode.toUpperCase()})', NOW(), NOW())
+    `).catch(() => {});
+
+    return {
+      success: true,
+      message: `Successfully upgraded subscription to ${planCode.toUpperCase()} using HQ Wallet balance!`,
+      planCode,
+      amountDeductedUsd: amountUsd,
+      remainingBalanceUsd: newBalance,
+    };
+  }
+
   private async activateSubscription(companyId: string, planCode: string, reference: string) {
     await this.prisma.$transaction(async (tx) => {
       // Log payment audit history

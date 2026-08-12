@@ -32,19 +32,11 @@ export class UserController {
   async findMe(@Req() req: types.AuthenticatedRequest) {
     let user = await this.userRepository.findById(req.user.uid);
     if (!user) {
-      const defaultCompany = await this.userRepository.findDefaultCompany();
-      if (!defaultCompany) {
-        throw new NotFoundException(
-          'Default company context not found. Please run seed script first.',
-        );
-      }
-      user = await this.userRepository.create({
-        id: req.user.uid,
-        email: req.user.email,
-        name: req.user.email ? req.user.email.split('@')[0] : 'Member',
-        companyId: defaultCompany.id,
-        role: req.user.role || 'MEMBER',
-      });
+      user = await this.userRepository.createIsolatedUserWorkspace(
+        req.user.uid,
+        req.user.email,
+        (req.user.role as any) || 'ORGANIZATION_OWNER',
+      );
     }
     return user;
   }

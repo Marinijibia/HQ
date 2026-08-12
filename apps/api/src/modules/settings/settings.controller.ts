@@ -63,7 +63,15 @@ export class SettingsController {
   @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
   @ApiOperation({ summary: 'Get organization audit logs' })
   getAuditLogs(@Req() req: types.AuthenticatedRequest) {
-    return this.settingsService.getAuditLogs(req.user.companyId);
+    return this.settingsService.getAuditLogs(req.user?.companyId);
+  }
+
+  @Get('kernel-traces')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @ApiOperation({ summary: 'Get AI Core Kernel Execution Traces' })
+  getKernelTraces() {
+    return this.settingsService.getKernelTraces();
   }
 
   @Get('platform-stats')
@@ -115,5 +123,57 @@ export class SettingsController {
     @Body() dto: any,
   ) {
     return this.settingsService.saveVoiceProfile(req.user.uid, dto);
+  }
+
+  @Get('governance')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @ApiOperation({ summary: 'Get governance policies, delegations, and decision audit logs' })
+  getGovernanceData(@Req() req: types.AuthenticatedRequest) {
+    return this.settingsService.getGovernanceData(req.user?.companyId);
+  }
+
+  @Post('governance/policies')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @ApiOperation({ summary: 'Register a new governance policy rule' })
+  createPolicy(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() body: { ruleText: string; category: string },
+  ) {
+    return this.settingsService.createPolicy({
+      ...body,
+      companyId: req.user?.companyId,
+    });
+  }
+
+  @Delete('governance/policies/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @ApiOperation({ summary: 'Delete a governance policy rule' })
+  deletePolicy(@Param('id') id: string) {
+    return this.settingsService.deletePolicy(id);
+  }
+
+  @Post('governance/delegations')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @ApiOperation({ summary: 'Create a new delegation of authority' })
+  createDelegation(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() body: { delegator: string; delegatee: string; scope: string; startDate?: string; endDate?: string },
+  ) {
+    return this.settingsService.createDelegation({
+      ...body,
+      companyId: req.user?.companyId,
+    });
+  }
+
+  @Delete('governance/delegations/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @ApiOperation({ summary: 'Revoke a delegation of authority' })
+  deleteDelegation(@Param('id') id: string) {
+    return this.settingsService.deleteDelegation(id);
   }
 }

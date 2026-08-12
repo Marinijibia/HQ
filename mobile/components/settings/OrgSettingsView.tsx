@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { HQColors } from '../../constants/theme';
 import { api } from '../../lib/api-client';
-import { Building2, Globe, Mail, MapPin, CheckCircle2, AlertCircle, Save } from 'lucide-react-native';
+import { TeamInviteModal } from '../sharing/TeamInviteModal';
+import { Building2, Globe, Mail, MapPin, CheckCircle2, AlertCircle, Save, UserPlus, Share2 } from 'lucide-react-native';
 
 export function OrgSettingsView() {
   const [hqName, setHqName] = useState('Headquarters Monorepo');
@@ -12,6 +13,7 @@ export function OrgSettingsView() {
   const [timezone, setTimezone] = useState('UTC');
   const [currency, setCurrency] = useState('USD');
   const [brandColor, setBrandColor] = useState('#0A84FF');
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -158,12 +160,24 @@ export function OrgSettingsView() {
           </View>
         </View>
 
+        {/* Native Team Invite Action */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setShowInviteModal(true)}
+          className="w-full py-3 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex-row items-center justify-center space-x-2 mt-2"
+        >
+          <UserPlus size={16} color={HQColors.cyan} />
+          <Text className="text-xs font-black text-cyan-300 tracking-wider uppercase">
+            Invite Team Member via AirDrop / Share
+          </Text>
+        </TouchableOpacity>
+
         {/* Save Changes Action */}
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleSaveOrgSettings}
           disabled={saving}
-          className="w-full py-3.5 rounded-2xl bg-cyan-500 border border-cyan-400/50 flex-row items-center justify-center space-x-2 mt-3 shadow-lg shadow-cyan-500/30"
+          className="w-full py-3.5 rounded-2xl bg-cyan-500 border border-cyan-400/50 flex-row items-center justify-center space-x-2 mt-2 shadow-lg shadow-cyan-500/30"
         >
           {saving ? (
             <ActivityIndicator color="#ffffff" size="small" />
@@ -177,6 +191,12 @@ export function OrgSettingsView() {
           )}
         </TouchableOpacity>
       </View>
+
+      <TeamInviteModal
+        visible={showInviteModal}
+        orgName={hqName}
+        onClose={() => setShowInviteModal(false)}
+      />
     </View>
   );
 }

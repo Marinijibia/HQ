@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { HQLogo } from '../components/HQLogo';
 import { AuthScreen } from '../components/AuthScreen';
 import { BottomNavbar, TabKey } from '../components/BottomNavbar';
+import { AsadVoiceButton } from '../components/voice/AsadVoiceButton';
 import { HQColors } from '../constants/theme';
 import { authService, UserContext } from '../lib/auth-service';
 
@@ -144,12 +145,23 @@ export default function Homepage() {
                 </View>
               </View>
 
-              <TouchableOpacity
-                onPress={handleLogout}
-                className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex-row items-center space-x-1"
-              >
-                <LogOut size={16} color="#f43f5e" />
-              </TouchableOpacity>
+              <View className="flex-row items-center space-x-2">
+                <AsadVoiceButton />
+
+                <TouchableOpacity
+                  onPress={handleOpenWebOnboarding}
+                  className="p-2.5 rounded-xl bg-slate-900 border border-slate-800"
+                >
+                  <Globe size={16} color={HQColors.cyan} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleLogout}
+                  className="p-2.5 rounded-xl bg-slate-900 border border-slate-800"
+                >
+                  <LogOut size={16} color="#f43f5e" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Executive Boardroom Hero Card */}

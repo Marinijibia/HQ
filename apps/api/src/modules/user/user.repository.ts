@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { User, Company, Team } from '@prisma/client';
+import { User, Company, Team, UserRole } from '@prisma/client';
 
 export type UserWithRelations = User & {
   company?: Company | null;
@@ -13,36 +13,125 @@ export class UserRepository {
 
   async findById(id: string): Promise<UserWithRelations | null> {
     if (!id || typeof id !== 'string') return null;
-    return this.prisma.user.findFirst({
-      where: {
-        OR: [{ id }, { firebaseUid: id }],
-        deletedAt: null,
-      },
-      include: {
-        company: true,
-        team: true,
-      },
-    });
+    try {
+      return await this.prisma.user.findFirst({
+        where: {
+          OR: [{ id }, { firebaseUid: id }],
+          deletedAt: null,
+        },
+        include: {
+          company: true,
+          team: true,
+        },
+      });
+    } catch {
+      try {
+        const rows: any[] = await this.prisma.$queryRawUnsafe(`
+          SELECT * FROM users WHERE (id = '${id}' OR firebase_uid = '${id}') AND deleted_at IS NULL LIMIT 1
+        `);
+        if (rows && rows.length > 0) {
+          const u = rows[0];
+          return {
+            id: u.id,
+            email: u.email,
+            name: u.name || u.display_name || u.email.split('@')[0],
+            displayName: u.display_name || u.name,
+            photoUrl: u.photo_url || null,
+            role: (u.role || 'MEMBER') as UserRole,
+            companyId: u.company_id,
+            teamId: u.team_id || null,
+            firebaseUid: u.firebase_uid || u.id,
+            emailVerified: u.email_verified ?? true,
+            passwordHash: u.password_hash || null,
+            lastLoginAt: u.last_login_at || new Date(),
+            createdAt: u.created_at || new Date(),
+            updatedAt: u.updated_at || new Date(),
+            deletedAt: null,
+            createdBy: null,
+            updatedBy: null,
+            deletedBy: null,
+          } as UserWithRelations;
+        }
+      } catch {}
+      return null;
+    }
   }
 
   async findByFirebaseUid(firebaseUid: string): Promise<UserWithRelations | null> {
-    if (!firebaseUid || typeof firebaseUid !== 'string') return null;
-    return this.prisma.user.findFirst({
-      where: {
-        OR: [{ firebaseUid }, { id: firebaseUid }],
-        deletedAt: null,
-      },
-      include: {
-        company: true,
-        team: true,
-      },
-    });
+    return this.findById(firebaseUid);
   }
 
   async findByEmail(email: string): Promise<UserWithRelations | null> {
     if (!email || typeof email !== 'string') return null;
-    return this.prisma.user.findFirst({
-      where: { email, deletedAt: null },
+    try {
+      return await this.prisma.user.findFirst({
+        where: { email: email.toLowerCase().trim(), deletedAt: null },
+        include: {
+          company: true,
+          team: true,
+        },
+      });
+    } catch {
+      try {
+        const cleanEmail = email.toLowerCase().trim();
+        const rows: any[] = await this.prisma.$queryRawUnsafe(`
+          SELECT * FROM users WHERE LOWER(email) = '${cleanEmail}' AND deleted_at IS NULL LIMIT 1
+        `);
+        if (rows && rows.length > 0) {
+          const u = rows[0];
+          return {
+            id: u.id,
+            email: u.email,
+            name: u.name || u.display_name || u.email.split('@')[0],
+            displayName: u.display_name || u.name,
+            photoUrl: u.photo_url || null,
+            role: (u.role || 'MEMBER') as UserRole,
+            companyId: u.company_id,
+            teamId: u.team_id || null,
+            firebaseUid: u.firebase_uid || u.id,
+            emailVerified: u.email_verified ?? true,
+            passwordHash: u.password_hash || null,
+            lastLoginAt: u.last_login_at || new Date(),
+            createdAt: u.created_at || new Date(),
+            updatedAt: u.updated_at || new Date(),
+            deletedAt: null,
+            createdBy: null,
+            updatedBy: null,
+            deletedBy: null,
+          } as UserWithRelations;
+        }
+      } catch {}
+      return null;
+    }
+  }
+
+  async createIsolatedUserWorkspace(
+    userId: string,
+    email: string,
+    role = 'ORGANIZATION_OWNER',
+  ): Promise<UserWithRelations> {
+    const rawName = email ? email.split('@')[0] : 'User';
+    const cleanName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+    const companyName = `${cleanName}'s Organization`;
+    const companySlug = `${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newCompany = await this.prisma.company.create({
+      data: {
+        name: companyName,
+        slug: companySlug,
+        primaryColor: '#0A84FF',
+      },
+    });
+
+    return await this.prisma.user.create({
+      data: {
+        id: userId,
+        email: email.toLowerCase().trim(),
+        name: cleanName,
+        displayName: cleanName,
+        companyId: newCompany.id,
+        role: role as UserRole,
+      },
       include: {
         company: true,
         team: true,
@@ -55,11 +144,11 @@ export class UserRepository {
       return await this.prisma.company.findFirst({
         where: { deletedAt: null },
       });
-    } catch (e) {
+    } catch {
       try {
-        const rows: any[] = await this.prisma.$queryRawUnsafe(`
+        const rows: any[] = (await this.prisma.$queryRawUnsafe(`
           SELECT id, name, slug FROM companies WHERE deleted_at IS NULL LIMIT 1
-        `);
+        `)) as any[];
         if (rows && rows.length > 0) {
           return rows[0] as Company;
         }
@@ -69,74 +158,59 @@ export class UserRepository {
   }
 
   async createDefaultCompany(): Promise<Company> {
+    const existing = await this.findDefaultCompany();
+    if (existing) return existing;
+
+    const id = `c-default-${Date.now()}`;
+    const slug = `hq-default-${Date.now()}`;
     try {
       return await this.prisma.company.create({
         data: {
-          name: 'HQ Organization',
-          slug: `hq-org-${Date.now()}`,
+          id,
+          name: 'HQ Default Corporation',
+          slug,
         },
       });
-    } catch (e) {
-      const companyId = `company_${Date.now()}`;
-      const slug = `hq-org-${Date.now()}`;
+    } catch {
       await this.prisma.$executeRawUnsafe(`
         INSERT INTO companies (id, name, slug, created_at, updated_at)
-        VALUES ('${companyId}', 'HQ Organization', '${slug}', NOW(), NOW())
+        VALUES ('${id}', 'HQ Default Corporation', '${slug}', NOW(), NOW())
         ON CONFLICT DO NOTHING
-      `);
+      `).catch(() => {});
+
       return {
-        id: companyId,
-        name: 'HQ Organization',
+        id,
+        name: 'HQ Default Corporation',
         slug,
         logoUrl: null,
         slogan: null,
         primaryColor: null,
         secondaryColor: null,
+        level: 'BUSINESS_UNIT',
+        parentId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
         createdBy: null,
         updatedBy: null,
         deletedBy: null,
-        parentId: null,
-        level: 'BUSINESS_UNIT' as any,
-      };
+      } as Company;
     }
   }
 
-  async create(data: {
+  async createUser(data: {
     id: string;
-    firebaseUid?: string;
     email: string;
-    name?: string;
     displayName?: string;
+    name?: string;
     photoUrl?: string;
+    companyId: string;
+    role?: 'OWNER' | 'ADMIN' | 'MEMBER';
+    firebaseUid?: string;
     emailVerified?: boolean;
     passwordHash?: string;
-    companyId: string;
-    role: any;
   }): Promise<UserWithRelations> {
-    const userCount = await this.prisma.user.count({
-      where: { deletedAt: null },
-    });
-
-    let assignedRole = data.role;
-    if (userCount === 0) {
-      assignedRole = 'SUPER_ADMINISTRATOR';
-    } else {
-      const invitedUser = await this.prisma.user.findFirst({
-        where: { email: data.email, deletedAt: null },
-      });
-      if (invitedUser) {
-        assignedRole = invitedUser.role;
-        await this.prisma.user.delete({
-          where: { id: invitedUser.id },
-        });
-      } else {
-        assignedRole = data.role || 'MEMBER';
-      }
-    }
-
+    const assignedRole = (data.role || 'MEMBER') as UserRole;
     try {
       return await this.prisma.user.create({
         data: {
@@ -157,11 +231,11 @@ export class UserRepository {
           team: true,
         },
       });
-    } catch (e) {
+    } catch {
       const name = data.name || data.displayName || (data.email ? data.email.split('@')[0] : 'Member');
       await this.prisma.$executeRawUnsafe(`
-        INSERT INTO users (id, firebase_uid, email, name, display_name, role, company_id, email_verified, created_at, updated_at)
-        VALUES ('${data.id}', '${data.firebaseUid || data.id}', '${data.email}', '${name}', '${name}', '${assignedRole}', '${data.companyId}', true, NOW(), NOW())
+        INSERT INTO users (id, firebase_uid, email, name, display_name, role, company_id, email_verified, password_hash, created_at, updated_at)
+        VALUES ('${data.id}', '${data.firebaseUid || data.id}', '${data.email}', '${name}', '${name}', '${assignedRole}', '${data.companyId}', true, '${data.passwordHash || ''}', NOW(), NOW())
         ON CONFLICT (email) DO UPDATE SET role = '${assignedRole}', name = '${name}'
       `).catch(() => {});
 
@@ -184,46 +258,92 @@ export class UserRepository {
         createdBy: null,
         updatedBy: null,
         deletedBy: null,
-      };
+      } as UserWithRelations;
     }
   }
 
-  async update(id: string, data: Partial<User>): Promise<UserWithRelations> {
-    return this.prisma.user.update({
-      where: { id },
-      data: {
-        ...data,
-        updatedAt: new Date(),
-      },
-      include: {
-        company: true,
-        team: true,
-      },
-    });
+  async create(data: {
+    id: string;
+    email: string;
+    displayName?: string;
+    name?: string;
+    photoUrl?: string;
+    companyId: string;
+    role?: 'OWNER' | 'ADMIN' | 'MEMBER';
+    firebaseUid?: string;
+    emailVerified?: boolean;
+    passwordHash?: string;
+  }): Promise<UserWithRelations> {
+    return this.createUser(data);
   }
 
-  async updateLastLogin(id: string): Promise<UserWithRelations> {
-    return this.prisma.user.update({
-      where: { id },
-      data: { lastLoginAt: new Date() },
-      include: {
-        company: true,
-        team: true,
-      },
-    });
+  async update(
+    id: string,
+    data: {
+      name?: string;
+      displayName?: string;
+      photoUrl?: string;
+      role?: 'OWNER' | 'ADMIN' | 'MEMBER';
+      companyId?: string;
+      teamId?: string;
+      passwordHash?: string;
+      lastLoginAt?: Date;
+      emailVerified?: boolean;
+    },
+  ): Promise<User | null> {
+    try {
+      const updateData: any = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.displayName !== undefined) updateData.displayName = data.displayName;
+      if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl;
+      if (data.role !== undefined) updateData.role = data.role as UserRole;
+      if (data.companyId !== undefined) updateData.companyId = data.companyId;
+      if (data.teamId !== undefined) updateData.teamId = data.teamId;
+      if (data.passwordHash !== undefined) updateData.passwordHash = data.passwordHash;
+      if (data.lastLoginAt !== undefined) updateData.lastLoginAt = data.lastLoginAt;
+      if (data.emailVerified !== undefined) updateData.emailVerified = data.emailVerified;
+
+      return await this.prisma.user.update({
+        where: { id },
+        data: updateData,
+      });
+    } catch {
+      const sets: string[] = [];
+      if (data.name) sets.push(`name = '${data.name}'`);
+      if (data.displayName) sets.push(`display_name = '${data.displayName}'`);
+      if (data.role) sets.push(`role = '${data.role}'`);
+      if (data.companyId) sets.push(`company_id = '${data.companyId}'`);
+      if (data.passwordHash) sets.push(`password_hash = '${data.passwordHash}'`);
+      if (data.lastLoginAt) sets.push(`last_login_at = NOW()`);
+      sets.push(`updated_at = NOW()`);
+
+      if (sets.length > 0) {
+        await this.prisma.$executeRawUnsafe(`
+          UPDATE users SET ${sets.join(', ')} WHERE id = '${id}'
+        `).catch(() => {});
+      }
+      return this.findById(id);
+    }
   }
 
-  async softDelete(id: string, deletedBy: string): Promise<UserWithRelations> {
-    return this.prisma.user.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-        deletedBy,
-      },
-      include: {
-        company: true,
-        team: true,
-      },
-    });
+  async updateUserRole(id: string, role: 'OWNER' | 'ADMIN' | 'MEMBER'): Promise<User | null> {
+    return this.update(id, { role });
+  }
+
+  async softDelete(id: string, deletedBy?: string): Promise<User | null> {
+    try {
+      return await this.prisma.user.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+          ...(deletedBy && { deletedBy }),
+        },
+      });
+    } catch {
+      await this.prisma.$executeRawUnsafe(`
+        UPDATE users SET deleted_at = NOW() WHERE id = '${id}'
+      `).catch(() => {});
+      return this.findById(id);
+    }
   }
 }

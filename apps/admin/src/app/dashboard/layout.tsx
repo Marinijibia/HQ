@@ -20,6 +20,9 @@ import {
   Building,
   UserPlus,
   Award,
+  DollarSign,
+  X,
+  Menu,
 } from 'lucide-react';
 import { AsadAdminVoiceButton } from '../../components/voice/asad-admin-voice-button';
 import { InviteUserModal } from '../../components/invite-user-modal';
@@ -32,6 +35,7 @@ interface SidebarItem {
 
 const navItems: SidebarItem[] = [
   { name: 'Operations Center', href: '/dashboard', icon: Activity },
+  { name: 'Billing & Treasury Oversight', href: '/dashboard/billing', icon: DollarSign },
   { name: 'AI Executive Training CMS', href: '/dashboard/cms', icon: Building },
   { name: 'Governance & Policies', href: '/dashboard/compliance', icon: Shield },
   { name: 'Kernel Execution Logs', href: '/dashboard/execution-log', icon: Terminal },
@@ -45,6 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { dbUser, loading, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const [inviteModalOpen, setInviteModalOpen] = React.useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!loading && !dbUser) {
@@ -104,8 +109,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Decorative background grid */}
       <div className="absolute inset-0 bg-[radial-gradient(#1e1e24_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none"></div>
 
-      {/* Glassmorphic left sidebar */}
-      <aside className="w-64 border-r border-slate-200 dark:border-white/10 bg-white/90 dark:bg-[#06070B]/95 backdrop-blur-2xl flex flex-col justify-between shrink-0 relative z-20 shadow-2xl">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 border-r border-slate-200 dark:border-white/10 bg-white/90 dark:bg-[#06070B]/95 backdrop-blur-2xl flex-col justify-between shrink-0 relative z-20 shadow-2xl">
         <div>
           {/* Header logo */}
           <div className="h-16 px-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
@@ -173,32 +178,111 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
+      {/* Mobile Drawer Overlay */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
+          <aside className="relative w-80 max-w-[85vw] bg-white dark:bg-[#06070B] border-r border-slate-200 dark:border-white/10 flex flex-col justify-between p-4 z-50 text-left shadow-2xl animate-in slide-in-from-left duration-200">
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10 mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-1 bg-gradient-to-tr from-cyan-500 to-purple-600 rounded-lg">
+                    <img src="/logo.png" alt="HQ Logo" className="h-6 w-6 rounded" />
+                  </div>
+                  <span className="font-black text-xs text-slate-900 dark:text-white tracking-tight">SUPER ADMIN CORE</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={toggleTheme}
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400"
+                  >
+                    {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
+                  </button>
+                  <button onClick={() => setMobileMenuOpen(false)} className="text-slate-400 p-1">
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+              <nav className="space-y-1.5">
+                <div className="text-[9px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest px-3 mb-2">
+                  ADMIN CONTROL
+                </div>
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                        isActive
+                          ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30 font-black'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <Icon size={16} />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Mobile Footer */}
+            <div className="pt-4 border-t border-slate-200 dark:border-white/10 space-y-3">
+              <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-100 dark:bg-card-bg/30">
+                <div className="h-8 w-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center font-bold text-xs">
+                  {dbUser.name?.slice(0, 2) || 'AD'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{dbUser.name}</div>
+                  <div className="text-[10px] text-slate-500 dark:text-foreground/50 truncate">{dbUser.email}</div>
+                </div>
+                <button onClick={logout} className="p-1.5 text-slate-400 hover:text-rose-500">
+                  <LogOut size={14} />
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* Main content body */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 text-left">
         {/* Top Header Bar */}
-        <header className="h-16 px-8 border-b border-slate-200 dark:border-card-border bg-white/50 dark:bg-card-bg/40 backdrop-blur-xl flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-              <Award className="h-3.5 w-3.5 text-blue-400" />
-              <span className="truncate max-w-[240px]">
+        <header className="h-16 px-4 sm:px-8 border-b border-slate-200 dark:border-card-border bg-white/70 dark:bg-card-bg/40 backdrop-blur-xl flex items-center justify-between shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open mobile navigation menu"
+              className="md:hidden p-2 rounded-xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+            >
+              <Menu size={18} />
+            </button>
+            <div className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+              <Award className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+              <span className="truncate max-w-[140px] sm:max-w-[240px]">
                 {localStorage.getItem('hq_admin_user_rank') || 'Director-General (DG)'} {dbUser?.name || 'Umar'}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <AsadVoiceCommand />
             <AsadAdminVoiceButton onOpenInviteModal={() => setInviteModalOpen(true)} />
             <Button
               onClick={() => setInviteModalOpen(true)}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black text-xs h-9 px-4 rounded-xl shadow-md flex items-center gap-1.5"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black text-xs h-9 px-3 sm:px-4 rounded-xl shadow-md flex items-center gap-1.5"
             >
-              <UserPlus className="h-4 w-4" /> Invite Admin Member
+              <UserPlus className="h-4 w-4" />
+              <span className="hidden sm:inline">Invite Admin Member</span>
+              <span className="sm:hidden">Invite</span>
             </Button>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8">
           {children}
         </div>
       </main>

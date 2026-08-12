@@ -48,6 +48,15 @@ export class CompanyController {
     private readonly companyService: CompanyService,
   ) {}
 
+  @Get()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List all multi-tenant organizations for Super Admin' })
+  async findAll() {
+    return this.companyRepository.findAll();
+  }
+
   @Get('check-slug')
   @ApiOperation({ summary: 'Check if company URL slug is available' })
   async checkSlug(@Query('slug') slug: string) {

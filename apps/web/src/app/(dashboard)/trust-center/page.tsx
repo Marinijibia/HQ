@@ -157,7 +157,7 @@ export default function TrustCenterPage() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all ${
                 activeTab === tab.id
-                  ? 'border-current text-white'
+                  ? 'border-current text-hq-blue font-extrabold'
                   : 'border-transparent text-foreground/55 hover:text-foreground'
               }`}
               style={activeTab === tab.id ? { borderColor: brandColor, color: brandColor } : {}}
