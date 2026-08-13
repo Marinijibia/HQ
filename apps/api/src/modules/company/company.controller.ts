@@ -52,9 +52,9 @@ export class CompanyController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'List all multi-tenant organizations for Super Admin' })
+  @ApiOperation({ summary: 'List all multi-tenant organizations for Super Admin with metrics' })
   async findAll() {
-    return this.companyRepository.findAll();
+    return this.companyRepository.findAllWithMetrics();
   }
 
   @Get('check-slug')
@@ -81,6 +81,52 @@ export class CompanyController {
   @ApiOperation({ summary: 'Create a new multi-tenant organization' })
   async create(@Body() createDto: CreateCompanyDto) {
     return this.companyRepository.create(createDto);
+  }
+
+  @Get(':id/details')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get detailed organization metrics, users, and marketplace installations' })
+  async getDetails(@Param('id') id: string) {
+    const details = await this.companyRepository.findDetailsWithMetrics(id);
+    if (!details) {
+      throw new NotFoundException('Organization not found');
+    }
+    return details;
+  }
+
+  @Patch(':id/level')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update organization level / tier (ENTERPRISE, TEAM, INDIVIDUAL)' })
+  async updateLevel(
+    @Param('id') id: string,
+    @Body('level') level: CompanyLevel,
+  ) {
+    return this.companyRepository.update(id, { level });
+  }
+
+  @Post(':id/force-password-reset')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Force password reset requirement for all tenant users' })
+  async forcePasswordReset(@Param('id') id: string) {
+    return this.companyRepository.forcePasswordResetForOrg(id);
+  }
+
+  @Post(':id/suspend')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMINISTRATOR)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle organization workspace suspension state' })
+  async toggleSuspend(
+    @Param('id') id: string,
+    @Body('isSuspended') isSuspended: boolean,
+  ) {
+    return this.companyRepository.toggleSuspension(id, isSuspended);
   }
 
   @Get(':id')

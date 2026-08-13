@@ -170,11 +170,11 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const handleDismissAll = async () => {
     if (!token) return;
     try {
-      await fetch('/api/notifications/dismiss-all', {
+      await fetch('/api/notifications/mark-all-read', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotifications([]);
+      fetchNotifications();
     } catch {
       setNotifications([]);
     }
@@ -348,39 +348,55 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                   <div className="flex items-center gap-2">
                     <Bell size={16} className="text-cyan-600 dark:text-cyan-400" />
                     <span className="text-xs font-bold text-slate-900 dark:text-white">Workspace Notifications</span>
-                    <Badge variant="outline" className="text-[10px]">{notifications.length}</Badge>
+                    <Badge variant="outline" className="text-[10px]">{notifications.filter(n => !n.read).length || notifications.length}</Badge>
                   </div>
                   {notifications.length > 0 && (
                     <button
                       onClick={handleDismissAll}
                       className="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline font-semibold"
                     >
-                      Clear All
+                      Mark All Read
                     </button>
                   )}
                 </div>
 
                 <div className="max-h-64 overflow-y-auto space-y-2.5 text-xs pr-1">
                   {notifications.length === 0 ? (
-                    <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs">
+                    <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs font-medium">
                       No new notifications. All C-Suite directives are clear.
                     </div>
                   ) : (
-                    notifications.map((n, idx) => (
+                    notifications.slice(0, 5).map((n, idx) => (
                       <div
-                        key={idx}
-                        className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-1 hover:border-cyan-400 transition-colors"
+                        key={n.id || idx}
+                        className={`p-2.5 rounded-xl border space-y-1 transition-all ${
+                          !n.read
+                            ? 'bg-cyan-500/5 dark:bg-cyan-500/10 border-cyan-500/30'
+                            : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10'
+                        }`}
                       >
                         <div className="flex items-center justify-between text-[11px] font-bold text-slate-900 dark:text-white">
-                          <span>{n.title || 'Executive Update'}</span>
-                          <span className="text-[9px] text-slate-400 font-mono">{n.time || 'Just now'}</span>
+                          <span className="truncate">{n.title || 'Executive Update'}</span>
+                          <span className="text-[9px] text-slate-400 font-mono shrink-0 ml-2">
+                            {n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                          </span>
                         </div>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-300 font-normal leading-relaxed">
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300 font-normal leading-relaxed line-clamp-2">
                           {n.message || n.description}
                         </p>
                       </div>
                     ))
                   )}
+                </div>
+
+                <div className="mt-3 pt-2 border-t border-slate-200 dark:border-white/10 text-center">
+                  <Link
+                    href="/notifications"
+                    onClick={() => setShowNotifications(false)}
+                    className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 inline-flex items-center gap-1"
+                  >
+                    View All Notifications Inbox <ArrowRight size={12} />
+                  </Link>
                 </div>
               </div>
             )}

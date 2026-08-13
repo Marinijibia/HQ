@@ -15,14 +15,17 @@ import {
   LogOut,
   ShieldAlert,
   ArrowLeft,
+  ArrowRight,
   Sun,
   Moon,
+  Building2,
   Building,
   UserPlus,
   Award,
   DollarSign,
   X,
   Menu,
+  Bell,
 } from 'lucide-react';
 import { AsadAdminVoiceButton } from '../../components/voice/asad-admin-voice-button';
 import { InviteUserModal } from '../../components/invite-user-modal';
@@ -35,6 +38,9 @@ interface SidebarItem {
 
 const navItems: SidebarItem[] = [
   { name: 'Operations Center', href: '/dashboard', icon: Activity },
+  { name: 'Organization Management', href: '/dashboard/organizations', icon: Building2 },
+  { name: 'Admin Staff & Invitations', href: '/dashboard/staff', icon: UserPlus },
+  { name: 'Notifications & Telemetry', href: '/dashboard/notifications', icon: Bell },
   { name: 'Billing & Treasury Oversight', href: '/dashboard/billing', icon: DollarSign },
   { name: 'AI Executive Training CMS', href: '/dashboard/cms', icon: Building },
   { name: 'Governance & Policies', href: '/dashboard/compliance', icon: Shield },
@@ -50,6 +56,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isDarkMode, toggleTheme } = useTheme();
   const [inviteModalOpen, setInviteModalOpen] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [showAdminNotifs, setShowAdminNotifs] = React.useState(false);
 
   React.useEffect(() => {
     if (!loading && !dbUser) {
@@ -271,6 +278,79 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center space-x-2 sm:space-x-3">
             <AsadVoiceCommand />
             <AsadAdminVoiceButton onOpenInviteModal={() => setInviteModalOpen(true)} />
+
+            {/* Admin Notification Bell */}
+            <div className="relative">
+              <button
+                onClick={() => setShowAdminNotifs(!showAdminNotifs)}
+                className="relative p-2 rounded-xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
+              >
+                <Bell size={18} />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-cyan-500" />
+              </button>
+
+              {showAdminNotifs && (
+                <div className="absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl p-4 shadow-2xl z-50 animate-in fade-in zoom-in duration-200 text-left">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3 mb-3">
+                    <div className="flex items-center gap-2">
+                      <Bell size={16} className="text-cyan-500" />
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">Platform System Telemetry</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-bold">
+                      LIVE
+                    </span>
+                  </div>
+
+                  <div className="max-h-64 overflow-y-auto space-y-2.5 text-xs pr-1">
+                    {[
+                      {
+                        title: 'Super-Admin Access Granted',
+                        msg: `Authenticated session active for ${dbUser?.name || 'Administrator'}`,
+                        time: 'Just now',
+                        type: 'SECURITY',
+                      },
+                      {
+                        title: 'Multi-Tenant Company Audit',
+                        msg: 'All registered company workspaces operating with zero cross-tenant leaks.',
+                        time: '5m ago',
+                        type: 'SYSTEM',
+                      },
+                      {
+                        title: '5 Core Executives Standard',
+                        msg: 'Asad, Teema, Legal, HR, and Mr. Intelligence synced across all tenants.',
+                        time: '12m ago',
+                        type: 'EXECUTIVE',
+                      },
+                    ].map((n, idx) => (
+                      <div
+                        key={idx}
+                        className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-1 hover:border-cyan-500/40 transition-colors"
+                      >
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-900 dark:text-white">
+                          <span>{n.title}</span>
+                          <span className="text-[9px] text-slate-400 font-mono">{n.time}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300 font-normal leading-relaxed">
+                          {n.msg}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-3 pt-2 border-t border-slate-200 dark:border-white/10 text-center">
+                    <Link
+                      href="/dashboard/notifications"
+                      onClick={() => setShowAdminNotifs(false)}
+                      className="text-[11px] font-bold text-cyan-500 hover:underline inline-flex items-center gap-1"
+                    >
+                      View Platform Telemetry Alerts <ArrowRight size={12} />
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <Button
               onClick={() => setInviteModalOpen(true)}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black text-xs h-9 px-3 sm:px-4 rounded-xl shadow-md flex items-center gap-1.5"

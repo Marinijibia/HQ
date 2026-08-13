@@ -24,7 +24,41 @@ export class NotificationService {
       search?: string;
     },
   ): Promise<Notification[]> {
-    return this.notificationRepository.findByCompanyId(companyId, filters);
+    let notifs = await this.notificationRepository.findByCompanyId(companyId, filters);
+
+    if (notifs.length === 0 && (!filters || Object.keys(filters).length === 0)) {
+      // Auto-seed initial welcome notifications for workspace
+      await this.createNotification({
+        title: 'Executive Boardroom Initialized',
+        message: 'Your multi-tenant executive workspace is fully active with 5 Core Active Directors.',
+        companyId,
+        priority: 'HIGH',
+        category: 'EXECUTIVE',
+        actionUrl: '/boardroom',
+      }).catch(() => null);
+
+      await this.createNotification({
+        title: '5 Core Directors Standing By',
+        message: 'Asad (CEO), Teema (Ops), Legal, Resource Director, and Mr. Intelligence are online.',
+        companyId,
+        priority: 'MEDIUM',
+        category: 'SYSTEM',
+        actionUrl: '/ceo-chat',
+      }).catch(() => null);
+
+      await this.createNotification({
+        title: 'Marketplace Suite Available',
+        message: 'Explore specialized department packs and executive suites in the Marketplace.',
+        companyId,
+        priority: 'LOW',
+        category: 'MISSION',
+        actionUrl: '/marketplace',
+      }).catch(() => null);
+
+      notifs = await this.notificationRepository.findByCompanyId(companyId, filters);
+    }
+
+    return notifs;
   }
 
   async createNotification(data: {

@@ -57,19 +57,27 @@ interface MarketplaceItem {
   rating: number;
 }
 
+const DEFAULT_EXECUTIVE_ROSTER: ExecutiveItem[] = [
+  { id: 'exec-ceo-001', name: 'Asad', roleKey: 'ceo', title: 'Chief Executive Officer (CEO)', systemPrompt: 'You are Asad, Chief Executive Officer. Lead strategic growth, corporate vision, and executive alignment across all departments.', isDefaultRoster: true, isActiveInWorkspace: true },
+  { id: 'exec-ops-001', name: 'Teema', roleKey: 'operations_director', title: 'Operations Director & Chief of Staff', systemPrompt: 'You are Teema, Operations Director. Manage daily execution, cross-department coordination, and operational efficiency.', isDefaultRoster: true, isActiveInWorkspace: true },
+  { id: 'exec-leg-001', name: 'Legal', roleKey: 'legal_compliance_director', title: 'Legal & Compliance Director', systemPrompt: 'You are Legal Director. Ensure regulatory compliance, data privacy, contract governance, and legal risk management.', isDefaultRoster: true, isActiveInWorkspace: true },
+  { id: 'exec-hr-001', name: 'Resource Director', roleKey: 'human_resources_director', title: 'Human Resources & Talent Director', systemPrompt: 'You are HR Director. Lead talent acquisition, performance reviews, organizational culture, and team structure.', isDefaultRoster: true, isActiveInWorkspace: true },
+  { id: 'exec-sea-001', name: 'Mr. Intelligence', roleKey: 'public_search_agent', title: 'Public Search Agent & Web Scraper', systemPrompt: 'You are Mr. Intelligence. Conduct web intelligence scanning, competitor research, and real-time market discovery.', isDefaultRoster: true, isActiveInWorkspace: true },
+];
+
 export default function AdminCmsPage() {
   const { token } = useAuth();
   const [activeTab, setActiveTab] = React.useState<'executives' | 'departments' | 'research' | 'marketplace'>('executives');
   const [loading, setLoading] = React.useState(false);
-  const [executives, setExecutives] = React.useState<ExecutiveItem[]>([]);
+  const [executives, setExecutives] = React.useState<ExecutiveItem[]>(DEFAULT_EXECUTIVE_ROSTER);
   const [departments, setDepartments] = React.useState<DepartmentItem[]>([]);
   const [marketplaceListings, setMarketplaceListings] = React.useState<MarketplaceItem[]>([]);
   
   // Edit State
-  const [selectedExec, setSelectedExec] = React.useState<ExecutiveItem | null>(null);
-  const [editPrompt, setEditPrompt] = React.useState('');
-  const [editName, setEditName] = React.useState('');
-  const [editTitle, setEditTitle] = React.useState('');
+  const [selectedExec, setSelectedExec] = React.useState<ExecutiveItem | null>(DEFAULT_EXECUTIVE_ROSTER[0]);
+  const [editPrompt, setEditPrompt] = React.useState(DEFAULT_EXECUTIVE_ROSTER[0].systemPrompt || '');
+  const [editName, setEditName] = React.useState(DEFAULT_EXECUTIVE_ROSTER[0].name);
+  const [editTitle, setEditTitle] = React.useState(DEFAULT_EXECUTIVE_ROSTER[0].title);
 
   // Training Data State
   const [trainFileName, setTrainFileName] = React.useState('');
@@ -103,10 +111,21 @@ export default function AdminCmsPage() {
         fetch('/api/marketplace/listings', { headers }).catch(() => null),
       ]);
 
+      let execList = DEFAULT_EXECUTIVE_ROSTER;
       if (execRes && execRes.ok) {
         const data = await execRes.json();
-        setExecutives(data);
+        if (Array.isArray(data) && data.length > 0) {
+          execList = data;
+        }
       }
+      setExecutives(execList);
+      setSelectedExec((prev) => {
+        const current = prev ? execList.find(e => e.id === prev.id) || execList[0] : execList[0];
+        setEditName(current.name);
+        setEditTitle(current.title);
+        setEditPrompt(current.systemPrompt || '');
+        return current;
+      });
 
       if (deptRes && deptRes.ok) {
         const deptData = await deptRes.json();

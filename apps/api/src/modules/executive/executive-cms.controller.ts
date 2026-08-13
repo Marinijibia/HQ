@@ -68,60 +68,76 @@ export class ExecutiveCmsController {
     });
 
     if (execs.length === 0) {
+      let companyId = 'comp-master-001';
       let company = await this.prisma.company.findFirst().catch(() => null);
-      if (!company) {
+      if (company?.id) {
+        companyId = company.id;
+      } else {
         try {
-          company = await this.prisma.company.create({
-            data: {
-              name: 'HQ Master Workspace',
-              slug: 'hq-master',
-            },
+          const newComp = await this.prisma.company.create({
+            data: { id: companyId, name: 'HQ Master Workspace', slug: 'hq-master' },
           });
+          companyId = newComp.id;
         } catch {
-          /* ignore */
+          await this.prisma.$executeRawUnsafe(`
+            INSERT INTO companies (id, name, slug) VALUES ('comp-master-001', 'HQ Master Workspace', 'hq-master') ON CONFLICT (id) DO NOTHING;
+          `).catch(() => {});
         }
       }
 
+      let deptId = 'dept-master-001';
       let defaultDept = await this.prisma.department.findFirst().catch(() => null);
-      if (!defaultDept && company?.id) {
+      if (defaultDept?.id) {
+        deptId = defaultDept.id;
+      } else {
         try {
-          defaultDept = await this.prisma.department.create({
+          const newDept = await this.prisma.department.create({
             data: {
+              id: deptId,
               name: 'Executive Leadership',
               description: 'C-Suite Executive Board & Governance',
               isDefaultRoster: true,
-              companyId: company.id,
+              companyId,
             },
           });
+          deptId = newDept.id;
         } catch {
-          /* ignore */
+          await this.prisma.$executeRawUnsafe(`
+            INSERT INTO departments (id, name, description, is_default_roster, company_id)
+            VALUES ('dept-master-001', 'Executive Leadership', 'C-Suite Executive Board & Governance', true, '${companyId}')
+            ON CONFLICT (id) DO NOTHING;
+          `).catch(() => {});
         }
       }
 
       const defaultRoster = [
-        { name: 'Asad', roleKey: 'ceo', title: 'Chief Executive Officer (CEO)', systemPrompt: 'You are Asad, Chief Executive Officer. Lead strategic growth, corporate vision, and executive alignment across all departments.' },
-        { name: 'Teema', roleKey: 'operations_director', title: 'Operations Director & Chief of Staff', systemPrompt: 'You are Teema, Operations Director. Manage daily execution, cross-department coordination, and operational efficiency.' },
-        { name: 'Dr. Hiroshi Tanaka', roleKey: 'cto', title: 'Chief Technology Officer (CTO)', systemPrompt: 'You are Dr. Hiroshi Tanaka, CTO. Oversee software architecture, AI infrastructure, cloud engineering, and technical roadmap.' },
-        { name: 'Sophia Vance', roleKey: 'cfo', title: 'Chief Financial Officer (CFO)', systemPrompt: 'You are Sophia Vance, CFO. Oversee capital allocation, treasury, pricing models, budgeting, and automated accounting.' },
-        { name: 'Legal', roleKey: 'legal_compliance_director', title: 'Legal & Compliance Director', systemPrompt: 'You are Legal Director. Ensure regulatory compliance, data privacy, contract governance, and legal risk management.' },
-        { name: 'Resource Director', roleKey: 'human_resources_director', title: 'Human Resources & Talent Director', systemPrompt: 'You are HR Director. Lead talent acquisition, performance reviews, organizational culture, and team structure.' },
-        { name: 'Mr. Intelligence', roleKey: 'public_search_agent', title: 'Public Search Agent & Web Scraper', systemPrompt: 'You are Mr. Intelligence. Conduct web intelligence scanning, competitor research, and real-time market discovery.' },
-        { name: 'Linus Kovacs', roleKey: 'software_engineering_director', title: 'Software Engineering Lead', systemPrompt: 'You are Linus Kovacs, Engineering Lead. Maintain codebase quality, code reviews, API integrations, and developer tooling.' },
+        { id: 'exec-ceo-001', name: 'Asad', roleKey: 'ceo', title: 'Chief Executive Officer (CEO)', systemPrompt: 'You are Asad, Chief Executive Officer. Lead strategic growth, corporate vision, and executive alignment across all departments.' },
+        { id: 'exec-ops-001', name: 'Teema', roleKey: 'operations_director', title: 'Operations Director & Chief of Staff', systemPrompt: 'You are Teema, Operations Director. Manage daily execution, cross-department coordination, and operational efficiency.' },
+        { id: 'exec-leg-001', name: 'Legal', roleKey: 'legal_compliance_director', title: 'Legal & Compliance Director', systemPrompt: 'You are Legal Director. Ensure regulatory compliance, data privacy, contract governance, and legal risk management.' },
+        { id: 'exec-hr-001', name: 'Resource Director', roleKey: 'human_resources_director', title: 'Human Resources & Talent Director', systemPrompt: 'You are HR Director. Lead talent acquisition, performance reviews, organizational culture, and team structure.' },
+        { id: 'exec-sea-001', name: 'Mr. Intelligence', roleKey: 'public_search_agent', title: 'Public Search Agent & Web Scraper', systemPrompt: 'You are Mr. Intelligence. Conduct web intelligence scanning, competitor research, and real-time market discovery.' },
       ];
 
       for (const r of defaultRoster) {
-        if (defaultDept?.id) {
+        try {
           await this.prisma.executive.create({
             data: {
+              id: r.id,
               name: r.name,
               roleKey: r.roleKey,
               title: r.title,
               systemPrompt: r.systemPrompt,
               isDefaultRoster: true,
               isActiveInWorkspace: true,
-              departmentId: defaultDept.id,
+              departmentId: deptId,
             },
-          }).catch(() => {});
+          });
+        } catch {
+          await this.prisma.$executeRawUnsafe(`
+            INSERT INTO executives (id, name, role_key, title, system_prompt, is_default_roster, is_active_in_workspace, department_id)
+            VALUES ('${r.id}', '${r.name.replace(/'/g, "''")}', '${r.roleKey}', '${r.title.replace(/'/g, "''")}', '${r.systemPrompt.replace(/'/g, "''")}', true, true, '${deptId}')
+            ON CONFLICT (id) DO NOTHING;
+          `).catch(() => {});
         }
       }
 

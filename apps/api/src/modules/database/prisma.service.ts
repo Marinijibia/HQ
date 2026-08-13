@@ -20,11 +20,19 @@ export class PrismaService
 
   private async ensureTablesExist() {
     try {
-      // Safely ensure vector extension is created if user has privileges
-      try {
-        await this.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS vector;`);
-      } catch {
-        // Ignore extension error if cloudsql.enable_pgvector is already managed or user is non-superuser
+      // Ensure required Postgres ENUM types exist for Prisma
+      const createEnums = [
+        `DO $$ BEGIN CREATE TYPE "CompanyLevel" AS ENUM ('HOLDING_CO', 'SUBSIDIARY', 'BUSINESS_UNIT', 'PROJECT_TEAM'); EXCEPTION WHEN duplicate_object THEN null; END $$;`,
+        `DO $$ BEGIN CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMINISTRATOR', 'ORGANIZATION_OWNER', 'EXECUTIVE_DIRECTOR', 'DEPARTMENT_HEAD', 'TEAM_LEAD', 'MEMBER', 'GUEST'); EXCEPTION WHEN duplicate_object THEN null; END $$;`,
+        `DO $$ BEGIN CREATE TYPE "SubscriptionStatus" AS ENUM ('ACTIVE', 'CANCELED', 'PAST_DUE', 'TRIALING'); EXCEPTION WHEN duplicate_object THEN null; END $$;`,
+        `DO $$ BEGIN CREATE TYPE "SubscriptionTier" AS ENUM ('STARTER', 'GROWTH', 'ENTERPRISE', 'CUSTOM'); EXCEPTION WHEN duplicate_object THEN null; END $$;`,
+        `DO $$ BEGIN CREATE TYPE "MissionStatus" AS ENUM ('DRAFT', 'PLANNING', 'IN_PROGRESS', 'PAUSED', 'COMPLETED', 'CANCELLED', 'FAILED'); EXCEPTION WHEN duplicate_object THEN null; END $$;`,
+        `DO $$ BEGIN CREATE TYPE "TaskStatus" AS ENUM ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'SKIPPED'); EXCEPTION WHEN duplicate_object THEN null; END $$;`,
+      ];
+      for (const eSql of createEnums) {
+        try {
+          await this.$executeRawUnsafe(eSql);
+        } catch {}
       }
 
       // 1. Ensure table users exists & add ALL columns (including password_hash)
