@@ -150,8 +150,9 @@ export default function OnboardingPage() {
   // Step 6: AI Governance Operating Style
   const [aiStyle, setAiStyle] = React.useState('growth');
 
-  // Step 7: Brand Accent
+  // Step 7: Brand Accent & Subscription Tier
   const [brandColor, setBrandColor] = React.useState('#06b6d4');
+  const [selectedPlanCode, setSelectedPlanCode] = React.useState('FREE');
 
   // Step 11: Submission State
   const [submitting, setSubmitting] = React.useState(false);
@@ -653,6 +654,7 @@ export default function OnboardingPage() {
       orgName,
       slogan,
       orgSlug,
+      planCode: selectedPlanCode,
       industry,
       companySize,
       userTitle,
@@ -1320,42 +1322,111 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* STEP 7: Workspace Branding Accent */}
+            {/* STEP 7: Workspace Branding Accent & Subscription Tier Selection */}
             {step === 7 && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className="space-y-2 text-left border-b border-slate-200 dark:border-white/10 pb-5">
                   <div className="flex items-center gap-2 text-[10px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
                     <Palette className="h-3.5 w-3.5" />
-                    STEP 7: WORKSPACE BRANDING
+                    STEP 7: BRANDING & SUBSCRIPTION TIER
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                    Select Brand Accent Color
+                    Select Plan Tier & Brand Theme
                   </h2>
                   <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
-                    Personalize your executive dashboard with your corporate brand theme.
+                    Choose your workspace subscription tier and customize your executive dashboard theme.
                   </p>
                 </div>
 
-                <div className="flex items-center justify-center gap-4 py-6">
-                  {[
-                    { color: '#06b6d4', label: 'Cyan Cyber' },
-                    { color: '#3b82f6', label: 'Electric Blue' },
-                    { color: '#a855f7', label: 'Luxury Purple' },
-                    { color: '#10b981', label: 'Emerald Tech' },
-                    { color: '#f59e0b', label: 'Amber Gold' },
-                  ].map((c) => (
-                    <button
-                      key={c.color}
-                      type="button"
-                      onClick={() => setBrandColor(c.color)}
-                      className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-all ${
-                        brandColor === c.color ? 'scale-110 shadow-lg ring-2 ring-white ring-offset-2 ring-offset-black' : 'opacity-70 hover:opacity-100'
-                      }`}
-                      style={{ backgroundColor: c.color }}
-                    >
-                      {brandColor === c.color && <Check className="h-5 w-5 text-black stroke-[3]" />}
-                    </button>
-                  ))}
+                {/* Subscription Tier Cards */}
+                <div className="space-y-3 text-left">
+                  <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                    Choose Workspace Plan Tier (Default: Free Starter Tier)
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {[
+                      {
+                        code: 'FREE',
+                        name: 'Free Starter Tier',
+                        price: '$0 / mo',
+                        badge: 'Recommended Free',
+                        desc: '500 AI Monthly Credits · 10 Active Missions · 5 Boardroom Executives · Standard RAG Vector Search',
+                        isPopular: true,
+                      },
+                      {
+                        code: 'PRO',
+                        name: 'Pro Tier',
+                        price: '$49 / mo',
+                        badge: 'Growth',
+                        desc: '5,000 AI Monthly Credits · 50 Active Missions · Unlimited Executives · Priority ASAD Voice Synthesis',
+                        isPopular: false,
+                      },
+                      {
+                        code: 'ENTERPRISE',
+                        name: 'Enterprise Tier',
+                        price: '$299 / mo',
+                        badge: 'Scale',
+                        desc: '50,000 AI Monthly Credits · 1,000 Active Missions · Dedicated Agent Swarms · SOC2 Security Audit',
+                        isPopular: false,
+                      },
+                    ].map((tier) => (
+                      <div
+                        key={tier.code}
+                        onClick={() => setSelectedPlanCode(tier.code)}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 relative ${
+                          selectedPlanCode === tier.code
+                            ? 'bg-gradient-to-b from-cyan-500/15 via-blue-500/10 to-purple-500/15 border-cyan-400/60 shadow-[0_0_20px_rgba(6,182,212,0.2)]'
+                            : 'bg-white dark:bg-black/40 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                        }`}
+                      >
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black text-slate-900 dark:text-white">{tier.name}</span>
+                            <Badge variant={tier.code === 'FREE' ? 'success' : 'neutral'} className="text-[8px] font-extrabold uppercase">
+                              {tier.badge}
+                            </Badge>
+                          </div>
+                          <div className="text-lg font-black text-cyan-600 dark:text-cyan-300">{tier.price}</div>
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-medium">{tier.desc}</p>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-700 dark:text-slate-300 pt-2 border-t border-slate-200 dark:border-white/10">
+                          <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${selectedPlanCode === tier.code ? 'border-cyan-400 bg-cyan-400 text-black' : 'border-slate-400 bg-transparent'}`}>
+                            {selectedPlanCode === tier.code && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                          </div>
+                          <span>{selectedPlanCode === tier.code ? 'Selected Tier' : 'Select Plan'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Brand Color Theme Selection */}
+                <div className="space-y-2 text-left pt-2 border-t border-slate-200 dark:border-white/10">
+                  <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                    Workspace Brand Theme Accent
+                  </label>
+                  <div className="flex items-center justify-center gap-4 py-3">
+                    {[
+                      { color: '#06b6d4', label: 'Cyan Cyber' },
+                      { color: '#3b82f6', label: 'Electric Blue' },
+                      { color: '#a855f7', label: 'Luxury Purple' },
+                      { color: '#10b981', label: 'Emerald Tech' },
+                      { color: '#f59e0b', label: 'Amber Gold' },
+                    ].map((c) => (
+                      <button
+                        key={c.color}
+                        type="button"
+                        onClick={() => setBrandColor(c.color)}
+                        className={`h-11 w-11 rounded-2xl flex items-center justify-center transition-all cursor-pointer ${
+                          brandColor === c.color ? 'scale-110 shadow-lg ring-2 ring-white ring-offset-2 ring-offset-black' : 'opacity-70 hover:opacity-100'
+                        }`}
+                        style={{ backgroundColor: c.color }}
+                      >
+                        {brandColor === c.color && <Check className="h-4 w-4 text-black stroke-[3]" />}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -1610,6 +1681,16 @@ export default function OnboardingPage() {
                     <div className="text-base font-black text-slate-900 dark:text-white">{orgName || 'HQ Workspace'}</div>
                     {slogan && <div className="text-xs text-cyan-600 dark:text-cyan-400 italic font-medium">"{slogan}"</div>}
                     <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">URL: hq.netify.ng/{orgSlug}</div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white dark:bg-black/50 border border-slate-200 dark:border-white/10 space-y-2">
+                    <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">SELECTED PLAN TIER</div>
+                    <div className="text-base font-black text-cyan-600 dark:text-cyan-300 flex items-center justify-between">
+                      <span>{selectedPlanCode === 'FREE' ? 'Free Starter Tier ($0/mo)' : selectedPlanCode === 'PRO' ? 'Pro Tier ($49/mo)' : 'Enterprise Tier ($299/mo)'}</span>
+                      <Badge variant={selectedPlanCode === 'FREE' ? 'success' : 'neutral'} className="text-[9px] font-bold">
+                        {selectedPlanCode === 'FREE' ? 'Standard Limits Active' : 'Paid Tier Active'}
+                      </Badge>
+                    </div>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-white dark:bg-black/50 border border-slate-200 dark:border-white/10 space-y-2">

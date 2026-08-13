@@ -46,6 +46,11 @@ export class OnboardCompanyDto {
   @IsNotEmpty()
   orgSlug!: string;
 
+  @ApiProperty({ example: 'FREE' })
+  @IsString()
+  @IsOptional()
+  planCode?: string;
+
   @ApiProperty({ example: 'Technology' })
   @IsString()
   @IsOptional()

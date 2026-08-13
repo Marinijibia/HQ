@@ -38,7 +38,8 @@ export class CompanyService {
   }
 
   async onboardCompany(userId: string, dto: OnboardCompanyDto) {
-    this.logger.log(`Initiating company onboarding for User ${userId}: ${dto.orgName}`);
+    const selectedPlanCode = (dto.planCode || 'FREE').toUpperCase();
+    this.logger.log(`Initiating company onboarding for User ${userId}: ${dto.orgName} [Selected Plan Tier: ${selectedPlanCode}]`);
 
     let slug = dto.orgSlug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '-');
 
@@ -62,7 +63,67 @@ export class CompanyService {
           },
         });
 
-        // 2. Create Departments
+        // 2. Provision Subscription & Plan Tier Limits (Default: FREE Tier)
+        let plan = await tx.plan.findUnique({
+          where: { code: selectedPlanCode },
+        });
+
+        if (!plan) {
+          plan = await tx.plan.create({
+            data: {
+              name: selectedPlanCode === 'FREE' ? 'Free Tier' : selectedPlanCode === 'PRO' ? 'Pro Tier' : 'Enterprise Tier',
+              code: selectedPlanCode,
+              description: selectedPlanCode === 'FREE' 
+                ? 'Free Starter Tier: 500 AI monthly credits, 10 active missions, standard board' 
+                : selectedPlanCode === 'PRO'
+                ? 'Pro Tier: 5,000 AI monthly credits, 50 active missions, priority voice'
+                : 'Enterprise Tier: Unlimited AI credits, custom model fine-tuning, dedicated agentic swarm',
+            },
+          });
+        }
+
+        const subscription = await tx.subscription.create({
+          data: {
+            companyId: company.id,
+            planId: plan.id,
+            status: selectedPlanCode === 'FREE' ? 'ACTIVE' : 'TRIAL',
+            currentPeriodStart: new Date(),
+            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          },
+        });
+
+        // 3. Provision Initial Tier Entitlements & Usage Records
+        const initialCredits = selectedPlanCode === 'FREE' ? 500 : selectedPlanCode === 'PRO' ? 5000 : 50000;
+        const initialMissionsLimit = selectedPlanCode === 'FREE' ? 10 : selectedPlanCode === 'PRO' ? 50 : 1000;
+
+        await tx.usageRecord.createMany({
+          data: [
+            {
+              companyId: company.id,
+              type: 'CREDITS',
+              quantity: initialCredits,
+              resetAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            },
+            {
+              companyId: company.id,
+              type: 'MISSIONS',
+              quantity: initialMissionsLimit,
+              resetAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            },
+          ],
+        });
+
+        // 4. Provision Organization Virtual Wallet ($50 USD starter allowance for Free tier)
+        await tx.organizationWallet.create({
+          data: {
+            companyId: company.id,
+            balanceUsd: selectedPlanCode === 'FREE' ? 50.0 : selectedPlanCode === 'PRO' ? 500.0 : 2500.0,
+            currency: 'USD',
+            status: 'ACTIVE',
+          },
+        });
+
+        // 5. Create Departments
         const createdDepartments: any[] = [];
         if (dto.departments && dto.departments.length > 0) {
           for (const deptName of dto.departments) {
@@ -86,7 +147,7 @@ export class CompanyService {
           createdDepartments.push(defaultDept);
         }
 
-        // 3. Create or Assign AI Executives
+        // 6. Create or Assign AI Executives
         const createdExecutives: any[] = [];
         if (dto.aiExecs && dto.aiExecs.length > 0) {
           for (const execDto of dto.aiExecs) {
@@ -112,7 +173,7 @@ export class CompanyService {
           }
         }
 
-        // 4. Update User role and company association
+        // 7. Update User role and company association
         let user: any = null;
         try {
           user = await tx.user.update({
@@ -146,6 +207,8 @@ export class CompanyService {
         return {
           token,
           company,
+          subscription,
+          plan,
           departments: createdDepartments,
           executives: createdExecutives,
           user,
@@ -153,7 +216,7 @@ export class CompanyService {
       });
 
       this.logger.log(
-        `Company Onboarding Complete: ${result.company.name} (${result.company.id}) for User ${userId}`,
+        `Company Onboarding Complete: ${result.company.name} (${result.company.id}) on ${selectedPlanCode} Tier for User ${userId}`,
       );
 
       return result;
