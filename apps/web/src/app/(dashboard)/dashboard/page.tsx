@@ -566,7 +566,7 @@ export default function DashboardPage() {
 
         {/* Right Col: Global Activity Feed */}
         <div className="space-y-6">
-          <GlobalActivityFeed />
+          <GlobalActivityFeed token={token ?? undefined} />
         </div>
       </div>
     </div>

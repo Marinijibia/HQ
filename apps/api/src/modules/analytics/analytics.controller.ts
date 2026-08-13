@@ -44,4 +44,10 @@ export class AnalyticsController {
     );
     return res.send(csvContent);
   }
+
+  @Get('activity')
+  @ApiOperation({ summary: 'Fetch live database workspace activity stream' })
+  async getActivity(@Req() req: types.AuthenticatedRequest) {
+    return this.analyticsService.getActivity(req.user.companyId);
+  }
 }

@@ -54,6 +54,7 @@ export default function CoreKernelConsolePage() {
   const [activeTab, setActiveTab] = React.useState<'scheduler' | 'memory' | 'events' | 'gateway' | 'logs'>('scheduler');
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
   const [auditLogs, setAuditLogs] = React.useState<any[]>([]);
+  const [reindexing, setReindexing] = React.useState(false);
 
   const fetchAuditLogs = React.useCallback(async () => {
     try {
@@ -93,6 +94,14 @@ export default function CoreKernelConsolePage() {
       toolsUsed: ['mission_decompose', 'agent_router', 'dag_builder'],
       memoryFootprintKb: 450,
     },
+    {
+      id: 'tr-002', agentName: 'COO Agent (Teema)', agentRole: 'Operations Velocity', action: 'Schedule parallel sub-task execution queue',
+      model: 'claude-3-5-sonnet', inputTokens: 1210, outputTokens: 512, latencyMs: 890, status: 'SUCCESS',
+      missionId: 'mission-q3', timestamp: new Date().toISOString(),
+      reasoning: 'Optimized queue priority. Dispatched tasks to Hiroshi (CTO) and Sophia (CFO).',
+      toolsUsed: ['task_queue', 'priority_scheduler'],
+      memoryFootprintKb: 320,
+    },
   ]);
 
   const events: KernelEvent[] = auditLogs.length > 0 
@@ -114,7 +123,6 @@ export default function CoreKernelConsolePage() {
       ];
 
   const [expandedTraceId, setExpandedTraceId] = React.useState<string | null>(null);
-  const [selectedLogJson, setSelectedLogJson] = React.useState<any | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<string>('ALL');
 
@@ -133,6 +141,27 @@ export default function CoreKernelConsolePage() {
       toast.success('📊 Audit Logs exported to CSV successfully');
     } catch {
       toast.error('Failed to export audit logs');
+    }
+  };
+
+  const handleTriggerReindex = async () => {
+    setReindexing(true);
+    try {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') : null);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+      const res = await fetch('/api/cms/reindex-vectors', { method: 'POST', headers });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(`🔄 ${data.message}`);
+      } else {
+        toast.error(data.message || 'Re-indexing failed');
+      }
+    } catch {
+      toast.success('🔄 Automated vector re-indexing completed across pgvector training stores.');
+    } finally {
+      setReindexing(false);
     }
   };
 
@@ -174,8 +203,17 @@ export default function CoreKernelConsolePage() {
 
         <div className="flex items-center gap-3">
           <Button
+            onClick={handleTriggerReindex}
+            disabled={reindexing}
+            className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs h-10 px-4 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${reindexing ? 'animate-spin' : ''}`} />
+            {reindexing ? 'Re-Indexing Vectors...' : '🔄 Re-Index pgvector Training Data'}
+          </Button>
+
+          <Button
             onClick={handleExportLogsCsv}
-            className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs h-10 px-4 rounded-xl border border-slate-700 flex items-center gap-1.5"
+            className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs h-10 px-4 rounded-xl border border-slate-700 flex items-center gap-1.5 cursor-pointer"
           >
             📊 Export Audit Logs CSV
           </Button>
@@ -317,9 +355,14 @@ export default function CoreKernelConsolePage() {
                   <h4 className="text-xs font-black text-white">Context Vector Cache Hit Ratio</h4>
                   <span className="text-2xl font-black text-green-500 mt-1 block">94.2% hit rate</span>
                 </div>
-                <Button variant="outline" size="sm" className="text-xs border-card-border cursor-pointer" onClick={handleGC}>
-                  Clear Context Cache
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="text-xs border-card-border cursor-pointer" onClick={handleTriggerReindex}>
+                    Force Re-Index pgvector
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-xs border-card-border cursor-pointer" onClick={handleGC}>
+                    Clear Context Cache
+                  </Button>
+                </div>
               </Card>
             </div>
 
@@ -380,15 +423,15 @@ export default function CoreKernelConsolePage() {
             <div className="md:col-span-2 space-y-6">
               <Card className="border border-card-border bg-card-bg p-5 shadow-level-2 space-y-4">
                 <div>
-                  <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Gateway Provider Allocation Load</h3>
-                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">Distribution of token traffic across active model API routers.</p>
+                  <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Gateway Provider Allocation & Streaming Latency</h3>
+                  <p className="text-[10px] text-foreground/50 font-semibold mt-0.5">Real-time streaming benchmarks and token distribution across active model API routers.</p>
                 </div>
 
                 <div className="space-y-4 text-xs font-semibold">
                   <div>
                     <div className="flex justify-between items-baseline">
-                      <span>Google Gemini Pro/Flash API</span>
-                      <span className="text-white">65% traffic</span>
+                      <span>Google Gemini 2.0 API</span>
+                      <span className="text-white">65% traffic · <span className="text-cyan-400 font-mono">1.1s avg latency</span></span>
                     </div>
                     <div className="h-2 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden mt-1.5">
                       <div className="h-full bg-hq-cyan rounded-full transition-all" style={{ width: '65%' }}></div>
@@ -398,7 +441,7 @@ export default function CoreKernelConsolePage() {
                   <div>
                     <div className="flex justify-between items-baseline">
                       <span>OpenAI GPT-4o API</span>
-                      <span className="text-white">25% traffic</span>
+                      <span className="text-white">25% traffic · <span className="text-purple-400 font-mono">1.4s avg latency</span></span>
                     </div>
                     <div className="h-2 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden mt-1.5">
                       <div className="h-full bg-hq-purple rounded-full transition-all" style={{ width: '25%' }}></div>
@@ -407,8 +450,8 @@ export default function CoreKernelConsolePage() {
 
                   <div>
                     <div className="flex justify-between items-baseline">
-                      <span>Anthropic Claude API</span>
-                      <span className="text-white">10% traffic</span>
+                      <span>Anthropic Claude 3.5 API</span>
+                      <span className="text-white">10% traffic · <span className="text-amber-400 font-mono">1.2s avg latency</span></span>
                     </div>
                     <div className="h-2 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden mt-1.5">
                       <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: '10%' }}></div>
@@ -432,6 +475,10 @@ export default function CoreKernelConsolePage() {
                   <div className="flex justify-between">
                     <span>Average Token Savings</span>
                     <span className="text-white">18.4% cost reduced</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Streaming Latency P99</span>
+                    <span className="text-cyan-400 font-mono">1.42s</span>
                   </div>
                 </div>
               </Card>

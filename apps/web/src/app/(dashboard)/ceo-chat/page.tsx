@@ -195,6 +195,7 @@ You can converse **1-on-1 with me**, or toggle **Full C-Suite Roundtable** to ha
   const [searchQuery, setSearchQuery] = React.useState('');
   const [threadFilter, setThreadFilter] = React.useState<'all' | 'pinned' | 'archived'>('all');
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+  const [activeMobileTab, setActiveMobileTab] = React.useState<'chat' | 'threads'>('chat');
 
   // Input & state
   const [inputMessage, setInputMessage] = React.useState('');
@@ -216,11 +217,85 @@ You can converse **1-on-1 with me**, or toggle **Full C-Suite Roundtable** to ha
     scrollToBottom();
   }, [activeThread?.messages, loading]);
 
-  const handleCreateNewThread = () => {
-    const newThreadId = `t-${Date.now()}`;
+  // ── Fetch conversations from backend ───────────────────────────────────────
+  React.useEffect(() => {
+    if (!token) return;
+    fetch('/api/conversations', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) return null;
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const dbThreads: DiscussionThread[] = data.map((conv: any) => ({
+            id: conv.id,
+            title: conv.title || conv.objective || 'Executive Strategic Session',
+            timestamp: conv.createdAt
+              ? new Date(conv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            participantMode: conv.participantMode || 'DIRECT_CEO',
+            isPinned: conv.isPinned || false,
+            isArchived: conv.isArchived || false,
+            messages: (conv.messages && conv.messages.length > 0)
+              ? conv.messages.map((m: any) => ({
+                  id: m.id,
+                  sender: m.senderRole === 'USER' ? 'owner' : (m.senderKey?.toLowerCase() || 'asad'),
+                  senderTitle: m.senderName || (m.senderRole === 'USER' ? 'Organization Owner' : 'Executive Director'),
+                  content: m.content,
+                  timestamp: m.createdAt
+                    ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                }))
+              : [
+                  {
+                    id: `welcome-${conv.id}`,
+                    sender: 'asad',
+                    senderTitle: 'Chief Executive Officer',
+                    content: `Greetings Owner. **CEO Asad** is ready to consult on **${conv.title || conv.objective || 'this strategic session'}**.`,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    mode: 'CONVERSATION',
+                  },
+                ],
+          }));
+
+          setThreads(dbThreads);
+          setActiveThreadId(dbThreads[0].id);
+        }
+      })
+      .catch(() => {});
+  }, [token]);
+
+  const handleCreateNewThread = async () => {
+    const titleText = `Executive Strategic Session #${threads.length + 1}`;
+    let newThreadId = `t-${Date.now()}`;
+
+    if (token) {
+      try {
+        const res = await fetch('/api/conversations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            objective: titleText,
+            specialistKeys: ['ceo', 'operations_director', 'legal_compliance_director', 'human_resources_director', 'public_search_agent'],
+          }),
+        });
+        if (res.ok) {
+          const created = await res.json();
+          if (created?.id) newThreadId = created.id;
+        }
+      } catch {
+        /* fallback to local ID */
+      }
+    }
+
     const newThread: DiscussionThread = {
       id: newThreadId,
-      title: `Executive Strategic Session #${threads.length + 1}`,
+      title: titleText,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       participantMode,
       messages: [
@@ -228,7 +303,7 @@ You can converse **1-on-1 with me**, or toggle **Full C-Suite Roundtable** to ha
           id: `welcome-${Date.now()}`,
           sender: 'asad',
           senderTitle: 'Chief Executive Officer',
-          content: `Owner, I have opened a new strategic discussion thread for **FuelOS**.
+          content: `Owner, I have opened a new strategic discussion thread.
 
 How can CEO Asad and our C-Suite executive team assist you on this objective?`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -272,7 +347,7 @@ How can CEO Asad and our C-Suite executive team assist you on this objective?`,
     );
 
     setLoading(true);
-    const companyId = dbUser?.companyId || '33f008b1-5733-4a1a-9093-dad32e9bb043';
+    const companyId = dbUser?.companyId;
 
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -280,77 +355,24 @@ How can CEO Asad and our C-Suite executive team assist you on this objective?`,
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      const res = await fetch('/api/missions/ceo/scope', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ message: textToSend, companyId, mode: targetMode }),
+      });
+
+      if (!res.ok) {
+        throw new Error('AI Orchestrator unavailable');
+      }
+
+      const data = await res.json();
+
       if (participantMode === 'DIRECT_CEO') {
-        // 1-on-1 Direct CEO Asad dialogue
-        const res = await fetch(`${API_BASE_URL}/missions/ceo/scope`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ message: textToSend, companyId, mode: targetMode }),
-        }).catch(() => null);
-
-        let data: any = null;
-        if (res && res.ok) {
-          data = await res.json();
-        } else {
-          // Dynamic adaptive AI response logic
-          const textLower = textToSend.toLowerCase();
-
-          if (textLower.includes('know fuelos') || textLower.includes('fuelos') || textLower.includes('my company') || textLower.includes('our business')) {
-            data = {
-              ceoResponse: `Greetings Owner! Here is the synthesized intelligence **Mr. Intelligence** and our C-Suite have gathered regarding **FuelOS**:
-
-### 🔍 Corporate Intelligence Profile — FuelOS
-- **Industry & Domain**: Petroleum & Energy Supply Chain Logistics, Downstream Dispensing Automation & Fleet Telematics.
-- **Core Operations**: Retail filling station automation, tank telemetry monitoring, petroleum depot dispatching, and automated fuel payment reconciliation.
-- **Target Market**: Downstream petroleum marketers, oil & gas depot managers, logistics fleet operators across Sub-Saharan Africa, Middle East, and UK.
-- **Key Advantage**: End-to-end digital auditability from refinery terminal to retail pump.
-
-As CEO Asad, I use this intelligence in every decision. How can we leverage our **FuelOS** market position for our next strategic objective?`,
-              isMissingDepartment: false,
-              mode: 'CONVERSATION',
-            };
-          } else if (textLower.includes('app') || textLower.includes('mobile') || textLower.includes('software')) {
-            data = {
-              ceoResponse: `Greetings Owner. I have evaluated your strategic directive: "${textToSend}".
-
-To build and deploy a mobile app at enterprise standards, we require the specialized capabilities of the **Technology & Software Engineering Department**.
-
-Currently, our active workspace roster includes our 5 baseline core directors (**Asad**, **Teema**, **Legal**, **Resource Director**, **Mr. Intelligence**).
-
-I strongly recommend installing the **Technology & Software Engineering Suite** from our Marketplace so we can deploy dedicated directors (**Dr. Hiroshi Tanaka - CTO** & **Linus Kovacs - Software Engineering**) for this task.`,
-              isMissingDepartment: true,
-              missingDepartmentName: 'Technology & Software Engineering',
-              recommendedMarketplaceListing: {
-                id: 'm1',
-                title: 'Technology & Software Engineering Suite',
-                description: 'Complete Technology Department package featuring Dr. Hiroshi Tanaka (CTO), Linus Kovacs (Software Engineering), and Dr. Sarah Ndiaye (AI/ML).',
-                price: 0,
-                category: 'Engineering',
-                departmentKey: 'technology',
-              },
-              mode: 'JOB_ASSIGNMENT',
-            };
-          } else {
-            data = {
-              ceoResponse: `Owner, strategic leadership requires aligning visionary ideas with crisp operational execution for **FuelOS**.
-
-Our C-Suite is positioned to support you:
-- **Mr. Intelligence** is monitoring market dynamics and competitor movements.
-- **Teema** is ready to map workflow dependencies.
-- **Legal** is standing by for regulatory & compliance guardrails.
-
-Tell me more about your vision — what outcome or milestone are we targeting?`,
-              isMissingDepartment: false,
-              mode: 'CONVERSATION',
-            };
-          }
-        }
-
         const asadMsg: ChatMessage = {
           id: `a-${Date.now()}`,
           sender: 'asad',
           senderTitle: 'Chief Executive Officer',
-          content: data.ceoResponse,
+          content: data.ceoResponse || 'Owner, I am scoping your strategic directive with our executive team.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           mode: data.mode,
           isMissingDepartment: data.isMissingDepartment,
@@ -368,61 +390,50 @@ Tell me more about your vision — what outcome or milestone are we targeting?`,
           prev.map((t) => (t.id === activeThreadId ? { ...t, messages: [...t.messages, asadMsg] } : t)),
         );
       } else {
-        // FULL C-SUITE ROUNDTABLE MODE: Multiple Directors respond to the Owner's message
+        // FULL C-SUITE ROUNDTABLE MODE: Dynamic response generated by AI Orchestrator
         const asadMsg: ChatMessage = {
           id: `a-rt-${Date.now()}`,
           sender: 'asad',
           senderTitle: 'Chief Executive Officer',
-          content: `Owner, I am initiating a **C-Suite Roundtable Alignment** on your prompt: "${textToSend}".
-
-I am delegating immediate domain analysis to **Teema** (Operations), **Legal** (Compliance), and **Mr. Intelligence** (Research).`,
+          content: data.ceoResponse || `Owner, I am initiating a **C-Suite Roundtable Alignment** on your prompt: "${textToSend}".`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          mode: 'CONVERSATION',
+          mode: data.mode,
+          webResearchBriefing: data.webResearchBriefing,
+          strategicScorecard: data.strategicScorecard,
+          delegationMatrix: data.delegationMatrix,
+          dispatchActionReady: data.dispatchActionReady,
         };
 
-        const teemaMsg: ChatMessage = {
-          id: `t-rt-${Date.now()}`,
-          sender: 'teema',
-          senderTitle: 'Operations Director',
-          content: `### ⚙️ Operations Perspective — Teema
-From an operational capacity standpoint for **FuelOS**:
-- I am structuring the work breakdown schedule (WBS) and mapping resource allocation.
-- We will ensure active directors have zero task overlap.`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
+        const roundtableMsgs: ChatMessage[] = [asadMsg];
 
-        const legalMsg: ChatMessage = {
-          id: `l-rt-${Date.now()}`,
-          sender: 'legal',
-          senderTitle: 'Legal & Compliance Director',
-          content: `### ⚖️ Legal & Governance Review — Legal
-From a regulatory perspective:
-- We will enforce data privacy bounds and ensure compliance with petroleum supply chain regulations.
-- Audit trails will be logged automatically to PostgreSQL.`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
+        if (Array.isArray(data.delegationMatrix) && data.delegationMatrix.length > 0) {
+          data.delegationMatrix.forEach((item: any, idx: number) => {
+            const senderKey = (item.directorName?.toLowerCase().includes('teema') ? 'teema'
+              : item.directorName?.toLowerCase().includes('legal') ? 'legal'
+              : item.directorName?.toLowerCase().includes('intelligence') ? 'mr_intelligence'
+              : item.directorName?.toLowerCase().includes('resource') ? 'resource_director'
+              : 'asad') as ChatMessage['sender'];
 
-        const intelMsg: ChatMessage = {
-          id: `i-rt-${Date.now()}`,
-          sender: 'mr_intelligence',
-          senderTitle: 'Public Web Research Agent',
-          content: `### 🔍 Intelligence Briefing — Mr. Intelligence
-I have verified domain intelligence for **FuelOS**:
-- Market telemetry and competitor analytics are indexed.
-- Ready to feed real-time market data into your operational graph.`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
+            roundtableMsgs.push({
+              id: `rt-item-${Date.now()}-${idx}`,
+              sender: senderKey,
+              senderTitle: item.roleTitle || 'Executive Director',
+              content: `### 🎯 ${item.roleTitle || item.directorName}\n- **Responsibility**: ${item.responsibility}\n- **Confidence Index**: ${item.confidenceScore || 95}%`,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            });
+          });
+        }
 
         setThreads((prev) =>
           prev.map((t) =>
             t.id === activeThreadId
-              ? { ...t, messages: [...t.messages, asadMsg, teemaMsg, legalMsg, intelMsg] }
+              ? { ...t, messages: [...t.messages, ...roundtableMsgs] }
               : t,
           ),
         );
       }
     } catch (e) {
-      toast.error('Communication error in executive chat.');
+      toast.error('AI Executive server communication error. Please ensure backend services are active.');
     } finally {
       setLoading(false);
     }
@@ -440,7 +451,7 @@ I have verified domain intelligence for **FuelOS**:
       }
 
       const departmentKey = listing.departmentKey || 'technology';
-      await fetch(`${API_BASE_URL}/missions/marketplace/install`, {
+      await fetch('/api/missions/marketplace/install', {
         method: 'POST',
         headers,
         body: JSON.stringify({ departmentKey, companyId }),
@@ -575,95 +586,121 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
   });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 text-left pb-12 select-none">
+    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 text-left pb-8 sm:pb-12 select-none px-2 sm:px-4 md:px-0">
       {/* Unified Executive Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 dark:border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 via-slate-100 to-blue-500/10 dark:from-slate-950 dark:via-[#0B0F19] dark:to-cyan-950/40 p-6 shadow-xl dark:shadow-2xl backdrop-blur-xl transition-all">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-cyan-500/30 dark:border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 via-slate-100 to-blue-500/10 dark:from-slate-950 dark:via-[#0B0F19] dark:to-cyan-950/40 p-4 sm:p-6 shadow-lg sm:shadow-xl dark:shadow-2xl backdrop-blur-xl transition-all">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 via-blue-500 to-purple-600 p-[1.5px] shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-                <div className="w-full h-full bg-white dark:bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-xl text-slate-900 dark:text-white">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="relative shrink-0">
+              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-cyan-500 via-blue-500 to-purple-600 p-[1.5px] shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                <div className="w-full h-full bg-white dark:bg-slate-950 rounded-[10px] sm:rounded-[14px] flex items-center justify-center font-black text-lg sm:text-xl text-slate-900 dark:text-white">
                   👑
                 </div>
               </div>
-              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 dark:bg-emerald-400 border-2 border-white dark:border-slate-950 animate-pulse" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-emerald-500 dark:bg-emerald-400 border-2 border-white dark:border-slate-950 animate-pulse" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">CEO Chat & C-Suite Discussions</h1>
-                <Badge variant="ai" className="text-[10px] uppercase font-bold tracking-wider">
-                  UNIFIED EXECUTIVE HUB
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">CEO Chat & C-Suite Hub</h1>
+                <Badge variant="ai" className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-2 py-0.5">
+                  EXECUTIVE HUB
                 </Badge>
               </div>
-              <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400 mt-1 font-medium">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 mt-0.5 sm:mt-1 font-medium">
                 <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
-                  <Activity size={12} /> Default 5 Roster Active
+                  <Activity size={12} /> 5 Roster Active
                 </span>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <span className="text-cyan-700 dark:text-cyan-300 font-semibold flex items-center gap-1">
-                  <Zap size={12} /> Connected to OrgIntelligence (FuelOS)
+                  <Zap size={12} /> OrgIntelligence (FuelOS)
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               onClick={handleCreateNewThread}
-              className="bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-white text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-300 dark:border-white/10 flex items-center gap-1.5 shadow-sm"
+              className="bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-white text-[11px] sm:text-xs font-bold px-3 sm:px-3.5 py-2 rounded-xl border border-slate-300 dark:border-white/10 flex items-center gap-1.5 shadow-xs"
             >
-              <PlusCircle size={14} className="text-cyan-500" /> New Discussion Thread
+              <PlusCircle size={14} className="text-cyan-500" /> New Thread
             </Button>
             <Link href="/marketplace">
-              <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-lg">
-                <ShoppingBag size={14} /> Open Marketplace
+              <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-[11px] sm:text-xs font-bold px-3.5 sm:px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-md">
+                <ShoppingBag size={14} /> Marketplace
               </Button>
             </Link>
           </div>
         </div>
 
         {/* Participant Scope & Strategy Controls */}
-        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-200 dark:border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">
+          <div className="w-full md:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
             <span className="text-slate-500 dark:text-slate-400 font-bold text-[11px] shrink-0 flex items-center gap-1">
-              <Users size={13} /> Participant Scope:
+              <Users size={13} /> Scope:
             </span>
 
-            <div className="flex bg-slate-200/80 dark:bg-slate-950 p-1 rounded-xl border border-slate-300 dark:border-white/10 text-[11px] font-bold">
+            <div className="w-full sm:w-auto flex bg-slate-200/80 dark:bg-slate-950 p-1 rounded-xl border border-slate-300 dark:border-white/10 text-[11px] font-bold overflow-x-auto">
               <button
                 onClick={() => setParticipantMode('DIRECT_CEO')}
-                className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                className={`flex-1 sm:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${
                   participantMode === 'DIRECT_CEO'
-                    ? 'bg-white dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 shadow-sm font-black'
+                    ? 'bg-white dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 shadow-xs font-black'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                👑 1-on-1 Direct with CEO Asad
+                👑 1-on-1 Direct CEO
               </button>
               <button
                 onClick={() => setParticipantMode('ROUNDTABLE')}
-                className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                className={`flex-1 sm:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 whitespace-nowrap ${
                   participantMode === 'ROUNDTABLE'
-                    ? 'bg-white dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 shadow-sm font-black'
+                    ? 'bg-white dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 shadow-xs font-black'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                👥 Full C-Suite Roundtable (Asad + Teema + Legal + HR + Intel)
+                👥 Full C-Suite Roundtable
               </button>
             </div>
           </div>
 
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium italic">
+          <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium italic">
             {participantMode === 'DIRECT_CEO' && '1-on-1 strategic command with CEO Asad.'}
             {participantMode === 'ROUNDTABLE' && 'All 5 active directors respond simultaneously to your directive.'}
           </div>
         </div>
       </div>
 
+      {/* Mobile Tab Switcher Bar (< md screens) */}
+      <div className="flex md:hidden bg-slate-200/80 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-300 dark:border-white/10 text-xs font-bold shadow-xs">
+        <button
+          onClick={() => setActiveMobileTab('chat')}
+          className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 ${
+            activeMobileTab === 'chat'
+              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md font-extrabold'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <MessageSquare size={15} /> 💬 Active Chat
+        </button>
+        <button
+          onClick={() => setActiveMobileTab('threads')}
+          className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 ${
+            activeMobileTab === 'threads'
+              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md font-extrabold'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Filter size={15} /> 📋 Threads ({threads.length})
+        </button>
+      </div>
+
       {/* Main Workspace Layout (Sidebar Threads Drawer + Master Chat Stage) */}
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
         {/* Left Panel: Discussion Threads Drawer */}
-        <Card className={`border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-4 flex flex-col shadow-xl dark:shadow-2xl transition-all ${
+        <Card className={`border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 flex flex-col shadow-lg sm:shadow-xl dark:shadow-2xl transition-all ${
+          activeMobileTab === 'threads' ? 'block' : 'hidden md:flex'
+        } ${
           isSidebarOpen ? 'w-full md:w-80 shrink-0' : 'w-full md:w-16 shrink-0 items-center'
         }`}>
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3 mb-3">
@@ -736,7 +773,10 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
                   filteredThreads.map((t) => (
                     <div
                       key={t.id}
-                      onClick={() => setActiveThreadId(t.id)}
+                      onClick={() => {
+                        setActiveThreadId(t.id);
+                        setActiveMobileTab('chat');
+                      }}
                       className={`p-3 rounded-2xl cursor-pointer transition-all border space-y-1 ${
                         t.id === activeThreadId
                           ? 'bg-cyan-50/90 dark:bg-cyan-500/10 border-cyan-400 dark:border-cyan-500/40 shadow-xs'
@@ -769,16 +809,18 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
         </Card>
 
         {/* Right Stage: Master Active Discussion Container */}
-        <Card className="flex-1 border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 flex flex-col h-[620px] shadow-xl dark:shadow-2xl relative overflow-hidden">
+        <Card className={`flex-1 border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 flex flex-col h-[calc(100vh-16rem)] min-h-[480px] md:h-[640px] shadow-lg sm:shadow-xl dark:shadow-2xl relative overflow-hidden ${
+          activeMobileTab === 'chat' ? 'block' : 'hidden md:flex'
+        }`}>
           {/* Active Thread Title & Mode Bar */}
-          <div className="border-b border-slate-200 dark:border-white/10 pb-3 mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+          <div className="border-b border-slate-200 dark:border-white/10 pb-3 mb-3 sm:mb-4 flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
                 {activeThread?.title}
-                {activeThread?.isPinned && <Pin size={12} className="text-cyan-500" />}
+                {activeThread?.isPinned && <Pin size={12} className="text-cyan-500 shrink-0" />}
               </h2>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
-                Active Participants: {participantMode === 'DIRECT_CEO' ? 'Owner & CEO Asad' : 'Owner & Full C-Suite (Asad, Teema, Legal, HR, Intel)'}
+              <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-semibold block truncate">
+                Participants: {participantMode === 'DIRECT_CEO' ? 'Owner & CEO Asad' : 'Owner & Full C-Suite'}
               </span>
             </div>
 
@@ -804,23 +846,23 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
                 );
                 toast.info('Reset active discussion messages.');
               }}
-              className="bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 flex items-center gap-1"
+              className="bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-[10px] sm:text-[11px] font-bold px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 flex items-center gap-1 shrink-0"
             >
-              <RotateCcw size={12} /> Clear Stage
+              <RotateCcw size={12} /> <span className="hidden sm:inline">Clear Stage</span>
             </Button>
           </div>
 
           {/* Discussion Message Stream */}
-          <div className="flex-1 overflow-y-auto space-y-5 pr-2">
+          <div className="flex-1 overflow-y-auto space-y-3.5 sm:space-y-5 pr-1 sm:pr-2">
             {activeThread?.messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex gap-3 text-xs leading-relaxed ${
+                className={`flex gap-2 sm:gap-3 text-xs leading-relaxed ${
                   msg.sender === 'owner' ? 'justify-end' : 'justify-start'
                 }`}
               >
                 {msg.sender !== 'owner' && (
-                  <div className={`w-9 h-9 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 shadow-sm border ${
+                  <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 shadow-xs border ${
                     msg.sender === 'asad'
                       ? 'bg-cyan-100 dark:bg-cyan-500/10 border-cyan-300 dark:border-cyan-500/30 text-cyan-600 dark:text-cyan-400'
                       : msg.sender === 'teema'
@@ -837,49 +879,49 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
                   </div>
                 )}
 
-                <div className="space-y-3 max-w-2xl">
+                <div className="space-y-2.5 sm:space-y-3 max-w-[85%] sm:max-w-2xl">
                   <div
-                    className={`p-5 rounded-3xl ${
+                    className={`p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl ${
                       msg.sender === 'owner'
-                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-tr-none shadow-md font-medium'
-                        : 'bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-tl-none shadow-md dark:shadow-xl font-normal'
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-tr-none shadow-sm font-medium'
+                        : 'bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-slate-200 rounded-tl-none shadow-sm dark:shadow-xl font-normal'
                     }`}
                   >
-                    <div className="font-bold text-[10px] text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
+                    <div className="font-bold text-[10px] text-slate-500 dark:text-slate-400 mb-1.5 sm:mb-2 flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-1.5 min-w-0 truncate">
                         {msg.sender === 'owner' ? (
-                          <span className="text-cyan-200">Organization Owner</span>
+                          <span className="text-cyan-200 truncate">Owner</span>
                         ) : (
-                          <span className="font-black flex items-center gap-1.5 text-cyan-700 dark:text-cyan-400">
+                          <span className="font-black flex items-center gap-1 text-cyan-700 dark:text-cyan-400 truncate">
                             {msg.sender === 'asad' && 'CEO Asad'}
-                            {msg.sender === 'teema' && 'Teema (Ops Director)'}
-                            {msg.sender === 'legal' && 'Legal (Compliance Director)'}
-                            {msg.sender === 'mr_intelligence' && 'Mr. Intelligence (Research)'}
-                            {msg.sender === 'resource_director' && 'Resource Director (HR)'}
+                            {msg.sender === 'teema' && 'Teema (Ops)'}
+                            {msg.sender === 'legal' && 'Legal'}
+                            {msg.sender === 'mr_intelligence' && 'Mr. Intel'}
+                            {msg.sender === 'resource_director' && 'Resource Dir'}
 
                             {msg.mode && (
-                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase ${
+                              <span className={`px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-extrabold uppercase ${
                                 msg.mode === 'CONVERSATION'
                                   ? 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-500/30'
                                   : 'bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-500/30'
                               }`}>
-                                {msg.mode === 'CONVERSATION' ? '💬 Strategic' : '🎯 Job Assignment'}
+                                {msg.mode === 'CONVERSATION' ? '💬 Strategic' : '🎯 Job'}
                               </span>
                             )}
                           </span>
                         )}
                       </span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {msg.sender !== 'owner' && (
                           <button
                             onClick={() => speakMessage(msg.id, msg.content)}
-                            title="Read message out loud"
+                            title="Read out loud"
                             className="p-1 rounded text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
                           >
                             {speakingMsgId === msg.id ? (
-                              <VolumeX size={13} className="text-cyan-600 dark:text-cyan-400 animate-pulse" />
+                              <VolumeX size={12} className="text-cyan-600 dark:text-cyan-400 animate-pulse" />
                             ) : (
-                              <Volume2 size={13} />
+                              <Volume2 size={12} />
                             )}
                           </button>
                         )}
@@ -892,23 +934,23 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
 
                   {/* Missing Department Marketplace Card */}
                   {msg.isMissingDepartment && msg.recommendedListing && (
-                    <Card className="p-5 border border-cyan-300 dark:border-cyan-500/40 bg-gradient-to-r from-cyan-50/90 via-white to-blue-50/60 dark:from-cyan-950/60 dark:via-slate-900/90 dark:to-slate-950 rounded-3xl space-y-4 shadow-md dark:shadow-[0_0_25px_rgba(6,182,212,0.2)] animate-in fade-in">
+                    <Card className="p-3.5 sm:p-5 border border-cyan-300 dark:border-cyan-500/40 bg-gradient-to-r from-cyan-50/90 via-white to-blue-50/60 dark:from-cyan-950/60 dark:via-slate-900/90 dark:to-slate-950 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4 shadow-sm dark:shadow-[0_0_25px_rgba(6,182,212,0.2)] animate-in fade-in">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-xl bg-cyan-100 dark:bg-cyan-500/10 border border-cyan-300 dark:border-cyan-500/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
-                            <ShoppingBag className="w-4 h-4" />
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-cyan-100 dark:bg-cyan-500/10 border border-cyan-300 dark:border-cyan-500/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+                            <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </div>
                           <div>
-                            <span className="text-xs font-black text-slate-900 dark:text-white block">Marketplace Recommendation</span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Recommended by CEO Asad</span>
+                            <span className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white block">Marketplace Recommendation</span>
+                            <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Recommended by CEO Asad</span>
                           </div>
                         </div>
-                        <Badge variant="ai" className="text-[9px] font-bold">RECOMMENDED</Badge>
+                        <Badge variant="ai" className="text-[8px] sm:text-[9px] font-bold">RECOMMENDED</Badge>
                       </div>
 
-                      <div className="p-4 rounded-2xl bg-white/90 dark:bg-slate-950/80 border border-slate-200 dark:border-white/10 space-y-1.5">
-                        <div className="text-sm font-black text-cyan-700 dark:text-cyan-300">{msg.recommendedListing.title}</div>
-                        <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+                      <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 dark:bg-slate-950/80 border border-slate-200 dark:border-white/10 space-y-1">
+                        <div className="text-xs sm:text-sm font-black text-cyan-700 dark:text-cyan-300">{msg.recommendedListing.title}</div>
+                        <p className="text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
                           {msg.recommendedListing.description}
                         </p>
                       </div>
@@ -921,15 +963,15 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
                         <Button
                           onClick={() => handleInstallDepartmentInChat(msg.recommendedListing)}
                           disabled={activeInstallId === msg.recommendedListing.id}
-                          className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold px-5 py-2 rounded-xl flex items-center gap-2 shadow-lg"
+                          className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-[11px] sm:text-xs font-bold px-3.5 sm:px-5 py-2 rounded-xl flex items-center gap-1.5 shadow-md"
                         >
                           {activeInstallId === msg.recommendedListing.id ? (
                             <>
-                              <Sparkles size={14} className="animate-spin" /> Installing...
+                              <Sparkles size={13} className="animate-spin" /> Installing...
                             </>
                           ) : (
                             <>
-                              Install Now into HQ Roster <ArrowRight size={14} />
+                              Install Now <ArrowRight size={13} />
                             </>
                           )}
                         </Button>
@@ -939,19 +981,19 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
 
                   {/* Active Assigned Directors & Mission Card */}
                   {msg.assignedExecutives && msg.assignedExecutives.length > 0 && (
-                    <Card className="p-4 border border-emerald-300 dark:border-emerald-500/30 bg-slate-50 dark:bg-slate-950/80 rounded-2xl space-y-3">
+                    <Card className="p-3.5 sm:p-4 border border-emerald-300 dark:border-emerald-500/30 bg-slate-50 dark:bg-slate-950/80 rounded-xl sm:rounded-2xl space-y-2.5 sm:space-y-3">
                       <div className="flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                        <span className="flex items-center gap-1.5">
-                          <CheckCircle2 size={14} /> Assigned Active Directors
+                        <span className="flex items-center gap-1.5 text-[11px] sm:text-xs">
+                          <CheckCircle2 size={13} /> Assigned Active Directors
                         </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400">Workspace Roster Active</span>
+                        <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400">Roster Active</span>
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {msg.assignedExecutives.map((exec, idx) => (
                           <span
                             key={idx}
-                            className="px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold"
+                            className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-[10px] sm:text-[11px] font-bold"
                           >
                             {exec}
                           </span>
@@ -959,13 +1001,13 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
                       </div>
 
                       {msg.missionPlan && (
-                        <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
-                            Mission Objective Queued
+                        <div className="pt-2 border-t border-slate-200 dark:border-white/10 flex items-center justify-between gap-2">
+                          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold truncate">
+                            Mission Queued
                           </span>
                           <Link href="/missions">
-                            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-xl flex items-center gap-1 shadow-md">
-                              <Rocket size={12} /> View Mission Task Graph
+                            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 rounded-xl flex items-center gap-1 shadow-sm shrink-0">
+                              <Rocket size={12} /> Task Graph
                             </Button>
                           </Link>
                         </div>
@@ -975,17 +1017,17 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
                 </div>
 
                 {msg.sender === 'owner' && (
-                  <div className="w-9 h-9 rounded-2xl bg-blue-600/20 border border-blue-500/40 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-xs shrink-0 shadow-md">
-                    <User size={16} />
+                  <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-blue-600/20 border border-blue-500/40 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                    <User size={14} className="sm:w-4 sm:h-4" />
                   </div>
                 )}
               </div>
             ))}
 
             {loading && (
-              <div className="flex items-center gap-3 p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/30 text-cyan-800 dark:text-cyan-300 text-xs font-mono animate-pulse max-w-md">
-                <Sparkles size={16} className="animate-spin text-cyan-500" />
-                <span>{participantMode === 'DIRECT_CEO' ? 'CEO Asad is generating dynamic AI response...' : 'C-Suite Directors are formulating roundtable responses...'}</span>
+              <div className="flex items-center gap-2.5 p-3.5 rounded-xl sm:rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/30 text-cyan-800 dark:text-cyan-300 text-[11px] sm:text-xs font-mono animate-pulse max-w-md">
+                <Sparkles size={15} className="animate-spin text-cyan-500 shrink-0" />
+                <span>{participantMode === 'DIRECT_CEO' ? 'CEO Asad is generating response...' : 'C-Suite Directors are formulating responses...'}</span>
               </div>
             )}
 
@@ -993,17 +1035,17 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
           </div>
 
           {/* Unified Input Bar */}
-          <div className="border-t border-slate-200 dark:border-white/10 pt-4 mt-2 flex items-center gap-3">
+          <div className="border-t border-slate-200 dark:border-white/10 pt-3 sm:pt-4 mt-2 flex items-center gap-2 sm:gap-3">
             <button
               onClick={toggleVoiceInput}
               title={isListening ? 'Stop listening' : 'Voice Input'}
-              className={`p-3 rounded-2xl border transition-all ${
+              className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border transition-all shrink-0 ${
                 isListening
                   ? 'bg-rose-500/20 border-rose-500/40 text-rose-600 dark:text-rose-400 animate-pulse'
                   : 'bg-slate-100 dark:bg-slate-950 border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/5'
               }`}
             >
-              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              {isListening ? <MicOff size={16} className="sm:w-4 sm:h-4" /> : <Mic size={16} className="sm:w-4 sm:h-4" />}
             </button>
 
             <Input
@@ -1012,20 +1054,22 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder={
                 isListening
-                  ? 'Listening to voice input...'
+                  ? 'Listening...'
                   : participantMode === 'DIRECT_CEO'
-                  ? 'Converse 1-on-1 with CEO Asad e.g. "I need us to discuss about my new idea"...'
-                  : 'Prompt Full C-Suite Roundtable (Asad + Teema + Legal + HR + Intel)...'
+                  ? 'Converse with CEO Asad...'
+                  : 'Prompt C-Suite Roundtable...'
               }
-              className="flex-1 bg-slate-100 dark:bg-slate-950 border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 h-12 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-500/50 rounded-2xl px-4"
+              className="flex-1 bg-slate-100 dark:bg-slate-950 border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 h-10 sm:h-12 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-500/50 rounded-xl sm:rounded-2xl px-3 sm:px-4"
             />
 
             <Button
               onClick={() => handleSendMessage()}
               disabled={loading || !inputMessage.trim()}
-              className="bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold text-xs h-12 px-6 rounded-2xl shadow-xl flex items-center gap-2"
+              className="bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold text-xs h-10 sm:h-12 px-3 sm:px-6 rounded-xl sm:rounded-2xl shadow-lg flex items-center justify-center gap-1.5 shrink-0"
             >
-              <Send size={15} /> Send to C-Suite
+              <Send size={14} />
+              <span className="hidden sm:inline">Send to C-Suite</span>
+              <span className="sm:hidden">Send</span>
             </Button>
           </div>
         </Card>

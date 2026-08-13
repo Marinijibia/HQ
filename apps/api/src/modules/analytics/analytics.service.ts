@@ -200,4 +200,48 @@ export class AnalyticsService {
 
     return csv;
   }
+
+  async getActivity(companyId: string) {
+    const recentMissions = await this.prisma.mission.findMany({
+      where: { companyId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    });
+
+    const recentNotifs = await this.prisma.notification.findMany({
+      where: { companyId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    });
+
+    const activities: Array<{
+      id: string;
+      type: string;
+      title: string;
+      subtitle: string;
+      createdAt: string;
+    }> = [];
+
+    recentMissions.forEach((m) => {
+      activities.push({
+        id: `miss-${m.id}`,
+        type: m.status === 'DELIVERED' || m.status === 'APPROVED' ? 'mission_completed' : 'mission_started',
+        title: `Mission ${m.status.toLowerCase()}`,
+        subtitle: m.objective,
+        createdAt: m.createdAt.toISOString(),
+      });
+    });
+
+    recentNotifs.forEach((n) => {
+      activities.push({
+        id: `notif-${n.id}`,
+        type: 'notification',
+        title: n.title,
+        subtitle: n.message,
+        createdAt: n.createdAt.toISOString(),
+      });
+    });
+
+    return activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
 }
