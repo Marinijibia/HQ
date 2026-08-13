@@ -67,7 +67,10 @@ export default function MissionsCommandCenterPage() {
   const [launching, setLaunching] = React.useState(false);
 
   const fetchMissions = React.useCallback(async () => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/missions', {
@@ -161,72 +164,74 @@ export default function MissionsCommandCenterPage() {
   };
 
   return (
-    <div className="space-y-8 select-none text-foreground pb-12 animate-in fade-in duration-500">
+    <div className="space-y-6 sm:space-y-8 select-none text-left pb-12 animate-in fade-in duration-300 px-2 sm:px-4 md:px-0">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-card-border pb-6">
-        <div className="space-y-1 text-left">
-          <div className="flex items-center gap-2 text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
-            <Rocket className="h-3.5 w-3.5" />
-            AUTONOMOUS EXECUTION HUB
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 via-slate-100 to-blue-500/10 dark:from-slate-950 dark:via-[#0B0F19] dark:to-cyan-950/40 p-4 sm:p-6 shadow-md dark:shadow-2xl backdrop-blur-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1 text-left">
+            <div className="flex items-center gap-2 text-[10px] font-black text-cyan-700 dark:text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/30 px-2.5 py-1 rounded-md w-fit">
+              <Rocket className="h-3.5 w-3.5" />
+              AUTONOMOUS EXECUTION HUB
+            </div>
+            <h1 className="text-xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+              Mission Command Center
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl font-medium">
+              Monitor, deploy, and inspect autonomous executive missions executed by your AI Boardroom.
+            </p>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2.5">
-            Mission Command Center
-          </h1>
-          <p className="text-xs text-foreground/50 leading-relaxed max-w-xl font-medium">
-            Monitor, deploy, and inspect autonomous executive missions executed by your AI Boardroom.
-          </p>
-        </div>
 
-        <Button
-          onClick={() => setShowLaunchModal(true)}
-          className="bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-black text-xs h-11 px-6 rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.3)] transition-all flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4 stroke-[3]" /> Launch Autonomous Mission
-        </Button>
+          <Button
+            onClick={() => setShowLaunchModal(true)}
+            className="bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-black text-xs h-10 sm:h-11 px-4 sm:px-6 rounded-xl sm:rounded-2xl shadow-md transition-all flex items-center gap-2 shrink-0"
+          >
+            <Plus className="h-4 w-4 stroke-[3]" /> Launch Autonomous Mission
+          </Button>
+        </div>
       </div>
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border border-card-border bg-card-bg/80 backdrop-blur-xl p-5 rounded-2xl text-left">
-          <div className="flex items-center justify-between text-foreground/50 mb-2">
+        <Card className="border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl p-5 rounded-2xl text-left shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider">Active Missions</span>
-            <Activity className="h-4 w-4 text-cyan-400" />
+            <Activity className="h-4 w-4 text-cyan-500" />
           </div>
-          <div className="text-2xl font-black text-foreground">{activeCount}</div>
-          <div className="text-[10px] text-cyan-400 font-bold mt-1">Autonomous Execution Active</div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white">{activeCount}</div>
+          <div className="text-[10px] text-cyan-700 dark:text-cyan-400 font-bold mt-1">Autonomous Execution Active</div>
         </Card>
 
-        <Card className="border border-card-border bg-card-bg/80 backdrop-blur-xl p-5 rounded-2xl text-left">
-          <div className="flex items-center justify-between text-foreground/50 mb-2">
+        <Card className="border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl p-5 rounded-2xl text-left shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider">Missions Completed</span>
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </div>
-          <div className="text-2xl font-black text-foreground">{completedCount}</div>
-          <div className="text-[10px] text-emerald-400 font-bold mt-1">100% Verified Deliverables</div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white">{completedCount}</div>
+          <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold mt-1">100% Verified Deliverables</div>
         </Card>
 
-        <Card className="border border-card-border bg-card-bg/80 backdrop-blur-xl p-5 rounded-2xl text-left">
-          <div className="flex items-center justify-between text-foreground/50 mb-2">
+        <Card className="border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl p-5 rounded-2xl text-left shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider">Execution Success Rate</span>
-            <TrendingUp className="h-4 w-4 text-purple-400" />
+            <TrendingUp className="h-4 w-4 text-purple-500" />
           </div>
-          <div className="text-2xl font-black text-foreground">{successRate}%</div>
-          <div className="text-[10px] text-purple-400 font-bold mt-1">Multi-Agent Deliberation Verified</div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white">{successRate}%</div>
+          <div className="text-[10px] text-purple-700 dark:text-purple-400 font-bold mt-1">Multi-Agent Deliberation Verified</div>
         </Card>
 
-        <Card className="border border-card-border bg-card-bg/80 backdrop-blur-xl p-5 rounded-2xl text-left">
-          <div className="flex items-center justify-between text-foreground/50 mb-2">
+        <Card className="border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl p-5 rounded-2xl text-left shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider">Active AI Board</span>
-            <Cpu className="h-4 w-4 text-blue-400" />
+            <Cpu className="h-4 w-4 text-blue-500" />
           </div>
-          <div className="text-2xl font-black text-foreground">5 Directors</div>
-          <div className="text-[10px] text-blue-400 font-bold mt-1">Asad, Teema, Legal, HR & Research</div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white">5 Directors</div>
+          <div className="text-[10px] text-blue-700 dark:text-blue-400 font-bold mt-1">Asad, Teema, Legal, HR & Research</div>
         </Card>
       </div>
 
       {/* Filter Tabs & Search */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-card-border pb-4">
-        <div className="flex items-center gap-2 p-1 bg-black/40 rounded-xl border border-white/10 w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-4">
+        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-white/10 w-full sm:w-auto overflow-x-auto">
           {[
             { id: 'ALL', label: 'All Missions' },
             { id: 'IN_PROGRESS', label: 'In Progress' },
@@ -236,10 +241,10 @@ export default function MissionsCommandCenterPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 rounded-lg text-xs font-extrabold transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                  : 'text-foreground/50 hover:text-foreground'
+                  ? 'bg-cyan-500 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {tab.label}
@@ -248,12 +253,12 @@ export default function MissionsCommandCenterPage() {
         </div>
 
         <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3.5 top-3 h-4 w-4 text-foreground/40" />
+          <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Search active missions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-black/50 border-white/10 text-xs h-10 rounded-xl focus-visible:ring-cyan-500"
+            className="pl-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white h-10 rounded-xl focus-visible:ring-cyan-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
         </div>
       </div>
@@ -261,23 +266,23 @@ export default function MissionsCommandCenterPage() {
       {/* Mission Grid */}
       {loading ? (
         <div className="py-16 text-center space-y-3">
-          <Cpu className="h-8 w-8 text-cyan-400 animate-spin mx-auto" />
-          <p className="text-xs text-foreground/50 font-semibold">Loading Mission Command Feed...</p>
+          <Cpu className="h-8 w-8 text-cyan-500 animate-spin mx-auto" />
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Loading Mission Command Feed...</p>
         </div>
       ) : filteredMissions.length === 0 ? (
-        <Card className="border border-card-border bg-card-bg/60 p-12 text-center rounded-3xl space-y-4">
-          <div className="h-14 w-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mx-auto">
+        <Card className="border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/60 p-8 sm:p-12 text-center rounded-3xl space-y-4 shadow-sm">
+          <div className="h-14 w-14 rounded-2xl bg-cyan-100 dark:bg-cyan-500/10 border border-cyan-300 dark:border-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 mx-auto">
             <Rocket className="h-7 w-7" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-lg font-black text-foreground">No Missions Found</h3>
-            <p className="text-xs text-foreground/50 max-w-sm mx-auto">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white">No Missions Found</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm mx-auto font-medium">
               Launch your first autonomous mission to delegate executive tasks to your AI Boardroom.
             </p>
           </div>
           <Button
             onClick={() => setShowLaunchModal(true)}
-            className="bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs h-10 px-5 rounded-xl"
+            className="bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs h-10 px-5 rounded-xl shadow-md"
           >
             Launch First Mission
           </Button>
@@ -302,7 +307,7 @@ export default function MissionsCommandCenterPage() {
               <Card
                 key={m.id}
                 onClick={() => router.push(`/missions/${m.id}`)}
-                className="border border-white/10 bg-[#0A0B10]/80 backdrop-blur-2xl hover:border-cyan-500/40 p-5 rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] flex flex-col justify-between space-y-4 group"
+                className="border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl hover:border-cyan-500/40 dark:hover:border-cyan-500/40 p-5 rounded-2xl cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between space-y-4 group"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -310,34 +315,34 @@ export default function MissionsCommandCenterPage() {
                       variant="outline"
                       className={`text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1.5 uppercase ${
                         isDone
-                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                          ? 'border-emerald-300 dark:border-emerald-500/30 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300'
                           : isInProg
-                          ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300'
-                          : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                          ? 'border-cyan-300 dark:border-cyan-500/30 bg-cyan-100 dark:bg-cyan-500/10 text-cyan-800 dark:text-cyan-300'
+                          : 'border-amber-300 dark:border-amber-500/30 bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300'
                       }`}
                     >
-                      <span className={`h-1.5 w-1.5 rounded-full ${isDone ? 'bg-emerald-400' : 'bg-cyan-400 animate-ping'}`} />
+                      <span className={`h-1.5 w-1.5 rounded-full ${isDone ? 'bg-emerald-500' : 'bg-cyan-500 animate-ping'}`} />
                       {m.status}
                     </Badge>
 
-                    <span className="text-[10px] text-foreground/45 font-medium">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                       Created {new Date(m.createdAt).toLocaleDateString()}
                     </span>
                   </div>
 
-                  <h3 className="text-base font-black text-white group-hover:text-cyan-300 transition-colors line-clamp-2">
+                  <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-cyan-700 dark:group-hover:text-cyan-300 transition-colors line-clamp-2">
                     {m.objective}
                   </h3>
                 </div>
 
                 {/* Progress & Assigned Board */}
-                <div className="space-y-3 pt-2 border-t border-white/5">
+                <div className="space-y-3 pt-2.5 border-t border-slate-100 dark:border-white/10">
                   <div className="space-y-1">
                     <div className="flex justify-between text-[10px] font-bold">
-                      <span className="text-foreground/50">Execution Progress</span>
-                      <span className="text-cyan-400 font-mono">{progressPct}%</span>
+                      <span className="text-slate-500 dark:text-slate-400">Execution Progress</span>
+                      <span className="text-cyan-700 dark:text-cyan-400 font-mono font-bold">{progressPct}%</span>
                     </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 rounded-full transition-all duration-500"
                         style={{ width: `${progressPct}%` }}
@@ -347,11 +352,11 @@ export default function MissionsCommandCenterPage() {
 
                   <div className="flex items-center justify-between pt-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider">Executive Lead:</span>
-                      <span className="text-xs font-black text-cyan-400">{getLeadTitle(m.assignedLead)}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider">Executive Lead:</span>
+                      <span className="text-xs font-black text-cyan-700 dark:text-cyan-400">{getLeadTitle(m.assignedLead)}</span>
                     </div>
 
-                    <span className="text-xs text-cyan-400 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    <span className="text-xs text-cyan-700 dark:text-cyan-400 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                       Inspect Logs <ArrowRight className="h-3.5 w-3.5" />
                     </span>
                   </div>
@@ -364,22 +369,22 @@ export default function MissionsCommandCenterPage() {
 
       {/* Launch Mission Modal */}
       {showLaunchModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <Card className="w-full max-w-lg border border-white/10 bg-[#0A0B10] p-6 rounded-3xl space-y-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in">
+          <Card className="w-full max-w-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 p-6 rounded-3xl space-y-6 shadow-2xl relative text-slate-900 dark:text-white">
             <button
               onClick={() => setShowLaunchModal(false)}
-              className="absolute top-4 right-4 text-foreground/40 hover:text-white p-1"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white p-1"
             >
               <X className="h-5 w-5" />
             </button>
 
             <div className="space-y-2 text-left">
-              <div className="flex items-center gap-2 text-[10px] font-black text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-md w-fit">
+              <div className="flex items-center gap-2 text-[10px] font-black text-cyan-700 dark:text-cyan-400 uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/30 px-2.5 py-1 rounded-md w-fit">
                 <Rocket className="h-3.5 w-3.5" />
                 AUTONOMOUS MISSION LAUNCHER
               </div>
-              <h2 className="text-2xl font-black text-white">Deploy Executive Mission</h2>
-              <p className="text-xs text-foreground/50">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Deploy Executive Mission</h2>
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                 Define the high-level objective for your AI Executive Board to execute.
               </p>
             </div>
@@ -387,8 +392,8 @@ export default function MissionsCommandCenterPage() {
             <form onSubmit={handleLaunchMission} className="space-y-5 text-left">
               {/* 1-Tap Enterprise Presets */}
               <div className="space-y-2">
-                <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-cyan-400">
-                  <Sparkles className="h-3.5 w-3.5" /> 1-Tap Enterprise Templates
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
+                  <Sparkles className="h-3.5 w-3.5 text-cyan-500" /> 1-Tap Enterprise Templates
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {[
@@ -420,9 +425,9 @@ export default function MissionsCommandCenterPage() {
                         setObjective(preset.text);
                         setSelectedExecRole(preset.lead);
                       }}
-                      className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/40 text-left transition-all hover:bg-cyan-500/10 group"
+                      className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-cyan-400/40 text-left transition-all hover:bg-cyan-50 dark:hover:bg-cyan-500/10 group"
                     >
-                      <div className="text-[11px] font-extrabold text-slate-200 group-hover:text-cyan-300">
+                      <div className="text-[11px] font-extrabold text-slate-900 dark:text-slate-200 group-hover:text-cyan-700 dark:group-hover:text-cyan-300">
                         {preset.label}
                       </div>
                     </button>
@@ -431,22 +436,22 @@ export default function MissionsCommandCenterPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Mission Objective / Key Deliverable *</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Mission Objective / Key Deliverable *</label>
                 <Input
                   placeholder="e.g. Audit security compliance, optimize Stripe billing hooks, and draft enterprise sales proposal"
                   value={objective}
                   onChange={(e) => setObjective(e.target.value)}
                   required
-                  className="bg-black/50 border-white/10 text-white text-xs h-12 focus-visible:ring-cyan-500 rounded-xl"
+                  className="bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs h-12 focus-visible:ring-cyan-500 rounded-xl"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">Primary Executive Lead</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Primary Executive Lead</label>
                 <select
                   value={selectedExecRole}
                   onChange={(e) => setSelectedExecRole(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-500"
                 >
                   <option value="asad">Asad — Chief Executive Officer (CEO)</option>
                   <option value="teema">Teema — Operations Director & Chief of Staff</option>
@@ -459,7 +464,7 @@ export default function MissionsCommandCenterPage() {
               <Button
                 type="submit"
                 disabled={launching}
-                className="w-full h-11 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-black text-xs rounded-xl shadow-[0_0_25px_rgba(6,182,212,0.3)] transition-all"
+                className="w-full h-11 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-black text-xs rounded-xl shadow-md transition-all"
               >
                 {launching ? 'Deploying Autonomous Mission...' : 'Deploy Mission & Notify Executive Agents'}
               </Button>
@@ -470,3 +475,4 @@ export default function MissionsCommandCenterPage() {
     </div>
   );
 }
+
