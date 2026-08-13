@@ -8,6 +8,7 @@ import { QaService } from './qa.service';
 import { WebResearchService } from './web-research.service';
 import { ResourceService } from './resource.service';
 import { FinanceService } from './finance.service';
+import { VectorReindexService } from './vector-reindex.service';
 import { AiModule } from '../ai/ai.module';
 import { DatabaseModule } from '../database/database.module';
 
@@ -22,6 +23,7 @@ import { DatabaseModule } from '../database/database.module';
     WebResearchService,
     ResourceService,
     FinanceService,
+    VectorReindexService,
   ],
   exports: [
     ExecutiveRepository,
@@ -31,6 +33,7 @@ import { DatabaseModule } from '../database/database.module';
     WebResearchService,
     ResourceService,
     FinanceService,
+    VectorReindexService,
   ],
 })
 export class ExecutiveModule {}

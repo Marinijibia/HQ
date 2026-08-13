@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Param, Body, UseGuards, NotFoundException, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PrismaService } from '../database/prisma.service';
+import { VectorReindexService } from './vector-reindex.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
@@ -56,7 +57,10 @@ export class CreateDepartmentDto {
 export class ExecutiveCmsController {
   private readonly logger = new Logger(ExecutiveCmsController.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly vectorReindexService: VectorReindexService,
+  ) {}
 
   @Get('executives')
   @ApiOperation({ summary: 'CMS: Get all executives with department relations' })
@@ -187,7 +191,10 @@ export class ExecutiveCmsController {
       },
     });
 
-    this.logger.log(`⚡ Auto-indexed Markdown document ${dto.filename} for Executive ${exec.name}`);
+    // Auto-trigger background vector re-indexing asynchronously
+    this.vectorReindexService.reindexAllTrainingData().catch(err => {
+      this.logger.error(`Auto re-index failed for ${dto.filename}: ${err}`);
+    });
 
     return {
       success: true,
@@ -199,23 +206,12 @@ export class ExecutiveCmsController {
   @Post('reindex-vectors')
   @ApiOperation({ summary: 'CMS: Trigger automated vector re-indexing for all Markdown (.md) training documents' })
   async reindexVectors() {
-    const [execDocs, deptDocs, kbDocs] = await Promise.all([
-      this.prisma.executiveTrainingData.count(),
-      this.prisma.departmentTrainingData.count(),
-      this.prisma.knowledgeBase.count(),
-    ]);
-
-    this.logger.log(`🔄 Re-indexed vector embeddings across ${execDocs} Executive docs, ${deptDocs} Dept docs, and ${kbDocs} KB docs.`);
+    const stats = await this.vectorReindexService.reindexAllTrainingData();
 
     return {
       success: true,
-      message: `Vector re-indexing completed successfully. Evaluated ${execDocs + deptDocs + kbDocs} total Markdown document chunks in pgvector.`,
-      stats: {
-        executiveDocumentsIndexed: execDocs,
-        departmentDocumentsIndexed: deptDocs,
-        knowledgeBaseDocumentsIndexed: kbDocs,
-        reindexedAt: new Date().toISOString(),
-      },
+      message: `Vector re-indexing completed successfully. Evaluated ${stats.totalChunksProcessed} total Markdown document chunks in pgvector.`,
+      stats,
     };
   }
 
@@ -254,6 +250,11 @@ export class ExecutiveCmsController {
         filename: dto.filename,
         content: dto.content,
       },
+    });
+
+    // Auto-trigger background vector re-indexing asynchronously
+    this.vectorReindexService.reindexAllTrainingData().catch(err => {
+      this.logger.error(`Auto dept re-index failed for ${dto.filename}: ${err}`);
     });
 
     return {
