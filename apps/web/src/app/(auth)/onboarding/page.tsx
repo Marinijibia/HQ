@@ -1355,18 +1355,18 @@ export default function OnboardingPage() {
                       },
                       {
                         code: 'PRO',
-                        name: 'Pro Tier',
-                        price: '$49 / mo',
+                        name: 'Growth Scale Tier',
+                        price: '$10 / mo',
                         badge: 'Growth',
-                        desc: '5,000 AI Monthly Credits · 50 Active Missions · Unlimited Executives · Priority ASAD Voice Synthesis',
+                        desc: '50,000 AI Monthly Tokens · 5 Parallel Boardrooms · Circle Agentic USDC Wallet',
                         isPopular: false,
                       },
                       {
                         code: 'ENTERPRISE',
-                        name: 'Enterprise Tier',
-                        price: '$299 / mo',
+                        name: 'Enterprise OS Tier',
+                        price: '$50 / mo',
                         badge: 'Scale',
-                        desc: '50,000 AI Monthly Credits · 1,000 Active Missions · Dedicated Agent Swarms · SOC2 Security Audit',
+                        desc: '200,000 AI Monthly Tokens · Unlimited Boardrooms · Dedicated Agent Swarms & 6-Tier Killswitch',
                         isPopular: false,
                       },
                     ].map((tier) => (
@@ -1686,7 +1686,7 @@ export default function OnboardingPage() {
                   <div className="p-4 rounded-2xl bg-white dark:bg-black/50 border border-slate-200 dark:border-white/10 space-y-2">
                     <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">SELECTED PLAN TIER</div>
                     <div className="text-base font-black text-cyan-600 dark:text-cyan-300 flex items-center justify-between">
-                      <span>{selectedPlanCode === 'FREE' ? 'Free Starter Tier ($0/mo)' : selectedPlanCode === 'PRO' ? 'Pro Tier ($49/mo)' : 'Enterprise Tier ($299/mo)'}</span>
+                      <span>{selectedPlanCode === 'FREE' ? 'Free Starter Tier ($0/mo)' : selectedPlanCode === 'PRO' ? 'Growth Scale Tier ($10/mo)' : 'Enterprise OS Tier ($50/mo)'}</span>
                       <Badge variant={selectedPlanCode === 'FREE' ? 'success' : 'neutral'} className="text-[9px] font-bold">
                         {selectedPlanCode === 'FREE' ? 'Standard Limits Active' : 'Paid Tier Active'}
                       </Badge>

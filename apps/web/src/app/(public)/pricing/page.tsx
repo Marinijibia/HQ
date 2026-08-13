@@ -127,7 +127,7 @@ export default function PricingPage() {
               <p className="text-xs text-hq-purple-300 font-medium">Best for complete AI execution</p>
             </div>
             <div className="text-4xl font-extrabold text-[#1A1A1E] dark:text-white">
-              $20<span className="text-xs font-normal text-foreground/45 ml-1">/ month</span>
+              $50<span className="text-xs font-normal text-foreground/45 ml-1">/ month</span>
             </div>
             <p className="text-sm text-foreground/50 leading-relaxed">
               Infinite boardroom capacity, custom C-Suite roster, and 6-tier autonomy killswitch. Includes 200,000 AI Tokens / mo.
@@ -154,7 +154,7 @@ export default function PricingPage() {
               variant="primary"
               className="w-full text-xs font-bold h-10 bg-purple-600 hover:bg-purple-500 text-white border-none shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all"
             >
-              Subscribe ($20/mo)
+              Subscribe ($50/mo)
             </Button>
           </Link>
         </Card>

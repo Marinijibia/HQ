@@ -55,10 +55,10 @@ export class BillingService {
     const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
     
     let amountUsd = 10;
-    if (planCode === 'enterprise') amountUsd = 20;
+    if (planCode === 'enterprise' || planCode === 'ENTERPRISE') amountUsd = 50;
     else if (planCode === 'token_pack_small') amountUsd = 5;
     else if (planCode === 'token_pack_large') amountUsd = 15;
-    else if (planCode === 'growth') amountUsd = 10;
+    else if (planCode === 'growth' || planCode === 'PRO') amountUsd = 10;
 
     // Fetch Live Real-Time USD-to-NGN Exchange Rate
     const fxRateNgn = await this.getLiveUsdToNgnFxRate();
@@ -184,7 +184,7 @@ export class BillingService {
 
   async paySubscriptionWithWallet(companyId: string, planCode: string) {
     let amountUsd = 10.0;
-    if (planCode === 'enterprise') amountUsd = 20.0;
+    if (planCode === 'enterprise' || planCode === 'ENTERPRISE') amountUsd = 50.0;
     else if (planCode === 'token_pack_small') amountUsd = 5.0;
     else if (planCode === 'token_pack_large') amountUsd = 15.0;
 
