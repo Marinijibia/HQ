@@ -110,7 +110,8 @@ export default function BoardroomPage() {
   const [isConsoleThinking, setIsConsoleThinking] = React.useState(false);
   const [isLoadingExecs, setIsLoadingExecs] = React.useState(true);
 
-  const [executives, setExecutives] = React.useState<BoardExecutive[]>(DEFAULT_BOARD_EXECUTIVES);
+  // Start empty — real executives loaded from DB only
+  const [executives, setExecutives] = React.useState<BoardExecutive[]>([]);
 
   // ── Fetch live active executives from backend API ───────────────────────
   React.useEffect(() => {
@@ -141,10 +142,17 @@ export default function BoardroomPage() {
             if (isMounted) {
               setExecutives(mapped);
             }
+          } else {
+            // No executives in this org — leave state empty so empty-state UI renders
+            if (isMounted) setExecutives([]);
           }
+        } else {
+          // API error — leave state empty, no fake fallback
+          if (isMounted) setExecutives([]);
         }
-      } catch (err) {
-        /* Keep robust fallback default roster */
+      } catch {
+        // Network error — leave state empty, no fake fallback
+        if (isMounted) setExecutives([]);
       } finally {
         if (isMounted) setIsLoadingExecs(false);
       }
@@ -313,6 +321,37 @@ export default function BoardroomPage() {
         </div>
 
         {/* Executives Grid */}
+        {isLoadingExecs ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl animate-pulse space-y-3">
+                <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-1/2" />
+                <div className="h-3 bg-slate-200 dark:bg-white/10 rounded w-3/4" />
+                <div className="h-3 bg-slate-200 dark:bg-white/10 rounded w-1/3" />
+              </div>
+            ))}
+          </div>
+        ) : filteredExecs.length === 0 ? (
+          <div className="text-center py-16 space-y-4">
+            <Building2 className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto" />
+            <h3 className="text-base font-black text-slate-900 dark:text-white">
+              {executives.length === 0 ? 'No Executives Installed' : 'No Matches Found'}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+              {executives.length === 0
+                ? 'Your organization has no active executives yet. Visit the Marketplace to install your AI C-Suite team.'
+                : 'Try adjusting your search or department filter.'}
+            </p>
+            {executives.length === 0 && (
+              <Button
+                onClick={() => router.push('/marketplace')}
+                className="bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs h-10 px-5 rounded-xl shadow-md"
+              >
+                Browse Marketplace
+              </Button>
+            )}
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredExecs.map((exec) => (
             <Card
@@ -377,6 +416,7 @@ export default function BoardroomPage() {
             </Card>
           ))}
         </div>
+        )}
       </div>
     </div>
   );

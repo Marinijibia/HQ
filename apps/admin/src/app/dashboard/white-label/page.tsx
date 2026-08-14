@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Badge, Input } from '@hq/ui';
@@ -200,7 +200,7 @@ export default function WhiteLabelPage() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${
                 activeTab === tab.id
-                  ? 'border-current text-white font-extrabold'
+                  ? 'border-current text-slate-900 dark:text-white font-extrabold'
                   : 'border-transparent text-foreground/55 hover:text-foreground'
               }`}
               style={activeTab === tab.id ? { borderColor: brandColor, color: brandColor } : {}}
@@ -253,7 +253,7 @@ export default function WhiteLabelPage() {
 
                 <Button
                   size="sm"
-                  className="text-white text-xs font-bold h-8.5 gap-1.5 mt-2 cursor-pointer"
+                  className="text-slate-900 dark:text-white text-xs font-bold h-8.5 gap-1.5 mt-2 cursor-pointer"
                   style={{ backgroundColor: brandColor }}
                   onClick={handleSaveBranding}
                 >
@@ -274,11 +274,11 @@ export default function WhiteLabelPage() {
                 </div>
 
                 {/* Interactive Component Simulator Container */}
-                <div className="border border-card-border bg-[#0C0C0E] rounded-2xl p-3.5 space-y-3 text-[10px] text-white">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <div className="border border-card-border bg-slate-50 dark:bg-[#0C0C0E] rounded-2xl p-3.5 space-y-3 text-[10px] text-slate-900 dark:text-white">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-2">
                     <div className="flex items-center gap-2">
                       <div className="h-4 w-4 rounded-md shadow-sm" style={{ backgroundColor: brandColor }} />
-                      <span className="font-extrabold text-xs text-white">{companyName}</span>
+                      <span className="font-extrabold text-xs text-slate-900 dark:text-white">{companyName}</span>
                     </div>
                     <div className="px-2 py-0.5 rounded-full text-[8px] font-bold" style={{ backgroundColor: `${secondaryColor}25`, color: secondaryColor }}>
                       PRO TIER ACTIVE
@@ -287,9 +287,9 @@ export default function WhiteLabelPage() {
 
                   {/* Simulated Action Buttons */}
                   <div className="space-y-1.5">
-                    <div className="text-[9px] font-bold text-slate-400 uppercase">Brand Action Button:</div>
+                    <div className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Brand Action Button:</div>
                     <button
-                      className="w-full h-8 rounded-xl font-black text-xs text-white shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      className="w-full h-8 rounded-xl font-black text-xs text-slate-900 dark:text-white shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                       style={{ backgroundColor: brandColor }}
                     >
                       <Sparkles className="h-3.5 w-3.5" /> Deploy Executive Directive
@@ -298,18 +298,18 @@ export default function WhiteLabelPage() {
 
                   {/* Simulated Progress Bar */}
                   <div className="space-y-1.5 pt-1">
-                    <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase">
+                    <div className="flex justify-between text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">
                       <span>WBS Mission Progress</span>
                       <span style={{ color: brandColor }}>84%</span>
                     </div>
-                    <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                       <div className="h-full rounded-full transition-all duration-300" style={{ width: '84%', backgroundColor: brandColor }} />
                     </div>
                   </div>
 
                   {/* Simulated Boardroom Pill */}
-                  <div className="p-2.5 rounded-xl border border-white/10 bg-black/40 flex items-center justify-between text-[9px]">
-                    <span className="font-bold text-slate-300">{termBoardroom} Swarm Active</span>
+                  <div className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-black/40 flex items-center justify-between text-[9px]">
+                    <span className="font-bold text-slate-600 dark:text-slate-300">{termBoardroom} Swarm Active</span>
                     <span className="font-black px-2 py-0.5 rounded-md" style={{ backgroundColor: `${secondaryColor}30`, color: secondaryColor }}>
                       3 AI Directors
                     </span>
@@ -358,7 +358,7 @@ export default function WhiteLabelPage() {
                   ].map((feat, idx) => (
                     <div key={idx} className="p-3 rounded-lg border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/10 flex justify-between gap-4 items-center">
                       <div>
-                        <span className="font-extrabold text-white text-xs block">{feat.label}</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white text-xs block">{feat.label}</span>
                         <span className="text-[9.5px] text-foreground/45 leading-relaxed mt-0.5 block">{feat.desc}</span>
                       </div>
                       <button
@@ -397,7 +397,7 @@ export default function WhiteLabelPage() {
                   {domains.map(dom => (
                     <div key={dom.id} className="p-3 rounded-lg border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 text-xs flex justify-between gap-4">
                       <div>
-                        <span className="font-extrabold text-white block">{dom.domain}</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white block">{dom.domain}</span>
                         <div className="flex gap-2 text-[9px] text-foreground/45 font-semibold mt-0.5">
                           <span>DNS: <span className={dom.dnsVerified ? 'text-green-500 font-bold' : 'text-yellow-500 font-bold'}>{dom.dnsVerified ? 'Verified' : 'Unresolved A-Record'}</span></span>
                         </div>
@@ -442,7 +442,7 @@ export default function WhiteLabelPage() {
 
                   <Button
                     size="sm"
-                    className="w-full text-white text-xs font-bold h-8.5 gap-1.5 cursor-pointer"
+                    className="w-full text-slate-900 dark:text-white text-xs font-bold h-8.5 gap-1.5 cursor-pointer"
                     style={{ backgroundColor: brandColor }}
                     onClick={handleCreateDomain}
                   >
@@ -464,8 +464,8 @@ export default function WhiteLabelPage() {
                 </div>
 
                 <div className="p-3 bg-black/40 border border-card-border rounded-xl space-y-2 text-xs">
-                  <div className="text-[11px] font-bold text-slate-400 uppercase">Required CNAME Alias Target:</div>
-                  <code className="text-cyan-300 font-mono text-[11px] block bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                  <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase">Required CNAME Alias Target:</div>
+                  <code className="text-cyan-300 font-mono text-[11px] block bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800">
                     cname.hq.netify.ng
                   </code>
                 </div>
@@ -496,11 +496,11 @@ export default function WhiteLabelPage() {
                   {clients.map(cli => (
                     <div key={cli.id} className="p-3.5 rounded-lg border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 text-xs flex justify-between gap-4">
                       <div>
-                        <span className="font-extrabold text-white block">{cli.name}</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white block">{cli.name}</span>
                         <div className="flex flex-wrap gap-2 text-[9.5px] text-foreground/45 font-semibold mt-1">
                           <span>Domain: <span className="text-hq-cyan">{cli.domain}</span></span>
                           <span>·</span>
-                          <span>Members: <span className="text-white">{cli.usersCount}</span></span>
+                          <span>Members: <span className="text-slate-900 dark:text-white">{cli.usersCount}</span></span>
                         </div>
                       </div>
 
@@ -544,7 +544,7 @@ export default function WhiteLabelPage() {
                   <div className="space-y-1.5">
                     <label className="text-foreground/75">Plan Entitlements</label>
                     <select
-                      className="bg-card-bg border border-card-border rounded-lg w-full p-2 h-9 text-xs font-bold focus:outline-none text-white"
+                      className="bg-card-bg border border-card-border rounded-lg w-full p-2 h-9 text-xs font-bold focus:outline-none text-slate-900 dark:text-white"
                       value={newClientPlan}
                       onChange={e => setNewClientPlan(e.target.value)}
                     >
@@ -556,7 +556,7 @@ export default function WhiteLabelPage() {
 
                   <Button
                     size="sm"
-                    className="w-full text-white text-xs font-bold h-8.5 gap-1.5 cursor-pointer"
+                    className="w-full text-slate-900 dark:text-white text-xs font-bold h-8.5 gap-1.5 cursor-pointer"
                     style={{ backgroundColor: brandColor }}
                     onClick={handleCreateClient}
                   >

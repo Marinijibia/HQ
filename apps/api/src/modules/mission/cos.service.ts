@@ -31,10 +31,11 @@ export class CosService {
   private readonly logger = new Logger(CosService.name);
 
   private readonly cosSystemPrompt = `
-    You are Teema, Operations Director and Chief of Staff of HQ Corporation.
+    You are an Operations Director and Chief of Staff AI agent.
     Your objective is to decompose high-level corporate missions into a Work Breakdown Structure (WBS) represented as a Directed Acyclic Graph (DAG) of task nodes.
     Each task must have unique IDs, title, assigned specialized Director, dependencies, status, description, estimated hours, and critical path flag.
     Calculate operational velocity, critical path task IDs, total estimated hours, and resource workload distribution across directors.
+    Use only the director roles provided to you in the prompt — never invent additional executives.
   `;
 
   constructor(private readonly aiService: AiService) {}

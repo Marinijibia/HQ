@@ -264,10 +264,10 @@ export default function OperationsCenterPage() {
               onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
               className="bg-transparent border-0 text-cyan-300 font-bold text-xs focus:outline-none cursor-pointer"
             >
-              <option value={5} className="bg-slate-900 text-white">5 seconds</option>
-              <option value={10} className="bg-slate-900 text-white">10 seconds</option>
-              <option value={30} className="bg-slate-900 text-white">30 seconds</option>
-              <option value={0} className="bg-slate-900 text-white">Paused (Manual)</option>
+              <option value={5} className="bg-slate-900 text-slate-900 dark:text-white">5 seconds</option>
+              <option value={10} className="bg-slate-900 text-slate-900 dark:text-white">10 seconds</option>
+              <option value={30} className="bg-slate-900 text-slate-900 dark:text-white">30 seconds</option>
+              <option value={0} className="bg-slate-900 text-slate-900 dark:text-white">Paused (Manual)</option>
             </select>
             {autoRefreshInterval > 0 && (
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
@@ -282,7 +282,7 @@ export default function OperationsCenterPage() {
                 type="button"
                 onClick={() => setTimeSeriesRange(range)}
                 className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
-                  timeSeriesRange === range ? 'bg-cyan-500 text-black shadow-sm' : 'text-slate-400 hover:text-white'
+                  timeSeriesRange === range ? 'bg-cyan-500 text-black shadow-sm' : 'text-slate-400 hover:text-slate-900 dark:text-white'
                 }`}
               >
                 {range}
@@ -301,7 +301,7 @@ export default function OperationsCenterPage() {
               }, 1200);
             }}
             disabled={maintenanceLoading}
-            className="px-3.5 py-2 bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-2 bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600 hover:text-slate-900 dark:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Zap size={14} className={maintenanceLoading ? 'animate-bounce' : ''} /> System Maintenance
           </button>
@@ -309,14 +309,14 @@ export default function OperationsCenterPage() {
           <button
             onClick={fetchStats}
             disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-slate-900 dark:text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
           >
             <RefreshCcw size={14} className={isLoading ? 'animate-spin' : ''} /> Sync Stats
           </button>
           <div className="h-6 w-[1px] bg-card-border" />
           <button
             onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gray-950 dark:bg-white text-white dark:text-gray-950 hover:bg-black dark:hover:bg-gray-100 rounded-xl text-xs font-black transition-all active:scale-[0.98] cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 bg-gray-950 dark:bg-white text-slate-900 dark:text-white dark:text-gray-950 hover:bg-black dark:hover:bg-gray-100 rounded-xl text-xs font-black transition-all active:scale-[0.98] cursor-pointer"
           >
             <Download size={14} /> Export CSV
           </button>
@@ -435,7 +435,7 @@ export default function OperationsCenterPage() {
         <div className="lg:col-span-2 bg-white/60 dark:bg-hq-graphite/40 backdrop-blur-xl rounded-[2.5rem] border border-card-border p-8 shadow-level-3 relative overflow-hidden transition-all duration-300 hover:scale-[1.01]">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
+              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 Revenue Growth Curve <TrendingUp className="text-blue-500" size={18} />
               </h2>
               <p className="text-foreground/50 text-xs mt-0.5">SaaS monthly recurring trajectory curves</p>
@@ -454,7 +454,7 @@ export default function OperationsCenterPage() {
                 <Cpu size={20} className="animate-spin" style={{ animationDuration: '6s' }} />
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-white">System Telemetry</h2>
+                <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">System Telemetry</h2>
                 <p className="text-foreground/50 text-xs mt-0.5">Real-time Node infrastructure metrics</p>
               </div>
             </div>
@@ -465,7 +465,7 @@ export default function OperationsCenterPage() {
                   <span className="text-xs text-foreground/50 font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <Zap size={12} className="text-blue-500" /> Active Sockets
                   </span>
-                  <span className="text-base font-black text-white">
+                  <span className="text-base font-black text-slate-900 dark:text-white">
                     {stats.systemTelemetry.activeSockets}
                   </span>
                 </div>
@@ -473,11 +473,11 @@ export default function OperationsCenterPage() {
                 <div className="p-4 bg-card-bg rounded-2xl border border-card-border space-y-2">
                   <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-foreground/50">
                     <span>Memory Usage (Heap)</span>
-                    <span className="text-white">
+                    <span className="text-slate-900 dark:text-white">
                       {stats.systemTelemetry.memory?.heapUsed} / {stats.systemTelemetry.memory?.heapTotal}
                     </span>
                   </div>
-                  <div className="w-full bg-[#0A0A0C] h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-slate-200 dark:bg-[#0A0A0C] h-2 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
                       style={{
@@ -512,7 +512,7 @@ export default function OperationsCenterPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Plan Distribution Breakdown */}
         <div className="bg-white/60 dark:bg-hq-graphite/40 backdrop-blur-xl rounded-[2.5rem] border border-card-border p-8 shadow-level-3 transition-all duration-300 hover:scale-[1.01]">
-          <h2 className="text-xl font-extrabold text-white mb-6">SaaS Tier Signups</h2>
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-6">SaaS Tier Signups</h2>
           <div className="space-y-5">
             {stats.planDistribution.map((item: any, idx: number) => {
               const percent = Math.round((item.count / totalPlanTenants) * 100);
@@ -525,7 +525,7 @@ export default function OperationsCenterPage() {
                     <span>{item.planName}</span>
                     <span>{item.count} tenants ({percent}%)</span>
                   </div>
-                  <div className="w-full bg-[#0A0A0C] h-2.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-slate-200 dark:bg-[#0A0A0C] h-2.5 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-1000 ${barColor}`}
                       style={{ width: `${percent}%` }}
@@ -540,7 +540,7 @@ export default function OperationsCenterPage() {
         {/* SaaS Billing logs & status table */}
         <div className="lg:col-span-2 bg-white/60 dark:bg-hq-graphite/40 backdrop-blur-xl rounded-[2.5rem] border border-card-border p-8 shadow-level-3 transition-all duration-300 hover:scale-[1.01] flex flex-col justify-between">
           <div>
-            <h2 className="text-xl font-extrabold text-white mb-6">Recent Billing Activities</h2>
+            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-6">Recent Billing Activities</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -554,10 +554,10 @@ export default function OperationsCenterPage() {
                 <tbody className="divide-y divide-card-border/50 text-sm font-semibold">
                   {stats.recentTransactions.map((tx: any) => (
                     <tr key={tx.id} className="group hover:bg-foreground/5 transition-colors">
-                      <td className="py-4 text-white">
+                      <td className="py-4 text-slate-900 dark:text-white">
                         {tx.tenant?.companyName || 'Deleted Tenant'}
                       </td>
-                      <td className="py-4 text-right font-mono font-black text-white">
+                      <td className="py-4 text-right font-mono font-black text-slate-900 dark:text-white">
                         ₦{tx.amount.toLocaleString()}
                       </td>
                       <td className="py-4 text-center">
@@ -586,7 +586,7 @@ export default function OperationsCenterPage() {
       <div className="bg-white/60 dark:bg-hq-graphite/40 backdrop-blur-xl rounded-[2.5rem] border border-card-border p-8 shadow-level-3 transition-all duration-300">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
+            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
               <Cpu className="h-5 w-5 text-cyan-400" />
               Top Token-Consuming Tenants Leaderboard
             </h2>
@@ -634,7 +634,7 @@ export default function OperationsCenterPage() {
                       {tenant.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 text-left">
-                      <h3 className="font-extrabold text-white text-sm truncate group-hover:text-cyan-300 transition-colors">
+                      <h3 className="font-extrabold text-slate-900 dark:text-white text-sm truncate group-hover:text-cyan-300 transition-colors">
                         {tenant.name}
                       </h3>
                       <p className="text-[10px] text-foreground/45 truncate font-mono">

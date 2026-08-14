@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -107,7 +107,7 @@ export default function AdminRegisterPage() {
 
   if (checkingSetup) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070709] text-white p-4">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#070709] text-slate-900 dark:text-white p-4">
         <div className="flex flex-col items-center space-y-3">
           <div className="w-8 h-8 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
           <p className="text-xs text-slate-400 font-semibold">Checking Super Admin Setup Status...</p>
@@ -118,8 +118,8 @@ export default function AdminRegisterPage() {
 
   if (isSetupRequired === false) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070709] text-white p-4">
-        <Card className="max-w-md w-full border border-slate-800 bg-slate-950 p-8 rounded-3xl space-y-6 text-center shadow-2xl">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#070709] text-slate-900 dark:text-white p-4">
+        <Card className="max-w-md w-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-8 rounded-3xl space-y-6 text-center shadow-2xl">
           <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto">
             <ShieldAlert size={28} />
           </div>
@@ -141,15 +141,15 @@ export default function AdminRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#070709] text-white p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#070709] text-slate-900 dark:text-white p-4 relative overflow-hidden">
       {/* Background Ambient Glow */}
       <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/10 via-blue-500/5 to-purple-600/10 blur-3xl pointer-events-none" />
 
-      <Card className="max-w-md w-full border border-slate-800 bg-slate-950/90 backdrop-blur-2xl p-8 rounded-3xl space-y-6 shadow-2xl relative z-10">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <Card className="max-w-md w-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/90 backdrop-blur-2xl p-8 rounded-3xl space-y-6 shadow-2xl relative z-10">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-blue-500 to-purple-600 p-[1.5px]">
-              <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-white font-bold text-base">
+              <div className="w-full h-full bg-white dark:bg-slate-950 rounded-[14px] flex items-center justify-center text-slate-900 dark:text-white font-bold text-base">
                 👑
               </div>
             </div>
@@ -172,7 +172,7 @@ export default function AdminRegisterPage() {
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider block">
+            <label className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
               Super Admin Full Name
             </label>
             <Input
@@ -180,12 +180,12 @@ export default function AdminRegisterPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Master Administrator"
               required
-              className="bg-slate-900 border-slate-800 text-xs text-white h-11 rounded-2xl px-4 focus:border-cyan-500"
+              className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white h-11 rounded-2xl px-4 focus:border-cyan-500"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider block">
+            <label className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
               Super Admin Email Address
             </label>
             <Input
@@ -194,12 +194,12 @@ export default function AdminRegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@hq.netify.ng"
               required
-              className="bg-slate-900 border-slate-800 text-xs text-white h-11 rounded-2xl px-4 focus:border-cyan-500"
+              className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white h-11 rounded-2xl px-4 focus:border-cyan-500"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider block">
+            <label className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
               Super Admin Password
             </label>
             <Input
@@ -209,12 +209,12 @@ export default function AdminRegisterPage() {
               placeholder="At least 8 characters..."
               required
               minLength={8}
-              className="bg-slate-900 border-slate-800 text-xs text-white h-11 rounded-2xl px-4 focus:border-cyan-500"
+              className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white h-11 rounded-2xl px-4 focus:border-cyan-500"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider block">
+            <label className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
               Confirm Super Admin Password
             </label>
             <Input
@@ -224,7 +224,7 @@ export default function AdminRegisterPage() {
               placeholder="Re-enter password..."
               required
               minLength={8}
-              className="bg-slate-900 border-slate-800 text-xs text-white h-11 rounded-2xl px-4 focus:border-cyan-500"
+              className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white h-11 rounded-2xl px-4 focus:border-cyan-500"
             />
           </div>
 
@@ -249,7 +249,7 @@ export default function AdminRegisterPage() {
         <div className="pt-2 text-center">
           <button
             onClick={() => router.push('/login')}
-            className="text-xs text-slate-400 hover:text-white font-medium flex items-center justify-center gap-1 mx-auto transition-colors"
+            className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium flex items-center justify-center gap-1 mx-auto transition-colors"
           >
             <ArrowLeft size={14} /> Back to Sign In
           </button>
@@ -258,3 +258,4 @@ export default function AdminRegisterPage() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { Card, Button, Badge, Input } from '@hq/ui';
@@ -326,13 +326,13 @@ export default function AdminBillingPage() {
           {/* Controls Bar */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
               <Input
                 type="text"
                 placeholder="Search by organization name, vendor, transaction ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-slate-50 dark:bg-black/50 border-slate-200 dark:border-white/10 h-10 text-xs rounded-xl"
+                className="pl-9 bg-slate-50 dark:bg-slate-100 dark:bg-black/50 border-slate-200 dark:border-white/10 h-10 text-xs rounded-xl"
               />
             </div>
 
@@ -341,7 +341,7 @@ export default function AdminBillingPage() {
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-10 text-xs font-bold rounded-xl px-3"
+                className="bg-slate-50 dark:bg-slate-100 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-10 text-xs font-bold rounded-xl px-3"
               >
                 <option value="ALL">All Event Types</option>
                 <option value="DEPOSIT">Fiat Deposits</option>
@@ -355,7 +355,7 @@ export default function AdminBillingPage() {
           <div className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 dark:bg-black/60 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-white/10 uppercase font-black text-[10px] tracking-wider">
+                <thead className="bg-slate-100 dark:bg-slate-100 dark:bg-black/60 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-white/10 uppercase font-black text-[10px] tracking-wider">
                   <tr>
                     <th className="py-3.5 px-4">Organization</th>
                     <th className="py-3.5 px-4">Event Type</th>
@@ -369,7 +369,7 @@ export default function AdminBillingPage() {
                 <tbody className="divide-y divide-slate-200 dark:divide-white/10 font-medium">
                   {filteredTransactions.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-slate-400 text-xs font-bold">
+                      <td colSpan={7} className="py-8 text-center text-slate-500 dark:text-slate-400 text-xs font-bold">
                         No transactions recorded in system audit feed yet.
                       </td>
                     </tr>
@@ -459,7 +459,7 @@ export default function AdminBillingPage() {
                 className={`border p-4 shadow-md space-y-3 ${
                   w.status === 'FROZEN'
                     ? 'border-rose-500/50 bg-rose-500/5'
-                    : 'border-slate-200 dark:border-white/10 bg-white dark:bg-black/50'
+                    : 'border-slate-200 dark:border-white/10 bg-white dark:bg-slate-100 dark:bg-black/50'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -483,7 +483,7 @@ export default function AdminBillingPage() {
                   </Badge>
                 </div>
 
-                <div className="p-3 bg-slate-50 dark:bg-black/60 rounded-xl border border-slate-200 dark:border-white/5 flex items-center justify-between">
+                <div className="p-3 bg-slate-50 dark:bg-slate-100 dark:bg-black/60 rounded-xl border border-slate-200 dark:border-slate-100 dark:border-white/5 flex items-center justify-between">
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">
                     Virtual USD Balance
                   </span>
@@ -549,7 +549,7 @@ export default function AdminBillingPage() {
 
       {/* ADJUSTMENT MODAL */}
       {selectedOrg && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-100 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <Card className="border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0A0B10] p-6 max-w-md w-full shadow-2xl space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
               <div>
@@ -580,7 +580,7 @@ export default function AdminBillingPage() {
                   placeholder="e.g. 50 (Credit) or -25 (Debit)"
                   value={adjustAmount}
                   onChange={(e) => setAdjustAmount(e.target.value)}
-                  className="bg-slate-50 dark:bg-black/50 border-slate-200 dark:border-white/10 h-10 text-xs rounded-xl"
+                  className="bg-slate-50 dark:bg-slate-100 dark:bg-black/50 border-slate-200 dark:border-white/10 h-10 text-xs rounded-xl"
                 />
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block font-medium">
                   Use positive numbers to add credit (+50) or negative numbers to deduct (-25).
@@ -596,7 +596,7 @@ export default function AdminBillingPage() {
                   placeholder="e.g. Promotional credit grant / Customer refund"
                   value={adjustReason}
                   onChange={(e) => setAdjustReason(e.target.value)}
-                  className="bg-slate-50 dark:bg-black/50 border-slate-200 dark:border-white/10 h-10 text-xs rounded-xl"
+                  className="bg-slate-50 dark:bg-slate-100 dark:bg-black/50 border-slate-200 dark:border-white/10 h-10 text-xs rounded-xl"
                 />
               </div>
             </div>
@@ -614,7 +614,7 @@ export default function AdminBillingPage() {
                 size="sm"
                 onClick={handleAdjustBalance}
                 disabled={adjusting || !adjustAmount || !adjustReason}
-                className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs h-9 px-4 rounded-xl"
+                className="bg-cyan-600 hover:bg-cyan-500 text-slate-900 dark:text-white font-bold text-xs h-9 px-4 rounded-xl"
               >
                 {adjusting ? 'Applying...' : 'Apply Balance Adjustment'}
               </Button>

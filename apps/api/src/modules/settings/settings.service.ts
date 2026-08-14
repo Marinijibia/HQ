@@ -63,8 +63,9 @@ export class SettingsService {
     });
   }
 
-  async getKernelTraces() {
+  async getKernelTraces(companyId: string) {
     const tasks = await this.prisma.missionTask.findMany({
+      where: { mission: { companyId }, deletedAt: null },
       take: 20,
       orderBy: { createdAt: 'desc' },
       include: { executive: true, mission: true },
@@ -89,9 +90,10 @@ export class SettingsService {
       }));
     }
 
+    // Fallback to wallet transactions for this org
     const txs: any[] = ((await this.prisma.$queryRawUnsafe(`
-      SELECT * FROM wallet_transactions ORDER BY created_at DESC LIMIT 20
-    `).catch(() => [])) as any[]) || [];
+      SELECT * FROM wallet_transactions WHERE company_id = $1 ORDER BY created_at DESC LIMIT 20
+    `, companyId).catch(() => [])) as any[]) || [];
 
     return txs.map((t) => ({
       id: t.id,
@@ -264,12 +266,13 @@ export class SettingsService {
       where: { id: userId },
       select: { id: true, name: true, email: true },
     });
+    if (!user) throw new NotFoundException('User not found');
     return {
       userId,
       wakeWord: 'Asad',
-      isTrained: true,
-      calibratedAt: new Date().toISOString(),
-      samplePhrasesCount: 3,
+      isTrained: false,
+      calibratedAt: null,
+      samplePhrasesCount: 0,
       confidenceThreshold: 0.85,
     };
   }
@@ -295,37 +298,29 @@ export class SettingsService {
       { id: 'pol-3', ruleText: 'Marketing campaigns publishing requires CMO sign-off.', category: 'Procurement', version: 'v1.4', status: 'Active' },
     ];
 
-    const mappedPolicies = policies.length > 0
-      ? policies.map((p) => ({
-          id: p.id,
-          ruleText: p.rule_text,
-          category: p.category,
-          version: p.version || 'v1.0',
-          status: p.status || 'Active',
-        }))
-      : defaultPolicies;
+    const mappedPolicies = policies.map((p) => ({
+      id: p.id,
+      ruleText: p.rule_text,
+      category: p.category,
+      version: p.version || 'v1.0',
+      status: p.status || 'Active',
+    }));
 
     const delegations: any[] = ((await this.prisma.$queryRawUnsafe(`
       SELECT * FROM governance_delegations WHERE active = true ORDER BY created_at DESC
     `).catch(() => [])) as any[]) || [];
 
-    const defaultDelegations = [
-      { id: 'del-1', delegator: 'Asad (CEO)', delegatee: 'Teema (Operations Director)', scope: 'Strategic WBS Approvals', startDate: '2026-07-15', endDate: '2026-07-29', active: true },
-    ];
+    const mappedDelegations = delegations.map((d) => ({
+      id: d.id,
+      delegator: d.delegator,
+      delegatee: d.delegatee,
+      scope: d.scope,
+      startDate: d.start_date,
+      endDate: d.end_date,
+      active: d.active,
+    }));
 
-    const mappedDelegations = delegations.length > 0
-      ? delegations.map((d) => ({
-          id: d.id,
-          delegator: d.delegator,
-          delegatee: d.delegatee,
-          scope: d.scope,
-          startDate: d.start_date,
-          endDate: d.end_date,
-          active: d.active,
-        }))
-      : defaultDelegations;
-
-    // Decisions audit from wallet_transactions
+    // Decisions audit from wallet_transactions scoped to org
     const txDecisions: any[] = ((await this.prisma.$queryRawUnsafe(`
       SELECT wt.*, c.name as company_name
       FROM wallet_transactions wt
@@ -346,9 +341,7 @@ export class SettingsService {
     return {
       policies: mappedPolicies,
       delegations: mappedDelegations,
-      decisions: mappedDecisions.length > 0 ? mappedDecisions : [
-        { id: 'dec-1', title: 'Paystack & Circle USDC Payment Gateway Activation', maker: 'Asad (CEO)', outcome: 'Approved', evidence: 'Payment API gateway verified & test suite passes', timestamp: new Date().toISOString() },
-      ],
+      decisions: mappedDecisions,
       emergencyPaused: false,
       autonomyLevel: 3,
     };

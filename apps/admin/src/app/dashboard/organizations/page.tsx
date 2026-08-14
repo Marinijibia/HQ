@@ -56,34 +56,7 @@ export default function AdminOrganizationsPage() {
         setOrganizations(data);
       } else {
         // Fallback default organization list
-        setOrganizations([
-          {
-            id: 'comp-master-001',
-            name: 'HQ Corporation',
-            slug: 'hq-corp',
-            level: 'ENTERPRISE',
-            createdAt: '2026-07-01T00:00:00.000Z',
-            userCount: 1,
-            marketplaceInstallationsCount: 2,
-            currentPlan: 'Enterprise Plan',
-            planCode: 'enterprise',
-            walletBalance: 100.0,
-            isSuspended: false,
-          },
-          {
-            id: 'comp-owner-002',
-            name: "Owner's Organization",
-            slug: 'owners-org',
-            level: 'TEAM',
-            createdAt: '2026-07-15T00:00:00.000Z',
-            userCount: 1,
-            marketplaceInstallationsCount: 1,
-            currentPlan: 'Growth Team Plan',
-            planCode: 'growth',
-            walletBalance: 50.0,
-            isSuspended: false,
-          },
-        ]);
+        setOrganizations([]);
       }
     } catch {
       toast.error('Failed to load organization roster');
@@ -154,15 +127,15 @@ export default function AdminOrganizationsPage() {
   return (
     <div className="space-y-8 text-left max-w-7xl mx-auto pb-12 select-none">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-r from-slate-950 via-[#0B0F19] to-cyan-950/40 p-8 shadow-2xl backdrop-blur-xl text-white">
+      <div className="relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-r from-slate-50 via-white dark:from-slate-950 dark:via-[#0B0F19] to-cyan-950/40 p-8 shadow-2xl backdrop-blur-xl text-slate-900 dark:text-white">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-black uppercase tracking-widest mb-3">
               <Building2 className="h-3.5 w-3.5 text-cyan-400" />
               <span>Super-Admin Multi-Tenant Oversight</span>
             </div>
-            <h1 className="text-3xl font-black text-white tracking-tight">Organization Management</h1>
-            <p className="text-slate-400 text-sm mt-1 max-w-2xl">
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Organization Management</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 max-w-2xl">
               Inspect registered multi-tenant organizations, manage workspace levels (`ENTERPRISE`, `TEAM`, `INDIVIDUAL`), issue force password resets, and audit tenant metrics with zero cross-tenant leaks.
             </p>
           </div>
@@ -170,14 +143,14 @@ export default function AdminOrganizationsPage() {
           <div className="flex items-center gap-3">
             <Button
               onClick={fetchOrganizations}
-              className="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2"
+              className="bg-white/5 hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2"
             >
               <RefreshCcw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
             </Button>
 
             <Button
               onClick={() => setShowCreateModal(true)}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-cyan-500/20"
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-900 dark:text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-cyan-500/20"
             >
               <Plus size={16} /> Provision Organization
             </Button>
@@ -187,43 +160,43 @@ export default function AdminOrganizationsPage() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Organizations</div>
-          <div className="text-3xl font-black text-white">{organizations.length}</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Organizations</div>
+          <div className="text-3xl font-black text-slate-900 dark:text-white">{organizations.length}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Enterprise Workspaces</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Enterprise Workspaces</div>
           <div className="text-3xl font-black text-cyan-300">{enterpriseCount}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Growth Teams</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Growth Teams</div>
           <div className="text-3xl font-black text-purple-300">{teamCount}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Tenant Users</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Tenant Users</div>
           <div className="text-3xl font-black text-emerald-400">{totalUsersCount}</div>
         </div>
       </div>
 
       {/* Toolbar: Search & Level Filter */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/40 p-4 rounded-2xl border border-white/10">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/40 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-200 dark:border-white/10">
         <div className="relative flex-1 w-full">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
           <input
             type="text"
             placeholder="Search organizations by name or slug..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
           />
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <SlidersHorizontal size={14} className="text-slate-400" />
+          <SlidersHorizontal size={14} className="text-slate-500 dark:text-slate-400" />
           <select
             value={levelFilter}
             onChange={(e) => setLevelFilter(e.target.value)}
-            className="bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-slate-300 focus:outline-none"
+            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 focus:outline-none"
           >
             <option value="ALL">All Tiers</option>
             <option value="ENTERPRISE">ENTERPRISE</option>
@@ -234,9 +207,9 @@ export default function AdminOrganizationsPage() {
       </div>
 
       {/* Interactive Organizations Table */}
-      <div className="border border-white/10 rounded-3xl overflow-hidden bg-slate-900/80 backdrop-blur-xl shadow-2xl">
-        <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-slate-950 border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+      <div className="border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-2xl">
+        <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+          <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
             <tr>
               <th className="p-4">Organization Name</th>
               <th className="p-4">Tier / Level</th>
@@ -257,7 +230,7 @@ export default function AdminOrganizationsPage() {
                         {org.name.slice(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-bold text-white text-sm flex items-center gap-2">
+                        <div className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
                           {org.name}
                           {org.isSuspended && (
                             <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[9px] font-bold">
@@ -265,7 +238,7 @@ export default function AdminOrganizationsPage() {
                             </span>
                           )}
                         </div>
-                        <div className="text-[11px] text-slate-400 font-mono">/{org.slug}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">/{org.slug}</div>
                       </div>
                     </div>
                   </td>
@@ -274,10 +247,10 @@ export default function AdminOrganizationsPage() {
                       {org.level || 'ENTERPRISE'}
                     </span>
                   </td>
-                  <td className="p-4 font-bold text-white">{org.userCount || 0} users</td>
+                  <td className="p-4 font-bold text-slate-900 dark:text-white">{org.userCount || 0} users</td>
                   <td className="p-4 font-bold text-purple-300">{org.marketplaceInstallationsCount || 0} packs</td>
-                  <td className="p-4 font-mono text-[11px] text-slate-300">{org.planCode || 'free'}</td>
-                  <td className="p-4 text-slate-400">
+                  <td className="p-4 font-mono text-[11px] text-slate-600 dark:text-slate-300">{org.planCode || 'free'}</td>
+                  <td className="p-4 text-slate-500 dark:text-slate-400">
                     {org.createdAt ? new Date(org.createdAt).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="p-4 text-right">
@@ -315,19 +288,19 @@ export default function AdminOrganizationsPage() {
       {/* Provision New Organization Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fadeIn">
-          <div className="bg-[#0B0F19] border border-white/10 rounded-3xl w-full max-w-md p-6 space-y-5 text-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="text-base font-black text-white flex items-center gap-2">
+          <div className="bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-md p-6 space-y-5 text-slate-900 dark:text-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Building2 size={18} className="text-cyan-400" /> Provision New Organization
               </h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setShowCreateModal(false)} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white">
                 <Plus size={18} className="rotate-45" />
               </button>
             </div>
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="font-bold text-slate-300 block mb-1">Organization Name</label>
+                <label className="font-bold text-slate-600 dark:text-slate-300 block mb-1">Organization Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Acme Global Industries"
@@ -338,27 +311,27 @@ export default function AdminOrganizationsPage() {
                       setNewOrgSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'));
                     }
                   }}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="font-bold text-slate-300 block mb-1">URL Slug</label>
+                <label className="font-bold text-slate-600 dark:text-slate-300 block mb-1">URL Slug</label>
                 <input
                   type="text"
                   placeholder="acme-global"
                   value={newOrgSlug}
                   onChange={(e) => setNewOrgSlug(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none font-mono"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none font-mono"
                 />
               </div>
 
               <div>
-                <label className="font-bold text-slate-300 block mb-1">Workspace Level / Tier</label>
+                <label className="font-bold text-slate-600 dark:text-slate-300 block mb-1">Workspace Level / Tier</label>
                 <select
                   value={newOrgLevel}
                   onChange={(e) => setNewOrgLevel(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none"
                 >
                   <option value="ENTERPRISE">ENTERPRISE</option>
                   <option value="TEAM">TEAM</option>
@@ -374,14 +347,14 @@ export default function AdminOrganizationsPage() {
             <div className="flex gap-2 pt-2">
               <Button
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1 bg-white/5 border border-white/10 text-slate-300 font-bold text-xs py-2.5 rounded-xl"
+                className="flex-1 bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 font-bold text-xs py-2.5 rounded-xl"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleCreateOrganization}
                 disabled={loading || !newOrgName}
-                className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs py-2.5 rounded-xl shadow-md"
+                className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-900 dark:text-white font-bold text-xs py-2.5 rounded-xl shadow-md"
               >
                 Provision Workspace
               </Button>

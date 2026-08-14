@@ -17,7 +17,7 @@ export class OpenAIProvider implements AIProvider {
       throw new Error('OPENAI_API_KEY is missing.');
     }
 
-    const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+    const model = process.env.OPENAI_MODEL || 'gpt-4o';
     this.logger.log(`[OpenAIProvider] Routing prompt to OpenAI API (${model})...`);
 
     const messages: any[] = [];

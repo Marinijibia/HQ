@@ -4,6 +4,8 @@ import {
   Post,
   Param,
   Body,
+  Req,
+  Query,
   UseGuards,
   NotFoundException,
 } from '@nestjs/common';
@@ -63,45 +65,68 @@ export class ExecutiveController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all active C-Suite AI executives' })
-  async findAll() {
-    return this.executiveRepository.findAll();
+  @ApiOperation({ summary: 'Get all active C-Suite AI executives (scoped to org)' })
+  async findAll(@Req() req: any) {
+    return this.executiveRepository.findAll(req.user?.companyId);
   }
 
   @Get('roster/capacity')
   @ApiOperation({ summary: 'Audit workspace executive roster capacity & domain coverage' })
-  async getRosterCapacity() {
-    return this.resourceService.auditRosterCapacity();
+  async getRosterCapacity(@Req() req: any) {
+    return this.resourceService.auditRosterCapacity(req.user?.companyId);
   }
 
   @Get('finance/health')
   @ApiOperation({ summary: 'Run CFO financial health audit and runway calculations' })
-  async getFinancialHealth() {
-    return this.financeService.auditFinancialHealth('default-workspace-company-id');
+  async getFinancialHealth(@Req() req: any) {
+    return this.financeService.auditFinancialHealth(req.user?.companyId);
   }
 
   @Get('finance/forecast')
   @ApiOperation({ summary: 'Generate CFO financial runway projection forecast' })
-  async getFinancialForecast() {
-    return this.financeService.forecastRunway('default-workspace-company-id');
+  async getFinancialForecast(@Req() req: any) {
+    return this.financeService.forecastRunway(req.user?.companyId);
   }
 
   @Get('finance/unit-economics')
-  @ApiOperation({ summary: 'Calculate CFO Unit Economics (LTV:CAC ratio & payback months)' })
-  async getUnitEconomics() {
-    return this.financeService.calculateUnitEconomics();
+  @ApiOperation({ summary: 'Calculate CFO Unit Economics — provide cac, arpu, churnRate, grossMargin via query' })
+  async getUnitEconomics(@Query() query: any) {
+    const cac = parseFloat(query.cac);
+    const arpu = parseFloat(query.arpu);
+    const churnRate = parseFloat(query.churnRate);
+    const grossMargin = parseFloat(query.grossMargin);
+
+    if ([cac, arpu, churnRate, grossMargin].some(isNaN)) {
+      return {
+        error: 'REQUIRES_INPUT',
+        message: 'Provide query params: cac, arpu, churnRate, grossMargin to calculate unit economics.',
+      };
+    }
+
+    return this.financeService.calculateUnitEconomics(cac, arpu, churnRate, grossMargin);
   }
 
   @Get('finance/cap-table')
-  @ApiOperation({ summary: 'Simulate Cap Table equity dilution scenario' })
-  async getCapTableScenario() {
-    return this.financeService.simulateCapTableDilution();
+  @ApiOperation({ summary: 'Simulate Cap Table dilution — provide preMoney, investment, optionPool via query' })
+  async getCapTableScenario(@Query() query: any) {
+    const preMoney = parseFloat(query.preMoney);
+    const investment = parseFloat(query.investment);
+    const optionPool = parseFloat(query.optionPool ?? '10');
+
+    if ([preMoney, investment].some(isNaN)) {
+      return {
+        error: 'REQUIRES_INPUT',
+        message: 'Provide query params: preMoney, investment, and optionally optionPool.',
+      };
+    }
+
+    return this.financeService.simulateCapTableDilution(preMoney, investment, optionPool);
   }
 
   @Get('ceo/welcome')
   @ApiOperation({ summary: 'Get welcome greeting context from AI CEO' })
-  async getWelcome() {
-    return this.ceoService.getWelcomeContext();
+  async getWelcome(@Req() req: any) {
+    return this.ceoService.getWelcomeContext(req.user?.companyId);
   }
 
   @Post('ceo/analyze')

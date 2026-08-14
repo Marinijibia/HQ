@@ -119,10 +119,19 @@ export class BillingService {
       );
     }
 
-    // Simulation Fallback
+    // In production, if Paystack key is missing we must not silently return a fake ref.
+    // This prevents mock payments from accidentally being accepted in live environments.
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'Payment gateway unavailable: No PAYSTACK_SECRET_KEY configured. Please contact support.',
+      );
+    }
+
+    // Development/Sandbox simulation only
     const mockRef = `pay_mock_${Math.random().toString(36).substring(7)}`;
+    this.logger.warn(`[Billing Service] DEV MODE: Returning simulated checkout reference: ${mockRef}`);
     return {
-      url: `http://localhost:3000/billing?status=success&reference=${mockRef}`,
+      url: `${process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000'}/billing?status=success&reference=${mockRef}`,
       reference: mockRef,
       accessCode: `access_mock_${mockRef}`,
     };
@@ -133,7 +142,7 @@ export class BillingService {
     this.logger.log(`[Billing Service] Verifying transaction reference: ${reference}`);
 
     let companyId = reqCompanyId || null;
-    let planCode = 'growth';
+    let planCode: string | null = null; // No default — must come from verified Paystack metadata
     let verifySuccess = false;
 
     if (paystackSecret && !reference.startsWith('pay_mock_')) {
@@ -153,8 +162,12 @@ export class BillingService {
           }
           verifySuccess = true;
           companyId = metaCompanyId || companyId;
-          planCode = result.data.metadata?.planCode || planCode;
-          this.logger.log(`[Billing Service] Paystack verified reference ${reference} successfully for company ${companyId}.`);
+          planCode = result.data.metadata?.planCode ?? null;
+          if (!planCode) {
+            this.logger.error(`[Billing Service] Paystack reference ${reference} has no planCode in metadata. Cannot activate subscription.`);
+            return false;
+          }
+          this.logger.log(`[Billing Service] Paystack verified reference ${reference} successfully for company ${companyId} plan ${planCode}.`);
         } else {
           this.logger.warn(`[Billing Service] Paystack reference verification failed: ${JSON.stringify(result)}`);
         }
@@ -162,19 +175,26 @@ export class BillingService {
         this.logger.error(`[Billing Service] Paystack verification error: ${err}`);
       }
     } else if (process.env.NODE_ENV !== 'production') {
-      // Sandbox mock verification only allowed in non-production environments
+      // Sandbox mock verification strictly blocked in production
       if (!companyId) {
         this.logger.warn('[Billing Service] Mock verification failed: Missing company ID');
         return false;
       }
-      this.logger.log('[Billing Service] Simulating verified transaction for dev environment.');
+      if (!reference.startsWith('pay_mock_')) {
+        this.logger.warn('[Billing Service] Unrecognized reference format in dev mode.');
+        return false;
+      }
+      // Use a default growth plan for sandbox testing only
+      planCode = 'growth';
+      this.logger.warn('[Billing Service] DEV MODE: Simulating verified transaction for sandbox environment.');
       verifySuccess = true;
     } else {
-      this.logger.warn('[Billing Service] Rejected mock transaction reference in production mode.');
+      // Production: reject any non-Paystack reference
+      this.logger.warn('[Billing Service] Rejected unrecognized payment reference in production mode.');
       return false;
     }
 
-    if (verifySuccess && companyId) {
+    if (verifySuccess && companyId && planCode) {
       await this.activateSubscription(companyId, planCode, reference);
       return true;
     }
@@ -188,12 +208,12 @@ export class BillingService {
     else if (planCode === 'token_pack_small') amountUsd = 5.0;
     else if (planCode === 'token_pack_large') amountUsd = 15.0;
 
-    // 1. Fetch Organization Virtual Wallet
-    const walletRows: any[] = ((await this.prisma.$queryRawUnsafe(`
-      SELECT id, balance_usd FROM organization_wallets WHERE company_id = '${companyId}' LIMIT 1
-    `).catch(() => [])) as any[]) || [];
+    // 1. Fetch Organization Virtual Wallet via Prisma ORM (no raw SQL)
+    const wallet = await this.prisma.organizationWallet.findUnique({
+      where: { companyId },
+    });
 
-    const currentBalance = walletRows.length > 0 ? parseFloat(walletRows[0].balance_usd || '0') : 100.0;
+    const currentBalance = wallet ? Number(wallet.balanceUsd) : 0;
 
     if (currentBalance < amountUsd) {
       throw new Error(
@@ -203,21 +223,31 @@ export class BillingService {
       );
     }
 
-    // 2. Deduct Virtual USD Balance
+    // 2. Deduct Virtual USD Balance via Prisma ORM
     const newBalance = currentBalance - amountUsd;
-    await this.prisma.$executeRawUnsafe(`
-      UPDATE organization_wallets SET balance_usd = ${newBalance}, updated_at = NOW() WHERE company_id = '${companyId}'
-    `).catch(() => {});
+    await this.prisma.organizationWallet.update({
+      where: { companyId },
+      data: { balanceUsd: newBalance },
+    });
 
     // 3. Activate Subscription & Entitlements
     const txRef = `tx-wallet-sub-${Date.now()}`;
     await this.activateSubscription(companyId, planCode, txRef);
 
-    // 4. Log Wallet Transaction
-    await this.prisma.$executeRawUnsafe(`
-      INSERT INTO wallet_transactions (id, company_id, type, amount_usd, amount_usdc, status, description, created_at, updated_at)
-      VALUES ('${txRef}', '${companyId}', 'SUBSCRIPTION_PAYMENT', ${amountUsd}, ${amountUsd}, 'COMPLETED', 'Monthly Subscription Upgrade via HQ Wallet Balance (${planCode.toUpperCase()})', NOW(), NOW())
-    `).catch(() => {});
+    // 4. Log Wallet Transaction via Prisma ORM
+    await this.prisma.walletTransaction.create({
+      data: {
+        id: txRef,
+        companyId,
+        type: 'SUBSCRIPTION_PAYMENT',
+        amountUsd,
+        amountUsdc: amountUsd,
+        status: 'COMPLETED',
+        description: `Monthly Subscription Upgrade via HQ Wallet Balance (${planCode.toUpperCase()})`,
+      },
+    }).catch((err) => {
+      this.logger.warn(`[Billing] Wallet tx log failed (non-critical): ${err}`);
+    });
 
     return {
       success: true,

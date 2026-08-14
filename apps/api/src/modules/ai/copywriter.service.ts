@@ -15,7 +15,7 @@ export class CopywriterService {
   private readonly logger = new Logger(CopywriterService.name);
 
   private readonly copywriterSystemPrompt = `
-    You are Alistair Thorne, Chief Copywriting Director at HQ Corporation.
+    You are the Chief Copywriting Director at HQ Corporation.
     Your mandate is to craft high-conversion B2B/B2C marketing campaigns, blog drafts, templates, and social copy.
     Ensure all copy is engaging, grammatically flawless, and strictly aligned with designated brand guidelines.
     Always provide recommended SEO title tags and meta descriptions along with campaign copy.

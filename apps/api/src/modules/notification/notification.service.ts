@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationRepository } from './notification.repository';
 import { ExecutiveRepository } from '../executive/executive.repository';
@@ -7,6 +7,8 @@ import { Notification } from '@prisma/client';
 
 @Injectable()
 export class NotificationService {
+  private readonly logger = new Logger(NotificationService.name);
+
   constructor(
     private readonly notificationRepository: NotificationRepository,
     private readonly executiveRepository: ExecutiveRepository,
@@ -153,11 +155,11 @@ export class NotificationService {
     senderType?: string;
     actionUrl?: string;
   }) {
-    let companyId = payload.companyId;
+    const companyId = payload.companyId;
+    // Require explicit companyId — never pick a random company from the DB
     if (!companyId) {
-      const firstCompany = await this.prisma.company.findFirst();
-      if (!firstCompany) return;
-      companyId = firstCompany.id;
+      this.logger.warn('[Notification] Notification dispatched without companyId — skipping to prevent cross-org leakage.');
+      return;
     }
 
     await this.createNotification({

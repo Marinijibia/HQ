@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -101,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <div className="flex gap-4 pt-2">
             <a href="https://hq.netify.ng/dashboard" className="w-full">
-              <Button className="w-full bg-[#0A84FF] hover:bg-blue-600 text-white rounded-xl text-xs font-bold py-2.5 flex items-center justify-center gap-2">
+              <Button className="w-full bg-[#0A84FF] hover:bg-blue-600 text-slate-900 dark:text-white rounded-xl text-xs font-bold py-2.5 flex items-center justify-center gap-2">
                 <ArrowLeft size={14} /> Back to User Workspace
               </Button>
             </a>
@@ -131,7 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <button
               onClick={toggleTheme}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 dark:text-white transition-colors"
             >
               {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
             </button>
@@ -153,7 +153,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     isActive
                       ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.15)] font-black'
-                      : 'text-slate-600 dark:text-slate-400 border border-transparent hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
+                      : 'text-slate-600 dark:text-slate-400 border border-transparent hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white'
                   }`}
                 >
                   <Icon size={16} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-cyan-500 dark:text-cyan-400' : ''} />
@@ -177,7 +177,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <button
               onClick={logout}
               title="Logout from Admin Staff"
-              className="p-1.5 text-slate-400 hover:text-rose-500 dark:text-foreground/40 dark:hover:text-rose-400 transition-colors"
+              className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:text-foreground/40 dark:hover:text-rose-400 transition-colors"
             >
               <LogOut size={14} />
             </button>
@@ -205,7 +205,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   >
                     {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
                   </button>
-                  <button onClick={() => setMobileMenuOpen(false)} className="text-slate-400 p-1">
+                  <button onClick={() => setMobileMenuOpen(false)} className="text-slate-500 dark:text-slate-400 p-1">
                     <X size={18} />
                   </button>
                 </div>
@@ -225,7 +225,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                         isActive
                           ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30 font-black'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white'
                       }`}
                     >
                       <Icon size={16} />
@@ -246,7 +246,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{dbUser.name}</div>
                   <div className="text-[10px] text-slate-500 dark:text-foreground/50 truncate">{dbUser.email}</div>
                 </div>
-                <button onClick={logout} className="p-1.5 text-slate-400 hover:text-rose-500">
+                <button onClick={logout} className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-500">
                   <LogOut size={14} />
                 </button>
               </div>
@@ -329,7 +329,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       >
                         <div className="flex items-center justify-between text-[11px] font-bold text-slate-900 dark:text-white">
                           <span>{n.title}</span>
-                          <span className="text-[9px] text-slate-400 font-mono">{n.time}</span>
+                          <span className="text-[9px] text-slate-500 dark:text-slate-400 font-mono">{n.time}</span>
                         </div>
                         <p className="text-[11px] text-slate-600 dark:text-slate-300 font-normal leading-relaxed">
                           {n.msg}
@@ -353,7 +353,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <Button
               onClick={() => setInviteModalOpen(true)}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black text-xs h-9 px-3 sm:px-4 rounded-xl shadow-md flex items-center gap-1.5"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-slate-900 dark:text-white font-black text-xs h-9 px-3 sm:px-4 rounded-xl shadow-md flex items-center gap-1.5"
             >
               <UserPlus className="h-4 w-4" />
               <span className="hidden sm:inline">Invite Admin Member</span>

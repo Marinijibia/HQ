@@ -37,11 +37,12 @@ export interface MissionHealthDetails {
 export class MoeService {
   private readonly logger = new Logger(MoeService.name);
 
-  private readonly legalSystemPrompt = `
-    You are Legal, the Legal & Compliance Director of HQ Corporation.
-    Your directive is to enforce zero-trust legal guardrails, regulatory compliance (GDPR, SOC2, financial compliance, petroleum safety standards), and risk management.
-    Maintain an authoritative, strict, and risk-averse legal perspective.
-  `;
+  /** Build the Legal system prompt dynamically with the real company name */
+  private buildLegalSystemPrompt(companyName: string): string {
+    return `You are Legal, the Legal & Compliance Director of ${companyName}.
+Your directive is to enforce zero-trust legal guardrails, regulatory compliance (GDPR, SOC2, financial compliance, petroleum safety standards), and risk management.
+Maintain an authoritative, strict, and risk-averse legal perspective.`;
+  }
 
   constructor(
     private readonly prisma: PrismaService,
@@ -56,6 +57,7 @@ export class MoeService {
     objective: string,
     content: string,
     industryContext: string = 'Enterprise Software & Technology',
+    companyName: string = 'your organization',
   ): Promise<LegalClearanceCertificate> {
     this.logger.log(`[Legal Director] Initiating AI compliance audit for ${industryContext}...`);
 
@@ -83,7 +85,7 @@ export class MoeService {
     try {
       const response = await this.aiService.executePrompt({
         prompt,
-        systemPrompt: this.legalSystemPrompt,
+        systemPrompt: this.buildLegalSystemPrompt(companyName),
         jsonMode: true,
         temperature: 0.1,
       });

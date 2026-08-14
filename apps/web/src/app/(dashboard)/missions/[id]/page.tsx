@@ -97,22 +97,10 @@ export default function MissionExecutionInspectorPage() {
         const data = await res.json();
         setMission(data);
       } else {
-        setMission({
-          id: missionId,
-          objective: 'Execute high-impact autonomous executive directive and compile strategic deliverables.',
-          status: 'IN_PROGRESS',
-          createdAt: new Date().toISOString(),
-          companyId: 'current-org',
-        });
+        setMission(null);
       }
     } catch {
-      setMission({
-        id: missionId,
-        objective: 'Execute high-impact autonomous executive directive and compile strategic deliverables.',
-        status: 'IN_PROGRESS',
-        createdAt: new Date().toISOString(),
-        companyId: 'current-org',
-      });
+      setMission(null);
     } finally {
       setLoading(false);
     }
@@ -122,77 +110,32 @@ export default function MissionExecutionInspectorPage() {
     fetchMissionDetails();
   }, [fetchMissionDetails]);
 
+  // Map real DB tasks to MissionStep display format
+  // Only uses real data — no hardcoded fallback steps
   const executionSteps: MissionStep[] = React.useMemo(() => {
-    if (mission?.tasks && mission.tasks.length > 0) {
-      return mission.tasks.map((task, idx) => ({
-        id: task.id,
-        stepNumber: idx + 1,
-        title: task.name,
-        executiveRole: task.executive?.title || 'Executive Lead',
-        executiveTitle: task.executive ? `${task.executive.name} (${task.executive.title})` : 'Teema & Asad (AI Board)',
-        status: task.status === 'COMPLETED' ? 'COMPLETED' : task.status === 'RUNNING' ? 'IN_PROGRESS' : 'PENDING',
-        detail: task.description || 'Executing autonomous work item node.',
-        timestamp: task.status === 'COMPLETED' ? 'Completed' : task.status === 'RUNNING' ? 'Executing now' : 'Queued',
-        reasoningTrace: `[AI Decision Trace]: Evaluated domain constraints for "${task.name}". Applied enterprise guardrails, multi-tenant token isolation, and verified operational velocity bounds. Zero policy breaches detected.`,
-        latencyMs: 180 + idx * 45,
-        confidenceScore: 98.6 + (idx % 2 === 0 ? 0.8 : 0.4),
-      }));
-    }
+    if (!mission?.tasks || mission.tasks.length === 0) return [];
 
-    return [
-      {
-        id: 'step-1',
-        stepNumber: 1,
-        title: 'Executive Mandate & Strategy Formulation',
-        executiveRole: 'ceo',
-        executiveTitle: 'Asad (Chief Executive Officer)',
-        status: 'COMPLETED',
-        detail: `Formulated corporate mandate for: "${mission?.objective || 'Mission Objective'}".`,
-        timestamp: 'Completed',
-        reasoningTrace: '[Asad CEO Trace]: Analyzed corporate goals, evaluated market opportunity vectors, and initialized C-Suite execution DAG with 100% strategic alignment.',
-        latencyMs: 210,
-        confidenceScore: 99.4,
-      },
-      {
-        id: 'step-2',
-        stepNumber: 2,
-        title: 'Operational Task WBS Graph & Resource Allocation',
-        executiveRole: 'cos',
-        executiveTitle: 'Teema (Operations Director & Chief of Staff)',
-        status: 'COMPLETED',
-        detail: 'Structured work breakdown schedule and assigned resource nodes across board directors.',
-        timestamp: 'Completed',
-        reasoningTrace: '[Teema CoS Trace]: Decomposed directive into 4 sequential work nodes. Assigned Legal, Research, and Executive leads with zero dependency locks.',
-        latencyMs: 195,
-        confidenceScore: 98.9,
-      },
-      {
-        id: 'step-3',
-        stepNumber: 3,
-        title: 'Legal Risk & Compliance Guardrail Check',
-        executiveRole: 'legal',
-        executiveTitle: 'Legal (Legal & Compliance Director)',
-        status: 'IN_PROGRESS',
-        detail: 'Auditing regulatory policies, data protection locks, and terms of service.',
-        timestamp: 'Executing now',
-        reasoningTrace: '[Legal Director Trace]: Scanning GDPR compliance, Terms of Service guardrails, and data isolation parameters. Verified encrypted audit trail.',
-        latencyMs: 310,
-        confidenceScore: 99.1,
-      },
-      {
-        id: 'step-4',
-        stepNumber: 4,
-        title: 'Public Web Research & Intelligence Verification',
-        executiveRole: 'research',
-        executiveTitle: 'Mr. Intelligence (Public Search & Research Agent)',
-        status: 'PENDING',
-        detail: 'Verifying real-time market data signals and domain benchmarks.',
-        timestamp: 'Pending',
-        reasoningTrace: '[Mr. Intelligence Trace]: Queueing live web search indexing for real-time domain signals and competitive benchmarking.',
-        latencyMs: 140,
-        confidenceScore: 97.8,
-      },
-    ];
+    return mission.tasks.map((task, idx) => ({
+      id: task.id,
+      stepNumber: idx + 1,
+      title: task.name,
+      executiveRole: task.executive?.department?.name || 'Executive',
+      executiveTitle: task.executive
+        ? `${task.executive.name} (${task.executive.title})`
+        : 'Executive Board',
+      status: task.status === 'COMPLETED' ? 'COMPLETED'
+        : task.status === 'RUNNING' ? 'IN_PROGRESS'
+        : 'PENDING',
+      detail: task.description || 'Autonomous work item in progress.',
+      timestamp: task.status === 'COMPLETED' ? 'Completed'
+        : task.status === 'RUNNING' ? 'Executing now'
+        : 'Queued',
+      // Real reasoning traces come from the AI execution log — not fabricated
+      reasoningTrace: undefined,
+      // Real latency would come from task execution metadata
+      latencyMs: undefined,
+      confidenceScore: undefined,
+    }));
   }, [mission]);
 
   const handleCopyBrief = () => {
@@ -263,13 +206,26 @@ ${executionSteps
     toast.success('📥 Downloaded Executive Brief (.md)!');
   };
 
-  const handleReRunStep = (stepId: string) => {
+  const handleReRunStep = async (stepId: string) => {
+    if (!token || !missionId) return;
     setReRunningStepId(stepId);
-    toast.info('⚡ Re-triggering AI execution step telemetry...');
-    setTimeout(() => {
+    toast.info('⚡ Re-triggering task execution...');
+    try {
+      const res = await fetch(`/api/missions/${missionId}/plan`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        toast.success('✅ Mission plan re-generated. Refreshing...');
+        await fetchMissionDetails();
+      } else {
+        toast.error('Could not re-trigger execution. Try again.');
+      }
+    } catch {
+      toast.error('Network error re-triggering step.');
+    } finally {
       setReRunningStepId(null);
-      toast.success('✅ Step execution re-evaluated with 100% confidence.');
-    }, 1200);
+    }
   };
 
   if (loading) {
@@ -278,6 +234,22 @@ ${executionSteps
         <div className="flex flex-col items-center space-y-3">
           <Cpu className="h-8 w-8 text-cyan-500 animate-spin" />
           <p className="text-xs text-foreground/50 font-semibold">Loading Mission Execution Inspector...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mission not found — show clean not-found state, never a fake mission
+  if (!mission) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center select-none">
+        <div className="text-center space-y-4">
+          <Rocket className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto" />
+          <h2 className="text-lg font-black text-slate-900 dark:text-white">Mission Not Found</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">This mission may have been removed or you may not have access.</p>
+          <Link href="/missions" className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline">
+            <ArrowLeft className="h-4 w-4" /> Back to Mission Command Center
+          </Link>
         </div>
       </div>
     );
@@ -344,10 +316,12 @@ ${executionSteps
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
               <span>Multi-Agent Board Verified</span>
             </div>
-            <div className="flex items-center gap-1.5 text-purple-400 font-bold">
-              <Zap className="h-3.5 w-3.5" />
-              <span>98.6% Velocity Index</span>
-            </div>
+            {executionSteps.length > 0 && (
+              <div className="flex items-center gap-1.5 text-purple-400 font-bold">
+                <Zap className="h-3.5 w-3.5" />
+                <span>{executionSteps.length} Tasks in Pipeline</span>
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -367,39 +341,47 @@ ${executionSteps
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
-          {executionSteps.map((step, idx) => {
-            const isDone = step.status === 'COMPLETED';
-            const isInProg = step.status === 'IN_PROGRESS';
+          {executionSteps.length === 0 ? (
+            <div className="lg:col-span-4 text-center py-8 space-y-2">
+              <Sparkles className="h-8 w-8 text-cyan-400 animate-pulse mx-auto" />
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Executive board is generating your task pipeline...</p>
+              <p className="text-[10px] text-slate-400">Tasks will appear here once the AI has decomposed your objective.</p>
+            </div>
+          ) : (
+            executionSteps.map((step, idx) => {
+              const isDone = step.status === 'COMPLETED';
+              const isInProg = step.status === 'IN_PROGRESS';
 
-            return (
-              <div key={step.id} className="relative group text-left">
-                <div
-                  className={`p-4 rounded-2xl border transition-all ${
-                    isDone
-                      ? 'bg-slate-50 dark:bg-black/50 border-emerald-300 dark:border-emerald-500/30'
-                      : isInProg
-                      ? 'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-400 dark:border-cyan-500/50 shadow-sm dark:shadow-[0_0_20px_rgba(6,182,212,0.2)]'
-                      : 'bg-slate-100/50 dark:bg-black/30 border-slate-200 dark:border-white/5 opacity-60'
-                  }`}
-                >
-                  <div className="flex items-center justify-between text-[10px] font-bold mb-2">
-                    <span className="text-cyan-700 dark:text-cyan-400">NODE #{step.stepNumber}</span>
-                    <span className={isDone ? 'text-emerald-700 dark:text-emerald-400' : isInProg ? 'text-cyan-700 dark:text-cyan-300 animate-pulse' : 'text-slate-500'}>
-                      {step.status}
-                    </span>
+              return (
+                <div key={step.id} className="relative group text-left">
+                  <div
+                    className={`p-4 rounded-2xl border transition-all ${
+                      isDone
+                        ? 'bg-slate-50 dark:bg-black/50 border-emerald-300 dark:border-emerald-500/30'
+                        : isInProg
+                        ? 'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-400 dark:border-cyan-500/50 shadow-sm dark:shadow-[0_0_20px_rgba(6,182,212,0.2)]'
+                        : 'bg-slate-100/50 dark:bg-black/30 border-slate-200 dark:border-white/5 opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-[10px] font-bold mb-2">
+                      <span className="text-cyan-700 dark:text-cyan-400">NODE #{step.stepNumber}</span>
+                      <span className={isDone ? 'text-emerald-700 dark:text-emerald-400' : isInProg ? 'text-cyan-700 dark:text-cyan-300 animate-pulse' : 'text-slate-500'}>
+                        {step.status}
+                      </span>
+                    </div>
+                    <div className="text-xs font-black text-slate-900 dark:text-white line-clamp-1 mb-1">{step.title}</div>
+                    <div className="text-[10px] text-slate-600 dark:text-slate-400 font-medium truncate">{step.executiveTitle}</div>
                   </div>
-                  <div className="text-xs font-black text-slate-900 dark:text-white line-clamp-1 mb-1">{step.title}</div>
-                  <div className="text-[10px] text-slate-600 dark:text-slate-400 font-medium truncate">{step.executiveTitle}</div>
+
+                  {idx < executionSteps.length - 1 && (
+                    <div className="hidden lg:block absolute top-1/2 -right-3 -translate-y-1/2 z-10 text-cyan-500 font-bold text-xs">
+                      ➔
+                    </div>
+                  )}
                 </div>
-
-                {idx < executionSteps.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-3 -translate-y-1/2 z-10 text-cyan-500 font-bold text-xs">
-                    ➔
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </Card>
 
@@ -488,8 +470,8 @@ ${executionSteps
                     {/* Step Metrics Footer & Reasoning Trace Toggle */}
                     <div className="pt-2 border-t border-slate-200 dark:border-white/5 flex items-center justify-between text-[10px]">
                       <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-semibold">
-                        <span>Latency: <strong className="text-cyan-700 dark:text-cyan-400">{step.latencyMs}ms</strong></span>
-                        <span>Confidence: <strong className="text-emerald-700 dark:text-emerald-400">{step.confidenceScore}%</strong></span>
+                        {step.latencyMs && <span>Latency: <strong className="text-cyan-700 dark:text-cyan-400">{step.latencyMs}ms</strong></span>}
+                        {step.confidenceScore && <span>Confidence: <strong className="text-emerald-700 dark:text-emerald-400">{step.confidenceScore}%</strong></span>}
                       </div>
 
                       <button

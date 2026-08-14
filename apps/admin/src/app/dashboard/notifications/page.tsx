@@ -41,48 +41,7 @@ export default function AdminNotificationsPage() {
   const [activePriority, setActivePriority] = React.useState<string>('ALL');
   const [searchQuery, setSearchQuery] = React.useState('');
 
-  const [alerts, setAlerts] = React.useState<AdminTelemetryAlert[]>([
-    {
-      id: 'alert-001',
-      title: 'Super-Admin Authentication',
-      message: `Privileged administrative session opened for ${dbUser?.name || 'Administrator'} (${dbUser?.email || 'admin@netify.ng'}).`,
-      priority: 'HIGH',
-      category: 'SECURITY',
-      read: false,
-      timestamp: new Date().toISOString(),
-      source: 'AUTH_GATEWAY',
-    },
-    {
-      id: 'alert-002',
-      title: 'Multi-Tenant Data Boundary Verified',
-      message: 'System audit confirmed 100% strict isolation across all tenant database schemas.',
-      priority: 'MEDIUM',
-      category: 'TENANT',
-      read: true,
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      source: 'SECURITY_AUDITOR',
-    },
-    {
-      id: 'alert-003',
-      title: '5 Core Executives Standard Active',
-      message: 'CEO (Asad), Operations, Legal, HR, and Mr. Intelligence synced for default installation.',
-      priority: 'LOW',
-      category: 'EXECUTIVE',
-      read: true,
-      timestamp: new Date(Date.now() - 7200000).toISOString(),
-      source: 'CMS_ENGINE',
-    },
-    {
-      id: 'alert-004',
-      title: 'Marketplace Department Installation',
-      message: 'New specialized AI executive suite activated for tenant workspace.',
-      priority: 'MEDIUM',
-      category: 'COMPLIANCE',
-      read: false,
-      timestamp: new Date(Date.now() - 14400000).toISOString(),
-      source: 'MARKETPLACE_BUS',
-    },
-  ]);
+  const [alerts, setAlerts] = React.useState<AdminTelemetryAlert[]>([]);
 
   const handleMarkAllRead = () => {
     setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
@@ -115,15 +74,15 @@ export default function AdminNotificationsPage() {
   return (
     <div className="space-y-8 text-left max-w-7xl mx-auto pb-12 select-none">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-r from-slate-950 via-[#0B0F19] to-indigo-950/40 p-8 shadow-2xl backdrop-blur-xl text-white">
+      <div className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-r from-slate-50 via-white dark:from-slate-950 dark:via-[#0B0F19] to-indigo-950/40 p-8 shadow-2xl backdrop-blur-xl text-slate-900 dark:text-white">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-black uppercase tracking-widest mb-3">
               <Bell className="h-3.5 w-3.5 text-blue-400" />
               <span>Platform System Telemetry & Security Alerts</span>
             </div>
-            <h1 className="text-3xl font-black text-white tracking-tight">System Telemetry & Notifications</h1>
-            <p className="text-slate-400 text-sm mt-1 max-w-2xl">
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">System Telemetry & Notifications</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 max-w-2xl">
               Real-time platform security audit triggers, multi-tenant workspace events, governance compliance alerts, and executive kernel execution telemetry.
             </p>
           </div>
@@ -131,7 +90,7 @@ export default function AdminNotificationsPage() {
           <div className="flex items-center gap-3">
             <Button
               onClick={handleMarkAllRead}
-              className="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2"
+              className="bg-white/5 hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2"
             >
               <CheckCircle2 size={14} className="text-emerald-400" /> Mark All Read
             </Button>
@@ -141,26 +100,26 @@ export default function AdminNotificationsPage() {
 
       {/* Stat Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total System Alerts</div>
-          <div className="text-3xl font-black text-white">{alerts.length}</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total System Alerts</div>
+          <div className="text-3xl font-black text-slate-900 dark:text-white">{alerts.length}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Unread Alerts</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Unread Alerts</div>
           <div className="text-3xl font-black text-cyan-400">{unreadCount}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Security Triggers</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Security Triggers</div>
           <div className="text-3xl font-black text-rose-400">{criticalCount}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">System Health</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">System Health</div>
           <div className="text-3xl font-black text-emerald-400">100%</div>
         </div>
       </div>
 
       {/* Toolbar & Filters */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/40 p-4 rounded-2xl border border-white/10">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/40 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-200 dark:border-white/10">
         <div className="flex items-center gap-2">
           {['ALL', 'HIGH', 'MEDIUM', 'LOW'].map((priority) => (
             <button
@@ -169,7 +128,7 @@ export default function AdminNotificationsPage() {
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 activePriority === priority
                   ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300 shadow-md'
-                  : 'bg-white/5 border border-white/5 text-slate-400 hover:text-white'
+                  : 'bg-white/5 border border-slate-100 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white'
               }`}
             >
               {priority === 'ALL' ? 'All Priorities' : `${priority} Priority`}
@@ -178,13 +137,13 @@ export default function AdminNotificationsPage() {
         </div>
 
         <div className="relative w-full sm:w-64">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
           <input
             type="text"
             placeholder="Search telemetry alerts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none"
+            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none"
           />
         </div>
       </div>
@@ -198,7 +157,7 @@ export default function AdminNotificationsPage() {
               className={`p-5 rounded-2xl border transition-all flex items-start justify-between gap-4 ${
                 !alert.read
                   ? 'bg-blue-950/20 border-blue-500/30 shadow-lg'
-                  : 'bg-slate-900/60 border-white/10'
+                  : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-white/10'
               }`}
             >
               <div className="flex items-start gap-4">
@@ -216,8 +175,8 @@ export default function AdminNotificationsPage() {
 
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-white text-sm">{alert.title}</span>
-                    <span className="px-2 py-0.5 rounded-full bg-slate-800 border border-white/10 text-[9px] font-mono font-bold text-slate-300">
+                    <span className="font-bold text-slate-900 dark:text-white text-sm">{alert.title}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-[9px] font-mono font-bold text-slate-600 dark:text-slate-300">
                       {alert.category}
                     </span>
                     <span
@@ -233,11 +192,11 @@ export default function AdminNotificationsPage() {
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
                     {alert.message}
                   </p>
 
-                  <div className="flex items-center gap-4 text-[10px] text-slate-400 font-mono pt-1">
+                  <div className="flex items-center gap-4 text-[10px] text-slate-500 dark:text-slate-400 font-mono pt-1">
                     <span>Source: {alert.source}</span>
                     <span>•</span>
                     <span>{new Date(alert.timestamp).toLocaleString()}</span>
@@ -249,14 +208,14 @@ export default function AdminNotificationsPage() {
                 <button
                   onClick={() => handleToggleRead(alert.id)}
                   title={alert.read ? 'Mark as Unread' : 'Mark as Read'}
-                  className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white"
+                  className="p-2 rounded-xl bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white"
                 >
                   <Check size={14} className={alert.read ? 'text-emerald-400' : ''} />
                 </button>
                 <button
                   onClick={() => handleDeleteAlert(alert.id)}
                   title="Dismiss Alert"
-                  className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-rose-400"
+                  className="p-2 rounded-xl bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-rose-400"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -264,7 +223,7 @@ export default function AdminNotificationsPage() {
             </div>
           ))
         ) : (
-          <div className="p-12 text-center border border-white/10 rounded-3xl bg-slate-900/60 text-slate-500 text-xs font-bold">
+          <div className="p-12 text-center border border-slate-200 dark:border-white/10 rounded-3xl bg-white/60 dark:bg-slate-900/60 text-slate-500 text-xs font-bold">
             No system alerts found for this filter query.
           </div>
         )}

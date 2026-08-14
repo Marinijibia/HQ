@@ -27,7 +27,7 @@ interface AsadVoiceBoardroomModalProps {
 
 interface VoiceMessage {
   id: string;
-  sender: 'User' | 'Asad AI' | 'CEO Elena' | 'CTO Hiroshi' | 'CFO Sophia';
+  sender: 'User' | 'Asad AI' | string;
   text: string;
   timestamp: string;
 }
@@ -174,7 +174,7 @@ export function AsadVoiceBoardroomModal({
     try {
       const token = localStorage.getItem('hq_auth_token');
       let responseText = '';
-      let senderName: 'CEO Elena' | 'CTO Hiroshi' | 'CFO Sophia' | 'Asad AI' = 'CEO Elena';
+      let senderName: string = 'AI Executive';
 
       // 1. UNIVERSAL NAVIGATION INTENT DISPATCH
       if (lower.includes('analytics') || lower.includes('telemetry')) {

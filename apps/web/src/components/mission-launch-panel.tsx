@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Button } from '@hq/ui';
 import { X, Rocket, Calendar, AlignLeft, Flag, Sparkles } from 'lucide-react';
 import { toast } from './toast';
+import { UpgradeModal, parseEntitlementError, UpgradeTrigger } from './upgrade-modal';
 
 interface MissionLaunchPanelProps {
   open: boolean;
@@ -33,6 +34,8 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
   const [deadline, setDeadline] = React.useState('');
   const [priority, setPriority] = React.useState<'Low' | 'Medium' | 'High'>('High');
   const [submitting, setSubmitting] = React.useState(false);
+  const [upgradeTrigger, setUpgradeTrigger] = React.useState<UpgradeTrigger | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = React.useState(false);
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
   React.useEffect(() => {
@@ -46,26 +49,48 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
 
   // Escape key to close
   React.useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape' && !upgradeOpen) onClose(); };
     if (open) window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [open, onClose]);
+  }, [open, onClose, upgradeOpen]);
 
   const handleSubmit = async () => {
     if (!objective.trim()) return;
     setSubmitting(true);
     try {
       if (token) {
-        await fetch('/api/missions', {
+        const res = await fetch('/api/missions', {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ objective: objective.trim(), deadline: deadline || undefined, priority }),
         });
+
+        // Check for entitlement limit — show upgrade modal instead of generic error
+        if (res.status === 403) {
+          const upgrade = await parseEntitlementError(res);
+          if (upgrade) {
+            setUpgradeTrigger(upgrade);
+            setUpgradeOpen(true);
+            return; // Don't close the panel — user can fix and retry after upgrading
+          }
+          // Generic 403 (not entitlement) — show toast
+          toast.error('Access denied. Please check your permissions.');
+          return;
+        }
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          toast.error(errData?.message || 'Failed to launch mission. Please try again.');
+          return;
+        }
       }
+
       localStorage.setItem('hq_first_mission_done', 'true');
       onSubmit({ objective: objective.trim(), deadline, priority });
       toast.success('🚀 Mission launched — your executive team is briefing now');
       onClose();
+    } catch {
+      toast.error('Network error. Please check your connection and try again.');
     } finally {
       setSubmitting(false);
     }
@@ -203,6 +228,13 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
           </p>
         </div>
       </div>
+
+      {/* Upgrade Modal — mounts over the slide panel when entitlement limit is hit */}
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        trigger={upgradeTrigger}
+      />
     </>
   );
 }

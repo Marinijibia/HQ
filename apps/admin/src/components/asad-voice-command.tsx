@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -153,13 +153,13 @@ export function AsadVoiceCommand() {
         onClick={toggleListening}
         className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-md ${
           isListening
-            ? 'bg-gradient-to-r from-rose-600 via-purple-600 to-cyan-500 text-white shadow-[0_0_20px_rgba(244,63,94,0.4)] animate-pulse'
+            ? 'bg-gradient-to-r from-rose-600 via-purple-600 to-cyan-500 text-slate-900 dark:text-white shadow-[0_0_20px_rgba(244,63,94,0.4)] animate-pulse'
             : 'bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-blue-500/20 border border-cyan-500/30 text-cyan-300 hover:border-cyan-400 hover:scale-105'
         }`}
       >
         {isListening ? (
           <>
-            <Mic className="h-4 w-4 text-white animate-bounce" />
+            <Mic className="h-4 w-4 text-slate-900 dark:text-white animate-bounce" />
             <span>Listening to Command...</span>
           </>
         ) : (

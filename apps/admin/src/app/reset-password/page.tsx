@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -75,23 +75,23 @@ function AdminResetPasswordForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050508] text-foreground flex flex-col justify-between font-sans relative overflow-x-hidden select-none animate-in fade-in duration-500">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#050508] text-foreground flex flex-col justify-between font-sans relative overflow-x-hidden select-none animate-in fade-in duration-500">
       {/* Luxury Ambient Radial Lighting Glows */}
       <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-radial from-cyan-500/15 via-blue-600/10 to-transparent blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-radial from-purple-600/10 via-indigo-600/5 to-transparent blur-[140px] pointer-events-none" />
       <div className="absolute top-[30%] right-[-10%] w-[500px] h-[500px] bg-radial from-rose-600/10 via-pink-600/5 to-transparent blur-[140px] pointer-events-none" />
 
       {/* Decorative Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
 
       {/* Header Bar */}
-      <header className="flex h-20 items-center justify-between border-b border-white/10 px-6 sm:px-12 bg-[#0A0B10]/60 backdrop-blur-2xl relative z-10">
+      <header className="flex h-20 items-center justify-between border-b border-slate-200 dark:border-white/10 px-6 sm:px-12 bg-white/80 dark:bg-[#0A0B10]/60 backdrop-blur-2xl relative z-10">
         <div className="flex items-center space-x-3">
           <div className="p-1 bg-gradient-to-tr from-cyan-500 via-blue-600 to-purple-600 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.4)]">
             <img src="/logo.png" alt="HQ Admin Logo" className="h-8 w-8 rounded-lg object-cover" />
           </div>
           <div className="flex flex-col text-left">
-            <span className="font-black tracking-tight text-white text-base flex items-center gap-2">
+            <span className="font-black tracking-tight text-slate-900 dark:text-white text-base flex items-center gap-2">
               HQ <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-rose-400 bg-clip-text text-transparent text-xs font-black uppercase tracking-widest">CREDENTIAL GATEWAY</span>
             </span>
             <span className="text-[10px] text-slate-400 font-medium tracking-wide">Enterprise Password Update</span>
@@ -107,7 +107,7 @@ function AdminResetPasswordForm() {
       {/* Main Form Center */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10 my-8">
         <div className="w-full max-w-md space-y-4">
-          <Card className="border border-cyan-500/30 dark:border-white/10 bg-[#0A0B10]/95 backdrop-blur-3xl shadow-[0_0_50px_rgba(6,182,212,0.15)] p-4 text-foreground rounded-3xl relative overflow-hidden">
+          <Card className="border border-cyan-500/30 bg-white/95 dark:bg-[#0A0B10]/95 backdrop-blur-3xl shadow-[0_0_50px_rgba(6,182,212,0.15)] p-4 text-foreground rounded-3xl relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-rose-500" />
 
             {error && (
@@ -126,7 +126,7 @@ function AdminResetPasswordForm() {
               <Badge className="w-fit text-[10px] tracking-widest font-black bg-cyan-500/10 border-cyan-500/30 text-cyan-400 uppercase rounded-lg px-2.5 py-1">
                 STAFF CREDENTIAL UPDATE
               </Badge>
-              <CardTitle className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+              <CardTitle className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                 <KeyRound className="h-6 w-6 text-cyan-400" />
                 Set New Admin Password
               </CardTitle>
@@ -138,7 +138,7 @@ function AdminResetPasswordForm() {
             <CardContent className="space-y-4 text-left">
               <form onSubmit={handleSubmit} className="space-y-4 text-xs font-semibold">
                 <div className="space-y-1.5">
-                  <label className="text-slate-300 font-bold uppercase tracking-wider text-[11px]">New Password *</label>
+                  <label className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[11px]">New Password *</label>
                   <div className="relative">
                     <Input
                       type={showNewPassword ? 'text' : 'password'}
@@ -146,12 +146,12 @@ function AdminResetPasswordForm() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
-                      className="bg-black/60 border-white/10 text-white pr-10 h-12 focus-visible:ring-cyan-500 rounded-2xl font-bold"
+                      className="bg-slate-50 dark:bg-black/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pr-10 h-12 focus-visible:ring-cyan-500 rounded-2xl font-bold"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white"
+                      className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     >
                       {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -159,7 +159,7 @@ function AdminResetPasswordForm() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-slate-300 font-bold uppercase tracking-wider text-[11px]">Confirm New Password *</label>
+                  <label className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[11px]">Confirm New Password *</label>
                   <div className="relative">
                     <Input
                       type={showConfirmPassword ? 'text' : 'password'}
@@ -167,12 +167,12 @@ function AdminResetPasswordForm() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
-                      className="bg-black/60 border-white/10 text-white pr-10 h-12 focus-visible:ring-cyan-500 rounded-2xl font-bold"
+                      className="bg-slate-50 dark:bg-black/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pr-10 h-12 focus-visible:ring-cyan-500 rounded-2xl font-bold"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white"
+                      className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     >
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -195,7 +195,7 @@ function AdminResetPasswordForm() {
               </form>
             </CardContent>
 
-            <CardFooter className="py-4 text-center flex flex-col gap-2 border-t border-white/5 mt-2">
+            <CardFooter className="py-4 text-center flex flex-col gap-2 border-t border-slate-100 dark:border-white/5 mt-2">
               <Link
                 href="/login"
                 className="mx-auto text-xs font-bold text-slate-400 hover:text-cyan-400 transition-colors flex items-center gap-1.5"
@@ -207,7 +207,7 @@ function AdminResetPasswordForm() {
         </div>
       </main>
 
-      <footer className="h-14 flex items-center justify-center border-t border-white/10 text-[11px] font-bold text-slate-500 relative z-10 bg-[#06070B]/80 backdrop-blur-xl">
+      <footer className="h-14 flex items-center justify-center border-t border-slate-200 dark:border-white/10 text-[11px] font-bold text-slate-500 relative z-10 bg-white/80 dark:bg-[#06070B]/80 backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
           <span>© 2026 HQ Inc. | Authorized Admin Security Gateway</span>
@@ -219,8 +219,9 @@ function AdminResetPasswordForm() {
 
 export default function AdminResetPasswordPage() {
   return (
-    <React.Suspense fallback={<div className="p-8 text-center text-white font-bold">Loading Security Gateway...</div>}>
+    <React.Suspense fallback={<div className="p-8 text-center text-slate-900 dark:text-white font-bold">Loading Security Gateway...</div>}>
       <AdminResetPasswordForm />
     </React.Suspense>
   );
 }
+

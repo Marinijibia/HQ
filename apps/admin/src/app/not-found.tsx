@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -67,7 +67,7 @@ export default function AdminNotFound() {
 
         <div className="pt-2">
           <Link href="/dashboard">
-            <Button className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs h-11 rounded-xl shadow-md flex items-center justify-center gap-2">
+            <Button className="w-full bg-rose-600 hover:bg-rose-500 text-slate-900 dark:text-white font-bold text-xs h-11 rounded-xl shadow-md flex items-center justify-center gap-2">
               <ArrowLeft size={15} /> Return to Operations Center
             </Button>
           </Link>

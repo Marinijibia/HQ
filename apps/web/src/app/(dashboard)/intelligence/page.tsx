@@ -102,8 +102,8 @@ const TWIN_LAYERS_CONFIG: TwinLayerInfo[] = [
     fields: [
       { key: 'departments', label: 'Departments', placeholder: 'Executive Office, Technology, Operations, Finance, Marketing' },
       { key: 'teams', label: 'Active Teams', placeholder: 'Core Platform Engineering, Growth Marketing Team' },
-      { key: 'executives', label: 'AI Executives Roster', placeholder: 'CEO (Elena), Strategy (Alistair), CTO (Hiroshi)', type: 'textarea' },
-      { key: 'reportingStructure', label: 'Reporting Structure', placeholder: 'Flat reporting, all AI specialists align under CEO Elena' },
+      { key: 'executives', label: 'AI Executives Roster', placeholder: 'CEO, Strategy Director, CTO', type: 'textarea' },
+      { key: 'reportingStructure', label: 'Reporting Structure', placeholder: 'Flat reporting, all AI specialists align under CEO' },
       { key: 'responsibilities', label: 'Executive Responsibilities', placeholder: 'CTO manages engineering, CMO manages content campaigns', type: 'textarea' },
       { key: 'approvalChains', label: 'Approval Chains', placeholder: 'Missions require final sign-off by Owner or CEO' },
     ],
@@ -169,7 +169,7 @@ const TWIN_LAYERS_CONFIG: TwinLayerInfo[] = [
       { key: 'previousMissions', label: 'Completed Campaign Logs', placeholder: 'Completed Q3 Petroleum Logistics strategy', type: 'textarea' },
       { key: 'decisions', label: 'Approved Boardroom Decisions', placeholder: 'Approved CMO campaign templates alignment' },
       { key: 'userPreferences', label: 'Strategic User Preferences', placeholder: 'Email notification preferences, dark mode' },
-      { key: 'executiveMemories', label: 'AI Director Memories', placeholder: 'Elena remembers strategic direction pivot Q2', type: 'textarea' },
+      { key: 'executiveMemories', label: 'AI Director Memories', placeholder: 'CEO remembers strategic direction pivot Q2', type: 'textarea' },
       { key: 'organizationHistory', label: 'Living History Records', placeholder: 'Company registered, series A funded', type: 'textarea' },
     ],
   },
@@ -623,11 +623,11 @@ export default function IntelligencePage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {[
-                { role: 'Asad (CEO)', desc: 'Strategic & Board KPIs', layers: [1, 2, 3, 4, 5, 8], color: '#0A84FF' },
-                { role: 'Teema (Ops)', desc: 'Operations & Execution', layers: [1, 2, 4, 6], color: '#22C55E' },
-                { role: 'Legal (Compliance)', desc: 'Guardrails & Risk', layers: [1, 2, 7], color: '#EC4899' },
-                { role: 'Resource Dir (HR)', desc: 'Team & Talent Sync', layers: [1, 3, 6], color: '#0EA5E9' },
-                { role: 'Mr. Intelligence', desc: 'Web Search & Signals', layers: [1, 2, 5, 8], color: '#F59E0B' },
+                { role: 'CEO', desc: 'Strategic & Board KPIs', layers: [1, 2, 3, 4, 5, 8], color: '#0A84FF' },
+                { role: 'Operations', desc: 'Operations & Execution', layers: [1, 2, 4, 6], color: '#22C55E' },
+                { role: 'Compliance', desc: 'Guardrails & Risk', layers: [1, 2, 7], color: '#EC4899' },
+                { role: 'HR & Talent', desc: 'Team & Talent Sync', layers: [1, 3, 6], color: '#0EA5E9' },
+                { role: 'Research', desc: 'Web Search & Signals', layers: [1, 2, 5, 8], color: '#F59E0B' },
               ].map(exec => (
                 <div key={exec.role} className="border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/50 rounded-xl p-3 space-y-2">
                   <p className="text-xs font-extrabold text-[#1A1A1E] dark:text-white">{exec.role}</p>

@@ -3,6 +3,9 @@ import { ExecutePromptDto } from './dto/execute-prompt.dto';
 import { ProviderFactory } from './factories/provider.factory';
 import { ProviderResponse } from './interfaces/ai-provider.interface';
 
+const GEMINI_EMBED_MODEL = 'text-embedding-004';
+
+
 export interface ExecutionResult {
   text: string;
   provider: string;
@@ -69,5 +72,49 @@ export class AiService {
       tokensUsed,
       failoverTrace,
     };
+  }
+
+  /**
+   * Generate a text embedding vector using Gemini text-embedding-004.
+   * Returns null if embedding is unavailable (no key, quota, or network error).
+   * The returned number[] is compatible with pgvector Unsupported("vector(768)") columns.
+   */
+  async embedText(text: string): Promise<number[] | null> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      this.logger.warn('[AiService.embedText] GEMINI_API_KEY not set — skipping embedding.');
+      return null;
+    }
+
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_EMBED_MODEL}:embedContent?key=${apiKey}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: `models/${GEMINI_EMBED_MODEL}`,
+          content: { parts: [{ text: text.substring(0, 8192) }] },
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        this.logger.warn(`[AiService.embedText] Embedding API error ${res.status}: ${errText}`);
+        return null;
+      }
+
+      const data: any = await res.json();
+      const values: number[] | undefined = data?.embedding?.values;
+
+      if (!Array.isArray(values) || values.length === 0) {
+        this.logger.warn('[AiService.embedText] Empty embedding returned from API.');
+        return null;
+      }
+
+      return values;
+    } catch (err) {
+      this.logger.warn(`[AiService.embedText] Embedding generation notice: ${err}`);
+      return null;
+    }
   }
 }

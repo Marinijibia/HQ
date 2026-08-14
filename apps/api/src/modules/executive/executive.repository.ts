@@ -6,23 +6,29 @@ import { Executive } from '@prisma/client';
 export class ExecutiveRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findById(id: string) {
-    return this.prisma.executive.findUnique({
-      where: { id, deletedAt: null },
+  async findById(id: string, companyId?: string) {
+    return this.prisma.executive.findFirst({
+      where: companyId
+        ? { id, deletedAt: null, department: { companyId } }
+        : { id, deletedAt: null },
       include: { department: true },
     });
   }
 
-  async findByRoleKey(roleKey: string) {
-    return this.prisma.executive.findUnique({
-      where: { roleKey, deletedAt: null },
+  async findByRoleKey(roleKey: string, companyId?: string) {
+    return this.prisma.executive.findFirst({
+      where: companyId
+        ? { roleKey, deletedAt: null, department: { companyId } }
+        : { roleKey, deletedAt: null },
       include: { department: true },
     });
   }
 
-  async findAll() {
+  async findAll(companyId?: string) {
     return this.prisma.executive.findMany({
-      where: { deletedAt: null },
+      where: companyId
+        ? { department: { companyId }, deletedAt: null }
+        : { deletedAt: null },
       include: { department: true },
     });
   }

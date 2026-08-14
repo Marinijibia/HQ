@@ -19,7 +19,7 @@ export class AiExecutiveAssignmentDto {
   @IsOptional()
   title?: string;
 
-  @ApiProperty({ example: 'Elena Rostova' })
+  @ApiProperty({ example: 'Jane Doe' })
   @IsString()
   @IsOptional()
   customName?: string;

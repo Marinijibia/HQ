@@ -159,36 +159,11 @@ function formatBoldText(text: string) {
 
 export default function CeoChatAndDiscussionsPage() {
   const { dbUser, token } = useAuth();
-  
-  // Threads state
-  const [threads, setThreads] = React.useState<DiscussionThread[]>([
-    {
-      id: 't-default',
-      title: 'FuelOS Executive Strategy & Operational Scoping',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      participantMode: 'DIRECT_CEO',
-      isPinned: true,
-      messages: [
-        {
-          id: 'welcome',
-          sender: 'asad',
-          senderTitle: 'Chief Executive Officer',
-          content: `Greetings Owner. I am **Asad**, Chief Executive Officer at HQ. 
+  const companyName = (dbUser as any)?.company?.name || (dbUser as any)?.companyName || 'your organization';
 
-Our active workspace roster includes our 5 baseline core directors:
-- **Asad** (CEO & Strategic Orchestrator)
-- **Teema** (Operations Director)
-- **Legal** (Legal & Compliance Director)
-- **Resource Director** (Human Resources Director)
-- **Mr. Intelligence** (Public Web Research Agent)
-
-You can converse **1-on-1 with me**, or toggle **Full C-Suite Roundtable** to have our entire active executive team discuss your strategic initiatives simultaneously. How shall we proceed today?`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          mode: 'CONVERSATION',
-        },
-      ],
-    },
-  ]);
+  // Threads state — starts empty, loaded from DB only (no hardcoded defaults)
+  const [threads, setThreads] = React.useState<DiscussionThread[]>([]);
+  const [welcomeContext, setWelcomeContext] = React.useState<{ message: string; activeExecutives: number } | null>(null);
 
   const [activeThreadId, setActiveThreadId] = React.useState<string>('t-default');
   const [participantMode, setParticipantMode] = React.useState<'DIRECT_CEO' | 'ROUNDTABLE'>('DIRECT_CEO');
@@ -217,16 +192,26 @@ You can converse **1-on-1 with me**, or toggle **Full C-Suite Roundtable** to ha
     scrollToBottom();
   }, [activeThread?.messages, loading]);
 
+  // ── Fetch CEO welcome context (real org name + active executive count) ──────
+  React.useEffect(() => {
+    if (!token) return;
+    fetch('/api/executive/ceo/welcome', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setWelcomeContext(data);
+      })
+      .catch(() => {});
+  }, [token]);
+
   // ── Fetch conversations from backend ───────────────────────────────────────
   React.useEffect(() => {
     if (!token) return;
     fetch('/api/conversations', {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => {
-        if (!res.ok) return null;
-        return res.json();
-      })
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           const dbThreads: DiscussionThread[] = data.map((conv: any) => ({
@@ -238,7 +223,7 @@ You can converse **1-on-1 with me**, or toggle **Full C-Suite Roundtable** to ha
             participantMode: conv.participantMode || 'DIRECT_CEO',
             isPinned: conv.isPinned || false,
             isArchived: conv.isArchived || false,
-            messages: (conv.messages && conv.messages.length > 0)
+            messages: Array.isArray(conv.messages) && conv.messages.length > 0
               ? conv.messages.map((m: any) => ({
                   id: m.id,
                   sender: m.senderRole === 'USER' ? 'owner' : (m.senderKey?.toLowerCase() || 'asad'),
@@ -248,18 +233,8 @@ You can converse **1-on-1 with me**, or toggle **Full C-Suite Roundtable** to ha
                     ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 }))
-              : [
-                  {
-                    id: `welcome-${conv.id}`,
-                    sender: 'asad',
-                    senderTitle: 'Chief Executive Officer',
-                    content: `Greetings Owner. **CEO Asad** is ready to consult on **${conv.title || conv.objective || 'this strategic session'}**.`,
-                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    mode: 'CONVERSATION',
-                  },
-                ],
+              : [],
           }));
-
           setThreads(dbThreads);
           setActiveThreadId(dbThreads[0].id);
         }
@@ -298,18 +273,8 @@ You can converse **1-on-1 with me**, or toggle **Full C-Suite Roundtable** to ha
       title: titleText,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       participantMode,
-      messages: [
-        {
-          id: `welcome-${Date.now()}`,
-          sender: 'asad',
-          senderTitle: 'Chief Executive Officer',
-          content: `Owner, I have opened a new strategic discussion thread.
-
-How can CEO Asad and our C-Suite executive team assist you on this objective?`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          mode: 'CONVERSATION',
-        },
-      ],
+      // No hardcoded welcome message — messages start empty; the CEO responds when the owner speaks
+      messages: [],
     };
 
     setThreads((prev) => [newThread, ...prev]);
@@ -408,10 +373,13 @@ How can CEO Asad and our C-Suite executive team assist you on this objective?`,
 
         if (Array.isArray(data.delegationMatrix) && data.delegationMatrix.length > 0) {
           data.delegationMatrix.forEach((item: any, idx: number) => {
-            const senderKey = (item.directorName?.toLowerCase().includes('teema') ? 'teema'
-              : item.directorName?.toLowerCase().includes('legal') ? 'legal'
-              : item.directorName?.toLowerCase().includes('intelligence') ? 'mr_intelligence'
-              : item.directorName?.toLowerCase().includes('resource') ? 'resource_director'
+            // Map by roleKey from API — not by hardcoded name strings
+            const roleKey = (item.roleKey || '').toLowerCase();
+            const senderKey = (roleKey.includes('ceo') ? 'asad'
+              : roleKey.includes('operations') || roleKey.includes('coo') ? 'teema'
+              : roleKey.includes('legal') || roleKey.includes('compliance') ? 'legal'
+              : roleKey.includes('research') || roleKey.includes('intelligence') ? 'mr_intelligence'
+              : roleKey.includes('resource') || roleKey.includes('hr') ? 'resource_director'
               : 'asad') as ChatMessage['sender'];
 
             roundtableMsgs.push({
@@ -441,21 +409,40 @@ How can CEO Asad and our C-Suite executive team assist you on this objective?`,
 
   const handleInstallDepartmentInChat = async (listing: any) => {
     if (!listing) return;
+
+    // Guard: never install into a hardcoded fallback org
+    const companyId = dbUser?.companyId;
+    if (!companyId) {
+      toast.error('Authentication required. Please refresh and try again.');
+      return;
+    }
+
     setActiveInstallId(listing.id || 'm1');
-    const companyId = dbUser?.companyId || '33f008b1-5733-4a1a-9093-dad32e9bb043';
 
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const departmentKey = listing.departmentKey || 'technology';
-      await fetch('/api/missions/marketplace/install', {
+      const installRes = await fetch('/api/missions/marketplace/install', {
         method: 'POST',
         headers,
         body: JSON.stringify({ departmentKey, companyId }),
       }).catch(() => null);
+
+      // Fetch real newly installed executives for this department
+      let assignedExecs: string[] = [];
+      try {
+        const execRes = await fetch(`/api/executive?departmentKey=${encodeURIComponent(departmentKey)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (execRes.ok) {
+          const execData = await execRes.json();
+          if (Array.isArray(execData)) {
+            assignedExecs = execData.slice(0, 3).map((e: any) => `${e.name} (${e.title})`);
+          }
+        }
+      } catch { /* non-fatal */ }
 
       toast.success(`🎉 Installed "${listing.title}" into your active workspace roster!`);
 
@@ -463,16 +450,15 @@ How can CEO Asad and our C-Suite executive team assist you on this objective?`,
         id: `a-conf-${Date.now()}`,
         sender: 'asad',
         senderTitle: 'Chief Executive Officer',
-        content: `🎉 Excellent news, Owner! **${listing.title}** has been successfully installed and activated in our workspace roster.
-
-I have updated our organizational directory and assigned **Linus Kovacs** (Software Engineering Director) and **Dr. Hiroshi Tanaka** (CTO) to your mission. We are ready to proceed with full execution!`,
+        content: [
+          `🎉 **${listing.title}** has been successfully installed and activated in your workspace.`,
+          assignedExecs.length > 0
+            ? `\nYour new directors are ready: ${assignedExecs.join(', ')}.`
+            : `\nYour new department directors are being configured and will be active shortly.`,
+          `\nWe are ready to proceed with full execution.`,
+        ].join(''),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        assignedExecutives: ['Linus Kovacs (Software Engineering)', 'Dr. Hiroshi Tanaka (CTO)', 'Teema (Operations)'],
-        missionPlan: {
-          id: `m-active-${Date.now()}`,
-          objective: 'Mobile App Engineering & Deployment',
-          status: 'EXECUTING',
-        },
+        assignedExecutives: assignedExecs.length > 0 ? assignedExecs : undefined,
         mode: 'JOB_ASSIGNMENT',
       };
 
@@ -608,11 +594,12 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
               </div>
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 mt-0.5 sm:mt-1 font-medium">
                 <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
-                  <Activity size={12} /> 5 Roster Active
+                  <Activity size={12} />
+                  {welcomeContext ? `${welcomeContext.activeExecutives} Directors Active` : 'Executive Board'}
                 </span>
                 <span className="hidden sm:inline">•</span>
                 <span className="text-cyan-700 dark:text-cyan-300 font-semibold flex items-center gap-1">
-                  <Zap size={12} /> OrgIntelligence (FuelOS)
+                  <Zap size={12} /> {companyName}
                 </span>
               </div>
             </div>
@@ -766,8 +753,14 @@ I have updated our organizational directory and assigned **Linus Kovacs** (Softw
               {/* Thread List */}
               <div className="space-y-1.5 max-h-[440px] overflow-y-auto pr-1">
                 {filteredThreads.length === 0 ? (
-                  <div className="text-center py-8 text-xs text-slate-400">
-                    No discussion threads found.
+                  <div className="text-center py-8 space-y-2">
+                    <div className="text-2xl">💬</div>
+                    <div className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                      {threads.length === 0 ? 'No sessions yet' : 'No threads match'}
+                    </div>
+                    <div className="text-[10px] text-slate-400">
+                      {threads.length === 0 ? 'Click "New Thread" to start your first strategic session.' : 'Try a different filter.'}
+                    </div>
                   </div>
                 ) : (
                   filteredThreads.map((t) => (

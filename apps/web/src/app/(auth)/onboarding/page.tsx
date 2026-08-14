@@ -1340,65 +1340,104 @@ export default function OnboardingPage() {
 
                 {/* Subscription Tier Cards */}
                 <div className="space-y-3 text-left">
-                  <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
-                    Choose Workspace Plan Tier (Default: Free Starter Tier)
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                      Choose Your Plan
+                    </label>
+                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Start free — upgrade anytime
+                    </span>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {[
                       {
                         code: 'FREE',
-                        name: 'Free Starter Tier',
+                        name: 'Free Starter',
                         price: '$0 / mo',
-                        badge: 'Recommended Free',
-                        desc: '500 AI Monthly Credits · 10 Active Missions · 5 Boardroom Executives · Standard RAG Vector Search',
+                        badge: '✓ No Card Required',
+                        desc: '500 AI Monthly Credits · 1 Active Mission · All 5 Boardroom Executives · Basic RAG Memory',
+                        highlight: 'Start exploring — no payment info needed.',
                         isPopular: true,
                       },
                       {
                         code: 'PRO',
-                        name: 'Growth Scale Tier',
+                        name: 'Growth Scale',
                         price: '$10 / mo',
-                        badge: 'Growth',
-                        desc: '50,000 AI Monthly Tokens · 5 Parallel Boardrooms · Circle Agentic USDC Wallet',
+                        badge: 'Most Popular',
+                        desc: '25,000 AI Monthly Credits · 10 Parallel Missions · Custom Executive Training · API Access',
+                        highlight: 'Upgrade when you need more firepower.',
                         isPopular: false,
                       },
                       {
                         code: 'ENTERPRISE',
-                        name: 'Enterprise OS Tier',
+                        name: 'Enterprise OS',
                         price: '$50 / mo',
-                        badge: 'Scale',
-                        desc: '200,000 AI Monthly Tokens · Unlimited Boardrooms · Dedicated Agent Swarms & 6-Tier Killswitch',
+                        badge: 'Full Power',
+                        desc: '200,000 AI Monthly Credits · Unlimited Missions · Dedicated Agent Swarms · Priority Support',
+                        highlight: 'For teams running at scale.',
                         isPopular: false,
                       },
                     ].map((tier) => (
                       <div
                         key={tier.code}
                         onClick={() => setSelectedPlanCode(tier.code)}
-                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 relative ${
+                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between space-y-3 relative ${
                           selectedPlanCode === tier.code
-                            ? 'bg-gradient-to-b from-cyan-500/15 via-blue-500/10 to-purple-500/15 border-cyan-400/60 shadow-[0_0_20px_rgba(6,182,212,0.2)]'
+                            ? tier.code === 'FREE'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.2)]'
+                              : 'bg-gradient-to-b from-cyan-500/15 via-blue-500/10 to-purple-500/15 border-cyan-400/60 shadow-[0_0_20px_rgba(6,182,212,0.2)]'
+                            : tier.code === 'FREE'
+                            ? 'bg-white dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900/50 hover:border-emerald-300 dark:hover:border-emerald-700'
                             : 'bg-white dark:bg-black/40 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
                         }`}
                       >
+                        {tier.code === 'FREE' && (
+                          <div className="absolute -top-2.5 left-3">
+                            <span className="bg-emerald-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              Recommended to Start
+                            </span>
+                          </div>
+                        )}
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-black text-slate-900 dark:text-white">{tier.name}</span>
-                            <Badge variant={tier.code === 'FREE' ? 'success' : 'neutral'} className="text-[8px] font-extrabold uppercase">
+                            <Badge
+                              variant={tier.code === 'FREE' ? 'success' : 'neutral'}
+                              className="text-[8px] font-extrabold uppercase"
+                            >
                               {tier.badge}
                             </Badge>
                           </div>
-                          <div className="text-lg font-black text-cyan-600 dark:text-cyan-300">{tier.price}</div>
-                          <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal font-medium">{tier.desc}</p>
+                          <div className={`text-lg font-black ${tier.code === 'FREE' ? 'text-emerald-600 dark:text-emerald-400' : 'text-cyan-600 dark:text-cyan-300'}`}>
+                            {tier.price}
+                          </div>
+                          <p className="text-[10.5px] text-slate-600 dark:text-slate-400 leading-normal font-medium">{tier.desc}</p>
+                          {selectedPlanCode !== tier.code && (
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">{tier.highlight}</p>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-700 dark:text-slate-300 pt-2 border-t border-slate-200 dark:border-white/10">
-                          <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${selectedPlanCode === tier.code ? 'border-cyan-400 bg-cyan-400 text-black' : 'border-slate-400 bg-transparent'}`}>
+                          <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                            selectedPlanCode === tier.code
+                              ? tier.code === 'FREE' ? 'border-emerald-400 bg-emerald-400 text-black' : 'border-cyan-400 bg-cyan-400 text-black'
+                              : 'border-slate-400 bg-transparent'
+                          }`}>
                             {selectedPlanCode === tier.code && <Check className="h-2.5 w-2.5 stroke-[3]" />}
                           </div>
-                          <span>{selectedPlanCode === tier.code ? 'Selected Tier' : 'Select Plan'}</span>
+                          <span className={selectedPlanCode === tier.code && tier.code === 'FREE' ? 'text-emerald-600 dark:text-emerald-400' : ''}>
+                            {selectedPlanCode === tier.code ? '✓ Selected' : 'Select Plan'}
+                          </span>
                         </div>
                       </div>
                     ))}
                   </div>
+                  {selectedPlanCode === 'FREE' && (
+                    <p className="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-semibold text-center pt-1">
+                      🎉 You can upgrade to Growth or Enterprise at any time from your billing page — no commitment needed.
+                    </p>
+                  )}
                 </div>
 
                 {/* Brand Color Theme Selection */}

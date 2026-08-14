@@ -70,8 +70,8 @@ export class SettingsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
   @ApiOperation({ summary: 'Get AI Core Kernel Execution Traces' })
-  getKernelTraces() {
-    return this.settingsService.getKernelTraces();
+  getKernelTraces(@Req() req: types.AuthenticatedRequest) {
+    return this.settingsService.getKernelTraces(req.user.companyId);
   }
 
   @Get('platform-stats')

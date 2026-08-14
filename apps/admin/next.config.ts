@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import path from 'path';
 
 const apiUrl =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -9,6 +10,7 @@ const formattedApiUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  outputFileTracingRoot: path.join(__dirname, '../../'),
   transpilePackages: ['@hq/ui', '@hq/design-system'],
   async rewrites() {
     return [

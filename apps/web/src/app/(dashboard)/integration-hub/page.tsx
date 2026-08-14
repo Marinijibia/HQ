@@ -72,11 +72,7 @@ export default function IntegrationsHubPage() {
   const [selectedApp, setSelectedApp] = React.useState<ConnectedApp | null>(null);
 
   // Connected Apps State
-  const [connectedApps, setConnectedApps] = React.useState<ConnectedApp[]>([
-    { id: 'slack', name: 'Slack', category: 'Communication', logo: '💬', status: 'Healthy', lastSync: '10 mins ago', dataTransferred: '420 KB', executives: ['Asad (CEO)', 'Teema (Ops)'] },
-    { id: 'gdrive', name: 'Google Drive', category: 'Storage', logo: '📁', status: 'Healthy', lastSync: '1 hour ago', dataTransferred: '12.4 MB', executives: ['Asad (CEO)', 'Mr. Intelligence'] },
-    { id: 'github', name: 'GitHub', category: 'Development', logo: '🐙', status: 'Syncing', lastSync: 'Just now', dataTransferred: '1.8 MB', executives: ['Teema (Ops)', 'Legal (Compliance)'] },
-  ]);
+  const [connectedApps, setConnectedApps] = React.useState<ConnectedApp[]>([]);
 
   // Catalog State
   const [catalog, setCatalog] = React.useState<IntegrationCatalogItem[]>([
@@ -128,7 +124,7 @@ export default function IntegrationsHubPage() {
           status: 'Healthy',
           lastSync: 'Just now',
           dataTransferred: '0 KB',
-          executives: ['Asad (CEO)', 'Teema (Ops)'],
+          executives: ['Executive Team'],
         };
         setConnectedApps(prev => [...prev, newApp]);
         setCatalog(prev => prev.filter(c => c.id !== selectedCatalogItem.id));
@@ -488,7 +484,7 @@ export default function IntegrationsHubPage() {
                 <span className="text-foreground/45 text-xs uppercase tracking-wider block">Assigned AI Co-Pilots</span>
                 <p className="text-[9.5px] text-foreground/50 leading-relaxed font-semibold mt-0.5">Toggle which AI Executives are authorized to query datasets from this service.</p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  {['Asad (CEO)', 'Teema (Ops)', 'Legal (Compliance)', 'Mr. Intelligence'].map(exec => {
+                  {['CEO', 'Operations', 'Compliance', 'Research'].map(exec => {
                     const active = selectedApp.executives.includes(exec);
                     return (
                       <button

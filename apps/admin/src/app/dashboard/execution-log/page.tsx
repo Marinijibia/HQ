@@ -85,24 +85,7 @@ export default function CoreKernelConsolePage() {
     fetchAuditLogs();
   }, [fetchAuditLogs]);
 
-  const [traces, setTraces] = React.useState<AgentTrace[]>([
-    {
-      id: 'tr-001', agentName: 'CEO Agent', agentRole: 'Strategic Orchestration', action: 'Decompose mission into DAG task hierarchy',
-      model: 'gemini-2.0-flash', inputTokens: 1842, outputTokens: 743, latencyMs: 1240, status: 'SUCCESS',
-      missionId: 'mission-q3', timestamp: new Date().toISOString(),
-      reasoning: 'Mission objective parsed. Identified 4 parallel workstreams: market analysis, budget review, legal clearance, tech feasibility.',
-      toolsUsed: ['mission_decompose', 'agent_router', 'dag_builder'],
-      memoryFootprintKb: 450,
-    },
-    {
-      id: 'tr-002', agentName: 'COO Agent (Teema)', agentRole: 'Operations Velocity', action: 'Schedule parallel sub-task execution queue',
-      model: 'claude-3-5-sonnet', inputTokens: 1210, outputTokens: 512, latencyMs: 890, status: 'SUCCESS',
-      missionId: 'mission-q3', timestamp: new Date().toISOString(),
-      reasoning: 'Optimized queue priority. Dispatched tasks to Hiroshi (CTO) and Sophia (CFO).',
-      toolsUsed: ['task_queue', 'priority_scheduler'],
-      memoryFootprintKb: 320,
-    },
-  ]);
+  const [traces, setTraces] = React.useState<AgentTrace[]>([]);
 
   const events: KernelEvent[] = auditLogs.length > 0 
     ? auditLogs.map((log: any) => {
@@ -205,7 +188,7 @@ export default function CoreKernelConsolePage() {
           <Button
             onClick={handleTriggerReindex}
             disabled={reindexing}
-            className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs h-10 px-4 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
+            className="bg-rose-600 hover:bg-rose-700 text-slate-900 dark:text-white font-bold text-xs h-10 px-4 rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${reindexing ? 'animate-spin' : ''}`} />
             {reindexing ? 'Re-Indexing Vectors...' : '🔄 Re-Index pgvector Training Data'}
@@ -213,7 +196,7 @@ export default function CoreKernelConsolePage() {
 
           <Button
             onClick={handleExportLogsCsv}
-            className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs h-10 px-4 rounded-xl border border-slate-700 flex items-center gap-1.5 cursor-pointer"
+            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs h-10 px-4 rounded-xl border border-slate-300 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer"
           >
             📊 Export Audit Logs CSV
           </Button>
@@ -236,7 +219,7 @@ export default function CoreKernelConsolePage() {
               onClick={() => handleToggleTab(tab.id as any)}
               className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${
                 activeTab === tab.id
-                  ? 'border-current text-white font-extrabold'
+                  ? 'border-current text-slate-900 dark:text-white font-extrabold'
                   : 'border-transparent text-foreground/55 hover:text-foreground'
               }`}
               style={activeTab === tab.id ? { borderColor: brandColor, color: brandColor } : {}}
@@ -258,7 +241,7 @@ export default function CoreKernelConsolePage() {
               <Card className="border border-card-border bg-card-bg p-4 flex items-center justify-between gap-3">
                 <div>
                   <span className="text-[10px] text-foreground/40 font-bold uppercase">Active Threads</span>
-                  <span className="text-2xl font-black text-white block mt-1">
+                  <span className="text-2xl font-black text-slate-900 dark:text-white block mt-1">
                     {traces.filter(t => t.status === 'RUNNING').length} running
                   </span>
                 </div>
@@ -276,7 +259,7 @@ export default function CoreKernelConsolePage() {
               <Card className="border border-card-border bg-card-bg p-4 flex items-center justify-between gap-3">
                 <div>
                   <span className="text-[10px] text-foreground/40 font-bold uppercase">Memory Footprint</span>
-                  <span className="text-2xl font-black text-white block mt-1">1.55 MB</span>
+                  <span className="text-2xl font-black text-slate-900 dark:text-white block mt-1">1.55 MB</span>
                 </div>
                 <HardDrive className="h-7 w-7 text-hq-purple" />
               </Card>
@@ -294,7 +277,7 @@ export default function CoreKernelConsolePage() {
                     <div key={trace.id} className="p-3 rounded-lg border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-extrabold text-white">{trace.agentName}</span>
+                          <span className="font-extrabold text-slate-900 dark:text-white">{trace.agentName}</span>
                           <span className="text-foreground/40 font-semibold text-[10px]">· Thread {trace.id}</span>
                         </div>
                         <p className="text-[11px] text-foreground/75 font-semibold mt-1">{trace.action}</p>
@@ -330,7 +313,7 @@ export default function CoreKernelConsolePage() {
                   <div>
                     <div className="flex justify-between items-baseline text-xs">
                       <span className="font-semibold text-foreground/60">Long-term Semantic Index Buffer</span>
-                      <span className="text-white font-extrabold">2.4 MB (72% utilized)</span>
+                      <span className="text-slate-900 dark:text-white font-extrabold">2.4 MB (72% utilized)</span>
                     </div>
                     <div className="h-2 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden mt-1.5">
                       <div className="h-full bg-hq-cyan rounded-full transition-all" style={{ width: '72%' }}></div>
@@ -340,7 +323,7 @@ export default function CoreKernelConsolePage() {
                   <div>
                     <div className="flex justify-between items-baseline text-xs">
                       <span className="font-semibold text-foreground/60">Short-term Memory Ring Buffer</span>
-                      <span className="text-white font-extrabold">410 KB (28% utilized)</span>
+                      <span className="text-slate-900 dark:text-white font-extrabold">410 KB (28% utilized)</span>
                     </div>
                     <div className="h-2 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden mt-1.5">
                       <div className="h-full bg-hq-purple rounded-full transition-all" style={{ width: '28%' }}></div>
@@ -352,7 +335,7 @@ export default function CoreKernelConsolePage() {
               {/* RAG Cache controls */}
               <Card className="border border-card-border bg-card-bg p-5 shadow-level-2 flex items-center justify-between gap-4">
                 <div>
-                  <h4 className="text-xs font-black text-white">Context Vector Cache Hit Ratio</h4>
+                  <h4 className="text-xs font-black text-slate-900 dark:text-white">Context Vector Cache Hit Ratio</h4>
                   <span className="text-2xl font-black text-green-500 mt-1 block">94.2% hit rate</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -375,11 +358,11 @@ export default function CoreKernelConsolePage() {
                 <div className="space-y-2 text-[10px] font-bold text-foreground/50 leading-relaxed">
                   <div className="flex justify-between">
                     <span>Index Nodes Count</span>
-                    <span className="text-white">1,842 nodes</span>
+                    <span className="text-slate-900 dark:text-white">1,842 nodes</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Active Memory Keys</span>
-                    <span className="text-white">340 active keys</span>
+                    <span className="text-slate-900 dark:text-white">340 active keys</span>
                   </div>
                 </div>
               </Card>
@@ -404,9 +387,9 @@ export default function CoreKernelConsolePage() {
                       <span className="text-[9px] text-foreground/40 font-semibold">{ev.timestamp}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-foreground/50 font-semibold text-[10px]">
-                      <span>Source: <span className="text-white/80">{ev.source}</span></span>
+                      <span>Source: <span className="text-slate-700 dark:text-white/80">{ev.source}</span></span>
                       <ArrowRight className="h-3 w-3 text-foreground/30" />
-                      <span>Target: <span className="text-white/80">{ev.target}</span></span>
+                      <span>Target: <span className="text-slate-700 dark:text-white/80">{ev.target}</span></span>
                     </div>
                   </div>
 
@@ -431,7 +414,7 @@ export default function CoreKernelConsolePage() {
                   <div>
                     <div className="flex justify-between items-baseline">
                       <span>Google Gemini 2.0 API</span>
-                      <span className="text-white">65% traffic · <span className="text-cyan-400 font-mono">1.1s avg latency</span></span>
+                      <span className="text-slate-900 dark:text-white">65% traffic · <span className="text-cyan-500 dark:text-cyan-400 font-mono">1.1s avg latency</span></span>
                     </div>
                     <div className="h-2 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden mt-1.5">
                       <div className="h-full bg-hq-cyan rounded-full transition-all" style={{ width: '65%' }}></div>
@@ -441,7 +424,7 @@ export default function CoreKernelConsolePage() {
                   <div>
                     <div className="flex justify-between items-baseline">
                       <span>OpenAI GPT-4o API</span>
-                      <span className="text-white">25% traffic · <span className="text-purple-400 font-mono">1.4s avg latency</span></span>
+                      <span className="text-slate-900 dark:text-white">25% traffic · <span className="text-purple-500 dark:text-purple-400 font-mono">1.4s avg latency</span></span>
                     </div>
                     <div className="h-2 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden mt-1.5">
                       <div className="h-full bg-hq-purple rounded-full transition-all" style={{ width: '25%' }}></div>
@@ -451,7 +434,7 @@ export default function CoreKernelConsolePage() {
                   <div>
                     <div className="flex justify-between items-baseline">
                       <span>Anthropic Claude 3.5 API</span>
-                      <span className="text-white">10% traffic · <span className="text-amber-400 font-mono">1.2s avg latency</span></span>
+                      <span className="text-slate-900 dark:text-white">10% traffic · <span className="text-amber-500 dark:text-amber-400 font-mono">1.2s avg latency</span></span>
                     </div>
                     <div className="h-2 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden mt-1.5">
                       <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: '10%' }}></div>
@@ -474,7 +457,7 @@ export default function CoreKernelConsolePage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Average Token Savings</span>
-                    <span className="text-white">18.4% cost reduced</span>
+                    <span className="text-slate-900 dark:text-white">18.4% cost reduced</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Streaming Latency P99</span>
@@ -510,19 +493,19 @@ export default function CoreKernelConsolePage() {
                       placeholder="Filter traces by keyword..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-black/50 border border-white/10 text-white pl-8 h-9 text-xs rounded-xl focus-visible:ring-rose-500 w-60 font-bold"
+                      className="bg-slate-100 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-8 h-9 text-xs rounded-xl focus-visible:ring-rose-500 w-60 font-bold"
                     />
                   </div>
 
                   {/* Status Pills */}
-                  <div className="flex items-center gap-1 bg-black/50 border border-white/10 p-1 rounded-xl">
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/50 border border-slate-200 dark:border-white/10 p-1 rounded-xl">
                     {['ALL', 'SUCCESS', 'RUNNING', 'QUEUED', 'ERROR'].map((st) => (
                       <button
                         key={st}
                         type="button"
                         onClick={() => setStatusFilter(st)}
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
-                          statusFilter === st ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                          statusFilter === st ? 'bg-rose-500 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-900 dark:text-white'
                         }`}
                       >
                         {st}
@@ -557,7 +540,7 @@ export default function CoreKernelConsolePage() {
                         >
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-extrabold text-white">{trace.agentName}</span>
+                              <span className="font-extrabold text-slate-900 dark:text-white">{trace.agentName}</span>
                               <span className="text-foreground/45 font-semibold text-[10px]">{trace.agentRole}</span>
                               <Badge variant="neutral" className="text-[8px] font-mono font-bold px-1.5 py-0.2">{trace.model}</Badge>
                             </div>
@@ -580,7 +563,7 @@ export default function CoreKernelConsolePage() {
                             {trace.reasoning && (
                               <div className="space-y-1.5">
                                 <span className="text-[9.5px] text-rose-400 font-bold uppercase tracking-wider block">AI Reasoning Log</span>
-                                <p className="p-3 rounded-lg border border-white/10 bg-black/60 font-mono text-[10.5px] text-slate-200">{trace.reasoning}</p>
+                                <p className="p-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-black/60 font-mono text-[10.5px] text-slate-700 dark:text-slate-200">{trace.reasoning}</p>
                               </div>
                             )}
 
@@ -589,7 +572,7 @@ export default function CoreKernelConsolePage() {
                                 <span className="text-[9.5px] text-cyan-400 font-bold uppercase tracking-wider block">Invoked OS Tools</span>
                                 <div className="flex flex-wrap gap-1.5">
                                   {trace.toolsUsed.map((t) => (
-                                    <Badge key={t} variant="neutral" className="text-[9px] font-mono font-bold px-2.5 py-1 bg-black/60 border border-cyan-500/30 text-cyan-300">
+                                    <Badge key={t} variant="neutral" className="text-[9px] font-mono font-bold px-2.5 py-1 bg-slate-100 dark:bg-black/60 border border-cyan-500/30 text-cyan-600 dark:text-cyan-300">
                                       ⚡ {t}
                                     </Badge>
                                   ))}
@@ -599,11 +582,11 @@ export default function CoreKernelConsolePage() {
 
                             <div className="grid gap-4 grid-cols-2 pt-2 text-[10px] font-bold border-t border-card-border/40 text-foreground/50">
                               <div>
-                                <span>Latency: <span className="text-white font-mono">{trace.latencyMs} ms</span></span>
-                                <span className="block mt-1">Tokens: <span className="text-white font-mono">In: {trace.inputTokens} / Out: {trace.outputTokens}</span></span>
+                                <span>Latency: <span className="text-slate-900 dark:text-white font-mono">{trace.latencyMs} ms</span></span>
+                                <span className="block mt-1">Tokens: <span className="text-slate-900 dark:text-white font-mono">In: {trace.inputTokens} / Out: {trace.outputTokens}</span></span>
                               </div>
                               <div>
-                                <span>Time: <span className="text-white">{trace.timestamp}</span></span>
+                                <span>Time: <span className="text-slate-900 dark:text-white">{trace.timestamp}</span></span>
                                 {trace.missionId && <span className="block mt-1">Mission ID: <span className="text-rose-400 font-mono">{trace.missionId}</span></span>}
                               </div>
                             </div>

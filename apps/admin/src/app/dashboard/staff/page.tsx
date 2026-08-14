@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { Card, Button, Badge } from '@hq/ui';
@@ -150,15 +150,15 @@ export default function AdminStaffPage() {
   return (
     <div className="space-y-8 text-left max-w-7xl mx-auto pb-12 select-none">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-r from-slate-950 via-[#0B0F19] to-indigo-950/40 p-8 shadow-2xl backdrop-blur-xl text-white">
+      <div className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-r from-slate-50 via-white dark:from-slate-950 dark:via-[#0B0F19] to-indigo-950/40 p-8 shadow-2xl backdrop-blur-xl text-slate-900 dark:text-white">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-black uppercase tracking-widest mb-3">
               <UserPlus className="h-3.5 w-3.5 text-blue-400" />
               <span>Admin Staff & Invitation Governance</span>
             </div>
-            <h1 className="text-3xl font-black text-white tracking-tight">Admin Staff & Invitations</h1>
-            <p className="text-slate-400 text-sm mt-1 max-w-2xl">
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Admin Staff & Invitations</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 max-w-2xl">
               Dispatch invitations to new admin staff members, track pending invitation acceptances, manage executive rank assignments, and enforce platform role permissions.
             </p>
           </div>
@@ -166,14 +166,14 @@ export default function AdminStaffPage() {
           <div className="flex items-center gap-3">
             <Button
               onClick={fetchStaffData}
-              className="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2"
+              className="bg-white/5 hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2"
             >
               <RefreshCcw size={14} className={loading ? 'animate-spin' : ''} /> Refresh Roster
             </Button>
 
             <Button
               onClick={() => setShowInviteModal(true)}
-              className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20"
+              className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-slate-900 dark:text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20"
             >
               <UserPlus size={16} /> Dispatch Invitation
             </Button>
@@ -183,26 +183,26 @@ export default function AdminStaffPage() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Active Admin Staff</div>
-          <div className="text-3xl font-black text-white">{activeStaff.length}</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Active Admin Staff</div>
+          <div className="text-3xl font-black text-slate-900 dark:text-white">{activeStaff.length}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Pending Invitations</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Pending Invitations</div>
           <div className="text-3xl font-black text-amber-400">{pendingStaff.length}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Accepted Invitations</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Accepted Invitations</div>
           <div className="text-3xl font-black text-emerald-400">{activeStaff.length}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-slate-900/60 border border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Super Administrators</div>
+        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
+          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Super Administrators</div>
           <div className="text-3xl font-black text-cyan-300">{superAdminCount}</div>
         </div>
       </div>
 
       {/* Filter Tabs & Search */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/40 p-4 rounded-2xl border border-white/10">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/40 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-200 dark:border-white/10">
         <div className="flex items-center gap-2">
           {[
             { id: 'active', label: `Active Staff (${activeStaff.length})`, icon: ShieldCheck },
@@ -218,7 +218,7 @@ export default function AdminStaffPage() {
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                   isActive
                     ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300 shadow-md'
-                    : 'bg-white/5 border border-white/5 text-slate-400 hover:text-white'
+                    : 'bg-white/5 border border-slate-100 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white'
                 }`}
               >
                 <Icon size={14} />
@@ -229,21 +229,21 @@ export default function AdminStaffPage() {
         </div>
 
         <div className="relative w-full sm:w-64">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
           <input
             type="text"
             placeholder="Search staff or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-white/10 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none"
+            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none"
           />
         </div>
       </div>
 
       {/* Roster & Invitations Table */}
-      <div className="border border-white/10 rounded-3xl overflow-hidden bg-slate-900/80 backdrop-blur-xl shadow-2xl">
-        <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-slate-950 border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+      <div className="border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-2xl">
+        <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+          <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
             <tr>
               <th className="p-4">Admin Staff Member</th>
               <th className="p-4">Executive Rank</th>
@@ -263,8 +263,8 @@ export default function AdminStaffPage() {
                         {member.name.slice(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-bold text-white text-sm">{member.name}</div>
-                        <div className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
+                        <div className="font-bold text-slate-900 dark:text-white text-sm">{member.name}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono">
                           <Mail size={12} className="text-slate-500" /> {member.email}
                         </div>
                       </div>
@@ -291,7 +291,7 @@ export default function AdminStaffPage() {
                       </span>
                     )}
                   </td>
-                  <td className="p-4 text-slate-400 text-[11px]">
+                  <td className="p-4 text-slate-500 dark:text-slate-400 text-[11px]">
                     {member.acceptedAt
                       ? `Accepted ${new Date(member.acceptedAt).toLocaleDateString()}`
                       : `Sent ${new Date(member.invitedAt).toLocaleDateString()}`}
@@ -316,7 +316,7 @@ export default function AdminStaffPage() {
                       ) : (
                         <Button
                           onClick={() => handleForcePasswordReset(member)}
-                          className="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-xs px-3 py-1 rounded-xl flex items-center gap-1 font-bold"
+                          className="bg-white/5 hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 text-xs px-3 py-1 rounded-xl flex items-center gap-1 font-bold"
                         >
                           <Key size={12} /> Force Reset
                         </Button>

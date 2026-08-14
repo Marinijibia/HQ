@@ -111,9 +111,7 @@ export default function CompliancePage() {
   const [isSimulating, setIsSimulating] = React.useState(false);
 
   // Approval Workflows & Delegations State
-  const [delegations, setDelegations] = React.useState<DelegationRecord[]>([
-    { id: 'del-1', delegator: 'Asad (CEO)', delegatee: 'Teema (Operations Director)', scope: 'Strategic WBS Approvals', startDate: '2026-07-15', endDate: '2026-07-29', active: true },
-  ]);
+  const [delegations, setDelegations] = React.useState<DelegationRecord[]>([]);
   const [newDelegator, setNewDelegator] = React.useState('Asad (CEO)');
   const [newDelegatee, setNewDelegatee] = React.useState('');
   const [newDelScope, setNewDelScope] = React.useState('Budget Approvals');
@@ -121,11 +119,7 @@ export default function CompliancePage() {
   const [newDelEnd, setNewDelEnd] = React.useState('2026-07-29');
 
   // Decision Register State
-  const [decisions, setDecisions] = React.useState<DecisionRecord[]>([
-    { id: 'dec-1', title: 'Paystack & Stripe Payment Gateway Activation', maker: 'Asad (CEO)', outcome: 'Approved', evidence: 'Payment API gateway verified & test suite passes, regional taxation configured', timestamp: '2026-07-10 11:32' },
-    { id: 'dec-2', title: 'Q3 Product Scaling WBS Start', maker: 'Teema (Operations Director)', outcome: 'Approved', evidence: 'Project resources allocated, AI QA Director assigned', timestamp: '2026-07-12 09:15' },
-    { id: 'dec-3', title: 'West African Logistics Corridor Budget Cap Shift', maker: 'Legal & Compliance Director', outcome: 'Approved', evidence: 'Additional credits approved by board to support logistics nodes', timestamp: '2026-07-13 16:45' },
-  ]);
+  const [decisions, setDecisions] = React.useState<DecisionRecord[]>([]);
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const fetchGovernanceData = React.useCallback(async () => {
@@ -316,7 +310,7 @@ export default function CompliancePage() {
               placeholder="Search governance policies & decisions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-black/50 border border-white/10 text-white pl-9 h-10 text-xs rounded-xl focus-visible:ring-cyan-500 w-72 font-bold"
+              className="bg-slate-100 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-9 h-10 text-xs rounded-xl focus-visible:ring-cyan-500 w-72 font-bold"
             />
           </div>
 
@@ -343,7 +337,7 @@ export default function CompliancePage() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${
                 activeTab === tab.id
-                  ? 'border-current text-white font-extrabold'
+                  ? 'border-current text-slate-900 dark:text-white font-extrabold'
                   : 'border-transparent text-foreground/55 hover:text-foreground'
               }`}
               style={activeTab === tab.id ? { borderColor: brandColor, color: brandColor } : {}}
@@ -491,11 +485,11 @@ export default function CompliancePage() {
                     <p className="uppercase text-foreground/45 tracking-widest text-[8.5px]">Ecosystem constraints</p>
                     <div className="flex justify-between">
                       <span className="text-foreground/40">Active Policies</span>
-                      <span className="text-white">{policies.length} rules active</span>
+                      <span className="text-slate-900 dark:text-white">{policies.length} rules active</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-foreground/40">Policy Violations Today</span>
-                      <span className="text-white">0</span>
+                      <span className="text-slate-900 dark:text-white">0</span>
                     </div>
                   </div>
                 </div>
@@ -555,7 +549,7 @@ export default function CompliancePage() {
                     <div className="space-y-1.5">
                       <label className="text-foreground/75">Policy Category</label>
                       <select
-                        className="bg-card-bg border border-card-border rounded-lg w-full p-2 h-9 text-xs font-bold focus:outline-none text-white"
+                        className="bg-card-bg border border-card-border rounded-lg w-full p-2 h-9 text-xs font-bold focus:outline-none text-slate-900 dark:text-white"
                         value={newRuleCategory}
                         onChange={e => setNewRuleCategory(e.target.value)}
                       >
@@ -570,7 +564,7 @@ export default function CompliancePage() {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      className="text-white text-xs font-bold h-8.5 gap-1.5 cursor-pointer"
+                      className="text-slate-900 dark:text-white text-xs font-bold h-8.5 gap-1.5 cursor-pointer"
                       style={{ backgroundColor: brandColor }}
                       onClick={handleCreateRule}
                     >
@@ -602,7 +596,7 @@ export default function CompliancePage() {
                   <div className="flex items-start gap-2.5">
                     <Info className="h-4 w-4 text-hq-cyan mt-0.5 shrink-0" />
                     <div>
-                      <span className="font-extrabold text-white">Policy Simulation Result</span>
+                      <span className="font-extrabold text-slate-900 dark:text-white">Policy Simulation Result</span>
                       <p className="text-foreground/70 leading-relaxed font-semibold mt-1">{simulationResult}</p>
                     </div>
                   </div>
@@ -617,7 +611,7 @@ export default function CompliancePage() {
                   {policies.map(p => (
                     <div key={p.id} className="p-3 rounded-lg border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 text-xs flex justify-between gap-4">
                       <div>
-                        <span className="font-extrabold text-white block">{p.ruleText}</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white block">{p.ruleText}</span>
                         <span className="text-[9.5px] text-foreground/45 font-semibold mt-0.5">{p.category} · Version {p.version}</span>
                       </div>
                       <Badge variant="success" className="text-[8px] h-5 self-center font-bold">Active</Badge>
@@ -641,20 +635,20 @@ export default function CompliancePage() {
                 </div>
 
                 <div className="border border-card-border bg-[#F9F9FB] dark:bg-[#08080A] rounded-xl p-4 flex flex-col md:flex-row items-center justify-center gap-3">
-                  <div className="p-2.5 rounded-lg border border-card-border bg-card-bg text-center font-bold text-[10px] text-white">
+                  <div className="p-2.5 rounded-lg border border-card-border bg-card-bg text-center font-bold text-[10px] text-slate-900 dark:text-white">
                     Mission Created
                   </div>
                   <ArrowRight className="h-4 w-4 text-foreground/35 shrink-0 hidden md:block" />
-                  <div className="p-2.5 rounded-lg border border-hq-cyan/40 bg-hq-cyan/5 text-center font-bold text-[10px] text-white">
+                  <div className="p-2.5 rounded-lg border border-hq-cyan/40 bg-hq-cyan/5 text-center font-bold text-[10px] text-slate-900 dark:text-white">
                     Department Manager
                   </div>
                   <ArrowRight className="h-4 w-4 text-foreground/35 shrink-0 hidden md:block" />
-                  <div className="p-2.5 rounded-lg border border-hq-purple/40 bg-hq-purple/5 text-center font-bold text-[10px] text-white">
+                  <div className="p-2.5 rounded-lg border border-hq-purple/40 bg-hq-purple/5 text-center font-bold text-[10px] text-slate-900 dark:text-white">
                     Finance Director
                   </div>
                   <ArrowRight className="h-4 w-4 text-foreground/35 shrink-0 hidden md:block" />
-                  <div className="p-2.5 rounded-lg border border-green-500/40 bg-green-500/5 text-center font-bold text-[10px] text-white">
-                    CEO Elena
+                  <div className="p-2.5 rounded-lg border border-green-500/40 bg-green-500/5 text-center font-bold text-[10px] text-slate-900 dark:text-white">
+                    CEO
                   </div>
                 </div>
               </Card>
@@ -672,7 +666,7 @@ export default function CompliancePage() {
                     {delegations.map(del => (
                       <div key={del.id} className="p-3 rounded-lg border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/20 text-xs flex justify-between gap-4">
                         <div>
-                          <span className="font-extrabold text-white block">{del.delegator} delegated to {del.delegatee}</span>
+                          <span className="font-extrabold text-slate-900 dark:text-white block">{del.delegator} delegated to {del.delegatee}</span>
                           <span className="text-[9.5px] text-foreground/45 font-semibold mt-0.5 block">Scope: {del.scope}</span>
                           <span className="text-[9px] text-[#0EA5E9] font-bold mt-1 block">Period: {del.startDate} to {del.endDate}</span>
                         </div>
@@ -699,13 +693,13 @@ export default function CompliancePage() {
                   <div className="space-y-1.5">
                     <label className="text-foreground/75">Delegator (Authority Holder)</label>
                     <select
-                      className="bg-card-bg border border-card-border rounded-lg w-full p-2 h-9 text-xs font-bold focus:outline-none text-white"
+                      className="bg-card-bg border border-card-border rounded-lg w-full p-2 h-9 text-xs font-bold focus:outline-none text-slate-900 dark:text-white"
                       value={newDelegator}
                       onChange={e => setNewDelegator(e.target.value)}
                     >
-                      <option value="Elena Rostova (CEO)">Elena Rostova (CEO)</option>
-                      <option value="Sophia Sterling (CFO)">Sophia Sterling (CFO)</option>
-                      <option value="Alexander Carter (CTO)">Alexander Carter (CTO)</option>
+                      <option value="CEO">CEO</option>
+                      <option value="CFO">CFO</option>
+                      <option value="CTO">CTO</option>
                     </select>
                   </div>
 
@@ -736,7 +730,7 @@ export default function CompliancePage() {
 
                   <Button
                     size="sm"
-                    className="w-full text-white text-xs font-bold h-8.5 gap-1.5 cursor-pointer"
+                    className="w-full text-slate-900 dark:text-white text-xs font-bold h-8.5 gap-1.5 cursor-pointer"
                     style={{ backgroundColor: brandColor }}
                     onClick={handleCreateDelegation}
                   >
@@ -802,11 +796,11 @@ export default function CompliancePage() {
                   <Card key={dec.id} className="border border-card-border bg-card-bg p-4 shadow-level-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-white">{dec.title}</span>
+                        <span className="text-xs font-black text-slate-900 dark:text-white">{dec.title}</span>
                         <Badge variant="success" className="text-[8px] h-4.5 font-bold uppercase">{dec.outcome}</Badge>
                       </div>
                       <p className="text-[10px] text-foreground/55 font-semibold">
-                        Resolved by: <span className="text-white">{dec.maker}</span> · Context: <span className="text-white/80">{dec.evidence}</span>
+                        Resolved by: <span className="text-slate-900 dark:text-white">{dec.maker}</span> · Context: <span className="text-slate-900 dark:text-white/80">{dec.evidence}</span>
                       </p>
                     </div>
 

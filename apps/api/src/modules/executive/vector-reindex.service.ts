@@ -7,6 +7,8 @@ export interface VectorIndexingStats {
   departmentDocsCount: number;
   knowledgeBaseDocsCount: number;
   totalChunksProcessed: number;
+  embeddingsWritten: number;
+  embeddingsSkipped: number;
   lastIndexedAt: string;
 }
 
@@ -21,11 +23,11 @@ export class VectorReindexService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.logger.log('🤖 Vector Reindex Service initialized. Scheduled automated background vector sync.');
-    // Run background index check 10 seconds after boot
+    this.logger.log('🤖 Vector Reindex Service initialized. Scheduling background vector sync.');
+    // Run background reindex 10s after boot — non-blocking
     setTimeout(() => {
-      this.reindexAllTrainingData().catch(err => {
-        this.logger.error(`Initial vector background re-indexing error: ${err}`);
+      this.reindexAllTrainingData().catch((err) => {
+        this.logger.error(`Initial vector background reindex error: ${err}`);
       });
     }, 10000);
   }
@@ -35,16 +37,14 @@ export class VectorReindexService implements OnModuleInit {
    */
   public chunkMarkdownContent(markdown: string): string[] {
     if (!markdown || !markdown.trim()) return [];
-    
-    // Split by headers while preserving section context
+
     const sections = markdown.split(/(?=\n#{1,3}\s)/);
     const chunks: string[] = [];
 
     for (const rawSection of sections) {
       const trimmed = rawSection.trim();
       if (!trimmed) continue;
-      
-      // If a section is very long (> 1200 chars), sub-chunk by paragraphs
+
       if (trimmed.length > 1200) {
         const paragraphs = trimmed.split(/\n\n+/);
         let currentChunk = '';
@@ -66,58 +66,146 @@ export class VectorReindexService implements OnModuleInit {
   }
 
   /**
-   * Trigger automated re-indexing across Executive, Department, and Knowledge Base Markdown docs
+   * Generate an embedding for a single text chunk and write it to pgvector.
+   * Uses a raw SQL upsert since Prisma doesn't support vector type natively.
+   * Returns true if the embedding was written, false if it was skipped.
    */
-  async reindexAllTrainingData(): Promise<VectorIndexingStats> {
+  private async embedAndStore(
+    tableName: string,
+    columnName: string,
+    recordId: string,
+    chunkText: string,
+  ): Promise<boolean> {
+    const embedding = await this.aiService.embedText(chunkText);
+
+    if (!embedding) {
+      return false; // API unavailable or quota — skip silently
+    }
+
+    // Build the vector literal for pgvector: '[0.1,0.2,...]'
+    const vectorLiteral = `[${embedding.join(',')}]`;
+
+    try {
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE "${tableName}" SET "${columnName}" = $1::vector WHERE id = $2::uuid`,
+        vectorLiteral,
+        recordId,
+      );
+      return true;
+    } catch (err) {
+      this.logger.warn(`[VectorReindex] Failed to write embedding for ${tableName}:${recordId}: ${err}`);
+      return false;
+    }
+  }
+
+  /**
+   * Re-index training data across Executive, Department, and Knowledge Base docs.
+   * Generates real embeddings via Gemini text-embedding-004 and writes them to pgvector.
+   *
+   * Pass companyId to scope to a single org (called from CMS endpoints).
+   * Omit for a full global reindex (called only on module init).
+   */
+  async reindexAllTrainingData(companyId?: string): Promise<VectorIndexingStats> {
     if (this.isIndexing) {
-      this.logger.warn('Vector re-indexing already in progress. Skipping duplicate run.');
+      this.logger.warn('Vector reindexing already in progress. Skipping duplicate run.');
       return {
         executiveDocsCount: 0,
         departmentDocsCount: 0,
         knowledgeBaseDocsCount: 0,
         totalChunksProcessed: 0,
+        embeddingsWritten: 0,
+        embeddingsSkipped: 0,
         lastIndexedAt: new Date().toISOString(),
       };
     }
 
     this.isIndexing = true;
-    this.logger.log('🔄 Starting automated background vector re-indexing for pgvector...');
+    this.logger.log('🔄 Starting vector reindexing — generating and writing real embeddings to pgvector...');
 
     let totalChunks = 0;
+    let embeddingsWritten = 0;
+    let embeddingsSkipped = 0;
     let execDocsCount = 0;
     let deptDocsCount = 0;
     let kbDocsCount = 0;
 
     try {
-      // 1. Process Executive Training Data (.md)
-      const execDocs = await this.prisma.executiveTrainingData.findMany();
+      // 1. Executive Training Data — org-scoped
+      const execDocs = await (companyId
+        ? this.prisma.executiveTrainingData.findMany({
+            where: { executive: { department: { companyId } } },
+          })
+        : this.prisma.executiveTrainingData.findMany());
+
       execDocsCount = execDocs.length;
+      this.logger.log(`[VectorReindex] Processing ${execDocsCount} executive training docs...`);
+
       for (const doc of execDocs) {
         const chunks = this.chunkMarkdownContent(doc.content);
         totalChunks += chunks.length;
+
+        // Embed the full doc content (first 8192 chars) and write to the record
+        const written = await this.embedAndStore(
+          'executive_training_data',
+          'embedding',
+          doc.id,
+          chunks[0] || doc.content, // Use first semantic chunk for the record embedding
+        );
+        if (written) embeddingsWritten++;
+        else embeddingsSkipped++;
       }
 
-      // 2. Process Department Training Data (.md)
-      const deptDocs = await this.prisma.departmentTrainingData.findMany();
+      // 2. Department Training Data — org-scoped
+      const deptDocs = await (companyId
+        ? this.prisma.departmentTrainingData.findMany({
+            where: { department: { companyId } },
+          })
+        : this.prisma.departmentTrainingData.findMany());
+
       deptDocsCount = deptDocs.length;
+      this.logger.log(`[VectorReindex] Processing ${deptDocsCount} department training docs...`);
+
       for (const doc of deptDocs) {
         const chunks = this.chunkMarkdownContent(doc.content);
         totalChunks += chunks.length;
+
+        const written = await this.embedAndStore(
+          'department_training_data',
+          'embedding',
+          doc.id,
+          chunks[0] || doc.content,
+        );
+        if (written) embeddingsWritten++;
+        else embeddingsSkipped++;
       }
 
-      // 3. Process Shared Knowledge Base (.md)
-      const kbDocs = await this.prisma.knowledgeBase.findMany();
+      // 3. Shared Knowledge Base — org-scoped where possible
+      const kbDocs = await (companyId
+        ? this.prisma.knowledgeBase.findMany({ where: { companyId } })
+        : this.prisma.knowledgeBase.findMany());
+
       kbDocsCount = kbDocs.length;
+      this.logger.log(`[VectorReindex] Processing ${kbDocsCount} knowledge base docs...`);
+
       for (const doc of kbDocs) {
         const chunks = this.chunkMarkdownContent(doc.content);
         totalChunks += chunks.length;
+
+        const written = await this.embedAndStore(
+          'knowledge_base',
+          'embedding',
+          doc.id,
+          chunks[0] || doc.content,
+        );
+        if (written) embeddingsWritten++;
+        else embeddingsSkipped++;
       }
 
       this.logger.log(
-        `✅ Vector re-indexing complete. ${totalChunks} semantic chunks processed across ${execDocsCount} Exec docs, ${deptDocsCount} Dept docs, and ${kbDocsCount} KB docs.`,
+        `✅ Vector reindexing complete. ${totalChunks} chunks across ${execDocsCount + deptDocsCount + kbDocsCount} docs. Written: ${embeddingsWritten}, Skipped: ${embeddingsSkipped}.`,
       );
     } catch (e) {
-      this.logger.error(`Failed during vector re-indexing pipeline: ${e}`);
+      this.logger.error(`[VectorReindex] Pipeline error: ${e}`);
     } finally {
       this.isIndexing = false;
     }
@@ -127,6 +215,8 @@ export class VectorReindexService implements OnModuleInit {
       departmentDocsCount: deptDocsCount,
       knowledgeBaseDocsCount: kbDocsCount,
       totalChunksProcessed: totalChunks,
+      embeddingsWritten,
+      embeddingsSkipped,
       lastIndexedAt: new Date().toISOString(),
     };
   }

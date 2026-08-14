@@ -97,8 +97,13 @@ export class MissionRepository {
     });
   }
 
-  async createTasks(missionId: string, tasks: any[]): Promise<void> {
-    const execs = await this.prisma.executive.findMany();
+  async createTasks(missionId: string, tasks: any[], companyId?: string): Promise<void> {
+    // Scope executive lookup to the mission's organization to prevent cross-org leakage
+    const execs = await this.prisma.executive.findMany({
+      where: companyId
+        ? { deletedAt: null, department: { companyId } }
+        : { deletedAt: null },
+    });
 
     await this.prisma.$transaction(async (tx) => {
       // Loop over tasks and create them
@@ -108,7 +113,7 @@ export class MissionRepository {
         else if (t.status === 'Completed') status = TaskStatus.COMPLETED;
         else if (t.status === 'Error') status = TaskStatus.FAILED;
 
-        // Try to match assignedDirector to an executive
+        // Try to match assignedDirector to an executive within this org
         const match = execs.find(
           (e) =>
             e.roleKey.toLowerCase() === t.assignedDirector.toLowerCase() ||

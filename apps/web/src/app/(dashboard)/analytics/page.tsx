@@ -94,7 +94,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = React.useState(true);
   const [exporting, setExporting] = React.useState(false);
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
-  const [ceoName, setCeoName] = React.useState('Asad');
+  const [ceoName, setCeoName] = React.useState('CEO');
 
   // Filters & Sorting state
   const [activeCategory, setActiveCategory] = React.useState<string>('all');
@@ -143,52 +143,7 @@ export default function AnalyticsPage() {
         // Enrich metrics recommendations with Categories & details
         const enriched: AnalyticsMetrics = {
           ...m,
-          recommendations: [
-            {
-              id: 'rec-1',
-              title: 'West African Shipping Outreach Potential',
-              type: 'opportunity',
-              category: 'Strategy',
-              confidence: 94,
-              impact: 'High',
-              effort: 'Medium',
-              description: 'Operations analysis indicates ₦4.2M gross potential yield if shipping corridor proposals scale up.',
-              executives: ['Asad (CEO)', 'Teema (Ops)'],
-            },
-            {
-              id: 'rec-2',
-              title: 'Webhook Compliance Signature Check',
-              type: 'risk',
-              category: 'Compliance',
-              confidence: 98,
-              impact: 'High',
-              effort: 'Low',
-              description: 'Rotation required for sandbox keys to bypass compliance warning thresholds.',
-              executives: ['CTO Hiroshi', 'CS Yuki'],
-            },
-            {
-              id: 'rec-3',
-              title: 'SOP Document Duplicate Cleanup',
-              type: 'opportunity',
-              category: 'Operations',
-              confidence: 85,
-              impact: 'Medium',
-              effort: 'Low',
-              description: 'Detected duplicate SOP logs inside Layer 6 Knowledge base. Clean footprint to save context tokens.',
-              executives: ['COS Arthur'],
-            },
-            {
-              id: 'rec-4',
-              title: 'Ad Conversion Campaign Re-targeting',
-              type: 'opportunity',
-              category: 'Finance',
-              confidence: 90,
-              impact: 'High',
-              effort: 'Medium',
-              description: 'Spend margins show Q2 marketing conversion levels dropped 4% below expectations. Leverage re-targeting flow.',
-              executives: ['CMO Amara', 'CFO Sophia'],
-            }
-          ]
+          recommendations: m.recommendations || []
         };
         setMetrics(enriched);
       }
@@ -641,8 +596,8 @@ export default function AnalyticsPage() {
                     {[
                       { x1: 250, y1: 175, x2: 120, y2: 80 },  // Org -> Executive Dept
                       { x1: 250, y1: 175, x2: 380, y2: 80 },  // Org -> Finance Dept
-                      { x1: 120, y1: 80, x2: 80, y2: 180 },   // Executive Dept -> CEO Elena
-                      { x1: 380, y1: 80, x2: 420, y2: 180 },  // Finance Dept -> CFO Sophia
+                      { x1: 120, y1: 80, x2: 80, y2: 180 },   // Executive Dept -> CEO
+                      { x1: 380, y1: 80, x2: 420, y2: 180 },  // Finance Dept -> CFO
                       { x1: 80, y1: 180, x2: 160, y2: 280 },  // CEO -> Strategy Mission
                       { x1: 420, y1: 180, x2: 340, y2: 280 }, // CFO -> Financial Audit
                       { x1: 160, y1: 280, x2: 250, y2: 175 }, // Mission -> Org Twin (Save)

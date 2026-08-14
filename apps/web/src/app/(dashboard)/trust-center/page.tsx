@@ -77,26 +77,13 @@ export default function TrustCenterPage() {
   const [scimEnabled, setScimEnabled] = React.useState(true);
 
   // Security Incident Alerts
-  const [alerts, setAlerts] = React.useState<SecurityAlert[]>([
-    { id: 'al-1', event: 'Privileged audit log export', actor: 'Teema (Ops Director)', ip: '197.210.64.12', timestamp: '10 mins ago', severity: 'Low' },
-    { id: 'al-2', event: 'New device authentication handshake', actor: 'Asad (CEO)', ip: '102.89.34.88', timestamp: '1 hour ago', severity: 'Medium' },
-    { id: 'al-3', event: 'Automatic secrets rotation completed', actor: 'Secrets Service', ip: 'localhost', timestamp: '3 hours ago', severity: 'Low' },
-  ]);
+  const [alerts, setAlerts] = React.useState<SecurityAlert[]>([]);
 
   // Active Sessions
-  const [sessions, setSessions] = React.useState<ActiveSession[]>([
-    { id: 'sess-1', identity: 'Asad (CEO)', type: 'Human', device: 'macOS · Chrome 126', ip: '102.89.34.88', location: 'Lagos, Nigeria', lastActive: 'Just now' },
-    { id: 'sess-2', identity: 'Teema (Ops Director)', type: 'AI Executive', device: 'HQ Sandbox Container v4', ip: '10.0.4.12', location: 'Cloud Node EU-West', lastActive: '3 mins ago' },
-    { id: 'sess-3', identity: 'Legal (Compliance Director)', type: 'AI Executive', device: 'HQ Guardrail Validator', ip: '82.44.12.90', location: 'Cloud Node US-East', lastActive: '12 mins ago' },
-    { id: 'sess-4', identity: 'GitHub Connector', type: 'Service', device: 'Webhook Receiver Gateway', ip: '140.82.115.4', location: 'GitHub IP Range', lastActive: 'Just now' },
-  ]);
+  const [sessions, setSessions] = React.useState<ActiveSession[]>([]);
 
   // Secrets Vault
-  const [secrets, setSecrets] = React.useState<SecretItem[]>([
-    { id: 'sec-1', name: 'Primary Stripe webhook signing key', prefix: 'whsec_e582...', type: 'OAuth Signing', rotatedAt: '2026-07-01', active: true },
-    { id: 'sec-2', name: 'OpenAI Gemini routing gateway key', prefix: 'sk-proj-4a91...', type: 'API Key', rotatedAt: '2026-07-12', active: true },
-    { id: 'sec-3', name: 'Slack Bot token key credentials', prefix: 'xoxb-9420...', type: 'Bot Token', rotatedAt: '2026-06-28', active: true },
-  ]);
+  const [secrets, setSecrets] = React.useState<SecretItem[]>([]);
 
   // Sandbox access boundaries toggles
   const [redactSensitiveData, setRedactSensitiveData] = React.useState(true);

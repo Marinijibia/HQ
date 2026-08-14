@@ -30,12 +30,7 @@ const TYPE_CONFIG = {
   approval: { icon: Zap, color: '#10B981', bg: 'bg-emerald-500/10' },
 };
 
-// Fallback seed feed — used when API has no data yet
-const SEED_FEED: ActivityEvent[] = [
-  { id: 's1', type: 'mission_started', title: 'Welcome to HQ', subtitle: 'Your AI executive team is ready and waiting', time: 'Just now' },
-  { id: 's2', type: 'executive_assigned', title: 'CEO activated', subtitle: 'Elena is ready to receive your first mission', time: '1m ago' },
-  { id: 's3', type: 'notification', title: 'Intelligence profile', subtitle: 'Complete your org profile to unlock deeper insights', time: '2m ago' },
-];
+const SEED_FEED: ActivityEvent[] = [];
 
 function timeAgo(dateStr: string): string {
   try {

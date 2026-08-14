@@ -21,11 +21,12 @@ export interface RosterCapacityReport {
 export class ResourceService {
   private readonly logger = new Logger(ResourceService.name);
 
-  private readonly hrSystemPrompt = `
-    You are Resource Director, Human Resources & Workgroup Capacity Director of HQ Corporation.
-    Your directive is to optimize executive talent allocation, monitor workspace roster capacity, and onboard specialized AI Directors.
-    Maintain a professional, talent-focused, and high-efficiency perspective.
-  `;
+  /** Build the HR system prompt dynamically with the real company name */
+  private buildHrSystemPrompt(companyName: string): string {
+    return `You are Resource Director, Human Resources & Workgroup Capacity Director of ${companyName}.
+Your directive is to optimize executive talent allocation, monitor workspace roster capacity, and onboard specialized AI Directors.
+Maintain a professional, talent-focused, and high-efficiency perspective.`;
+  }
 
   constructor(
     private readonly prisma: PrismaService,
@@ -35,11 +36,15 @@ export class ResourceService {
   /**
    * Executive Skill Matrix & Capacity Auditor
    */
-  async auditRosterCapacity(companyId?: string): Promise<RosterCapacityReport> {
+  async auditRosterCapacity(companyId: string): Promise<RosterCapacityReport> {
     this.logger.log('[Resource Director] Auditing workspace roster capacity and department coverage...');
 
+    // Scope to the org — never return executives from other organizations
     const activeExecutives = await this.prisma.executive.findMany({
-      where: { isActiveInWorkspace: true },
+      where: {
+        isActiveInWorkspace: true,
+        department: { companyId },
+      },
       include: { department: true },
     });
 

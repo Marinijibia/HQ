@@ -184,32 +184,18 @@ export default function SettingsPage() {
   // Interactive form states
   const [newDeptName, setNewDeptName] = React.useState('');
   const [newDeptExec, setNewDeptExec] = React.useState('');
-  const [departments, setDepartments] = React.useState([
-    { id: 'dept-1', name: 'Executive Office', executive: 'Asad (CEO)', teamCount: 5, missionCount: 12, status: 'Active' },
-    { id: 'dept-2', name: 'Operations & Execution', executive: 'Teema (Ops Director)', teamCount: 4, missionCount: 8, status: 'Active' },
-    { id: 'dept-3', name: 'Legal & Compliance', executive: 'Legal (Compliance Director)', teamCount: 3, missionCount: 10, status: 'Active' },
-    { id: 'dept-4', name: 'Human Resources & Capacity', executive: 'Resource Director (HR)', teamCount: 2, missionCount: 6, status: 'Active' },
-    { id: 'dept-5', name: 'Intelligence & Research', executive: 'Mr. Intelligence (Research)', teamCount: 2, missionCount: 14, status: 'Active' },
-  ]);
+  const [departments, setDepartments] = React.useState<any[]>([]);
 
   const [newBranchName, setNewBranchName] = React.useState('');
   const [newBranchRegion, setNewBranchRegion] = React.useState('');
   const [newBranchManager, setNewBranchManager] = React.useState('');
-  const [branches, setBranches] = React.useState([
-    { id: 'br-1', name: 'Primary Headquarters', region: 'Global HQ', manager: 'Asad (CEO)', memberCount: 12 },
-    { id: 'br-2', name: 'Regional Operations Hub', region: 'EMEA', manager: 'Teema (Ops Director)', memberCount: 5 },
-  ]);
+  const [branches, setBranches] = React.useState<any[]>([]);
 
   const [inviteEmail, setInviteEmail] = React.useState('');
   const [inviteRole, setInviteRole] = React.useState('MEMBER');
-  const [invitations, setInvitations] = React.useState([
-    { id: 'inv-1', email: 'director@company.com', role: 'ADMINISTRATOR', invitedAt: '2026-07-20', expiresAt: '2026-08-15' },
-  ]);
+  const [invitations, setInvitations] = React.useState<any[]>([]);
 
-  const [workspaces, setWorkspaces] = React.useState([
-    { id: 'ws-1', name: 'Strategic Expansion', description: 'Core executive launching workspace', membersCount: 5, executives: ['Asad (CEO)', 'Teema (Ops)'] },
-    { id: 'ws-2', name: 'Global Compliance Audit', description: 'Legal & security alignment workspace', membersCount: 3, executives: ['Legal (Compliance)'] },
-  ]);
+  const [workspaces, setWorkspaces] = React.useState<any[]>([]);
   const [newWsName, setNewWsName] = React.useState('');
   const [newWsDesc, setNewWsDesc] = React.useState('');
 

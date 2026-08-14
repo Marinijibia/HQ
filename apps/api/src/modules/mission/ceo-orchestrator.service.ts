@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { AiService } from '../ai/ai.service';
 import { WebResearchService, IntelligenceBriefingResult } from '../executive/web-research.service';
@@ -47,30 +47,31 @@ export class CeoOrchestratorService {
     ownerMessage: string,
     requestedMode?: 'CONVERSATION' | 'JOB_ASSIGNMENT',
   ): Promise<ScopeMissionResult> {
-    // 1. Fetch Company details & OrgIntelligence dynamically
-    let company = await this.prisma.company.findUnique({
+    // 1. Fetch Company details — throw if not found (never fall through to a random org)
+    const company = await this.prisma.company.findUnique({
       where: { id: companyId },
       include: { orgIntelligence: true },
     });
 
     if (!company) {
-      company = await this.prisma.company.findFirst({
-        include: { orgIntelligence: true },
-      });
+      throw new NotFoundException(`Organization not found for companyId: ${companyId}`);
     }
 
-    const companyName = company?.name || 'HQ Enterprise';
-    const intel = company?.orgIntelligence;
+    const companyName = company.name;
+    const intel = company.orgIntelligence;
     const identityObj: any = intel?.identityData || {};
     const industryContext =
       identityObj.industry ||
       identityObj.domain ||
-      company?.slogan ||
-      'Enterprise Software & Supply Chain Technology';
+      company.slogan ||
+      'Enterprise Technology';
 
-    // 2. Fetch Active Workspace Roster
+    // 2. Fetch Active Workspace Roster — scoped strictly to this org via department relation
     const activeExecutives = await this.prisma.executive.findMany({
-      where: { isActiveInWorkspace: true },
+      where: {
+        isActiveInWorkspace: true,
+        department: { companyId },
+      },
       include: { department: true },
     });
 
@@ -80,10 +81,10 @@ export class CeoOrchestratorService {
 
     const messageLower = ownerMessage.toLowerCase();
 
-    // 3. Persistent Corporate Memory & Multi-Thread Recall (Query past PostgreSQL missions)
-    const historicalMemory = await this.fetchCorporateMemoryContext(company?.id || companyId);
+    // 3. Persistent Corporate Memory — real DB missions only, no fake fallbacks
+    const historicalMemory = await this.fetchCorporateMemoryContext(companyId);
 
-    // 4. Trigger Mr. Intelligence Web Research & Deep Scraping
+    // 4. Trigger Mr. Intelligence Web Research
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const urlMatch = ownerMessage.match(urlRegex);
 
@@ -117,7 +118,7 @@ export class CeoOrchestratorService {
       isExecutionDirective = actionKeywords.some((kw) => messageLower.includes(kw));
     }
 
-    // 6. Construct 4-Quadrant Strategic Scorecard & Delegation Matrix via AI
+    // 6. Construct Strategic Scorecard & Delegation Matrix via AI
     const scorecardAndMatrix = await this.generateScorecardAndMatrix(
       ownerMessage,
       companyName,
@@ -125,16 +126,19 @@ export class CeoOrchestratorService {
       activeExecutives,
     );
 
-    // 7. CONVERSATION MODE Execution
+    // 7. CONVERSATION MODE
     if (!isExecutionDirective) {
+      const historySection = historicalMemory.length > 0
+        ? `Historical Corporate Memory (Past Missions & Decisions):\n${historicalMemory.map((m, i) => `${i + 1}. ${m}`).join('\n')}`
+        : `This appears to be your first interaction. No prior mission history exists yet for ${companyName}.`;
+
       const prompt = `
-        You are Asad, Chief Executive Officer of ${companyName}.
-        Company Context (${industryContext}): ${intel?.identityData ? JSON.stringify(intel.identityData) : industryContext}
+        You are Asad, Chief Executive Officer of ${companyName} (${industryContext}).
+        ${intel?.identityData ? `Company Context: ${JSON.stringify(intel.identityData)}` : ''}
 
-        Historical Corporate Memory (Past Missions & Decisions):
-        ${historicalMemory.map((m, i) => `${i + 1}. ${m}`).join('\n')}
+        ${historySection}
 
-        Live Web & News Intelligence (Verification Confidence: ${researchBriefing.confidenceScore}%):
+        Live Web & News Intelligence (Confidence: ${researchBriefing.confidenceScore}%):
         - Summary: ${researchBriefing.summary}
         - Takeaways: ${researchBriefing.keyTakeaways.join('; ')}
 
@@ -143,11 +147,11 @@ export class CeoOrchestratorService {
         - Operational Effort: ${scorecardAndMatrix.scorecard.operationalEffort}
         - Regulatory Risk: ${scorecardAndMatrix.scorecard.regulatoryRisk}
 
-        The Owner says to you: "${ownerMessage}".
+        The Owner says: "${ownerMessage}"
 
         Instructions:
-        1. Answer directly and authoritatively as CEO Asad.
-        2. Incorporate historical memory, research facts, and strategic scorecard metrics.
+        1. Answer directly and authoritatively as CEO Asad of ${companyName}.
+        2. Incorporate historical memory, research facts, and scorecard metrics.
         3. End with 1 sharp strategic question.
       `;
 
@@ -155,18 +159,12 @@ export class CeoOrchestratorService {
       try {
         const aiRes = await this.aiService.executePrompt({
           prompt,
-          systemPrompt: `You are CEO Asad of ${companyName}. Maintain visionary executive leadership with multi-thread memory recall.`,
+          systemPrompt: `You are CEO Asad of ${companyName}. Maintain visionary executive leadership.`,
         });
         if (aiRes.text) conversationalText = aiRes.text;
       } catch (e) {
-        conversationalText = `Greetings Owner! As CEO of **${companyName}**, I have compiled our strategic analysis:
-
-### 👑 CEO Executive Scorecard
-- **Strategic Impact**: ${scorecardAndMatrix.scorecard.strategicImpact}/100
-- **Operational Effort**: ${scorecardAndMatrix.scorecard.operationalEffort}
-- **Regulatory Risk**: ${scorecardAndMatrix.scorecard.regulatoryRisk}
-
-Building on our corporate background in **${industryContext}**, our active board is aligned. What strategic milestone shall we target next for ${companyName}?`;
+        this.logger.warn(`[CeoOrchestrator] Conversation AI error: ${e}`);
+        conversationalText = `Greetings Owner. As CEO of **${companyName}**, I have compiled our strategic analysis.\n\n**Strategic Scorecard**: Impact ${scorecardAndMatrix.scorecard.strategicImpact}/100, Effort: ${scorecardAndMatrix.scorecard.operationalEffort}, Risk: ${scorecardAndMatrix.scorecard.regulatoryRisk}.\n\nWhat strategic milestone shall we prioritize next for ${companyName}?`;
       }
 
       return {
@@ -194,7 +192,7 @@ Building on our corporate background in **${industryContext}**, our active board
         requiredDomain = 'Sales & Growth Marketing';
         missingDeptKey = 'sales_marketing';
       }
-    } else if (messageLower.includes('finance') || messageLower.includes('audit') || messageLower.includes('budget') || messageLower.includes('stripe') || messageLower.includes('paystack') || messageLower.includes('circle') || messageLower.includes('usdc') || messageLower.includes('runway') || messageLower.includes('burn rate')) {
+    } else if (messageLower.includes('finance') || messageLower.includes('audit') || messageLower.includes('budget') || messageLower.includes('runway') || messageLower.includes('burn rate')) {
       if (!activeDepartmentNames.some((d) => d?.includes('finance'))) {
         requiredDomain = 'Finance & Capital Strategy';
         missingDeptKey = 'finance';
@@ -211,11 +209,7 @@ Building on our corporate background in **${industryContext}**, our active board
         },
       });
 
-      const ceoResponse = `Greetings Owner. I have evaluated your execution directive for **${companyName}**: "${ownerMessage}". 
-
-**Mr. Intelligence** has verified market signals indicating that top enterprises execute ${requiredDomain} with specialized engineering leadership in ${industryContext}.
-
-I strongly recommend installing the **${marketplaceListing ? marketplaceListing.title : requiredDomain}** from our Marketplace so we can deploy dedicated AI directors.`;
+      const ceoResponse = `Greetings Owner. I have evaluated your directive for **${companyName}**: "${ownerMessage}".\n\n**Mr. Intelligence** has verified that top enterprises execute ${requiredDomain} with specialized leadership.\n\nI recommend installing the **${marketplaceListing ? marketplaceListing.title : requiredDomain}** Suite from our Marketplace.`;
 
       return {
         ceoResponse,
@@ -237,18 +231,19 @@ I strongly recommend installing the **${marketplaceListing ? marketplaceListing.
       };
     }
 
-    // 9. Active Roster Execution: Construct Job Briefing & Enable 1-Click Dispatch!
+    // 9. Full Roster Execution: Construct Job Briefing
     const prompt = `
       You are Asad, Chief Executive Officer of ${companyName}.
-      The Owner has formally ordered the execution of: "${ownerMessage}".
+      The Owner has formally ordered: "${ownerMessage}".
 
       Strategic Scorecard: Impact ${scorecardAndMatrix.scorecard.strategicImpact}/100, Effort ${scorecardAndMatrix.scorecard.operationalEffort}, Risk ${scorecardAndMatrix.scorecard.regulatoryRisk}.
+      Active Directors: ${activeExecutives.map((e) => `${e.name} (${e.title})`).join(', ') || 'No active directors configured yet'}.
 
       Write a formal Job Assignment & Execution Briefing for ${companyName}:
-      1. Affirm that the mission is officially queued for execution.
+      1. Affirm the mission is officially queued for execution.
       2. Provide a 3-step Execution Roadmap.
       3. Assign specific tasks to active directors.
-      4. State target milestone completion window (${scorecardAndMatrix.scorecard.targetCompletionDays} Days).
+      4. State target milestone window (${scorecardAndMatrix.scorecard.targetCompletionDays} Days).
     `;
 
     let ceoText = '';
@@ -259,20 +254,13 @@ I strongly recommend installing the **${marketplaceListing ? marketplaceListing.
       });
       if (aiRes.text) ceoText = aiRes.text;
     } catch (e) {
-      ceoText = `Owner, I have received your formal execution directive for **${companyName}**: "${ownerMessage}".
-
-### 📋 Executive Job Assignment Plan
-1. **Operational Analysis**: Teema will structure task dependencies.
-2. **Governance Audit**: Legal will review compliance constraints.
-3. **Task Graph Dispatch**: Asad will monitor execution progress.
-
-**Target Milestone Completion**: ${scorecardAndMatrix.scorecard.targetCompletionDays} Days.`;
+      this.logger.warn(`[CeoOrchestrator] Job assignment AI error: ${e}`);
+      ceoText = `Owner, I have received your formal execution directive for **${companyName}**: "${ownerMessage}".\n\n**Target Completion**: ${scorecardAndMatrix.scorecard.targetCompletionDays} Days.\n\nYour active board has been briefed and execution is now underway.`;
     }
 
-    const targetCompanyId = company?.id || companyId;
     const mission = await this.prisma.mission.create({
       data: {
-        companyId: targetCompanyId,
+        companyId,
         objective: ownerMessage,
         status: 'PLANNING',
         healthScore: 'Excellent',
@@ -294,7 +282,8 @@ I strongly recommend installing the **${marketplaceListing ? marketplaceListing.
   }
 
   /**
-   * Queries historical corporate memory (past missions & conversations) from PostgreSQL
+   * Queries real corporate memory from DB — returns [] if no missions exist yet.
+   * Never injects fake/hardcoded historical objectives.
    */
   private async fetchCorporateMemoryContext(companyId: string): Promise<string[]> {
     try {
@@ -304,23 +293,17 @@ I strongly recommend installing the **${marketplaceListing ? marketplaceListing.
         orderBy: { createdAt: 'desc' },
       });
 
-      if (pastMissions.length > 0) {
-        return pastMissions.map(
-          (m) => `Mission Objective: "${m.objective}" (Status: ${m.status}, Health: ${m.healthScore})`,
-        );
-      }
+      return pastMissions.map(
+        (m) => `Mission: "${m.objective}" (Status: ${m.status}, Health: ${m.healthScore || 'N/A'})`,
+      );
     } catch (err) {
       this.logger.warn(`[CeoOrchestrator] Corporate memory query notice: ${err}`);
+      return []; // No fallback fiction — just return empty
     }
-
-    return [
-      'Prior Objective: Establish automated station telemetry and digital supply chain audit logs.',
-      'Prior Objective: Deploy multi-tenant executive board governance frameworks.',
-    ];
   }
 
   /**
-   * Generates 4-Quadrant Strategic Scorecard & Executive Delegation Matrix via AI
+   * Generates Strategic Scorecard & Executive Delegation Matrix via AI
    */
   private async generateScorecardAndMatrix(
     objective: string,
@@ -328,9 +311,13 @@ I strongly recommend installing the **${marketplaceListing ? marketplaceListing.
     industryContext: string,
     activeExecutives: any[],
   ): Promise<{ scorecard: StrategicScorecard; delegationMatrix: ExecutiveDelegationItem[] }> {
+    const execList = activeExecutives.length > 0
+      ? activeExecutives.map((e) => `${e.name} (${e.title})`).join(', ')
+      : 'No active directors configured yet';
+
     const prompt = `
       Analyze strategic objective for ${companyName} (${industryContext}): "${objective}".
-      Active Directors: ${activeExecutives.map((e) => `${e.name} (${e.title})`).join(', ')}.
+      Active Directors: ${execList}.
 
       Generate JSON:
       {
@@ -340,22 +327,10 @@ I strongly recommend installing the **${marketplaceListing ? marketplaceListing.
         "targetCompletionDays": 7,
         "delegationMatrix": [
           {
-            "directorName": "Teema",
-            "roleTitle": "Operations Director",
-            "responsibility": "Map WBS task graph and monitor execution schedules",
+            "directorName": "Director Name from active list",
+            "roleTitle": "Their Role Title",
+            "responsibility": "Specific responsibility for this objective",
             "confidenceScore": 96
-          },
-          {
-            "directorName": "Legal",
-            "roleTitle": "Legal & Compliance Director",
-            "responsibility": "Enforce data privacy and regulatory compliance audit logs",
-            "confidenceScore": 98
-          },
-          {
-            "directorName": "Mr. Intelligence",
-            "roleTitle": "Public Web Research Agent",
-            "responsibility": "Gather live web signals, news citations, and market sentiment",
-            "confidenceScore": 95
           }
         ]
       }
@@ -364,11 +339,16 @@ I strongly recommend installing the **${marketplaceListing ? marketplaceListing.
     try {
       const res = await this.aiService.executePrompt({
         prompt,
-        systemPrompt: 'You are CEO Asad. Generate executive strategic scorecard and delegation matrix.',
+        systemPrompt: `You are CEO Asad of ${companyName}. Generate a precise strategic scorecard and delegation matrix using only the active directors listed.`,
         jsonMode: true,
       });
 
-      const parsed = JSON.parse(res.text);
+      let cleanedText = res.text.trim();
+      if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '');
+      }
+
+      const parsed = JSON.parse(cleanedText);
       return {
         scorecard: {
           strategicImpact: parsed.strategicImpact || 92,
@@ -376,28 +356,12 @@ I strongly recommend installing the **${marketplaceListing ? marketplaceListing.
           regulatoryRisk: parsed.regulatoryRisk || 'Low',
           targetCompletionDays: parsed.targetCompletionDays || 7,
         },
-        delegationMatrix: parsed.delegationMatrix || [
-          {
-            directorName: 'Teema',
-            roleTitle: 'Operations Director',
-            responsibility: 'WBS task graph structure and milestone schedules',
-            confidenceScore: 96,
-          },
-          {
-            directorName: 'Legal',
-            roleTitle: 'Legal & Compliance Director',
-            responsibility: 'Data protection policies and zero-trust audit logs',
-            confidenceScore: 98,
-          },
-          {
-            directorName: 'Mr. Intelligence',
-            roleTitle: 'Research Agent',
-            responsibility: 'Live web scraping and competitor telemetry feeds',
-            confidenceScore: 95,
-          },
-        ],
+        delegationMatrix: Array.isArray(parsed.delegationMatrix) ? parsed.delegationMatrix : [],
       };
-    } catch {
+    } catch (err) {
+      this.logger.warn(`[CeoOrchestrator] Scorecard AI notice: ${err}`);
+      // Return a minimal real scorecard — delegation matrix is empty if AI fails
+      // Never inject hardcoded director names like "Teema" or "Legal" as fallback
       return {
         scorecard: {
           strategicImpact: 90,
@@ -405,20 +369,12 @@ I strongly recommend installing the **${marketplaceListing ? marketplaceListing.
           regulatoryRisk: 'Low',
           targetCompletionDays: 7,
         },
-        delegationMatrix: [
-          {
-            directorName: 'Teema',
-            roleTitle: 'Operations Director',
-            responsibility: 'WBS task graph structure and milestone schedules',
-            confidenceScore: 95,
-          },
-          {
-            directorName: 'Legal',
-            roleTitle: 'Legal & Compliance Director',
-            responsibility: 'Data protection policies and zero-trust audit logs',
-            confidenceScore: 98,
-          },
-        ],
+        delegationMatrix: activeExecutives.slice(0, 3).map((e) => ({
+          directorName: e.name,
+          roleTitle: e.title,
+          responsibility: `Lead execution for: ${objective.substring(0, 80)}`,
+          confidenceScore: 90,
+        })),
       };
     }
   }

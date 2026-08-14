@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { Button, Card, CardTitle, CardDescription } from '@hq/ui';
@@ -41,7 +41,7 @@ export default function AdminError({
         <div className="flex gap-3 pt-2">
           <Button
             onClick={() => reset()}
-            className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs h-11 rounded-xl shadow-md flex items-center justify-center gap-2"
+            className="flex-1 bg-rose-600 hover:bg-rose-500 text-slate-900 dark:text-white font-bold text-xs h-11 rounded-xl shadow-md flex items-center justify-center gap-2"
           >
             <RefreshCw size={15} /> Reset Console
           </Button>

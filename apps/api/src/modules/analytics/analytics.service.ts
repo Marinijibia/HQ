@@ -102,10 +102,10 @@ export class AnalyticsService {
 
     // Populate baseline utilization hours if none exist
     const defaultRoles = [
-      { name: 'Elena Rostova', title: 'CEO & Owner', hrs: 42, pct: 95 },
-      { name: 'Arthur Steward', title: 'Chief of Staff', hrs: 34, pct: 80 },
-      { name: 'Linus Kovacs', title: 'Creative Director', hrs: 22, pct: 50 },
-      { name: 'Jack Bauer', title: 'Security CISO', hrs: 18, pct: 40 },
+      { name: 'CEO', title: 'Chief Executive Officer', hrs: 42, pct: 95 },
+      { name: 'Operations', title: 'Operations Director', hrs: 34, pct: 80 },
+      { name: 'Compliance', title: 'Legal & Compliance', hrs: 22, pct: 50 },
+      { name: 'Research', title: 'Web Research Agent', hrs: 18, pct: 40 },
     ];
 
     const executiveUtilization = defaultRoles.map((role, idx) => {
@@ -130,12 +130,7 @@ export class AnalyticsService {
     ];
 
     // 5. Security audit log alerts
-    const securityLogs = [
-      { id: 'sec-1', event: 'MFA Verification Complete', status: 'Success', user: 'elena@hq.corp', time: '10 mins ago' },
-      { id: 'sec-2', event: 'Role Permission Checked', status: 'Authorized', user: 'system', time: '1 hour ago' },
-      { id: 'sec-3', event: 'Asset Vault Decryption', status: 'Success', user: 'jack@hq.corp', time: '2 hours ago' },
-      { id: 'sec-4', event: 'Stripe Signature Validation', status: 'Verified', user: 'billing-hook', time: '5 hours ago' },
-    ];
+    const securityLogs: any[] = [];
 
     // 6. Proactive Recommendations
     const recommendations = [

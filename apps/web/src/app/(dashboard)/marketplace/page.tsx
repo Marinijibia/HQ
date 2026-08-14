@@ -109,7 +109,11 @@ export default function MarketplacePage() {
   });
 
   const handleInstallItem = async (item: MarketplaceItem) => {
-    const companyId = dbUser?.companyId || '33f008b1-5733-4a1a-9093-dad32e9bb043';
+    const companyId = dbUser?.companyId;
+    if (!companyId) {
+      toast.error('Organization not found.');
+      return;
+    }
 
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };

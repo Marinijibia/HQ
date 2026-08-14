@@ -33,6 +33,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { toast } from '../../../components/toast';
+import { UpgradeModal, parseEntitlementError, UpgradeTrigger } from '../../../components/upgrade-modal';
+
 
 interface MissionTask {
   id: string;
@@ -65,6 +67,9 @@ export default function MissionsCommandCenterPage() {
   const [objective, setObjective] = React.useState('');
   const [selectedExecRole, setSelectedExecRole] = React.useState('asad');
   const [launching, setLaunching] = React.useState(false);
+  const [upgradeOpen, setUpgradeOpen] = React.useState(false);
+  const [upgradeTrigger, setUpgradeTrigger] = React.useState<UpgradeTrigger | null>(null);
+
 
   const fetchMissions = React.useCallback(async () => {
     if (!token) {
@@ -110,8 +115,22 @@ export default function MissionsCommandCenterPage() {
         body: JSON.stringify({ objective, assignedLead: selectedExecRole }),
       });
 
+      // Intercept entitlement limit — show upgrade modal instead of generic error
+      if (res.status === 403) {
+        const upgrade = await parseEntitlementError(res);
+        if (upgrade) {
+          setUpgradeTrigger(upgrade);
+          setUpgradeOpen(true);
+          setShowLaunchModal(false);
+          return;
+        }
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData?.message || 'Access denied.');
+        return;
+      }
+
       if (!res.ok) {
-        const errData = await res.json();
+        const errData = await res.json().catch(() => ({}));
         throw new Error(errData.message || 'Mission deployment failed');
       }
 
@@ -221,13 +240,34 @@ export default function MissionsCommandCenterPage() {
 
         <Card className="border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl p-5 rounded-2xl text-left shadow-sm">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider">Active AI Board</span>
+            <span className="text-[11px] font-extrabold uppercase tracking-wider">AI Executive Board</span>
             <Cpu className="h-4 w-4 text-blue-500" />
           </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white">5 Directors</div>
-          <div className="text-[10px] text-blue-700 dark:text-blue-400 font-bold mt-1">Asad, Teema, Legal, HR & Research</div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white">
+            {missions.length > 0 ? `${new Set(missions.map(m => m.assignedLead).filter(Boolean)).size || '—'}` : '—'}
+          </div>
+          <div className="text-[10px] text-blue-700 dark:text-blue-400 font-bold mt-1">Leads Assigned Across Missions</div>
         </Card>
       </div>
+
+      {/* Freemium nudge — shown when user has 1+ active mission (Free tier at capacity) */}
+      {activeCount >= 1 && (
+        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+          <div className="flex items-center gap-2.5">
+            <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+              <span className="font-black">Free plan:</span> You have {activeCount} active mission{activeCount > 1 ? 's' : ''} running.
+              {' '}Upgrade to Growth to run up to 10 missions simultaneously.
+            </p>
+          </div>
+          <button
+            onClick={() => router.push('/billing')}
+            className="text-[11px] font-black text-amber-700 dark:text-amber-300 whitespace-nowrap hover:underline flex items-center gap-1 shrink-0"
+          >
+            Upgrade <ArrowRight className="h-3 w-3" />
+          </button>
+        </div>
+      )}
 
       {/* Filter Tabs & Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-4">
@@ -472,6 +512,13 @@ export default function MissionsCommandCenterPage() {
           </Card>
         </div>
       )}
+
+      {/* Upgrade Modal — appears when entitlement limit is hit during mission launch */}
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        trigger={upgradeTrigger}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -169,7 +169,7 @@ export function AsadAdminVoiceButton({ onOpenInviteModal }: AsadAdminVoiceButton
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-2xl animate-in fade-in duration-300">
-          <Card className="w-full max-w-2xl border border-card-border bg-[#0A0B10]/95 backdrop-blur-3xl p-6 rounded-3xl space-y-6 shadow-2xl text-left relative overflow-hidden flex flex-col max-h-[90vh]">
+          <Card className="w-full max-w-2xl border border-card-border bg-white/95 dark:bg-[#0A0B10]/95 backdrop-blur-3xl p-6 rounded-3xl space-y-6 shadow-2xl text-left relative overflow-hidden flex flex-col max-h-[90vh]">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600" />
 
             <div className="flex items-center justify-between border-b border-card-border pb-4">
@@ -178,7 +178,7 @@ export function AsadAdminVoiceButton({ onOpenInviteModal }: AsadAdminVoiceButton
                   <Award className="h-5 w-5 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                  <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                     Asad Super-Admin Control Chamber
                   </h3>
                   <p className="text-[11px] text-blue-400 font-bold uppercase tracking-wider flex items-center gap-1">
@@ -189,7 +189,7 @@ export function AsadAdminVoiceButton({ onOpenInviteModal }: AsadAdminVoiceButton
 
               <button
                 onClick={() => setModalOpen(false)}
-                className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white"
+                className="p-2 rounded-xl bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -209,16 +209,16 @@ export function AsadAdminVoiceButton({ onOpenInviteModal }: AsadAdminVoiceButton
 
                 <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,0.6)] z-10">
                   {isSpeakingTTS ? (
-                    <Volume2 className="h-8 w-8 text-white animate-bounce" />
+                    <Volume2 className="h-8 w-8 text-slate-900 dark:text-white animate-bounce" />
                   ) : isProcessing ? (
-                    <Cpu className="h-8 w-8 text-white animate-spin" />
+                    <Cpu className="h-8 w-8 text-slate-900 dark:text-white animate-spin" />
                   ) : (
-                    <Mic className="h-8 w-8 text-white animate-pulse" />
+                    <Mic className="h-8 w-8 text-slate-900 dark:text-white animate-pulse" />
                   )}
                 </div>
               </div>
 
-              <p className="text-xs font-black text-white mt-4 uppercase tracking-widest">
+              <p className="text-xs font-black text-slate-900 dark:text-white mt-4 uppercase tracking-widest">
                 {isSpeakingTTS
                   ? `Asad Addressing ${userRank} ${userName}...`
                   : isProcessing
@@ -242,7 +242,7 @@ export function AsadAdminVoiceButton({ onOpenInviteModal }: AsadAdminVoiceButton
                 <button
                   key={cmd}
                   onClick={() => handleDispatchAdminVoiceQuery(cmd)}
-                  className="px-3 py-1 rounded-full bg-slate-900 hover:bg-blue-500/20 border border-slate-800 hover:border-blue-400/50 text-slate-300 hover:text-blue-300 text-[10px] font-bold flex-shrink-0 transition-all"
+                  className="px-3 py-1 rounded-full bg-white dark:bg-slate-900 hover:bg-blue-500/20 border border-slate-800 hover:border-blue-400/50 text-slate-600 dark:text-slate-300 hover:text-blue-300 text-[10px] font-bold flex-shrink-0 transition-all"
                 >
                   🎤 "{cmd}"
                 </button>
@@ -257,10 +257,10 @@ export function AsadAdminVoiceButton({ onOpenInviteModal }: AsadAdminVoiceButton
                   className={`p-3.5 rounded-2xl border text-xs leading-relaxed ${
                     msg.sender === 'User'
                       ? 'bg-blue-500/10 border-blue-500/30 text-right text-blue-200 ml-8'
-                      : 'bg-slate-900 border-slate-800 text-left text-slate-100 mr-8'
+                      : 'bg-white dark:bg-slate-900 border-slate-800 text-left text-slate-100 mr-8'
                   }`}
                 >
-                  <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-400 mb-1">
+                  <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 mb-1">
                     <span>{msg.sender}</span>
                     <span>{msg.timestamp}</span>
                   </div>
@@ -277,11 +277,11 @@ export function AsadAdminVoiceButton({ onOpenInviteModal }: AsadAdminVoiceButton
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleDispatchAdminVoiceQuery(query)}
                 placeholder={`Speak or type command for Asad (e.g. 'Invite User', 'Open White Label')...`}
-                className="flex-1 bg-black/60 border border-card-border rounded-2xl px-4 py-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+                className="flex-1 bg-slate-100 dark:bg-black/60 border border-card-border rounded-2xl px-4 py-3 text-xs text-slate-900 dark:text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
               />
               <Button
                 onClick={() => handleDispatchAdminVoiceQuery(query)}
-                className="h-11 px-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-black text-xs rounded-2xl shadow-lg"
+                className="h-11 px-5 bg-gradient-to-r from-blue-600 to-purple-600 text-slate-900 dark:text-white font-black text-xs rounded-2xl shadow-lg"
               >
                 <Send className="h-4 w-4" />
               </Button>

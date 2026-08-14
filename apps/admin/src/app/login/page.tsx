@@ -237,23 +237,23 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050508] text-foreground flex flex-col justify-between font-sans relative overflow-x-hidden select-none animate-in fade-in duration-500">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#050508] text-foreground flex flex-col justify-between font-sans relative overflow-x-hidden select-none animate-in fade-in duration-500">
       {/* Luxury Ambient Radial Lighting Glows */}
       <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-radial from-cyan-500/15 via-blue-600/10 to-transparent blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-radial from-purple-600/10 via-indigo-600/5 to-transparent blur-[140px] pointer-events-none" />
       <div className="absolute top-[30%] right-[-10%] w-[500px] h-[500px] bg-radial from-rose-600/10 via-pink-600/5 to-transparent blur-[140px] pointer-events-none" />
 
       {/* Decorative Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
 
       {/* Header Bar */}
-      <header className="flex h-20 items-center justify-between border-b border-white/10 px-6 sm:px-12 bg-[#0A0B10]/60 backdrop-blur-2xl relative z-10">
+      <header className="flex h-20 items-center justify-between border-b border-slate-200 dark:border-white/10 px-6 sm:px-12 bg-white/80 dark:bg-[#0A0B10]/60 backdrop-blur-2xl relative z-10">
         <div className="flex items-center space-x-3">
           <div className="p-1 bg-gradient-to-tr from-cyan-500 via-blue-600 to-purple-600 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.4)]">
             <img src="/logo.png" alt="HQ Admin Logo" className="h-8 w-8 rounded-lg object-cover" />
           </div>
           <div className="flex flex-col text-left">
-            <span className="font-black tracking-tight text-white text-base flex items-center gap-2">
+            <span className="font-black tracking-tight text-slate-900 dark:text-white text-base flex items-center gap-2">
               HQ <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-rose-400 bg-clip-text text-transparent text-xs font-black uppercase tracking-widest">SUPER ADMIN</span>
             </span>
             <span className="text-[10px] text-slate-400 font-medium tracking-wide">Enterprise Control Plane</span>
@@ -269,7 +269,7 @@ export default function AdminLoginPage() {
       {/* Main Form Center */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10 my-8">
         <div className="w-full max-w-md space-y-4">
-          <Card className="border border-cyan-500/30 dark:border-white/10 bg-[#0A0B10]/95 backdrop-blur-3xl shadow-[0_0_50px_rgba(6,182,212,0.15)] p-4 text-foreground rounded-3xl relative overflow-hidden">
+          <Card className="border border-cyan-500/30 bg-white/95 dark:bg-[#0A0B10]/95 backdrop-blur-3xl shadow-[0_0_50px_rgba(6,182,212,0.15)] p-4 text-foreground rounded-3xl relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-rose-500" />
 
             {/* Loading Clearance Overlay */}
@@ -282,7 +282,7 @@ export default function AdminLoginPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <CardTitle className="text-2xl font-black tracking-tight text-white">
+                  <CardTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                     Verifying Staff Clearance
                   </CardTitle>
                   <p className="text-cyan-400 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-1.5">
@@ -291,7 +291,7 @@ export default function AdminLoginPage() {
                   </p>
                 </div>
 
-                <div className="w-full h-2.5 bg-black/60 rounded-full overflow-hidden p-0.5 border border-white/10">
+                <div className="w-full h-2.5 bg-slate-200 dark:bg-black/60 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-white/10">
                   <div
                     className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-rose-500 rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.5)]"
                     style={{ width: `${loadProgress}%` }}
@@ -319,12 +319,12 @@ export default function AdminLoginPage() {
                     </Badge>
 
                     {/* Auth Mode Tabs */}
-                    <div className="flex items-center gap-1 bg-black/60 border border-white/10 p-1 rounded-xl">
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/60 border border-slate-200 dark:border-white/10 p-1 rounded-xl">
                       <button
                         type="button"
                         onClick={() => { setAuthMode('password'); setError(null); }}
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
-                          authMode === 'password' ? 'bg-cyan-500 text-black shadow-sm' : 'text-slate-400 hover:text-white'
+                          authMode === 'password' ? 'bg-cyan-500 text-black shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         Password
@@ -333,7 +333,7 @@ export default function AdminLoginPage() {
                         type="button"
                         onClick={() => { setAuthMode('otp'); setError(null); }}
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all ${
-                          authMode === 'otp' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                          authMode === 'otp' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         2FA Token
@@ -341,7 +341,7 @@ export default function AdminLoginPage() {
                     </div>
                   </div>
 
-                  <CardTitle className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                  <CardTitle className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                     <Lock className="h-6 w-6 text-cyan-400" />
                     Sign In | Admin Staff
                   </CardTitle>
@@ -354,7 +354,7 @@ export default function AdminLoginPage() {
                   {authMode === 'password' ? (
                     <form onSubmit={handlePasswordLogin} className="space-y-4 text-xs font-semibold">
                       <div className="space-y-1.5">
-                        <label className="text-slate-300 font-bold uppercase tracking-wider text-[11px]">Staff Email Address *</label>
+                        <label className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[11px]">Staff Email Address *</label>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                           <Input
@@ -363,14 +363,14 @@ export default function AdminLoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="bg-black/60 border-white/10 text-white pl-10 h-12 focus-visible:ring-cyan-500 rounded-2xl font-bold"
+                            className="bg-slate-50 dark:bg-black/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 h-12 focus-visible:ring-cyan-500 rounded-2xl font-bold"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <label className="text-slate-300 font-bold uppercase tracking-wider text-[11px]">Clearance Password *</label>
+                          <label className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[11px]">Clearance Password *</label>
                           <a
                             href="/forgot-password"
                             className="text-[11px] font-bold text-cyan-400 hover:underline transition-colors"
@@ -385,12 +385,12 @@ export default function AdminLoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="bg-black/60 border-white/10 text-white pr-10 h-12 focus-visible:ring-cyan-500 rounded-2xl font-bold"
+                            className="bg-slate-50 dark:bg-black/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pr-10 h-12 focus-visible:ring-cyan-500 rounded-2xl font-bold"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white"
+                            className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-900 dark:hover:text-white"
                           >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
@@ -419,7 +419,7 @@ export default function AdminLoginPage() {
                       {!otpSent ? (
                         <form onSubmit={handleSendOtp} className="space-y-4 text-xs font-semibold">
                           <div className="space-y-1.5">
-                            <label className="text-slate-300 font-bold uppercase tracking-wider text-[11px]">Staff Email Address *</label>
+                            <label className="text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[11px]">Staff Email Address *</label>
                             <div className="relative">
                               <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                               <Input
@@ -428,7 +428,7 @@ export default function AdminLoginPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="bg-black/60 border-white/10 text-white pl-10 h-12 focus-visible:ring-purple-500 rounded-2xl font-bold"
+                                className="bg-slate-50 dark:bg-black/60 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 h-12 focus-visible:ring-purple-500 rounded-2xl font-bold"
                               />
                             </div>
                           </div>
@@ -454,7 +454,7 @@ export default function AdminLoginPage() {
                               value={otpCode}
                               onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
                               required
-                              className="bg-black/60 border-purple-500/50 text-purple-300 text-center font-mono text-xl tracking-[0.4em] h-14 focus-visible:ring-purple-500 rounded-2xl font-black"
+                              className="bg-slate-50 dark:bg-black/60 border-purple-400 dark:border-purple-500/50 text-purple-700 dark:text-purple-300 text-center font-mono text-xl tracking-[0.4em] h-14 focus-visible:ring-purple-500 rounded-2xl font-black"
                             />
                           </div>
 
@@ -484,11 +484,11 @@ export default function AdminLoginPage() {
                   )}
 
                   <div className="relative flex py-2 items-center">
-                    <div className="flex-grow border-t border-white/10" />
+                    <div className="flex-grow border-t border-slate-200 dark:border-white/10" />
                     <span className="flex-shrink mx-4 text-slate-500 text-[10px] font-black uppercase tracking-widest">
                       OR
                     </span>
-                    <div className="flex-grow border-t border-white/10" />
+                    <div className="flex-grow border-t border-slate-200 dark:border-white/10" />
                   </div>
 
                   <Button
@@ -496,7 +496,7 @@ export default function AdminLoginPage() {
                     variant="outline"
                     onClick={handleGoogleLogin}
                     disabled={authLoading}
-                    className="w-full h-12 border-white/10 hover:bg-white/5 text-white font-bold transition-all flex items-center justify-center gap-3 rounded-2xl text-xs"
+                    className="w-full h-12 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-900 dark:text-white font-bold transition-all flex items-center justify-center gap-3 rounded-2xl text-xs"
                   >
                     <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -508,7 +508,7 @@ export default function AdminLoginPage() {
                   </Button>
                 </CardContent>
 
-                <CardFooter className="py-4 text-center flex flex-col gap-2 border-t border-white/5 mt-2">
+                <CardFooter className="py-4 text-center flex flex-col gap-2 border-t border-slate-100 dark:border-white/5 mt-2">
                   <a
                     href={`${process.env.NEXT_PUBLIC_WEB_URL || 'https://hq.netify.ng'}/login`}
                     className="mx-auto text-xs font-bold text-slate-400 hover:text-cyan-400 transition-colors"
@@ -522,7 +522,7 @@ export default function AdminLoginPage() {
         </div>
       </main>
 
-      <footer className="h-14 flex items-center justify-center border-t border-white/10 text-[11px] font-bold text-slate-500 relative z-10 bg-[#06070B]/80 backdrop-blur-xl">
+      <footer className="h-14 flex items-center justify-center border-t border-slate-200 dark:border-white/10 text-[11px] font-bold text-slate-500 relative z-10 bg-white/80 dark:bg-[#06070B]/80 backdrop-blur-xl">
         <span>© 2026 HQ Inc. | Authorized Admin Security Ledger &amp; Control Plane</span>
       </footer>
     </div>

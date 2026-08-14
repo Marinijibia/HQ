@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { Card, Button, Input, Badge } from '@hq/ui';
@@ -59,7 +59,7 @@ export function InviteUserModal({ onClose, onSuccess }: InviteUserModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-in fade-in duration-300">
-      <Card className="w-full max-w-md border border-card-border bg-[#0A0B10]/95 backdrop-blur-3xl p-6 rounded-3xl space-y-6 shadow-2xl text-left relative overflow-hidden">
+      <Card className="w-full max-w-md border border-card-border bg-white/95 dark:bg-[#0A0B10]/95 backdrop-blur-3xl p-6 rounded-3xl space-y-6 shadow-2xl text-left relative overflow-hidden">
         {/* Top Glow Bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600" />
 
@@ -69,7 +69,7 @@ export function InviteUserModal({ onClose, onSuccess }: InviteUserModalProps) {
               <UserPlus className="h-5 w-5 text-blue-400" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white">Invite Admin Staff Member</h3>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Invite Admin Staff Member</h3>
               <p className="text-[10px] text-foreground/50 font-bold uppercase tracking-wider">
                 Enterprise Access Control & Rank Assignment
               </p>
@@ -78,7 +78,7 @@ export function InviteUserModal({ onClose, onSuccess }: InviteUserModalProps) {
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-white/5 border border-white/10 text-foreground/40 hover:text-white"
+            className="p-1.5 rounded-xl bg-white/5 border border-slate-200 dark:border-white/10 text-foreground/40 hover:text-slate-900 dark:text-white"
           >
             <X className="h-4 w-4" />
           </button>
@@ -86,7 +86,7 @@ export function InviteUserModal({ onClose, onSuccess }: InviteUserModalProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
               Email Address *
             </label>
             <div className="relative">
@@ -97,13 +97,13 @@ export function InviteUserModal({ onClose, onSuccess }: InviteUserModalProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-black/50 border-white/10 text-white pl-10 h-11 text-xs rounded-xl focus-visible:ring-blue-500"
+                className="bg-slate-100 dark:bg-black/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white pl-10 h-11 text-xs rounded-xl focus-visible:ring-blue-500"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
               Full Name *
             </label>
             <Input
@@ -111,7 +111,7 @@ export function InviteUserModal({ onClose, onSuccess }: InviteUserModalProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="bg-black/50 border-white/10 text-white h-11 text-xs rounded-xl focus-visible:ring-blue-500 font-bold"
+              className="bg-slate-100 dark:bg-black/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11 text-xs rounded-xl focus-visible:ring-blue-500 font-bold"
             />
           </div>
 
@@ -123,7 +123,7 @@ export function InviteUserModal({ onClose, onSuccess }: InviteUserModalProps) {
             <select
               value={rank}
               onChange={(e) => setRank(e.target.value)}
-              className="w-full bg-black/60 border border-cyan-500/40 text-cyan-300 font-bold h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-400"
+              className="w-full bg-slate-100 dark:bg-black/60 border border-cyan-500/40 text-cyan-300 font-bold h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-cyan-400"
             >
               <option value="Director-General (DG)">Director-General (DG)</option>
               <option value="General (Gen)">General (Gen)</option>
@@ -146,7 +146,7 @@ export function InviteUserModal({ onClose, onSuccess }: InviteUserModalProps) {
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full bg-black/60 border border-purple-500/40 text-purple-300 font-bold h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-purple-400"
+              className="w-full bg-slate-100 dark:bg-black/60 border border-purple-500/40 text-purple-300 font-bold h-11 text-xs rounded-xl px-3 focus:outline-none focus:border-purple-400"
             >
               <option value="ADMINISTRATOR">Administrator (Full Tenant Control)</option>
               <option value="SUPER_ADMINISTRATOR">Super Administrator (Platform Wide)</option>
@@ -166,7 +166,7 @@ export function InviteUserModal({ onClose, onSuccess }: InviteUserModalProps) {
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 h-11 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-black text-xs rounded-xl shadow-lg shadow-blue-500/20"
+              className="flex-1 h-11 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-slate-900 dark:text-white font-black text-xs rounded-xl shadow-lg shadow-blue-500/20"
             >
               {loading ? 'Dispatching...' : 'Dispatch Invitation'}
             </Button>

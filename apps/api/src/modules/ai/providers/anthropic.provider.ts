@@ -17,7 +17,7 @@ export class AnthropicProvider implements AIProvider {
       throw new Error('ANTHROPIC_API_KEY is missing.');
     }
 
-    const model = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022';
+    const model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
     this.logger.log(`[AnthropicProvider] Routing prompt to Anthropic API (${model})...`);
 
     const payload: any = {
