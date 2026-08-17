@@ -360,6 +360,10 @@ model ChatMessage {
   senderType     String       @map("sender_type")       // "USER" or "EXECUTIVE"
   content        String
   timestamp      DateTime     @default(now()) @map("timestamp")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  tokensUsed     Int?         @map("tokens_used")
+  provider       String?      @map("provider")
+  latencyMs      Int?         @map("latency_ms")
 
   conversationId String       @db.Uuid @map("conversation_id")
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
