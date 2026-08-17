@@ -417,9 +417,18 @@ Response must be a single flat JSON object containing only keys and mock values 
         systemPrompt,
         provider: 'gemini',
         temperature: 0.7,
+        companyId,
+        category: 'RESEARCH',
       });
 
-      return JSON.parse(result.text);
+      if (result.text) {
+        const jsonMatch = result.text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+        return JSON.parse(result.text);
+      }
+      return {};
     } catch (e) {
       // Fallback if parsing fails
       return {};

@@ -35,15 +35,29 @@ export class CompanyResearchService {
       );
     }
 
+    const cleanCompanyName = companyName
+      .trim()
+      .slice(0, 100)
+      .replace(/[\r\n\t]/g, ' ')
+      .replace(/["`\\{}[\]]/g, '');
+
+    const cleanDomainHint = domainHint
+      ? domainHint
+          .trim()
+          .slice(0, 100)
+          .replace(/[\r\n\t]/g, ' ')
+          .replace(/["`\\{}[\]]/g, '')
+      : '';
+
     const resolvedCompanyId = companyId;
 
     this.logger.log(
-      `Mr. Intelligence starting public web research for company: "${companyName}" (Org: ${resolvedCompanyId})`,
+      `Mr. Intelligence starting public web research for company: "${cleanCompanyName}" (Org: ${resolvedCompanyId})`,
     );
 
     const prompt = `
       You are Mr. Intelligence, the Autonomous Public Web Research Agent for HQ.
-      Perform an intelligence synthesis for the company "${companyName}" ${domainHint ? `(${domainHint})` : ''}.
+      Perform an intelligence synthesis for the company "${cleanCompanyName}" ${cleanDomainHint ? `(${cleanDomainHint})` : ''}.
 
       Synthesize:
       1. Business Model & Core Offerings
@@ -59,7 +73,7 @@ export class CompanyResearchService {
     `;
 
     let researchResult: ResearchSynthesisResult = {
-      identityData: `${companyName} is an enterprise operating in modern technology and business management solutions.`,
+      identityData: `${cleanCompanyName} is an enterprise operating in modern technology and business management solutions.`,
       businessModelData: `B2B / SaaS enterprise solutions and autonomous operational workflows.`,
       strategyData: `Market expansion, digital transformation, and automated mission orchestration.`,
       brandData: `Professional, forward-thinking, state-of-the-art enterprise leadership.`,

@@ -66,6 +66,12 @@ export class IntelligenceController {
   ) {}
 
   @Post('research')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({
     summary:
       'Mr. Intelligence: Conduct automated public web research on company',
@@ -108,6 +114,12 @@ export class IntelligenceController {
   }
 
   @Post('domain/:domain/draft')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Draft data for a specific domain using AI' })
   draftDomain(
     @Req() req: types.AuthenticatedRequest,
