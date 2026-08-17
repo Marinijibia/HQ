@@ -7,6 +7,7 @@ import {
   Param,
   UseGuards,
   Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import {
@@ -60,7 +61,12 @@ export class WalletController {
   @Get('me')
   @ApiOperation({ summary: 'Get current organization HQ Wallet balance' })
   async getWallet(@Req() req: types.AuthenticatedRequest) {
-    const companyId = req.user.companyId || req.user.uid;
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new ForbiddenException(
+        'Organization workspace context required to access virtual treasury',
+      );
+    }
     return this.walletService.getWallet(companyId);
   }
 
@@ -74,7 +80,12 @@ export class WalletController {
     @Req() req: types.AuthenticatedRequest,
     @Body() dto: DepositDto,
   ) {
-    const companyId = req.user.companyId || req.user.uid;
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new ForbiddenException(
+        'Organization workspace context required to access virtual treasury',
+      );
+    }
     return this.walletService.deposit(
       companyId,
       dto.amountUsd,
@@ -85,7 +96,12 @@ export class WalletController {
   @Get('allowances')
   @ApiOperation({ summary: 'Get AI Executive spending allowances' })
   async getAllowances(@Req() req: types.AuthenticatedRequest) {
-    const companyId = req.user.companyId || req.user.uid;
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new ForbiddenException(
+        'Organization workspace context required to access virtual treasury',
+      );
+    }
     return this.walletService.getAgentAllowances(companyId);
   }
 
@@ -104,7 +120,12 @@ export class WalletController {
     @Param('roleKey') roleKey: string,
     @Body() dto: UpdateAllowanceDto,
   ) {
-    const companyId = req.user.companyId || req.user.uid;
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new ForbiddenException(
+        'Organization workspace context required to access virtual treasury',
+      );
+    }
     return this.walletService.updateAgentAllowance(companyId, roleKey, dto);
   }
 
@@ -122,14 +143,24 @@ export class WalletController {
     @Req() req: types.AuthenticatedRequest,
     @Body() dto: ExecuteAgentPaymentDto,
   ) {
-    const companyId = req.user.companyId || req.user.uid;
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new ForbiddenException(
+        'Organization workspace context required to access virtual treasury',
+      );
+    }
     return this.walletService.executeAutonomousAgentPayment(companyId, dto);
   }
 
   @Get('transactions')
   @ApiOperation({ summary: 'Get transaction audit history for HQ Wallet' })
   async getTransactions(@Req() req: types.AuthenticatedRequest) {
-    const companyId = req.user.companyId || req.user.uid;
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      throw new ForbiddenException(
+        'Organization workspace context required to access virtual treasury',
+      );
+    }
     return this.walletService.getTransactions(companyId);
   }
 }

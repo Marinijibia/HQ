@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import * as crypto from 'crypto';
@@ -321,6 +322,17 @@ export class SettingsService {
       );
     }
 
+    // Role hierarchy protection: Only ORGANIZATION_OWNER or SUPER_ADMINISTRATOR can assign ORGANIZATION_OWNER role
+    if (
+      role === 'ORGANIZATION_OWNER' &&
+      callerRole !== 'ORGANIZATION_OWNER' &&
+      callerRole !== 'SUPER_ADMINISTRATOR'
+    ) {
+      throw new ForbiddenException(
+        'Access denied: Only Organization Owners or Super Administrators can grant Organization Owner status',
+      );
+    }
+
     // Disallow invalid roles
     const validRoles = [
       'SUPER_ADMINISTRATOR',
@@ -333,6 +345,16 @@ export class SettingsService {
     ];
     if (!validRoles.includes(role)) {
       throw new BadRequestException(`Invalid role "${role}".`);
+    }
+
+    // Prevent duplicate user creation conflicts
+    const existingUser = await this.prisma.user.findFirst({
+      where: { email: cleanEmail, deletedAt: null },
+    });
+    if (existingUser) {
+      throw new ConflictException(
+        'A user with this email address already exists in the system.',
+      );
     }
 
     const tempId = crypto.randomUUID();
@@ -386,14 +408,18 @@ export class SettingsService {
     };
   }
   async getGovernanceData(companyId?: string) {
-    const policies: any[] =
-      ((await this.prisma
-        .$queryRawUnsafe(
-          `
-      SELECT * FROM governance_policies ORDER BY created_at DESC
-    `,
-        )
-        .catch(() => [])) as any[]) || [];
+    const policies: any[] = companyId
+      ? ((await this.prisma
+          .$queryRawUnsafe(
+            `SELECT * FROM governance_policies WHERE (company_id = $1 OR company_id IS NULL) ORDER BY created_at DESC`,
+            companyId,
+          )
+          .catch(() => [])) as any[]) || []
+      : ((await this.prisma
+          .$queryRawUnsafe(
+            `SELECT * FROM governance_policies WHERE company_id IS NULL ORDER BY created_at DESC`,
+          )
+          .catch(() => [])) as any[]) || [];
 
     const defaultPolicies = [
       {
@@ -421,22 +447,23 @@ export class SettingsService {
       },
     ];
 
-    const mappedPolicies = policies.map((p) => ({
+    const sourcePolicies = policies.length > 0 ? policies : defaultPolicies;
+    const mappedPolicies = sourcePolicies.map((p) => ({
       id: p.id,
-      ruleText: p.rule_text,
+      ruleText: p.rule_text || p.ruleText,
       category: p.category,
       version: p.version || 'v1.0',
       status: p.status || 'Active',
     }));
 
-    const delegations: any[] =
-      ((await this.prisma
-        .$queryRawUnsafe(
-          `
-      SELECT * FROM governance_delegations WHERE active = true ORDER BY created_at DESC
-    `,
-        )
-        .catch(() => [])) as any[]) || [];
+    const delegations: any[] = companyId
+      ? ((await this.prisma
+          .$queryRawUnsafe(
+            `SELECT * FROM governance_delegations WHERE active = true AND company_id = $1 ORDER BY created_at DESC`,
+            companyId,
+          )
+          .catch(() => [])) as any[]) || []
+      : [];
 
     const mappedDelegations = delegations.map((d) => ({
       id: d.id,
@@ -449,18 +476,21 @@ export class SettingsService {
     }));
 
     // Decisions audit from wallet_transactions scoped to org
-    const txDecisions: any[] =
-      ((await this.prisma
-        .$queryRawUnsafe(
-          `
-      SELECT wt.*, c.name as company_name
-      FROM wallet_transactions wt
-      LEFT JOIN companies c ON wt.company_id = c.id
-      ORDER BY wt.created_at DESC
-      LIMIT 15
-    `,
-        )
-        .catch(() => [])) as any[]) || [];
+    const txDecisions: any[] = companyId
+      ? ((await this.prisma
+          .$queryRawUnsafe(
+            `
+        SELECT wt.*, c.name as company_name
+        FROM wallet_transactions wt
+        LEFT JOIN companies c ON wt.company_id = c.id
+        WHERE wt.company_id = $1
+        ORDER BY wt.created_at DESC
+        LIMIT 15
+      `,
+            companyId,
+          )
+          .catch(() => [])) as any[]) || []
+      : [];
 
     const mappedDecisions = txDecisions.map((t) => ({
       id: t.id,
@@ -515,14 +545,10 @@ export class SettingsService {
     if (companyId) {
       await this.prisma
         .$executeRawUnsafe(
-          `DELETE FROM governance_policies WHERE id = $1 AND (company_id = $2 OR company_id IS NULL)`,
+          `DELETE FROM governance_policies WHERE id = $1 AND company_id = $2`,
           id,
           companyId,
         )
-        .catch(() => {});
-    } else {
-      await this.prisma
-        .$executeRawUnsafe(`DELETE FROM governance_policies WHERE id = $1`, id)
         .catch(() => {});
     }
     return { success: true, id };
@@ -564,14 +590,10 @@ export class SettingsService {
     if (companyId) {
       await this.prisma
         .$executeRawUnsafe(
-          `DELETE FROM governance_delegations WHERE id = $1 AND (company_id = $2 OR company_id IS NULL)`,
+          `DELETE FROM governance_delegations WHERE id = $1 AND company_id = $2`,
           id,
           companyId,
         )
-        .catch(() => {});
-    } else {
-      await this.prisma
-        .$executeRawUnsafe(`DELETE FROM governance_delegations WHERE id = $1`, id)
         .catch(() => {});
     }
     return { success: true, id };

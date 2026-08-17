@@ -24,8 +24,8 @@ async function createDevControlledWallets() {
   );
 
   const client = initiateDeveloperControlledWalletsClient({
-    apiKey,
-    entitySecret,
+    apiKey: apiKey!,
+    entitySecret: entitySecret!,
   });
 
   console.log('🔄 Creating Developer-Controlled Wallet Set...');

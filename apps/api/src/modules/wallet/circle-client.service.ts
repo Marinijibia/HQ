@@ -24,7 +24,9 @@ export class CircleClientService {
   private readonly baseUrl =
     process.env.CIRCLE_API_BASE_URL || 'https://api.circle.com';
   private readonly masterWalletId =
-    process.env.CIRCLE_MASTER_WALLET_ID || 'hq_master_circle_vault';
+    process.env.CIRCLE_WALLET_ID ||
+    process.env.CIRCLE_MASTER_WALLET_ID ||
+    'hq_master_circle_vault';
 
   /**
    * Fetches real-time USDC reserves from Master Circle Wallet

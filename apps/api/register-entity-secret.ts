@@ -33,7 +33,7 @@ async function registerSecret() {
 
   console.log('🔄 Registering Entity Secret with Circle API...');
   await registerEntitySecretCiphertext({
-    apiKey,
+    apiKey: apiKey!,
     entitySecret,
     recoveryFileDownloadPath: recoveryFilePath,
   });
