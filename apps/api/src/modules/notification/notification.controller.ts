@@ -56,26 +56,38 @@ export class NotificationController {
 
   @Patch(':id/read')
   @ApiOperation({ summary: 'Mark alert as read' })
-  async markRead(@Param('id') id: string) {
-    return this.notificationService.markAsRead(id);
+  async markRead(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    return this.notificationService.markAsRead(id, req.user.companyId);
   }
 
   @Patch(':id/unread')
   @ApiOperation({ summary: 'Mark alert as unread' })
-  async markUnread(@Param('id') id: string) {
-    return this.notificationService.markAsUnread(id);
+  async markUnread(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    return this.notificationService.markAsUnread(id, req.user.companyId);
   }
 
   @Post(':id/pin')
   @ApiOperation({ summary: 'Toggle pinned state' })
-  async togglePin(@Param('id') id: string) {
-    return this.notificationService.togglePin(id);
+  async togglePin(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    return this.notificationService.togglePin(id, req.user.companyId);
   }
 
   @Post(':id/archive')
   @ApiOperation({ summary: 'Toggle archived state' })
-  async toggleArchive(@Param('id') id: string) {
-    return this.notificationService.toggleArchive(id);
+  async toggleArchive(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    return this.notificationService.toggleArchive(id, req.user.companyId);
   }
 
   @Post('mark-all-read')
@@ -86,7 +98,10 @@ export class NotificationController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Dismiss/Delete notification' })
-  async remove(@Param('id') id: string) {
-    return this.notificationService.deleteNotification(id);
+  async remove(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    return this.notificationService.deleteNotification(id, req.user.companyId);
   }
 }

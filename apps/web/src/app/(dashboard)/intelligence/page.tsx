@@ -242,6 +242,7 @@ export default function IntelligencePage() {
   const [editData, setEditData] = React.useState<Record<string, string>>({});
   const [saving, setSaving] = React.useState(false);
   const [drafting, setDrafting] = React.useState(false);
+  const [researching, setResearching] = React.useState(false);
   const [runningReview, setRunningReview] = React.useState(false);
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
 
@@ -274,6 +275,41 @@ export default function IntelligencePage() {
     fetch('/api/memory', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : [])
       .then(data => setMemories(data));
+  };
+
+  const handleTriggerResearch = async () => {
+    if (!token) return;
+    setResearching(true);
+    toast.info('🔍 Mr. Intelligence is scanning public web signals for your organization...');
+    try {
+      let orgName = 'Easefy';
+      try {
+        const draft = JSON.parse(localStorage.getItem('hq_onboarding_draft') || '{}');
+        if (draft.companyName) orgName = draft.companyName;
+      } catch {}
+
+      const res = await fetch('/api/intelligence/research', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ companyName: orgName }),
+      });
+
+      if (res.ok) {
+        toast.success('✨ Public intelligence synthesized & saved to Digital Twin & CEO memory!');
+        fetchIntelligence();
+        fetchMemories();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message || 'Research synthesis failed');
+      }
+    } catch {
+      toast.error('Network error triggering public research.');
+    } finally {
+      setResearching(false);
+    }
   };
 
   React.useEffect(() => {
@@ -450,7 +486,7 @@ export default function IntelligencePage() {
   return (
     <div className="space-y-6 text-foreground pb-12">
       {/* Header */}
-      <div className="flex items-start justify-between pb-4 border-b border-card-border">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-card-border">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl flex items-center justify-center shadow-lg animate-pulse" style={{ backgroundColor: `${brandColor}18` }}>
             <Brain className="h-5 w-5" style={{ color: brandColor }} />
@@ -465,12 +501,24 @@ export default function IntelligencePage() {
             </p>
           </div>
         </div>
-        {intelligence?.lastLearnedAt && (
-          <div className="flex items-center gap-1.5 text-foreground/45 bg-[#F9F9FB] dark:bg-[#0A0A0C] border border-card-border px-3 py-1 rounded-xl">
-            <RefreshCw className="h-3 w-3 text-hq-blue" />
-            <span className="text-xs font-bold uppercase tracking-wider">Sync: Live</span>
-          </div>
-        )}
+
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleTriggerResearch}
+            disabled={researching}
+            className="h-9 px-3.5 text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl shadow-sm hover:opacity-90 gap-1.5 flex items-center"
+          >
+            <Sparkles className={`h-3.5 w-3.5 ${researching ? 'animate-spin' : ''}`} />
+            {researching ? 'Scanning Signals...' : 'Run Web Research (Mr. Intelligence)'}
+          </Button>
+
+          {intelligence?.lastLearnedAt && (
+            <div className="flex items-center gap-1.5 text-foreground/45 bg-[#F9F9FB] dark:bg-[#0A0A0C] border border-card-border px-3 py-1.5 rounded-xl">
+              <RefreshCw className="h-3 w-3 text-hq-blue" />
+              <span className="text-xs font-bold uppercase tracking-wider">Sync: Live</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {loading ? (

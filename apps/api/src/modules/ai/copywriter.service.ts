@@ -61,7 +61,9 @@ export class CopywriterService {
       if (parsed.seoDescription) seoDescription = parsed.seoDescription;
     } catch {
       // If output is raw string, use live AI completion text directly
-      this.logger.log('[Copywriter Engine] Live response format parsed as raw text completion.');
+      this.logger.log(
+        '[Copywriter Engine] Live response format parsed as raw text completion.',
+      );
     }
 
     return {

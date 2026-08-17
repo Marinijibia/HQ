@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AIProvider, GenerateOptions, ProviderResponse } from '../interfaces/ai-provider.interface';
+import {
+  AIProvider,
+  GenerateOptions,
+  ProviderResponse,
+} from '../interfaces/ai-provider.interface';
 
 /**
  * HQ Graceful Degradation Engine
@@ -25,8 +29,8 @@ export class HqEngineProvider implements AIProvider {
   async generate(options: GenerateOptions): Promise<ProviderResponse> {
     this.logger.error(
       '[HqEngineProvider] ⚠️ All real AI providers have failed or are unconfigured. ' +
-      'Returning graceful degradation response. Check VERTEX_PROJECT_ID, GEMINI_API_KEY, ' +
-      'OPENAI_API_KEY, and ANTHROPIC_API_KEY environment variables.',
+        'Returning graceful degradation response. Check VERTEX_PROJECT_ID, GEMINI_API_KEY, ' +
+        'OPENAI_API_KEY, and ANTHROPIC_API_KEY environment variables.',
     );
 
     const text = this.buildDegradationResponse(options);
@@ -35,7 +39,8 @@ export class HqEngineProvider implements AIProvider {
     if (options.jsonMode) {
       parsedJson = {
         error: 'AI_SERVICE_DEGRADED',
-        message: 'AI providers are temporarily unavailable. Please try again shortly.',
+        message:
+          'AI providers are temporarily unavailable. Please try again shortly.',
         available: false,
       };
       return {
@@ -53,7 +58,10 @@ export class HqEngineProvider implements AIProvider {
     };
   }
 
-  async generateStream(options: GenerateOptions, onChunk: (chunk: string) => void): Promise<ProviderResponse> {
+  async generateStream(
+    options: GenerateOptions,
+    onChunk: (chunk: string) => void,
+  ): Promise<ProviderResponse> {
     const res = await this.generate(options);
     onChunk(res.text);
     return res;

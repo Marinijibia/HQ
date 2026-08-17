@@ -41,8 +41,11 @@ export class QaService {
     objective: string,
     content: string,
     tonePreference = 'Professional',
+    companyId?: string,
   ): Promise<QaEvaluationReport> {
-    this.logger.log(`[QA Validation Gate] Initiating pre-flight audit for content...`);
+    this.logger.log(
+      `[QA Validation Gate] Initiating pre-flight audit for content...`,
+    );
 
     const prompt = `
       Evaluate this content: "${content}"
@@ -89,11 +92,15 @@ export class QaService {
       systemPrompt: this.qaSystemPrompt,
       jsonMode: true,
       temperature: 0.1,
+      companyId,
+      category: 'EVALUATION',
     });
 
     let cleanedText = response.text.trim();
     if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '');
+      cleanedText = cleanedText
+        .replace(/^```(?:json)?\n?/i, '')
+        .replace(/\n?```$/, '');
     }
 
     try {
@@ -103,17 +110,39 @@ export class QaService {
       );
       return parsed;
     } catch {
-      this.logger.log('[QA Validation Gate] Live QA response evaluated dynamically.');
+      this.logger.log(
+        '[QA Validation Gate] Live QA response evaluated dynamically.',
+      );
       return {
         passed: true,
         score: 95,
         critique: response.text,
         checks: [
-          { checkType: 'STRATEGIC_ALIGNMENT', passed: true, notes: 'Strategic objective alignment verified.' },
-          { checkType: 'TONE_CONSISTENCY', passed: true, notes: `Style matches ${tonePreference} guidelines.` },
-          { checkType: 'REGULATORY_COMPLIANCE', passed: true, notes: 'Regulatory compliance verified.' },
-          { checkType: 'TECHNICAL_FEASIBILITY', passed: true, notes: 'Technical execution feasible.' },
-          { checkType: 'COMPLETENESS', passed: true, notes: 'Deliverable complete.' },
+          {
+            checkType: 'STRATEGIC_ALIGNMENT',
+            passed: true,
+            notes: 'Strategic objective alignment verified.',
+          },
+          {
+            checkType: 'TONE_CONSISTENCY',
+            passed: true,
+            notes: `Style matches ${tonePreference} guidelines.`,
+          },
+          {
+            checkType: 'REGULATORY_COMPLIANCE',
+            passed: true,
+            notes: 'Regulatory compliance verified.',
+          },
+          {
+            checkType: 'TECHNICAL_FEASIBILITY',
+            passed: true,
+            notes: 'Technical execution feasible.',
+          },
+          {
+            checkType: 'COMPLETENESS',
+            passed: true,
+            notes: 'Deliverable complete.',
+          },
         ],
       };
     }

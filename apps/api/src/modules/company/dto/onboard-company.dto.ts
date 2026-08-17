@@ -71,13 +71,17 @@ export class OnboardCompanyDto {
   @IsOptional()
   businessDesc?: string;
 
-  @ApiProperty({ example: ['Scale Monthly Sales', 'Automate Operational Tasks'] })
+  @ApiProperty({
+    example: ['Scale Monthly Sales', 'Automate Operational Tasks'],
+  })
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
   goals?: string[];
 
-  @ApiProperty({ example: ['Executive Leadership', 'Sales & Marketing', 'Engineering'] })
+  @ApiProperty({
+    example: ['Executive Leadership', 'Sales & Marketing', 'Engineering'],
+  })
   @IsArray()
   @IsString({ each: true })
   @IsOptional()

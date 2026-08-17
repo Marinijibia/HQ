@@ -39,8 +39,6 @@ interface MarketplaceItem {
   isInstalled?: boolean;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
 export default function MarketplacePage() {
   const { dbUser, token } = useAuth();
   const [activeTab, setActiveTab] = React.useState<'catalog' | 'installed'>('catalog');
@@ -65,7 +63,7 @@ export default function MarketplacePage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await fetch(`${API_BASE_URL}/marketplace/listings`, { headers }).catch(() => null);
+      const res = await fetch('/api/marketplace/listings', { headers }).catch(() => null);
       if (res && res.ok) {
         const data = await res.json();
         setCatalog(Array.isArray(data) ? data : []);
@@ -121,7 +119,7 @@ export default function MarketplacePage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      await fetch(`${API_BASE_URL}/marketplace/listings/${item.id}/install`, {
+      await fetch(`/api/marketplace/listings/${item.id}/install`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ companyId }),
@@ -166,7 +164,7 @@ export default function MarketplacePage() {
             >
               <RefreshCw size={14} className={loading ? 'animate-spin text-cyan-500' : ''} /> Refresh Store
             </Button>
-            <Link href="/ceo-chat">
+            <Link href="/ceo-chat?exec=asad">
               <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-lg">
                 <MessageSquare size={14} /> Consult CEO Asad
               </Button>

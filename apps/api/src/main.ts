@@ -18,7 +18,10 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
 
   app.enableCors({
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       if (!origin) return callback(null, true);
 
       const allowedDomains = [
@@ -39,18 +42,32 @@ async function bootstrap() {
 
       if (
         allowedDomains.includes(origin) ||
-        /netify\.ng$/.test(origin) ||
+        /\.netify\.ng$/.test(origin) ||
         /\.run\.app$/.test(origin) ||
         origin.startsWith('http://localhost') ||
         origin.startsWith('http://127.0.0.1')
       ) {
         return callback(null, true);
       }
-      return callback(null, true);
+
+      if (process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`), false);
     },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With, X-Company-Id, X-User-Id',
+    allowedHeaders:
+      'Content-Type, Accept, Authorization, X-Requested-With, X-Company-Id, X-User-Id',
+  });
+
+  app.use((req: any, res: any, next: any) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
   });
 
   app.useGlobalPipes(
@@ -77,6 +94,8 @@ async function bootstrap() {
 
   const port = process.env.PORT || 5000;
   await app.listen(port);
-  console.log(`\n🚀 HQ API Backend successfully listening on http://localhost:${port}\n📖 Swagger API Documentation available at http://localhost:${port}/api/docs\n`);
+  console.log(
+    `\n🚀 HQ API Backend successfully listening on http://localhost:${port}\n📖 Swagger API Documentation available at http://localhost:${port}/api/docs\n`,
+  );
 }
 bootstrap();

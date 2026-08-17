@@ -13,4 +13,3 @@ import { AiModule } from '../ai/ai.module';
   exports: [IntelligenceService, CompanyResearchService],
 })
 export class IntelligenceModule {}
-

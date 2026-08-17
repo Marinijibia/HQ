@@ -188,26 +188,49 @@ export default function DiscussionThreadWorkspacePage() {
   };
 
   const handleConvertToMission = async () => {
-    if (!conversation || !token) return;
+    if (!conversation || !token || !id) return;
     try {
-      const res = await fetch('/api/missions', {
+      const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      };
+
+      // Try specialized conversation conversion endpoint first
+      let res = await fetch(`/api/conversations/${id}/convert-mission`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          objective: conversation.title,
-        }),
+        headers,
       });
+
+      if (!res.ok) {
+        // Fallback to direct mission creation with guaranteed objective string
+        const objective = conversation.title?.trim() || 'Autonomous Boardroom Directive';
+        res = await fetch('/api/missions', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ objective }),
+        });
+      }
+
+      if (res.status === 403) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err?.message || 'Plan limit reached. Please upgrade to launch more active missions.');
+        return;
+      }
 
       if (res.ok) {
         const mission = await res.json();
         toast.success('🚀 Discussion Converted to Autonomous Mission Task!');
-        router.push(`/missions/${mission.id}`);
+        if (mission?.id) {
+          router.push(`/missions/${mission.id}`);
+        } else {
+          router.push('/missions');
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err?.message || 'Failed to convert discussion to mission');
       }
     } catch {
-      toast.error('Failed to convert discussion to mission');
+      toast.error('Network error converting discussion to mission');
     }
   };
 

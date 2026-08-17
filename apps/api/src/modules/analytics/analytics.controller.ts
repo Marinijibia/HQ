@@ -1,13 +1,9 @@
-import {
-  Controller,
-  Get,
-  UseGuards,
-  Req,
-  Res,
-} from '@nestjs/common';
+import { Controller, Get, UseGuards, Req, Res } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles, UserRole } from '../auth/roles.decorator';
 import * as types from '../../common/interfaces/request.interface';
 import type { Response } from 'express';
 
@@ -25,18 +21,28 @@ export class AnalyticsController {
   }
 
   @Get('metrics')
-  @ApiOperation({ summary: 'Fetch business intelligence telemetry charts payload' })
+  @ApiOperation({
+    summary: 'Fetch business intelligence telemetry charts payload',
+  })
   async getMetrics(@Req() req: types.AuthenticatedRequest) {
     return this.analyticsService.getMetrics(req.user.companyId);
   }
 
   @Get('export')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Download compiled CSV business analysis report' })
   async exportReport(
     @Req() req: types.AuthenticatedRequest,
     @Res() res: Response,
   ) {
-    const csvContent = await this.analyticsService.exportReport(req.user.companyId);
+    const csvContent = await this.analyticsService.exportReport(
+      req.user.companyId,
+    );
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader(
       'Content-Disposition',

@@ -45,7 +45,9 @@ export class CollaborationService {
       this.logger.error(
         `[Agent Collaboration] dispatchMessage failed: Mission ${payload.missionId} not found. Aborting audit log write to prevent cross-org data corruption.`,
       );
-      throw new NotFoundException(`Mission ${payload.missionId} not found. Cannot dispatch inter-agent message.`);
+      throw new NotFoundException(
+        `Mission ${payload.missionId} not found. Cannot dispatch inter-agent message.`,
+      );
     }
 
     await this.prisma.auditLog.create({
@@ -74,9 +76,18 @@ export class CollaborationService {
       `[Specialist Reasoning Cycle] ${executiveTitle} is processing inputs via AI...`,
     );
 
-    const steps = ['UNDERSTAND', 'ANALYZE', 'EVALUATE', 'RECOMMEND', 'REVIEW', 'DELIVER'];
+    const steps = [
+      'UNDERSTAND',
+      'ANALYZE',
+      'EVALUATE',
+      'RECOMMEND',
+      'REVIEW',
+      'DELIVER',
+    ];
     steps.forEach((step) => {
-      this.logger.log(`[Specialist Reasoning Cycle] ${executiveTitle} - Step: ${step}`);
+      this.logger.log(
+        `[Specialist Reasoning Cycle] ${executiveTitle} - Step: ${step}`,
+      );
     });
 
     const prompt = `
@@ -97,7 +108,8 @@ export class CollaborationService {
       }
     `;
 
-    const resolvedSystemPrompt = systemPrompt ||
+    const resolvedSystemPrompt =
+      systemPrompt ||
       `You are ${executiveTitle}. Apply deep domain expertise and deliver structured, actionable executive analysis.`;
 
     try {
@@ -110,25 +122,40 @@ export class CollaborationService {
 
       let cleanedText = response.text.trim();
       if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '');
+        cleanedText = cleanedText
+          .replace(/^```(?:json)?\n?/i, '')
+          .replace(/\n?```$/, '');
       }
 
       const parsed = JSON.parse(cleanedText);
       return {
-        executiveSummary: parsed.executiveSummary || `${executiveTitle} completed reasoning cycle.`,
+        executiveSummary:
+          parsed.executiveSummary ||
+          `${executiveTitle} completed reasoning cycle.`,
         findings: Array.isArray(parsed.findings) ? parsed.findings : [],
-        recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
+        recommendations: Array.isArray(parsed.recommendations)
+          ? parsed.recommendations
+          : [],
         risks: Array.isArray(parsed.risks) ? parsed.risks : [],
-        confidenceScore: typeof parsed.confidenceScore === 'number' ? parsed.confidenceScore : 90,
-        nextActions: Array.isArray(parsed.nextActions) ? parsed.nextActions : [],
+        confidenceScore:
+          typeof parsed.confidenceScore === 'number'
+            ? parsed.confidenceScore
+            : 90,
+        nextActions: Array.isArray(parsed.nextActions)
+          ? parsed.nextActions
+          : [],
       };
     } catch (err) {
-      this.logger.warn(`[Specialist Reasoning Cycle] ${executiveTitle} AI response parse notice: ${err}`);
+      this.logger.warn(
+        `[Specialist Reasoning Cycle] ${executiveTitle} AI response parse notice: ${err}`,
+      );
       // Return minimal real output — never a hardcoded fake result
       return {
         executiveSummary: `${executiveTitle} completed reasoning analysis for the provided context.`,
         findings: ['Domain analysis completed within executive bounds.'],
-        recommendations: ['Proceed with standard execution parameters pending further review.'],
+        recommendations: [
+          'Proceed with standard execution parameters pending further review.',
+        ],
         risks: ['Context complexity may require escalation to CEO board.'],
         confidenceScore: 80,
         nextActions: ['Forward to Quality Assurance Director for sign-off.'],
@@ -160,7 +187,9 @@ export class CollaborationService {
         this.logger.error(
           `[Conflict Resolution Engine] Mission ${missionId} not found. Cannot write conflict escalation audit log.`,
         );
-        throw new NotFoundException(`Mission ${missionId} not found. Cannot resolve conflict.`);
+        throw new NotFoundException(
+          `Mission ${missionId} not found. Cannot resolve conflict.`,
+        );
       }
 
       await this.prisma.auditLog.create({
@@ -176,7 +205,8 @@ export class CollaborationService {
 
       return {
         resolved: false,
-        decision: 'Escalated to CEO Asad: Low confidence bounds on workgroup proposals.',
+        decision:
+          'Escalated to CEO Asad: Low confidence bounds on workgroup proposals.',
         escalatedToCeo: true,
       };
     }
@@ -186,7 +216,8 @@ export class CollaborationService {
     );
     return {
       resolved: true,
-      decision: 'Proceed with strategic planning path: Recommendations aligned.',
+      decision:
+        'Proceed with strategic planning path: Recommendations aligned.',
       escalatedToCeo: false,
     };
   }

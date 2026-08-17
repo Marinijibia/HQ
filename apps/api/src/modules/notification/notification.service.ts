@@ -26,13 +26,20 @@ export class NotificationService {
       search?: string;
     },
   ): Promise<Notification[]> {
-    let notifs = await this.notificationRepository.findByCompanyId(companyId, filters);
+    let notifs = await this.notificationRepository.findByCompanyId(
+      companyId,
+      filters,
+    );
 
-    if (notifs.length === 0 && (!filters || Object.keys(filters).length === 0)) {
+    if (
+      notifs.length === 0 &&
+      (!filters || Object.keys(filters).length === 0)
+    ) {
       // Auto-seed initial welcome notifications for workspace
       await this.createNotification({
         title: 'Executive Boardroom Initialized',
-        message: 'Your multi-tenant executive workspace is fully active with 5 Core Active Directors.',
+        message:
+          'Your multi-tenant executive workspace is fully active with 5 Core Active Directors.',
         companyId,
         priority: 'HIGH',
         category: 'EXECUTIVE',
@@ -41,7 +48,8 @@ export class NotificationService {
 
       await this.createNotification({
         title: '5 Core Directors Standing By',
-        message: 'Asad (CEO), Teema (Ops), Legal, Resource Director, and Mr. Intelligence are online.',
+        message:
+          'Asad (CEO), Teema (Ops), Legal, Resource Director, and Mr. Intelligence are online.',
         companyId,
         priority: 'MEDIUM',
         category: 'SYSTEM',
@@ -50,14 +58,18 @@ export class NotificationService {
 
       await this.createNotification({
         title: 'Marketplace Suite Available',
-        message: 'Explore specialized department packs and executive suites in the Marketplace.',
+        message:
+          'Explore specialized department packs and executive suites in the Marketplace.',
         companyId,
         priority: 'LOW',
         category: 'MISSION',
         actionUrl: '/marketplace',
       }).catch(() => null);
 
-      notifs = await this.notificationRepository.findByCompanyId(companyId, filters);
+      notifs = await this.notificationRepository.findByCompanyId(
+        companyId,
+        filters,
+      );
     }
 
     return notifs;
@@ -106,29 +118,37 @@ export class NotificationService {
     });
   }
 
-  async markAsRead(id: string): Promise<Notification> {
-    const notif = await this.notificationRepository.findById(id);
-    if (!notif) throw new NotFoundException('Notification not found');
+  async markAsRead(id: string, companyId?: string): Promise<Notification> {
+    const notif = await this.notificationRepository.findById(id, companyId);
+    if (!notif) {
+      throw new NotFoundException('Notification not found in your organization');
+    }
     return this.notificationRepository.update(id, { read: true });
   }
 
-  async markAsUnread(id: string): Promise<Notification> {
-    const notif = await this.notificationRepository.findById(id);
-    if (!notif) throw new NotFoundException('Notification not found');
+  async markAsUnread(id: string, companyId?: string): Promise<Notification> {
+    const notif = await this.notificationRepository.findById(id, companyId);
+    if (!notif) {
+      throw new NotFoundException('Notification not found in your organization');
+    }
     return this.notificationRepository.update(id, { read: false });
   }
 
-  async togglePin(id: string): Promise<Notification> {
-    const notif = await this.notificationRepository.findById(id);
-    if (!notif) throw new NotFoundException('Notification not found');
+  async togglePin(id: string, companyId?: string): Promise<Notification> {
+    const notif = await this.notificationRepository.findById(id, companyId);
+    if (!notif) {
+      throw new NotFoundException('Notification not found in your organization');
+    }
     return this.notificationRepository.update(id, {
       isPinned: !notif.isPinned,
     });
   }
 
-  async toggleArchive(id: string): Promise<Notification> {
-    const notif = await this.notificationRepository.findById(id);
-    if (!notif) throw new NotFoundException('Notification not found');
+  async toggleArchive(id: string, companyId?: string): Promise<Notification> {
+    const notif = await this.notificationRepository.findById(id, companyId);
+    if (!notif) {
+      throw new NotFoundException('Notification not found in your organization');
+    }
     return this.notificationRepository.update(id, {
       isArchived: !notif.isArchived,
     });
@@ -138,9 +158,11 @@ export class NotificationService {
     return this.notificationRepository.markAllRead(companyId);
   }
 
-  async deleteNotification(id: string): Promise<Notification> {
-    const notif = await this.notificationRepository.findById(id);
-    if (!notif) throw new NotFoundException('Notification not found');
+  async deleteNotification(id: string, companyId?: string): Promise<Notification> {
+    const notif = await this.notificationRepository.findById(id, companyId);
+    if (!notif) {
+      throw new NotFoundException('Notification not found in your organization');
+    }
     return this.notificationRepository.delete(id);
   }
 
@@ -158,7 +180,9 @@ export class NotificationService {
     const companyId = payload.companyId;
     // Require explicit companyId — never pick a random company from the DB
     if (!companyId) {
-      this.logger.warn('[Notification] Notification dispatched without companyId — skipping to prevent cross-org leakage.');
+      this.logger.warn(
+        '[Notification] Notification dispatched without companyId — skipping to prevent cross-org leakage.',
+      );
       return;
     }
 

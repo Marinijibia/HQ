@@ -137,9 +137,16 @@ export default function LoginPage() {
         body: JSON.stringify({ email }),
       });
 
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { message: text || `Server error (${res.status})` };
+      }
+
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || 'Failed to dispatch verification OTP');
+        throw new Error(data.message || (res.status === 500 ? 'Backend API is currently offline.' : 'Failed to dispatch verification OTP'));
       }
 
       setOtpSent(true);
@@ -170,10 +177,16 @@ export default function LoginPage() {
         body: JSON.stringify({ email, code: otpCode }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { message: text || `Server error (${res.status})` };
+      }
 
       if (!res.ok) {
-        throw new Error(data.message || 'Invalid or expired OTP code');
+        throw new Error(data.message || (res.status === 500 ? 'Backend API is currently offline.' : 'Invalid or expired OTP code'));
       }
 
       if (data.token) {
@@ -214,9 +227,16 @@ export default function LoginPage() {
         body: JSON.stringify({ email: forgotEmail }),
       });
 
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { message: text || `Server error (${res.status})` };
+      }
+
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || 'Password reset request failed');
+        throw new Error(data.message || (res.status === 500 ? 'Backend API is currently offline.' : 'Password reset request failed'));
       }
 
       setSuccessMsg(`Password reset instructions sent to ${forgotEmail}`);

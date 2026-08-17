@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AIProvider, GenerateOptions, ProviderResponse } from '../interfaces/ai-provider.interface';
+import {
+  AIProvider,
+  GenerateOptions,
+  ProviderResponse,
+} from '../interfaces/ai-provider.interface';
 
 @Injectable()
 export class OpenAIProvider implements AIProvider {
@@ -18,7 +22,9 @@ export class OpenAIProvider implements AIProvider {
     }
 
     const model = process.env.OPENAI_MODEL || 'gpt-4o';
-    this.logger.log(`[OpenAIProvider] Routing prompt to OpenAI API (${model})...`);
+    this.logger.log(
+      `[OpenAIProvider] Routing prompt to OpenAI API (${model})...`,
+    );
 
     const messages: any[] = [];
     if (options.systemPrompt) {
@@ -61,27 +67,39 @@ export class OpenAIProvider implements AIProvider {
     if (options.jsonMode) {
       try {
         parsedJson = JSON.parse(text);
-        if (options.responseSchema && typeof options.responseSchema === 'object') {
+        if (
+          options.responseSchema &&
+          typeof options.responseSchema === 'object'
+        ) {
           for (const key of Object.keys(options.responseSchema)) {
             if (!(key in parsedJson)) {
-              this.logger.warn(`[OpenAIProvider] Response schema key '${key}' missing in parsed JSON output.`);
+              this.logger.warn(
+                `[OpenAIProvider] Response schema key '${key}' missing in parsed JSON output.`,
+              );
             }
           }
         }
       } catch (jsonErr) {
-        this.logger.warn(`[OpenAIProvider] JSON mode enabled but output parsing failed: ${jsonErr}`);
+        this.logger.warn(
+          `[OpenAIProvider] JSON mode enabled but output parsing failed: ${jsonErr}`,
+        );
       }
     }
 
     return {
       text,
       providerName: `openai (${model})`,
-      tokensUsed: data.usage?.total_tokens || Math.round((options.prompt.length + text.length) / 4),
+      tokensUsed:
+        data.usage?.total_tokens ||
+        Math.round((options.prompt.length + text.length) / 4),
       parsedJson,
     };
   }
 
-  async generateStream(options: GenerateOptions, onChunk: (chunk: string) => void): Promise<ProviderResponse> {
+  async generateStream(
+    options: GenerateOptions,
+    onChunk: (chunk: string) => void,
+  ): Promise<ProviderResponse> {
     const res = await this.generate(options);
     onChunk(res.text);
     return res;

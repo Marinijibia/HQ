@@ -47,7 +47,7 @@ import { HQLogo } from '../../../components/hq-logo';
 import { toast } from '../../../components/toast';
 
 export default function OnboardingPage() {
-  const { user, token, refetchUser, signInWithEmail, signUpWithEmail } = useAuth();
+  const { user, token, refetchUser, signInWithEmail, signUpWithEmail, setSession } = useAuth();
   const router = useRouter();
 
   // Core step state (1 to 11)
@@ -417,7 +417,9 @@ export default function OnboardingPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to set password.');
       // Store full auth token — user is now fully authenticated
-      localStorage.setItem('hq_auth_token', data.token);
+      if (data.token) {
+        setSession(data.token);
+      }
       await refetchUser();
       setEmailVerified(true);
       toast.success('🔒 Account credentials registered successfully!');
@@ -707,7 +709,7 @@ export default function OnboardingPage() {
       try {
         if (typeof window !== 'undefined') {
           if (resData.token) {
-            localStorage.setItem('hq_auth_token', resData.token);
+            setSession(resData.token);
           }
           localStorage.removeItem('hq_session_token');
           localStorage.removeItem('hq_onboarding_draft');

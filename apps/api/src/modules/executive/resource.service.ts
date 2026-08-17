@@ -37,7 +37,9 @@ Maintain a professional, talent-focused, and high-efficiency perspective.`;
    * Executive Skill Matrix & Capacity Auditor
    */
   async auditRosterCapacity(companyId: string): Promise<RosterCapacityReport> {
-    this.logger.log('[Resource Director] Auditing workspace roster capacity and department coverage...');
+    this.logger.log(
+      '[Resource Director] Auditing workspace roster capacity and department coverage...',
+    );
 
     // Scope to the org — never return executives from other organizations
     const activeExecutives = await this.prisma.executive.findMany({
@@ -48,7 +50,9 @@ Maintain a professional, talent-focused, and high-efficiency perspective.`;
       include: { department: true },
     });
 
-    const activeDepts = activeExecutives.map((e) => e.department?.name.toLowerCase()).filter(Boolean);
+    const activeDepts = activeExecutives
+      .map((e) => e.department?.name.toLowerCase())
+      .filter(Boolean);
 
     const standardDomains = [
       { name: 'Executive Office & Management', key: 'management' },
@@ -61,26 +65,40 @@ Maintain a professional, talent-focused, and high-efficiency perspective.`;
       { name: 'Finance & Capital Strategy', key: 'finance' },
     ];
 
-    const departmentCoverage: DepartmentCoverage[] = standardDomains.map((domain) => {
-      const isCovered = activeDepts.some((d) => d?.includes(domain.key) || d?.includes(domain.name.toLowerCase()));
-      return {
-        departmentName: domain.name,
-        activeDirectorCount: activeExecutives.filter((e) => e.department?.name.toLowerCase().includes(domain.key)).length || (isCovered ? 1 : 0),
-        covered: isCovered,
-      };
-    });
+    const departmentCoverage: DepartmentCoverage[] = standardDomains.map(
+      (domain) => {
+        const isCovered = activeDepts.some(
+          (d) =>
+            d?.includes(domain.key) || d?.includes(domain.name.toLowerCase()),
+        );
+        return {
+          departmentName: domain.name,
+          activeDirectorCount:
+            activeExecutives.filter((e) =>
+              e.department?.name.toLowerCase().includes(domain.key),
+            ).length || (isCovered ? 1 : 0),
+          covered: isCovered,
+        };
+      },
+    );
 
     const coveredCount = departmentCoverage.filter((d) => d.covered).length;
-    const capacityScore = Math.round((coveredCount / standardDomains.length) * 100);
+    const capacityScore = Math.round(
+      (coveredCount / standardDomains.length) * 100,
+    );
 
-    let capacityStatus: 'OPTIMAL' | 'BALANCED' | 'CAPACITY_CONSTRAINED' = 'BALANCED';
+    let capacityStatus: 'OPTIMAL' | 'BALANCED' | 'CAPACITY_CONSTRAINED' =
+      'BALANCED';
     if (capacityScore >= 80) capacityStatus = 'OPTIMAL';
     else if (capacityScore < 60) capacityStatus = 'CAPACITY_CONSTRAINED';
 
-    const missingDomains = departmentCoverage.filter((d) => !d.covered).map((d) => d.departmentName);
+    const missingDomains = departmentCoverage
+      .filter((d) => !d.covered)
+      .map((d) => d.departmentName);
 
     const recommendations = missingDomains.map(
-      (domain) => `Install the ${domain} Suite from Marketplace to onboard specialized directors.`,
+      (domain) =>
+        `Install the ${domain} Suite from Marketplace to onboard specialized directors.`,
     );
 
     return {
@@ -96,8 +114,13 @@ Maintain a professional, talent-focused, and high-efficiency perspective.`;
   /**
    * Automated AI Director Activation / Deactivation
    */
-  async activateExecutive(executiveId: string, isActive: boolean): Promise<boolean> {
-    this.logger.log(`[Resource Director] Updating executive ${executiveId} active status to: ${isActive}`);
+  async activateExecutive(
+    executiveId: string,
+    isActive: boolean,
+  ): Promise<boolean> {
+    this.logger.log(
+      `[Resource Director] Updating executive ${executiveId} active status to: ${isActive}`,
+    );
 
     const exec = await this.prisma.executive.update({
       where: { id: executiveId },
@@ -118,7 +141,9 @@ Maintain a professional, talent-focused, and high-efficiency perspective.`;
     biography: string,
     systemPrompt: string,
   ) {
-    this.logger.log(`[Resource Director] Onboarding new specialized Director: ${name} (${title})...`);
+    this.logger.log(
+      `[Resource Director] Onboarding new specialized Director: ${name} (${title})...`,
+    );
 
     return this.prisma.executive.create({
       data: {

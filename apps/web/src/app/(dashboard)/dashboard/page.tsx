@@ -425,11 +425,11 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
           {[
-            { name: 'Asad', title: 'CEO & Founder', role: 'Strategy Lead', path: '/ceo-chat', icon: '👑' },
-            { name: 'Teema', title: 'Chief of Staff', role: 'Operations', path: '/discussions', icon: '⚡' },
-            { name: 'Legal', title: 'Compliance Dir.', role: 'Risk Audit', path: '/trust-center', icon: '⚖️' },
-            { name: 'Resource Dir.', title: 'HR & People Ops', role: 'Talent Sync', path: '/teams', icon: '👥' },
-            { name: 'Mr. Intelligence', title: 'Web Research Agent', role: 'Market Signals', path: '/intelligence', icon: '🌐' },
+            { name: 'Asad', title: 'CEO & Founder', role: 'Strategy Lead', path: '/ceo-chat?exec=asad', icon: '👑' },
+            { name: 'Teema', title: 'Chief of Staff', role: 'Operations', path: '/ceo-chat?exec=teema', icon: '⚡' },
+            { name: 'Legal', title: 'Compliance Dir.', role: 'Risk Audit', path: '/ceo-chat?exec=legal', icon: '⚖️' },
+            { name: 'Resource Dir.', title: 'HR & People Ops', role: 'Talent Sync', path: '/ceo-chat?exec=resource', icon: '👥' },
+            { name: 'Mr. Intelligence', title: 'Web Research Agent', role: 'Market Signals', path: '/ceo-chat?exec=intelligence', icon: '🔍' },
           ].map((dir, idx) => (
             <button
               key={idx}

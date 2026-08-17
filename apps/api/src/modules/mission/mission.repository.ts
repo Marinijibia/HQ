@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { Mission, MissionStatus, TaskStatus } from '@prisma/client';
 
@@ -13,10 +17,10 @@ export class MissionRepository {
         tasks: {
           include: {
             executive: {
-              include: { department: true }
-            }
-          }
-        }
+              include: { department: true },
+            },
+          },
+        },
       },
     });
   }
@@ -97,8 +101,14 @@ export class MissionRepository {
     });
   }
 
-  async createTasks(missionId: string, tasks: any[], companyId?: string): Promise<void> {
-    // Scope executive lookup to the mission's organization to prevent cross-org leakage
+  async createTasks(
+    missionId: string,
+    tasks: any[],
+    companyId?: string,
+  ): Promise<void> {
+    if (!Array.isArray(tasks) || tasks.length === 0) return;
+
+    // Scope executive lookup to the mission's organization
     const execs = await this.prisma.executive.findMany({
       where: companyId
         ? { deletedAt: null, department: { companyId } }
@@ -106,31 +116,83 @@ export class MissionRepository {
     });
 
     await this.prisma.$transaction(async (tx) => {
-      // Loop over tasks and create them
       for (const t of tasks) {
         let status: TaskStatus = TaskStatus.PENDING;
-        if (t.status === 'Running') status = TaskStatus.RUNNING;
-        else if (t.status === 'Completed') status = TaskStatus.COMPLETED;
-        else if (t.status === 'Error') status = TaskStatus.FAILED;
+        const rawStatus = (t.status || '').toUpperCase();
+        if (rawStatus === 'RUNNING' || rawStatus === 'IN_PROGRESS')
+          status = TaskStatus.RUNNING;
+        else if (rawStatus === 'COMPLETED' || rawStatus === 'DONE')
+          status = TaskStatus.COMPLETED;
+        else if (rawStatus === 'ERROR' || rawStatus === 'FAILED')
+          status = TaskStatus.FAILED;
 
-        // Try to match assignedDirector to an executive within this org
+        // Safely match director
+        const directorStr = String(
+          t.assignedDirector || t.director || t.role || '',
+        ).toLowerCase();
         const match = execs.find(
           (e) =>
-            e.roleKey.toLowerCase() === t.assignedDirector.toLowerCase() ||
-            e.title.toLowerCase().includes(t.assignedDirector.toLowerCase()) ||
-            e.name.toLowerCase().includes(t.assignedDirector.toLowerCase()),
+            directorStr &&
+            (e.roleKey.toLowerCase() === directorStr ||
+              e.title.toLowerCase().includes(directorStr) ||
+              e.name.toLowerCase().includes(directorStr) ||
+              directorStr.includes(e.roleKey.toLowerCase()) ||
+              directorStr.includes(e.name.toLowerCase())),
         );
 
         await tx.missionTask.create({
           data: {
-            name: t.title,
+            name: t.title || t.name || 'Autonomous Task Step',
             description: t.description || '',
             status,
             missionId,
-            executiveId: match ? match.id : null,
+            executiveId: match ? match.id : execs[0]?.id || null,
           },
         });
       }
     });
+  }
+
+  async updateTaskStatus(
+    taskId: string,
+    status: TaskStatus,
+    missionId?: string,
+  ): Promise<any> {
+    if (missionId) {
+      const task = await this.prisma.missionTask.findFirst({
+        where: { id: taskId, missionId },
+      });
+      if (!task) {
+        throw new NotFoundException(
+          `Task with ID "${taskId}" not found in mission "${missionId}"`,
+        );
+      }
+    }
+
+    const updated = await this.prisma.missionTask.update({
+      where: { id: taskId },
+      data: { status },
+      include: {
+        mission: {
+          include: {
+            tasks: true,
+          },
+        },
+      },
+    });
+
+    if (updated.mission && updated.mission.tasks.length > 0) {
+      const allDone = updated.mission.tasks.every(
+        (t) => t.status === TaskStatus.COMPLETED,
+      );
+      if (allDone && updated.mission.status !== MissionStatus.DELIVERED) {
+        await this.prisma.mission.update({
+          where: { id: updated.mission.id },
+          data: { status: MissionStatus.DELIVERED },
+        });
+      }
+    }
+
+    return updated;
   }
 }

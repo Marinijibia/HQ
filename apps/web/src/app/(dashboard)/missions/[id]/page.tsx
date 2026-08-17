@@ -67,7 +67,7 @@ interface MissionStep {
 interface MissionDetail {
   id: string;
   objective: string;
-  status: 'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'EXECUTING';
+  status: 'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'EXECUTING' | 'PLANNING' | 'ARCHIVED';
   createdAt: string;
   companyId: string;
   tasks?: BackendTask[];
@@ -209,22 +209,62 @@ ${executionSteps
   const handleReRunStep = async (stepId: string) => {
     if (!token || !missionId) return;
     setReRunningStepId(stepId);
-    toast.info('⚡ Re-triggering task execution...');
+    toast.info('⚡ Decomposing mission into WBS DAG pipeline...');
     try {
       const res = await fetch(`/api/missions/${missionId}/plan`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
-        toast.success('✅ Mission plan re-generated. Refreshing...');
+        toast.success('✅ Mission task pipeline generated! Refreshing telemetry...');
         await fetchMissionDetails();
       } else {
-        toast.error('Could not re-trigger execution. Try again.');
+        toast.error('Could not generate execution plan. Try again.');
       }
     } catch {
-      toast.error('Network error re-triggering step.');
+      toast.error('Network error generating step pipeline.');
     } finally {
       setReRunningStepId(null);
+    }
+  };
+
+  const handleUpdateMissionStatus = async (action: 'start' | 'pause' | 'resume' | 'cancel') => {
+    if (!token || !missionId) return;
+    try {
+      const res = await fetch(`/api/missions/${missionId}/${action}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        toast.success(`Mission successfully transitioned: ${action.toUpperCase()}`);
+        fetchMissionDetails();
+      } else {
+        toast.error(`Action ${action} could not be completed.`);
+      }
+    } catch {
+      toast.error(`Network error during ${action}.`);
+    }
+  };
+
+  const handleToggleTaskStatus = async (taskId: string, currentStatus: string) => {
+    if (!token || !missionId) return;
+    const nextStatus =
+      currentStatus === 'COMPLETED' ? 'PENDING' : currentStatus === 'IN_PROGRESS' ? 'COMPLETED' : 'IN_PROGRESS';
+    try {
+      const res = await fetch(`/api/missions/${missionId}/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      if (res.ok) {
+        toast.success(`Task status updated to ${nextStatus}`);
+        fetchMissionDetails();
+      }
+    } catch {
+      toast.error('Failed to update task status.');
     }
   };
 
@@ -239,7 +279,7 @@ ${executionSteps
     );
   }
 
-  // Mission not found — show clean not-found state, never a fake mission
+  // Mission not found
   if (!mission) {
     return (
       <div className="flex h-[70vh] items-center justify-center select-none">
@@ -255,10 +295,13 @@ ${executionSteps
     );
   }
 
+  const isExecuting = mission.status === 'EXECUTING' || mission.status === 'IN_PROGRESS';
+  const isPlanning = mission.status === 'PLANNING';
+
   return (
     <div className="space-y-8 select-none text-foreground pb-12 animate-in fade-in duration-500 text-left">
       {/* Top Bar Navigation */}
-      <div className="flex items-center justify-between border-b border-card-border pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-card-border pb-4">
         <Link
           href="/missions"
           className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 font-bold transition-colors"
@@ -267,9 +310,34 @@ ${executionSteps
         </Link>
 
         <div className="flex items-center gap-2">
+          {isPlanning && (
+            <Button
+              onClick={() => handleUpdateMissionStatus('start')}
+              className="h-8 px-3 text-xs font-black bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-xl shadow-xs"
+            >
+              <Zap className="h-3.5 w-3.5" /> Start Execution
+            </Button>
+          )}
+          {isExecuting && (
+            <Button
+              onClick={() => handleUpdateMissionStatus('pause')}
+              variant="outline"
+              className="h-8 px-3 text-xs font-bold text-amber-600 border-amber-300 rounded-xl"
+            >
+              Pause
+            </Button>
+          )}
+          {mission.status === 'PLANNING' && (
+            <Button
+              onClick={() => handleUpdateMissionStatus('resume')}
+              className="h-8 px-3 text-xs font-bold bg-cyan-500 text-white rounded-xl"
+            >
+              Resume
+            </Button>
+          )}
           <Badge variant="outline" className="border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 text-[11px] font-black px-3 py-1 rounded-full flex items-center gap-1.5 uppercase">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-ping" />
-            LIVE TELEMETRY ACTIVE
+            STATUS: {mission.status}
           </Badge>
         </div>
       </div>
@@ -335,17 +403,36 @@ ${executionSteps
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Directed Acyclic Graph of board tasks & director execution flow.</p>
           </div>
-          <Badge variant="outline" className="border-cyan-400/40 text-cyan-700 dark:text-cyan-300 text-[10px] font-bold">
-            PARALLEL EXECUTION ACTIVE
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => handleReRunStep('generate-dag')}
+              disabled={Boolean(reRunningStepId)}
+              variant="outline"
+              className="h-7 px-2.5 text-[10px] font-extrabold border-cyan-500/30 text-cyan-700 dark:text-cyan-300 rounded-lg gap-1"
+            >
+              <RotateCw className={`h-3 w-3 ${reRunningStepId ? 'animate-spin' : ''}`} />
+              {reRunningStepId ? 'Synthesizing...' : 'Regenerate Plan'}
+            </Button>
+            <Badge variant="outline" className="border-cyan-400/40 text-cyan-700 dark:text-cyan-300 text-[10px] font-bold">
+              PARALLEL EXECUTION ACTIVE
+            </Badge>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
           {executionSteps.length === 0 ? (
-            <div className="lg:col-span-4 text-center py-8 space-y-2">
+            <div className="lg:col-span-4 text-center py-8 space-y-3">
               <Sparkles className="h-8 w-8 text-cyan-400 animate-pulse mx-auto" />
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Executive board is generating your task pipeline...</p>
-              <p className="text-[10px] text-slate-400">Tasks will appear here once the AI has decomposed your objective.</p>
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Executive board is ready to decompose your objective.</p>
+              <p className="text-[11px] text-slate-500 max-w-sm mx-auto">Click below to generate the WBS Task Graph and assign specialized directors.</p>
+              <Button
+                onClick={() => handleReRunStep('generate-all')}
+                disabled={Boolean(reRunningStepId)}
+                className="bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs h-9 px-4 rounded-xl shadow-md gap-2"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                {reRunningStepId ? 'Decomposing Tasks with AI...' : 'Decompose & Generate WBS Task Pipeline'}
+              </Button>
             </div>
           ) : (
             executionSteps.map((step, idx) => {
@@ -455,15 +542,29 @@ ${executionSteps
                           {step.status}
                         </Badge>
 
-                        <button
-                          onClick={() => handleReRunStep(step.id)}
-                          disabled={isReRunning}
-                          className="text-[10px] text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-300 flex items-center gap-1 font-bold transition-colors"
-                          title="Re-run step telemetry"
-                        >
-                          <RotateCw className={`h-3 w-3 ${isReRunning ? 'animate-spin text-cyan-500' : ''}`} />
-                          {isReRunning ? 'Evaluating...' : 'Re-run'}
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleToggleTaskStatus(step.id, step.status)}
+                            className={`text-[10px] px-2 py-0.5 rounded-md font-extrabold transition-all border ${
+                              isDone
+                                ? 'border-slate-300 dark:border-white/10 text-slate-500 hover:text-slate-700'
+                                : 'border-cyan-400 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/20'
+                            }`}
+                            title="Toggle step completion status"
+                          >
+                            {isDone ? '↺ Reopen' : isInProg ? '✓ Complete' : '▶ Start'}
+                          </button>
+
+                          <button
+                            onClick={() => handleReRunStep(step.id)}
+                            disabled={isReRunning}
+                            className="text-[10px] text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-300 flex items-center gap-1 font-bold transition-colors"
+                            title="Re-run step telemetry"
+                          >
+                            <RotateCw className={`h-3 w-3 ${isReRunning ? 'animate-spin text-cyan-500' : ''}`} />
+                            {isReRunning ? 'Evaluating...' : 'Re-run'}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -544,10 +645,10 @@ ${executionSteps
               </Button>
             ) : (
               <Button
-                onClick={() => router.push('/discussions')}
+                onClick={() => router.push('/ceo-chat')}
                 className="w-full h-10 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 border border-slate-200 dark:border-white/10"
               >
-                <MessageSquare className="h-4 w-4 text-cyan-500" /> View Boardroom Discussions
+                <MessageSquare className="h-4 w-4 text-cyan-500" /> Consult CEO & Boardroom
               </Button>
             )}
           </Card>

@@ -407,7 +407,7 @@ export default function BoardroomPage() {
                   <Zap size={12} className="text-cyan-500" /> Dispatch
                 </Button>
                 <Button
-                  onClick={() => router.push('/ceo-chat')}
+                  onClick={() => router.push(`/ceo-chat?exec=${encodeURIComponent((exec.roleKey || exec.name || 'asad').toLowerCase())}`)}
                   className="flex-1 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-400/30 text-[11px] font-extrabold py-1.5 rounded-xl flex items-center justify-center gap-1"
                 >
                   <MessageSquare size={12} /> Consult

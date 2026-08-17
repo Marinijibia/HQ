@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ExecutePromptDto } from './dto/execute-prompt.dto';
 import { ProviderFactory } from './factories/provider.factory';
 import { ProviderResponse } from './interfaces/ai-provider.interface';
+import { PrismaService } from '../database/prisma.service';
 
-const GEMINI_EMBED_MODEL = 'text-embedding-004';
-
+const GEMINI_EMBED_MODEL = 'gemini-embedding-001';
 
 export interface ExecutionResult {
   text: string;
@@ -18,23 +18,34 @@ export interface ExecutionResult {
 export class AiService {
   private readonly logger = new Logger(AiService.name);
 
-  constructor(private readonly providerFactory: ProviderFactory) {}
+  constructor(
+    private readonly providerFactory: ProviderFactory,
+    @Optional() private readonly prisma?: PrismaService,
+  ) {}
 
   async executePrompt(dto: ExecutePromptDto): Promise<ExecutionResult> {
     const startTime = Date.now();
     const failoverTrace: string[] = [];
-    const sequence = this.providerFactory.getFailoverSequence(dto.provider, false);
+    const sequence = this.providerFactory.getFailoverSequence(
+      dto.provider,
+      false,
+    );
 
     let finalResponse: ProviderResponse | null = null;
 
     for (const provider of sequence) {
-      if (!provider.isConfigured() && provider.name !== 'hq_generative_engine') {
+      if (
+        !provider.isConfigured() &&
+        provider.name !== 'hq_generative_engine'
+      ) {
         failoverTrace.push(`${provider.name} (skipped: unconfigured)`);
         continue;
       }
 
       try {
-        this.logger.log(`[AiService] Dispatching request to provider: ${provider.name}`);
+        this.logger.log(
+          `[AiService] Dispatching request to provider: ${provider.name}`,
+        );
         finalResponse = await provider.generate({
           prompt: dto.prompt,
           systemPrompt: dto.systemPrompt,
@@ -44,16 +55,24 @@ export class AiService {
           break;
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        this.logger.warn(`[AiService] Provider '${provider.name}' execution notice: ${errorMessage}`);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.warn(
+          `[AiService] Provider '${provider.name}' execution notice: ${errorMessage}`,
+        );
         failoverTrace.push(`${provider.name} (failed: ${errorMessage})`);
       }
     }
 
     // Ultimate fallback if no provider returned text
     if (!finalResponse || !finalResponse.text) {
-      this.logger.log(`[AiService] Executing local HQ dynamic engine fallback...`);
-      const hqEngine = this.providerFactory.getPrimaryProvider('hq_engine', true);
+      this.logger.log(
+        `[AiService] Executing local HQ dynamic engine fallback...`,
+      );
+      const hqEngine = this.providerFactory.getPrimaryProvider(
+        'hq_engine',
+        true,
+      );
       finalResponse = await hqEngine.generate({
         prompt: dto.prompt,
         systemPrompt: dto.systemPrompt,
@@ -61,9 +80,32 @@ export class AiService {
     }
 
     const latencyMs = Date.now() - startTime;
-    const tokensUsed = finalResponse.tokensUsed || Math.round((dto.prompt.length + finalResponse.text.length) / 4);
+    const tokensUsed =
+      finalResponse.tokensUsed ||
+      Math.round((dto.prompt.length + finalResponse.text.length) / 4);
 
-    this.logger.log(`[AiService] Execution completed | Provider: ${finalResponse.providerName} | Latency: ${latencyMs}ms | Tokens: ${tokensUsed}`);
+    this.logger.log(
+      `[AiService] Execution completed | Provider: ${finalResponse.providerName} | Latency: ${latencyMs}ms | Tokens: ${tokensUsed}`,
+    );
+
+    // Record real token usage into PostgreSQL
+    if (dto.companyId && this.prisma) {
+      try {
+        await this.prisma.usageRecord.create({
+          data: {
+            companyId: dto.companyId,
+            type: dto.category || 'CONVERSATION',
+            quantity: Math.max(1, tokensUsed),
+            resetAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          },
+        });
+        this.logger.log(
+          `[AiService] Usage recorded for tenant ${dto.companyId}: ${tokensUsed} tokens (${dto.category || 'CONVERSATION'})`,
+        );
+      } catch (usageErr) {
+        this.logger.warn(`[AiService] Usage record persistence notice: ${usageErr}`);
+      }
+    }
 
     return {
       text: finalResponse.text,
@@ -82,7 +124,9 @@ export class AiService {
   async embedText(text: string): Promise<number[] | null> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      this.logger.warn('[AiService.embedText] GEMINI_API_KEY not set — skipping embedding.');
+      this.logger.warn(
+        '[AiService.embedText] GEMINI_API_KEY not set — skipping embedding.',
+      );
       return null;
     }
 
@@ -94,12 +138,15 @@ export class AiService {
         body: JSON.stringify({
           model: `models/${GEMINI_EMBED_MODEL}`,
           content: { parts: [{ text: text.substring(0, 8192) }] },
+          outputDimensionality: 1536,
         }),
       });
 
       if (!res.ok) {
         const errText = await res.text();
-        this.logger.warn(`[AiService.embedText] Embedding API error ${res.status}: ${errText}`);
+        this.logger.warn(
+          `[AiService.embedText] Embedding API error ${res.status}: ${errText}`,
+        );
         return null;
       }
 
@@ -107,13 +154,17 @@ export class AiService {
       const values: number[] | undefined = data?.embedding?.values;
 
       if (!Array.isArray(values) || values.length === 0) {
-        this.logger.warn('[AiService.embedText] Empty embedding returned from API.');
+        this.logger.warn(
+          '[AiService.embedText] Empty embedding returned from API.',
+        );
         return null;
       }
 
       return values;
     } catch (err) {
-      this.logger.warn(`[AiService.embedText] Embedding generation notice: ${err}`);
+      this.logger.warn(
+        `[AiService.embedText] Embedding generation notice: ${err}`,
+      );
       return null;
     }
   }

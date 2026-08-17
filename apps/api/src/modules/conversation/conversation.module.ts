@@ -9,7 +9,13 @@ import { ExecutiveModule } from '../executive/executive.module';
 import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [AuthModule, AiModule, DatabaseModule, ExecutiveModule, NotificationModule],
+  imports: [
+    AuthModule,
+    AiModule,
+    DatabaseModule,
+    ExecutiveModule,
+    NotificationModule,
+  ],
   controllers: [ConversationController],
   providers: [ConversationService, ConversationRepository],
   exports: [ConversationService, ConversationRepository],

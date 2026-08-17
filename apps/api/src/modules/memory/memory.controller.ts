@@ -14,8 +14,16 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { MemoryService } from './memory.service';
 import { MemoryLayer } from '@prisma/client';
-import { IsString, IsNotEmpty, IsEnum, IsOptional, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  IsOptional,
+  IsNumber,
+} from 'class-validator';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles, UserRole } from '../auth/roles.decorator';
 import * as types from '../../common/interfaces/request.interface';
 
 export class SaveMemoryDto {
@@ -70,6 +78,12 @@ export class QueryMemoryDto {
   missionId?: string;
 }
 
+export class PromoteMemoryDto {
+  @IsEnum(MemoryLayer)
+  @IsNotEmpty()
+  targetLayer!: MemoryLayer;
+}
+
 @ApiTags('Memory')
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
@@ -114,6 +128,12 @@ export class MemoryController {
   }
 
   @Post('review-cycle')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Trigger a Memory Review Cycle optimization run' })
   async reviewCycle(@Req() req: types.AuthenticatedRequest) {
@@ -121,29 +141,55 @@ export class MemoryController {
   }
 
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update a specific memory node content/metadata' })
-  async update(@Param('id') id: string, @Body() dto: UpdateMemoryDto) {
-    await this.memoryService.updateMemory(id, dto);
+  async update(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() dto: UpdateMemoryDto,
+  ) {
+    await this.memoryService.updateMemory(id, req.user.companyId, dto);
     return { success: true };
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Archive/delete a memory node' })
-  async delete(@Param('id') id: string) {
-    await this.memoryService.deleteMemory(id);
+  async delete(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    await this.memoryService.deleteMemory(id, req.user.companyId);
     return { success: true };
   }
 
   @Post(':id/promote')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Promote a working memory to another layer' })
   async promote(
+    @Req() req: types.AuthenticatedRequest,
     @Param('id') id: string,
-    @Body('targetLayer') targetLayer: MemoryLayer,
+    @Body() dto: PromoteMemoryDto,
   ) {
-    await this.memoryService.promoteMemory(id, targetLayer);
+    await this.memoryService.promoteMemory(id, req.user.companyId, dto.targetLayer);
     return { success: true };
   }
 }

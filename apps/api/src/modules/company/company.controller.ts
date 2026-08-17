@@ -10,6 +10,7 @@ import {
   UseGuards,
   Req,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { CompanyRepository } from './company.repository';
@@ -21,6 +22,7 @@ import { Roles, UserRole } from '../auth/roles.decorator';
 import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
 import { CompanyLevel } from '@prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import * as types from '../../common/interfaces/request.interface';
 
 export class CreateCompanyDto {
   @IsString()
@@ -50,23 +52,27 @@ export class CompanyController {
 
   @Get()
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @Roles(UserRole.SUPER_ADMINISTRATOR)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'List all multi-tenant organizations for Super Admin with metrics' })
+  @ApiOperation({
+    summary: 'List all multi-tenant organizations for Super Admin with metrics',
+  })
   async findAll() {
     return this.companyRepository.findAllWithMetrics();
   }
 
   @Get('check-slug')
   @ApiOperation({ summary: 'Check if company URL slug is available' })
-  async checkSlug(@Query('slug') slug: string) {
-    return this.companyService.checkSlugAvailability(slug || '');
+  async checkSlug(@Req() req: types.AuthenticatedRequest, @Query('slug') slug: string) {
+    return this.companyService.checkSlugAvailability(slug || '', req.ip);
   }
 
   @Post('onboard')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Complete first-time company onboarding and provision workspace' })
+  @ApiOperation({
+    summary: 'Complete first-time company onboarding and provision workspace',
+  })
   async onboard(
     @CurrentUser() currentUser: { uid: string },
     @Body() dto: OnboardCompanyDto,
@@ -85,10 +91,28 @@ export class CompanyController {
 
   @Get(':id/details')
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get detailed organization metrics, users, and marketplace installations' })
-  async getDetails(@Param('id') id: string) {
+  @ApiOperation({
+    summary:
+      'Get detailed organization metrics, users, and marketplace installations',
+  })
+  async getDetails(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    if (
+      req.user?.role !== UserRole.SUPER_ADMINISTRATOR &&
+      req.user?.companyId !== id
+    ) {
+      throw new ForbiddenException(
+        'Access denied: You do not have permission to view this organization details',
+      );
+    }
     const details = await this.companyRepository.findDetailsWithMetrics(id);
     if (!details) {
       throw new NotFoundException('Organization not found');
@@ -100,7 +124,9 @@ export class CompanyController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMINISTRATOR)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update organization level / tier (ENTERPRISE, TEAM, INDIVIDUAL)' })
+  @ApiOperation({
+    summary: 'Update organization level / tier (ENTERPRISE, TEAM, INDIVIDUAL)',
+  })
   async updateLevel(
     @Param('id') id: string,
     @Body('level') level: CompanyLevel,
@@ -112,7 +138,9 @@ export class CompanyController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMINISTRATOR)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Force password reset requirement for all tenant users' })
+  @ApiOperation({
+    summary: 'Force password reset requirement for all tenant users',
+  })
   async forcePasswordReset(@Param('id') id: string) {
     return this.companyRepository.forcePasswordResetForOrg(id);
   }
@@ -133,7 +161,17 @@ export class CompanyController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get organization details by ID' })
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    if (
+      req.user?.role !== UserRole.SUPER_ADMINISTRATOR &&
+      req.user?.companyId !== id
+    ) {
+      throw new ForbiddenException('Access denied: You do not have permission to view this organization');
+    }
+
     const company = await this.companyRepository.findById(id);
     if (!company) {
       throw new NotFoundException('Organization not found');

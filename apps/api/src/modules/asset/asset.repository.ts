@@ -6,7 +6,18 @@ import { Asset, AssetVersion, DataClassification } from '@prisma/client';
 export class AssetRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findById(id: string): Promise<Asset | null> {
+  async findById(id: string, companyId?: string): Promise<Asset | null> {
+    if (companyId) {
+      return this.prisma.asset.findFirst({
+        where: { id, companyId, deletedAt: null },
+        include: {
+          versions: {
+            orderBy: { version: 'desc' },
+          },
+        },
+      });
+    }
+
     return this.prisma.asset.findUnique({
       where: { id },
       include: {

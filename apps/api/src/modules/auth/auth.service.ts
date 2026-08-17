@@ -29,8 +29,14 @@ export interface JwtPayload {
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private readonly inMemoryOtpStore = new Map<string, { code: string; expiresAt: number }>();
-  private readonly inMemoryTokenStore = new Map<string, { email: string; expiresAt: number }>();
+  private readonly inMemoryOtpStore = new Map<
+    string,
+    { code: string; expiresAt: number }
+  >();
+  private readonly inMemoryTokenStore = new Map<
+    string,
+    { email: string; expiresAt: number }
+  >();
 
   constructor(
     private readonly userRepository: UserRepository,
@@ -39,31 +45,47 @@ export class AuthService {
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
   ) {
     // Evict expired in-memory OTP/token entries every 5 minutes (Redis fallback cleanup)
-    setInterval(() => {
-      const now = Date.now();
-      for (const [key, val] of this.inMemoryOtpStore.entries()) {
-        if (val.expiresAt <= now) this.inMemoryOtpStore.delete(key);
-      }
-      for (const [key, val] of this.inMemoryTokenStore.entries()) {
-        if (val.expiresAt <= now) this.inMemoryTokenStore.delete(key);
-      }
-    }, 5 * 60 * 1000);
+    setInterval(
+      () => {
+        const now = Date.now();
+        for (const [key, val] of this.inMemoryOtpStore.entries()) {
+          if (val.expiresAt <= now) this.inMemoryOtpStore.delete(key);
+        }
+        for (const [key, val] of this.inMemoryTokenStore.entries()) {
+          if (val.expiresAt <= now) this.inMemoryTokenStore.delete(key);
+        }
+      },
+      5 * 60 * 1000,
+    );
   }
 
   // ─── JWT Helpers ─────────────────────────────────────────────────────────────
 
   private get jwtSecret(): string {
-    return process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'hq-onboarding-secret';
+    const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      if (process.env.NODE_ENV === 'production') {
+        this.logger.error('[CRITICAL] JWT_SECRET environment variable is missing in production!');
+        throw new InternalServerErrorException('Security misconfiguration: Missing JWT secret.');
+      }
+      return 'hq_dev_fallback_secret_key_2026_unauthorized_for_production';
+    }
+    return secret;
   }
 
-  signJwt(payload: Omit<JwtPayload, 'iat' | 'exp'>, expiryDays = 30): string {
+  signJwt(payload: Omit<JwtPayload, 'iat' | 'exp'>, expiryDays = 7): string {
     const fullPayload: JwtPayload = {
       ...payload,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * expiryDays,
     };
-    const payloadB64 = Buffer.from(JSON.stringify(fullPayload)).toString('base64url');
-    const sig = crypto.createHmac('sha256', this.jwtSecret).update(payloadB64).digest('base64url');
+    const payloadB64 = Buffer.from(JSON.stringify(fullPayload)).toString(
+      'base64url',
+    );
+    const sig = crypto
+      .createHmac('sha256', this.jwtSecret)
+      .update(payloadB64)
+      .digest('base64url');
     return `${payloadB64}.${sig}`;
   }
 
@@ -71,8 +93,20 @@ export class AuthService {
     const parts = token.split('.');
     if (parts.length !== 2) throw new UnauthorizedException('Malformed token');
     const [payloadB64, sig] = parts;
-    const expected = crypto.createHmac('sha256', this.jwtSecret).update(payloadB64).digest('base64url');
-    if (sig !== expected) throw new UnauthorizedException('Invalid token signature');
+    const expected = crypto
+      .createHmac('sha256', this.jwtSecret)
+      .update(payloadB64)
+      .digest('base64url');
+
+    const sigBuf = Buffer.from(sig);
+    const expectedBuf = Buffer.from(expected);
+    if (
+      sigBuf.length !== expectedBuf.length ||
+      !crypto.timingSafeEqual(sigBuf, expectedBuf)
+    ) {
+      throw new UnauthorizedException('Invalid token signature');
+    }
+
     let payload: JwtPayload;
     try {
       payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString());
@@ -93,7 +127,9 @@ export class AuthService {
       try {
         result = await this.redis.get(key);
       } catch (err) {
-        this.logger.warn(`Redis get notice for ${key}: ${(err as Error).message}`);
+        this.logger.warn(
+          `Redis get notice for ${key}: ${(err as Error).message}`,
+        );
       }
     }
     if (result) return result;
@@ -105,7 +141,11 @@ export class AuthService {
     return null;
   }
 
-  private async safeRedisSet(key: string, value: string, ttlSeconds: number): Promise<void> {
+  private async safeRedisSet(
+    key: string,
+    value: string,
+    ttlSeconds: number,
+  ): Promise<void> {
     const expiresAt = Date.now() + ttlSeconds * 1000;
     if (key.startsWith('otp:')) {
       this.inMemoryOtpStore.set(key, { code: value, expiresAt });
@@ -117,7 +157,9 @@ export class AuthService {
       try {
         await this.redis.set(key, value, 'EX', ttlSeconds);
       } catch (err) {
-        this.logger.warn(`Redis set notice for ${key}: ${(err as Error).message}`);
+        this.logger.warn(
+          `Redis set notice for ${key}: ${(err as Error).message}`,
+        );
       }
     }
   }
@@ -130,7 +172,9 @@ export class AuthService {
       try {
         await this.redis.del(key);
       } catch (err) {
-        this.logger.warn(`Redis del notice for ${key}: ${(err as Error).message}`);
+        this.logger.warn(
+          `Redis del notice for ${key}: ${(err as Error).message}`,
+        );
       }
     }
   }
@@ -143,7 +187,10 @@ export class AuthService {
 
     if (!user || !user.passwordHash) {
       // Use constant-time comparison to avoid timing attacks
-      await bcrypt.compare(password, '$2b$12$invalidhashfortimingprotection00000000000000000000');
+      await bcrypt.compare(
+        password,
+        '$2b$12$invalidhashfortimingprotection00000000000000000000',
+      );
       throw new UnauthorizedException('Invalid email or password');
     }
 
@@ -178,7 +225,9 @@ export class AuthService {
 
     const existing = await this.userRepository.findByEmail(cleanEmail);
     if (existing) {
-      throw new BadRequestException('An account with this email already exists');
+      throw new BadRequestException(
+        'An account with this email already exists',
+      );
     }
 
     if (!password || password.length < 6) {
@@ -188,7 +237,11 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, 12);
     const userId = crypto.randomUUID();
 
-    const user = await this.userRepository.createIsolatedUserWorkspace(userId, cleanEmail, 'ORGANIZATION_OWNER');
+    const user = await this.userRepository.createIsolatedUserWorkspace(
+      userId,
+      cleanEmail,
+      'ORGANIZATION_OWNER',
+    );
     await this.userRepository.update(userId, {
       passwordHash,
       name: name || cleanEmail.split('@')[0],
@@ -197,7 +250,11 @@ export class AuthService {
 
     this.emailService
       .sendWelcomeEmail(user.email, user.displayName || user.name || 'HQ User')
-      .catch((err) => this.logger.warn(`Welcome email notice for ${cleanEmail}: ${err.message}`));
+      .catch((err) =>
+        this.logger.warn(
+          `Welcome email notice for ${cleanEmail}: ${err.message}`,
+        ),
+      );
 
     const token = this.signJwt({
       uid: user.id,
@@ -240,7 +297,11 @@ export class AuthService {
     } else {
       // New user — create account with hashed password in an isolated workspace
       const userId = crypto.randomUUID();
-      user = await this.userRepository.createIsolatedUserWorkspace(userId, cleanEmail, 'ORGANIZATION_OWNER');
+      user = await this.userRepository.createIsolatedUserWorkspace(
+        userId,
+        cleanEmail,
+        'ORGANIZATION_OWNER',
+      );
       user = await this.userRepository.update(userId, {
         passwordHash,
         emailVerified: true,
@@ -248,7 +309,9 @@ export class AuthService {
     }
 
     if (!user) {
-      throw new InternalServerErrorException('Failed to set password for user account');
+      throw new InternalServerErrorException(
+        'Failed to set password for user account',
+      );
     }
 
     const token = this.signJwt({
@@ -281,7 +344,10 @@ export class AuthService {
           : 'Initial Super Admin setup is complete.',
       };
     } catch {
-      return { isSetupRequired: true, message: 'Initial Super Admin registration is required.' };
+      return {
+        isSetupRequired: true,
+        message: 'Initial Super Admin registration is required.',
+      };
     }
   }
 
@@ -313,7 +379,7 @@ export class AuthService {
 
     if (existingUser) {
       const updatedUser = await this.userRepository.update(existingUser.id, {
-        role: 'OWNER',
+        role: 'ORGANIZATION_OWNER' as any,
         name,
         displayName: name,
         companyId,
@@ -357,7 +423,9 @@ export class AuthService {
       const user = await this.userRepository.findByEmail(cleanEmail);
       if (user) recipientName = user.displayName || user.name || recipientName;
     } catch (err) {
-      this.logger.warn(`User lookup fallback for OTP (${cleanEmail}): ${(err as Error).message}`);
+      this.logger.warn(
+        `User lookup fallback for OTP (${cleanEmail}): ${(err as Error).message}`,
+      );
     }
 
     const otpCode = crypto.randomInt(100000, 999999).toString();
@@ -366,17 +434,33 @@ export class AuthService {
     await this.safeRedisSet(redisKey, otpCode, 600);
 
     try {
-      await this.trackIncompleteOnboarding(cleanEmail, 9, 'Unfinished Workspace Registration', false);
+      await this.trackIncompleteOnboarding(
+        cleanEmail,
+        9,
+        'Unfinished Workspace Registration',
+        false,
+      );
     } catch (err) {
-      this.logger.warn(`Lead tracking notice for ${cleanEmail}: ${(err as Error).message}`);
+      this.logger.warn(
+        `Lead tracking notice for ${cleanEmail}: ${(err as Error).message}`,
+      );
     }
 
-    this.logger.log(`🔑 [Auth Service] OTP Code generated for ${cleanEmail}: ${otpCode}`);
+    this.logger.log(
+      `🔑 [Auth Service] OTP Code generated for ${cleanEmail}: ******`,
+    );
 
     try {
-      await this.emailService.sendOtpEmail(cleanEmail, recipientName, otpCode, 10);
+      await this.emailService.sendOtpEmail(
+        cleanEmail,
+        recipientName,
+        otpCode,
+        10,
+      );
     } catch (err) {
-      this.logger.warn(`Email dispatch notice for ${cleanEmail}: ${(err as Error).message}`);
+      this.logger.warn(
+        `Email dispatch notice for ${cleanEmail}: ${(err as Error).message}`,
+      );
     }
 
     return {
@@ -389,13 +473,38 @@ export class AuthService {
   async verifyOtp(email: string, code: string) {
     const cleanEmail = email.toLowerCase().trim();
     const redisKey = `otp:${cleanEmail}`;
+    const attemptsKey = `otp_attempts:${cleanEmail}`;
+
+    const attemptsStr = await this.safeRedisGet(attemptsKey);
+    const currentAttempts = attemptsStr ? parseInt(attemptsStr, 10) : 0;
+
+    if (currentAttempts >= 5) {
+      await this.safeRedisDel(redisKey);
+      await this.safeRedisDel(attemptsKey);
+      throw new BadRequestException(
+        'Too many failed verification attempts. This OTP code has been locked and invalidated for security. Please request a new code.',
+      );
+    }
+
     const storedCode = await this.safeRedisGet(redisKey);
 
     if (!storedCode || storedCode !== code.trim()) {
-      throw new BadRequestException('Invalid or expired verification code. Please request a new OTP code.');
+      const nextAttempt = currentAttempts + 1;
+      if (nextAttempt >= 5) {
+        await this.safeRedisDel(redisKey);
+        await this.safeRedisDel(attemptsKey);
+        throw new BadRequestException(
+          'Too many failed verification attempts. This OTP code has been locked and invalidated for security. Please request a new code.',
+        );
+      }
+      await this.safeRedisSet(attemptsKey, String(nextAttempt), 600);
+      throw new BadRequestException(
+        `Invalid or expired verification code. ${5 - nextAttempt} attempts remaining.`,
+      );
     }
 
     await this.safeRedisDel(redisKey);
+    await this.safeRedisDel(attemptsKey);
 
     // Check if user already exists in DB
     let existingUser: any = null;
@@ -408,7 +517,9 @@ export class AuthService {
         });
       }
     } catch (err) {
-      this.logger.warn(`User verification update notice (${cleanEmail}): ${(err as Error).message}`);
+      this.logger.warn(
+        `User verification update notice (${cleanEmail}): ${(err as Error).message}`,
+      );
     }
 
     if (existingUser) {
@@ -431,8 +542,8 @@ export class AuthService {
       };
     }
 
-    // New user (onboarding) -> issue temporary onboarding session token
-    const uid = `otp_${crypto.createHash('sha256').update(cleanEmail).digest('hex').slice(0, 24)}`;
+    // New user (onboarding) -> issue temporary onboarding session token with valid UUID
+    const uid = crypto.randomUUID();
     const sessionToken = this.signJwt({
       uid,
       email: cleanEmail,
@@ -448,13 +559,37 @@ export class AuthService {
     };
   }
 
-  async checkEmail(email: string): Promise<{ exists: boolean }> {
+  async checkEmail(
+    email: string,
+    clientIp?: string,
+  ): Promise<{ exists: boolean }> {
     const cleanEmail = email.toLowerCase().trim();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return { exists: false };
+    }
+
+    if (clientIp) {
+      const rateLimitKey = `rate:check_email:${clientIp}`;
+      const currentCount = await this.safeRedisGet(rateLimitKey);
+      if (currentCount && parseInt(currentCount, 10) >= 15) {
+        throw new BadRequestException(
+          'Too many email verification checks. Please wait a moment before trying again.',
+        );
+      }
+      await this.safeRedisSet(
+        rateLimitKey,
+        String(parseInt(currentCount || '0', 10) + 1),
+        60,
+      );
+    }
+
     try {
       const user = await this.userRepository.findByEmail(cleanEmail);
       return { exists: !!user };
     } catch (err) {
-      this.logger.warn(`checkEmail lookup notice for ${cleanEmail}: ${(err as Error).message}`);
+      this.logger.warn(
+        `checkEmail lookup notice for ${cleanEmail}: ${(err as Error).message}`,
+      );
       return { exists: false };
     }
   }
@@ -467,7 +602,9 @@ export class AuthService {
       const user = await this.userRepository.findByEmail(cleanEmail);
       if (user) recipientName = user.displayName || user.name || recipientName;
     } catch (err) {
-      this.logger.warn(`User lookup fallback for reset (${cleanEmail}): ${(err as Error).message}`);
+      this.logger.warn(
+        `User lookup fallback for reset (${cleanEmail}): ${(err as Error).message}`,
+      );
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -475,11 +612,16 @@ export class AuthService {
     await this.safeRedisSet(redisKey, cleanEmail, 3600);
 
     const resetLink = `https://hq.netify.ng/reset-password?token=${resetToken}`;
-    await this.emailService.sendPasswordResetEmail(cleanEmail, recipientName, resetLink);
+    await this.emailService.sendPasswordResetEmail(
+      cleanEmail,
+      recipientName,
+      resetLink,
+    );
 
     return {
       success: true,
-      message: 'If an account exists for this email, password reset instructions have been sent.',
+      message:
+        'If an account exists for this email, password reset instructions have been sent.',
     };
   }
 
@@ -487,7 +629,8 @@ export class AuthService {
     const redisKey = `pwd_reset:${token}`;
     const email = await this.safeRedisGet(redisKey);
 
-    if (!email) throw new BadRequestException('Invalid or expired password reset link');
+    if (!email)
+      throw new BadRequestException('Invalid or expired password reset link');
 
     await this.safeRedisDel(redisKey);
 
@@ -501,10 +644,15 @@ export class AuthService {
       const user = await this.userRepository.findByEmail(email);
       if (user) {
         await this.userRepository.update(user.id, { passwordHash });
-        this.logger.log(`[Auth] Password reset completed for ${email}`);
+        // Invalidate active refresh tokens and session caches
+        await this.safeRedisDel(`refresh_token:${user.id}`);
+        await this.safeRedisDel(`user_session:${user.id}`);
+        this.logger.log(`[Auth] Password reset completed and active sessions revoked for ${email}`);
       }
     } catch (err) {
-      this.logger.warn(`Password reset update notice for ${email}: ${(err as Error).message}`);
+      this.logger.warn(
+        `Password reset update notice for ${email}: ${(err as Error).message}`,
+      );
     }
 
     this.emailService
@@ -521,7 +669,8 @@ export class AuthService {
 
   async getMe(userId: string) {
     const user = await this.userRepository.findById(userId);
-    if (!user) throw new NotFoundException('Authenticated user profile not found');
+    if (!user)
+      throw new NotFoundException('Authenticated user profile not found');
 
     const permissions = this.resolveUserPermissions(user.role);
 
@@ -551,7 +700,14 @@ export class AuthService {
   }
 
   private sanitizeUser(user: any) {
-    const { deletedAt, deletedBy, createdBy, updatedBy, passwordHash, ...cleanUser } = user;
+    const {
+      deletedAt,
+      deletedBy,
+      createdBy,
+      updatedBy,
+      passwordHash,
+      ...cleanUser
+    } = user;
     return cleanUser;
   }
 
@@ -572,25 +728,50 @@ export class AuthService {
     }
   }
 
-  async trackIncompleteOnboarding(email: string, step?: number, orgName?: string, completed?: boolean) {
+  async trackIncompleteOnboarding(
+    email: string,
+    step?: number,
+    orgName?: string,
+    completed?: boolean,
+    clientIp?: string,
+  ) {
     if (!email || !email.includes('@')) return { success: false };
     const cleanEmail = email.toLowerCase().trim();
-    const leadKey = `lead:onboarding:${cleanEmail}`;
-    const statusTag = completed ? 'COMPLETED_ONBOARDING' : 'INCOMPLETE_ONBOARDING';
 
+    if (clientIp) {
+      const rateLimitKey = `rate:lead_track:${clientIp}`;
+      const currentCount = await this.safeRedisGet(rateLimitKey);
+      if (currentCount && parseInt(currentCount, 10) >= 20) {
+        return { success: false, message: 'Rate limit exceeded' };
+      }
+      await this.safeRedisSet(
+        rateLimitKey,
+        String(parseInt(currentCount || '0', 10) + 1),
+        60,
+      );
+    }
+
+    const leadKey = `lead:onboarding:${cleanEmail}`;
+    const statusTag = completed
+      ? 'COMPLETED_ONBOARDING'
+      : 'INCOMPLETE_ONBOARDING';
+
+    // Persist for 48 hours (172,800s) instead of 30 days to protect Redis memory
     await this.safeRedisSet(
       leadKey,
       JSON.stringify({
         email: cleanEmail,
         tag: statusTag,
         lastStep: step || 1,
-        orgName: orgName || 'Unfinished Workspace',
+        orgName: (orgName || 'Unfinished Workspace').slice(0, 100),
         updatedAt: new Date().toISOString(),
       }),
-      86400 * 30,
+      86400 * 2,
     );
 
-    this.logger.log(`📌 Tagged lead ${cleanEmail} as ${statusTag} (Step ${step || 1})`);
+    this.logger.log(
+      `📌 Tagged lead ${cleanEmail} as ${statusTag} (Step ${step || 1})`,
+    );
     return { success: true, email: cleanEmail, tag: statusTag };
   }
 }

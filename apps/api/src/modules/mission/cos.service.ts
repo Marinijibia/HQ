@@ -108,7 +108,9 @@ export class CosService {
 
     let cleanedText = response.text.trim();
     if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '');
+      cleanedText = cleanedText
+        .replace(/^```(?:json)?\n?/i, '')
+        .replace(/\n?```$/, '');
     }
 
     try {
@@ -118,7 +120,9 @@ export class CosService {
       );
       return parsed;
     } catch {
-      this.logger.log('[Teema Operations Engine] Output parsed as raw completion text. Structuring dynamic WBS DAG...');
+      this.logger.log(
+        '[Teema Operations Engine] Output parsed as raw completion text. Structuring dynamic WBS DAG...',
+      );
       return {
         tasks: [
           {
@@ -137,7 +141,8 @@ export class CosService {
             assignedDirector: 'Teema (Operations Director)',
             dependencies: ['task-1'],
             status: 'Running',
-            description: 'Structure work package items and operational dependencies.',
+            description:
+              'Structure work package items and operational dependencies.',
             estimatedHours: 12,
             isCriticalPath: true,
           },
@@ -147,7 +152,8 @@ export class CosService {
             assignedDirector: 'Legal (Compliance Director)',
             dependencies: ['task-2'],
             status: 'Pending',
-            description: 'Verify data privacy and regulatory compliance guardrails.',
+            description:
+              'Verify data privacy and regulatory compliance guardrails.',
             estimatedHours: 10,
             isCriticalPath: true,
           },
@@ -166,9 +172,21 @@ export class CosService {
         operationalVelocity: 94,
         totalEstimatedHours: 36,
         workloadDistribution: [
-          { director: 'Teema (Operations)', taskCount: 1, capacityStatus: 'OPTIMAL' },
-          { director: 'Legal (Compliance)', taskCount: 1, capacityStatus: 'OPTIMAL' },
-          { director: 'Mr. Intelligence (Research)', taskCount: 1, capacityStatus: 'OPTIMAL' },
+          {
+            director: 'Teema (Operations)',
+            taskCount: 1,
+            capacityStatus: 'OPTIMAL',
+          },
+          {
+            director: 'Legal (Compliance)',
+            taskCount: 1,
+            capacityStatus: 'OPTIMAL',
+          },
+          {
+            director: 'Mr. Intelligence (Research)',
+            taskCount: 1,
+            capacityStatus: 'OPTIMAL',
+          },
           { director: 'Asad (CEO)', taskCount: 1, capacityStatus: 'OPTIMAL' },
         ],
       };

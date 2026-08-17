@@ -35,7 +35,7 @@ export class UserController {
       user = await this.userRepository.createIsolatedUserWorkspace(
         req.user.uid,
         req.user.email,
-        (req.user.role as any) || 'ORGANIZATION_OWNER',
+        (req.user.role as any) || 'MEMBER',
       );
     }
     return user;

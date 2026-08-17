@@ -58,7 +58,9 @@ export class EmailService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        this.logger.warn(`Resend API Notice [${response.status}]: ${errorText}`);
+        this.logger.warn(
+          `Resend API Notice [${response.status}]: ${errorText}`,
+        );
         // Return true on domain/recipient restriction so auth flow is never blocked
         return true;
       }
@@ -69,7 +71,9 @@ export class EmailService {
       );
       return true;
     } catch (error) {
-      this.logger.warn(`Resend API dispatch notice: ${(error as Error).message}`);
+      this.logger.warn(
+        `Resend API dispatch notice: ${(error as Error).message}`,
+      );
       return true;
     }
   }
@@ -85,8 +89,14 @@ export class EmailService {
     otpCode: string,
     expiresInMinutes: number = 10,
   ): Promise<boolean> {
-    this.logger.log(`🔑 [OTP Dispatch Log] Email: ${to} | Verification Code: ${otpCode}`);
-    const { subject, html } = getOtpEmailTemplate(name, otpCode, expiresInMinutes);
+    this.logger.log(
+      `🔑 [OTP Dispatch Log] Email: ${to} | Verification Code: ******`,
+    );
+    const { subject, html } = getOtpEmailTemplate(
+      name,
+      otpCode,
+      expiresInMinutes,
+    );
     return this.sendRawEmail({ to, subject, html });
   }
 

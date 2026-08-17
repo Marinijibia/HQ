@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConversationRepository } from './conversation.repository';
 import { ExecutiveRepository } from '../executive/executive.repository';
 import { AiService } from '../ai/ai.service';
-import { Conversation, ChatMessage } from '@prisma/client';
+import { Conversation, ChatMessage, MissionStatus } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
@@ -51,18 +51,41 @@ export class ConversationService {
 
   async getConversations(
     companyId: string,
-    filters?: { isPinned?: boolean; isArchived?: boolean; search?: string } | boolean,
+    filters?:
+      { isPinned?: boolean; isArchived?: boolean; search?: string } | boolean,
   ): Promise<Conversation[]> {
     if (typeof filters === 'boolean') {
-      return this.conversationRepository.findByCompanyId(companyId, { isArchived: filters });
+      return this.conversationRepository.findByCompanyId(companyId, {
+        isArchived: filters,
+      });
     }
     return this.conversationRepository.findByCompanyId(companyId, filters);
   }
 
-  async getConversation(id: string): Promise<Conversation & { messages: ChatMessage[] }> {
-    const conv = await this.conversationRepository.findById(id);
+  async getConversation(
+    id: string,
+    companyId?: string,
+  ): Promise<Conversation & { messages: ChatMessage[] }> {
+    const conv = await this.conversationRepository.findById(id, companyId);
     if (!conv) throw new NotFoundException('Conversation not found');
     return conv;
+  }
+
+  async saveMessage(
+    conversationId: string,
+    senderId: string,
+    senderType: string,
+    content: string,
+  ): Promise<ChatMessage> {
+    const conv = await this.conversationRepository.findById(conversationId);
+    if (!conv) throw new NotFoundException('Conversation not found');
+
+    return this.conversationRepository.createMessage({
+      conversationId,
+      senderId,
+      senderType,
+      content,
+    });
   }
 
   async submitMessage(
@@ -77,7 +100,9 @@ export class ConversationService {
     // Fetch real company name for prompts — never hardcode
     let companyName = 'your organization';
     try {
-      const company = await this.prisma.company.findUnique({ where: { id: conv.companyId } });
+      const company = await this.prisma.company.findUnique({
+        where: { id: conv.companyId },
+      });
       if (company?.name) companyName = company.name;
     } catch {
       // Non-fatal — fallback to generic
@@ -105,14 +130,15 @@ export class ConversationService {
     if (rawExecutives.length === 0) {
       this.logger.warn(
         `[ConversationService] No active executives found for company ${conv.companyId}. ` +
-        `Cannot generate boardroom deliberation.`,
+          `Cannot generate boardroom deliberation.`,
       );
       // Save a system notice — no fake executive responses
       const systemMsg = await this.conversationRepository.createMessage({
         conversationId,
         senderId: conv.companyId,
         senderType: 'SYSTEM',
-        content: 'No active executives are installed in your workspace yet. Visit the Marketplace to install your C-Suite team.',
+        content:
+          'No active executives are installed in your workspace yet. Visit the Marketplace to install your C-Suite team.',
       });
       return [systemMsg];
     }
@@ -128,6 +154,7 @@ export class ConversationService {
         companyName,
         conv.title || 'this strategic session',
         content,
+        conv.companyId,
       );
 
       const msg = await this.conversationRepository.createMessage({
@@ -162,7 +189,7 @@ export class ConversationService {
         objective: conv.title || 'Executive Objective',
         companyId: conv.companyId,
         createdBy: userId,
-        status: 'IN_PROGRESS' as any,
+        status: MissionStatus.EXECUTING,
       },
     });
 
@@ -195,11 +222,13 @@ export class ConversationService {
     companyName: string,
     threadTitle: string,
     userMessage: string,
+    companyId?: string,
   ): Promise<string> {
-    const systemPrompt = executiveSystemPrompt ||
+    const systemPrompt =
+      executiveSystemPrompt ||
       `You are ${executiveName}, ${executiveTitle} of ${companyName}. ` +
-      `Apply your domain expertise to provide authoritative, precise, and actionable executive analysis. ` +
-      `Maintain a professional, confident executive tone. Avoid generic boilerplate.`;
+        `Apply your domain expertise to provide authoritative, precise, and actionable executive analysis. ` +
+        `Maintain a professional, confident executive tone. Avoid generic boilerplate.`;
 
     const prompt =
       `You are ${executiveName}, ${executiveTitle} at ${companyName}.\n` +
@@ -214,6 +243,8 @@ export class ConversationService {
         systemPrompt,
         temperature: 0.4,
         maxTokens: 512,
+        companyId,
+        category: 'CONVERSATION',
       });
 
       if (result.text && result.text.trim().length > 20) {
@@ -250,7 +281,7 @@ export class ConversationService {
     });
   }
 
-  async deleteConversation(id: string): Promise<Conversation> {
-    return this.conversationRepository.delete(id);
+  async deleteConversation(id: string, companyId?: string): Promise<Conversation> {
+    return this.conversationRepository.delete(id, companyId);
   }
 }

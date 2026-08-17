@@ -1,10 +1,21 @@
+export function escapeHtml(str?: string): string {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export function getBaseEmailLayout(title: string, content: string): string {
+  const safeTitle = escapeHtml(title);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
+  <title>${safeTitle}</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -112,10 +123,14 @@ export function getBaseEmailLayout(title: string, content: string): string {
 </html>`;
 }
 
-export function getWelcomeEmailTemplate(name: string): { subject: string; html: string } {
+export function getWelcomeEmailTemplate(name: string): {
+  subject: string;
+  html: string;
+} {
+  const safeName = escapeHtml(name);
   const subject = 'Welcome to HQ AI OS - Your Autonomous Command Center';
   const content = `
-    <h2>Welcome aboard, ${name}! 👋</h2>
+    <h2>Welcome aboard, ${safeName}! 👋</h2>
     <p>We are thrilled to welcome you to <strong>HQ AI OS</strong>, your enterprise platform for autonomous AI executive management, strategic planning, and automated workflow execution.</p>
     
     <div class="card">
@@ -142,13 +157,15 @@ export function getOtpEmailTemplate(
   otpCode: string,
   expiresInMinutes: number = 10,
 ): { subject: string; html: string } {
-  const subject = `${otpCode} is your HQ AI OS Verification Code`;
+  const safeName = escapeHtml(name);
+  const safeOtp = escapeHtml(otpCode);
+  const subject = `${safeOtp} is your HQ AI OS Verification Code`;
   const content = `
     <h2>Security Verification Code</h2>
-    <p>Hello ${name},</p>
+    <p>Hello ${safeName},</p>
     <p>Use the following 6-digit verification code to complete your security authentication or email verification request:</p>
     
-    <div class="code-box">${otpCode}</div>
+    <div class="code-box">${safeOtp}</div>
 
     <p style="font-size: 13px; color: #9ca3af;">
       ⏱️ This code will expire in <strong>${expiresInMinutes} minutes</strong>. For security reasons, do not share this code with anyone.
@@ -163,19 +180,21 @@ export function getPasswordResetEmailTemplate(
   name: string,
   resetUrl: string,
 ): { subject: string; html: string } {
+  const safeName = escapeHtml(name);
+  const safeResetUrl = encodeURI(resetUrl);
   const subject = 'Reset Your HQ AI OS Password';
   const content = `
     <h2>Password Reset Request</h2>
-    <p>Hello ${name},</p>
+    <p>Hello ${safeName},</p>
     <p>We received a request to reset the password for your HQ AI OS account.</p>
 
     <p style="text-align: center;">
-      <a href="${resetUrl}" class="button">Reset Your Password</a>
+      <a href="${safeResetUrl}" class="button">Reset Your Password</a>
     </p>
 
     <p style="font-size: 13px; color: #9ca3af;">
       If the button above doesn't work, copy and paste this link into your browser:<br>
-      <a href="${resetUrl}" style="color:#818cf8; word-break:break-all;">${resetUrl}</a>
+      <a href="${safeResetUrl}" style="color:#818cf8; word-break:break-all;">${safeResetUrl}</a>
     </p>
 
     <p style="font-size: 13px; color: #ef4444; margin-top: 20px;">
@@ -191,16 +210,20 @@ export function getSecurityLoginNoticeEmailTemplate(
   userAgent: string,
   time: string,
 ): { subject: string; html: string } {
+  const safeName = escapeHtml(name);
+  const safeIp = escapeHtml(ipAddress);
+  const safeUserAgent = escapeHtml(userAgent);
+  const safeTime = escapeHtml(time);
   const subject = 'Security Alert: New Login to HQ AI OS';
   const content = `
     <h2>Security Alert: New Sign-In Detected</h2>
-    <p>Hello ${name},</p>
+    <p>Hello ${safeName},</p>
     <p>We detected a new login to your HQ AI OS account with the following details:</p>
 
     <div class="card">
-      <p style="margin: 4px 0;"><strong>Timestamp:</strong> ${time}</p>
-      <p style="margin: 4px 0;"><strong>IP Address:</strong> ${ipAddress}</p>
-      <p style="margin: 4px 0;"><strong>Device / Browser:</strong> ${userAgent}</p>
+      <p style="margin: 4px 0;"><strong>Timestamp:</strong> ${safeTime}</p>
+      <p style="margin: 4px 0;"><strong>IP Address:</strong> ${safeIp}</p>
+      <p style="margin: 4px 0;"><strong>Device / Browser:</strong> ${safeUserAgent}</p>
     </div>
 
     <p>If this was you, no action is required.</p>
@@ -215,19 +238,23 @@ export function getTeamInvitationEmailTemplate(
   companyName: string,
   inviteUrl: string,
 ): { subject: string; html: string } {
-  const subject = `${inviterName} invited you to join ${companyName} on HQ AI OS`;
+  const safeName = escapeHtml(name);
+  const safeInviter = escapeHtml(inviterName);
+  const safeCompany = escapeHtml(companyName);
+  const safeInviteUrl = encodeURI(inviteUrl);
+  const subject = `${safeInviter} invited you to join ${safeCompany} on HQ AI OS`;
   const content = `
     <h2>You've been invited! 🏢</h2>
-    <p>Hello ${name},</p>
-    <p><strong>${inviterName}</strong> has invited you to join <strong>${companyName}</strong> on HQ AI OS.</p>
+    <p>Hello ${safeName},</p>
+    <p><strong>${safeInviter}</strong> has invited you to join <strong>${safeCompany}</strong> on HQ AI OS.</p>
 
     <p style="text-align: center;">
-      <a href="${inviteUrl}" class="button">Accept Invitation</a>
+      <a href="${safeInviteUrl}" class="button">Accept Invitation</a>
     </p>
 
     <p style="font-size: 13px; color: #9ca3af;">
       Invitation Link:<br>
-      <a href="${inviteUrl}" style="color:#818cf8; word-break:break-all;">${inviteUrl}</a>
+      <a href="${safeInviteUrl}" style="color:#818cf8; word-break:break-all;">${safeInviteUrl}</a>
     </p>
   `;
   return { subject, html: getBaseEmailLayout(subject, content) };
@@ -241,20 +268,26 @@ export function getTransactionReceiptEmailTemplate(
   vendorOrPlan: string,
   executiveRole?: string,
 ): { subject: string; html: string } {
-  const subject = `🧾 Transaction Receipt: ${reference.slice(0, 16)} — HQ AI OS`;
+  const safeName = escapeHtml(name);
+  const safeAmount = escapeHtml(amountFormatted);
+  const safeGateway = escapeHtml(gateway);
+  const safeRef = escapeHtml(reference);
+  const safeVendor = escapeHtml(vendorOrPlan);
+  const safeExecRole = executiveRole ? escapeHtml(executiveRole) : undefined;
+  const subject = `🧾 Transaction Receipt: ${safeRef.slice(0, 16)} — HQ AI OS`;
   const content = `
     <h2>Transaction Receipt 🧾</h2>
-    <p>Hello ${name},</p>
+    <p>Hello ${safeName},</p>
     <p>This email confirms a successful financial settlement processed through HQ AI OS.</p>
 
     <div class="card">
       <p style="margin: 6px 0; font-size: 20px; font-weight: bold; color: #10b981;">
-        ${amountFormatted}
+        ${safeAmount}
       </p>
-      <p style="margin: 4px 0;"><strong>Transaction Hash / Ref:</strong> <code style="color:#38bdf8;">${reference}</code></p>
-      <p style="margin: 4px 0;"><strong>Gateway / Protocol:</strong> ${gateway}</p>
-      <p style="margin: 4px 0;"><strong>Item / Service:</strong> ${vendorOrPlan}</p>
-      ${executiveRole ? `<p style="margin: 4px 0;"><strong>Authorized By:</strong> ${executiveRole}</p>` : ''}
+      <p style="margin: 4px 0;"><strong>Transaction Hash / Ref:</strong> <code style="color:#38bdf8;">${safeRef}</code></p>
+      <p style="margin: 4px 0;"><strong>Gateway / Protocol:</strong> ${safeGateway}</p>
+      <p style="margin: 4px 0;"><strong>Item / Service:</strong> ${safeVendor}</p>
+      ${safeExecRole ? `<p style="margin: 4px 0;"><strong>Authorized By:</strong> ${safeExecRole}</p>` : ''}
       <p style="margin: 4px 0;"><strong>Date & Time:</strong> ${new Date().toUTCString()}</p>
       <p style="margin: 4px 0;"><strong>Settlement Status:</strong> <span style="color:#10b981; font-weight:bold;">COMPLETED / SETTLED</span></p>
     </div>

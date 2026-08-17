@@ -36,37 +36,54 @@ export class MemoryService {
   constructor(private readonly prisma: PrismaService) {}
 
   // Helper to parse Hybrid JSON value
-  parseValue(rawValue: string): { content: string; confidence: number; version: number; isConflicted: boolean; tags: string[] } {
+  parseValue(rawValue: string): {
+    content: string;
+    confidence: number;
+    version: number;
+    isConflicted: boolean;
+    tags: string[];
+  } {
     try {
       const parsed = JSON.parse(rawValue);
       if (parsed && typeof parsed === 'object' && 'content' in parsed) {
         return {
           content: parsed.content || '',
-          confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 100,
+          confidence:
+            typeof parsed.confidence === 'number' ? parsed.confidence : 100,
           version: typeof parsed.version === 'number' ? parsed.version : 1,
           isConflicted: !!parsed.isConflicted,
-          tags: Array.isArray(parsed.tags) ? parsed.tags : []
+          tags: Array.isArray(parsed.tags) ? parsed.tags : [],
         };
       }
-    } catch { /* ignore and treat as raw string */ }
+    } catch {
+      /* ignore and treat as raw string */
+    }
 
     return {
       content: rawValue,
       confidence: 100,
       version: 1,
       isConflicted: false,
-      tags: []
+      tags: [],
     };
   }
 
   // Helper to compile Hybrid JSON value
-  compileValue(content: string, meta: { confidence?: number; version?: number; isConflicted?: boolean; tags?: string[] }): string {
+  compileValue(
+    content: string,
+    meta: {
+      confidence?: number;
+      version?: number;
+      isConflicted?: boolean;
+      tags?: string[];
+    },
+  ): string {
     return JSON.stringify({
       content,
       confidence: meta.confidence ?? 100,
       version: meta.version ?? 1,
       isConflicted: meta.isConflicted ?? false,
-      tags: meta.tags ?? []
+      tags: meta.tags ?? [],
     });
   }
 
@@ -82,7 +99,10 @@ export class MemoryService {
       `[Memory Engine] Saving memory node in layer: ${data.layer} (Key: ${data.key})`,
     );
 
-    const compiled = this.compileValue(data.value, { confidence: 100, version: 1 });
+    const compiled = this.compileValue(data.value, {
+      confidence: 100,
+      version: 1,
+    });
 
     return this.prisma.executiveMemory.create({
       data: {
@@ -159,7 +179,7 @@ export class MemoryService {
         confidence: parsed.confidence,
         version: parsed.version,
         isConflicted: parsed.isConflicted,
-        tags: parsed.tags
+        tags: parsed.tags,
       };
     });
 
@@ -185,10 +205,10 @@ export class MemoryService {
   async listMemories(companyId: string): Promise<MemoryItem[]> {
     const list = await this.prisma.executiveMemory.findMany({
       where: { companyId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
 
-    return list.map(m => {
+    return list.map((m) => {
       const parsed = this.parseValue(m.value);
       return {
         id: m.id,
@@ -203,18 +223,27 @@ export class MemoryService {
         createdAt: m.createdAt,
         updatedAt: m.updatedAt,
         executiveId: m.executiveId,
-        missionId: m.missionId
+        missionId: m.missionId,
       };
     });
   }
 
-  async deleteMemory(id: string): Promise<void> {
-    await this.prisma.executiveMemory.delete({ where: { id } });
-  }
-
-  async updateMemory(id: string, data: { key: string; content: string; confidence?: number; version?: number; isConflicted?: boolean; tags?: string[] }): Promise<void> {
-    const existing = await this.prisma.executiveMemory.findUnique({ where: { id } });
-    if (!existing) throw new NotFoundException('Memory not found');
+  async updateMemory(
+    id: string,
+    companyId: string,
+    data: {
+      key: string;
+      content: string;
+      confidence?: number;
+      version?: number;
+      isConflicted?: boolean;
+      tags?: string[];
+    },
+  ): Promise<void> {
+    const existing = await this.prisma.executiveMemory.findFirst({
+      where: { id, companyId },
+    });
+    if (!existing) throw new NotFoundException('Memory not found in your organization');
 
     const parsed = this.parseValue(existing.value);
     const newVersion = (data.version ?? parsed.version) + 1;
@@ -223,32 +252,44 @@ export class MemoryService {
       confidence: data.confidence ?? parsed.confidence,
       version: newVersion,
       isConflicted: data.isConflicted ?? parsed.isConflicted,
-      tags: data.tags ?? parsed.tags
+      tags: data.tags ?? parsed.tags,
     });
 
     await this.prisma.executiveMemory.update({
       where: { id },
       data: {
         key: data.key,
-        value: compiled
-      }
+        value: compiled,
+      },
+    });
+  }
+
+  async deleteMemory(id: string, companyId: string): Promise<void> {
+    const existing = await this.prisma.executiveMemory.findFirst({
+      where: { id, companyId },
+    });
+    if (!existing) throw new NotFoundException('Memory not found in your organization');
+
+    await this.prisma.executiveMemory.delete({
+      where: { id },
     });
   }
 
   async promoteMemory(
     workingMemoryId: string,
+    companyId: string,
     targetLayer: MemoryLayer,
   ): Promise<void> {
     this.logger.log(
       `[Memory Engine] Promoting working memory ${workingMemoryId} to long-term: ${targetLayer}`,
     );
 
-    const memory = await this.prisma.executiveMemory.findUnique({
-      where: { id: workingMemoryId },
+    const memory = await this.prisma.executiveMemory.findFirst({
+      where: { id: workingMemoryId, companyId },
     });
 
     if (!memory) {
-      throw new Error('Working memory context not found');
+      throw new NotFoundException('Working memory context not found in your organization');
     }
 
     await this.prisma.$transaction(async (tx) => {
@@ -272,22 +313,24 @@ export class MemoryService {
   }
 
   async runReviewCycle(companyId: string) {
-    this.logger.log(`[Memory Engine] Running scheduled Memory Review Cycle for: ${companyId}`);
+    this.logger.log(
+      `[Memory Engine] Running scheduled Memory Review Cycle for: ${companyId}`,
+    );
 
     const memories = await this.prisma.executiveMemory.findMany({
-      where: { companyId }
+      where: { companyId },
     });
 
-    const parsedItems = memories.map(m => ({
+    const parsedItems = memories.map((m) => ({
       dbItem: m,
-      parsed: this.parseValue(m.value)
+      parsed: this.parseValue(m.value),
     }));
 
     let duplicatesRemoved = 0;
     let conflictsFlagged = 0;
     let decayedItems = 0;
 
-    const seen = new Map<string, typeof parsedItems[0]>();
+    const seen = new Map<string, (typeof parsedItems)[0]>();
     const toDeleteIds: string[] = [];
     const toUpdate: { id: string; key: string; value: string }[] = [];
 
@@ -301,7 +344,10 @@ export class MemoryService {
       // 1. Deduplication Check
       if (seen.has(uniqueKey)) {
         const prev = seen.get(uniqueKey)!;
-        if (prev.parsed.content.toLowerCase() === item.parsed.content.toLowerCase()) {
+        if (
+          prev.parsed.content.toLowerCase() ===
+          item.parsed.content.toLowerCase()
+        ) {
           // Exact duplicate key & value in the same layer -> keep the newest, delete this older one
           toDeleteIds.push(item.dbItem.id);
           duplicatesRemoved++;
@@ -317,7 +363,10 @@ export class MemoryService {
       }
 
       // 2. Memory Decay (Aged memories drop confidence score)
-      if (item.dbItem.createdAt < thirtyDaysAgo && item.parsed.confidence > 40) {
+      if (
+        item.dbItem.createdAt < thirtyDaysAgo &&
+        item.parsed.confidence > 40
+      ) {
         item.parsed.confidence = Math.max(30, item.parsed.confidence - 10);
         decayedItems++;
       }
@@ -327,36 +376,40 @@ export class MemoryService {
         confidence: item.parsed.confidence,
         version: item.parsed.version,
         isConflicted: item.parsed.isConflicted,
-        tags: item.parsed.tags
+        tags: item.parsed.tags,
       });
 
       if (recompiled !== item.dbItem.value) {
         toUpdate.push({
           id: item.dbItem.id,
           key: item.dbItem.key,
-          value: recompiled
+          value: recompiled,
         });
       }
     }
 
     // Execute bulk DB updates
     await this.prisma.$transaction([
-      ...toDeleteIds.map(id => this.prisma.executiveMemory.delete({ where: { id } })),
-      ...toUpdate.map(up => this.prisma.executiveMemory.update({
-        where: { id: up.id },
-        data: { value: up.value }
-      }))
+      ...toDeleteIds.map((id) =>
+        this.prisma.executiveMemory.delete({ where: { id } }),
+      ),
+      ...toUpdate.map((up) =>
+        this.prisma.executiveMemory.update({
+          where: { id: up.id },
+          data: { value: up.value },
+        }),
+      ),
     ]);
 
     this.logger.log(
-      `[Memory Review Cycle Finished] Duplicates Merged: ${duplicatesRemoved}, Conflicts Flagged: ${conflictsFlagged}, Decayed: ${decayedItems}`
+      `[Memory Review Cycle Finished] Duplicates Merged: ${duplicatesRemoved}, Conflicts Flagged: ${conflictsFlagged}, Decayed: ${decayedItems}`,
     );
 
     return {
       duplicatesRemoved,
       conflictsFlagged,
       decayedItems,
-      currentMemorySize: memories.length - duplicatesRemoved
+      currentMemorySize: memories.length - duplicatesRemoved,
     };
   }
 }

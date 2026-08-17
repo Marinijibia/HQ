@@ -1,29 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { Conversation, ChatMessage } from '@prisma/client';
 
-function toValidUuid(id: string): string {
+function toValidUuid(id?: string): string {
   if (!id) return '00000000-0000-0000-0000-000000000000';
-  const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+  const uuidRegex =
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
   if (uuidRegex.test(id)) {
     return id;
   }
-  const roleMap: Record<string, string> = {
-    'exec-ceo': '00000000-0000-0000-0000-000000000001',
-    'exec-cto': '00000000-0000-0000-0000-000000000002',
-    'exec-cmo': '00000000-0000-0000-0000-000000000003',
-    'exec-cfo': '00000000-0000-0000-0000-000000000004',
-    'exec-cro': '00000000-0000-0000-0000-000000000005',
-    'exec-coo': '00000000-0000-0000-0000-000000000006',
-  };
-  return roleMap[id] || '00000000-0000-0000-0000-000000000000';
+  return '00000000-0000-0000-0000-000000000000';
 }
 
 @Injectable()
 export class ConversationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findById(id: string): Promise<(Conversation & { messages: ChatMessage[] }) | null> {
+  async findById(
+    id: string,
+    companyIdInput?: string,
+  ): Promise<(Conversation & { messages: ChatMessage[] }) | null> {
+    if (companyIdInput) {
+      const companyId = await this.prisma.resolveCompanyId(companyIdInput);
+      return this.prisma.conversation.findFirst({
+        where: { id, companyId },
+        include: {
+          messages: {
+            orderBy: { timestamp: 'asc' },
+          },
+          mission: true,
+        },
+      });
+    }
+
     return this.prisma.conversation.findUnique({
       where: { id },
       include: {
@@ -36,15 +45,17 @@ export class ConversationRepository {
   }
 
   async findByCompanyId(
-    companyId: string,
+    companyIdInput: string,
     filters?: { isPinned?: boolean; isArchived?: boolean; search?: string },
   ): Promise<Conversation[]> {
+    const companyId = await this.prisma.resolveCompanyId(companyIdInput);
+
     const where: {
       companyId: string;
       isPinned?: boolean;
       isArchived?: boolean;
       title?: { contains: string; mode: 'insensitive' };
-    } = { companyId: toValidUuid(companyId) };
+    } = { companyId };
 
     if (filters) {
       if (filters.isPinned !== undefined) {
@@ -62,6 +73,11 @@ export class ConversationRepository {
     }
     return this.prisma.conversation.findMany({
       where,
+      include: {
+        messages: {
+          orderBy: { timestamp: 'asc' },
+        },
+      },
       orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }],
     });
   }
@@ -71,11 +87,19 @@ export class ConversationRepository {
     title?: string;
     missionId?: string;
   }): Promise<Conversation> {
+    const companyId = await this.prisma.resolveCompanyId(data.companyId);
+
     return this.prisma.conversation.create({
       data: {
         ...data,
-        companyId: toValidUuid(data.companyId),
-        missionId: data.missionId ? toValidUuid(data.missionId) : undefined,
+        companyId,
+        missionId:
+          data.missionId &&
+          /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+            data.missionId,
+          )
+            ? data.missionId
+            : undefined,
       },
     });
   }
@@ -87,7 +111,18 @@ export class ConversationRepository {
     });
   }
 
-  async delete(id: string): Promise<Conversation> {
+  async delete(id: string, companyId?: string): Promise<Conversation> {
+    if (companyId) {
+      const resolvedCompanyId = await this.prisma.resolveCompanyId(companyId);
+      const conv = await this.prisma.conversation.findFirst({
+        where: { id, companyId: resolvedCompanyId },
+      });
+      if (!conv) {
+        throw new NotFoundException(
+          `Conversation with ID "${id}" not found in workspace`,
+        );
+      }
+    }
     return this.prisma.conversation.delete({
       where: { id },
     });
@@ -104,8 +139,10 @@ export class ConversationRepository {
     return this.prisma.$transaction(async (tx) => {
       const msg = await tx.chatMessage.create({
         data: {
-          ...data,
+          conversationId: data.conversationId,
           senderId: sanitizedSenderId,
+          senderType: data.senderType || 'USER',
+          content: data.content,
         },
       });
       // Touch conversation to update its updatedAt timestamp

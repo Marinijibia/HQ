@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Button } from '@hq/ui';
 import { X, Rocket, Calendar, AlignLeft, Flag, Sparkles } from 'lucide-react';
 import { toast } from './toast';
+import { useRouter } from 'next/navigation';
 import { UpgradeModal, parseEntitlementError, UpgradeTrigger } from './upgrade-modal';
 
 interface MissionLaunchPanelProps {
@@ -30,6 +31,7 @@ const MISSION_SUGGESTIONS = [
 ];
 
 export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A84FF', token }: MissionLaunchPanelProps) {
+  const router = useRouter();
   const [objective, setObjective] = React.useState('');
   const [deadline, setDeadline] = React.useState('');
   const [priority, setPriority] = React.useState<'Low' | 'Medium' | 'High'>('High');
@@ -58,6 +60,7 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
     if (!objective.trim()) return;
     setSubmitting(true);
     try {
+      let createdMissionId: string | null = null;
       if (token) {
         const res = await fetch('/api/missions', {
           method: 'POST',
@@ -83,12 +86,21 @@ export function MissionLaunchPanel({ open, onClose, onSubmit, brandColor = '#0A8
           toast.error(errData?.message || 'Failed to launch mission. Please try again.');
           return;
         }
+
+        const data = await res.json().catch(() => null);
+        if (data?.id) {
+          createdMissionId = data.id;
+        }
       }
 
       localStorage.setItem('hq_first_mission_done', 'true');
       onSubmit({ objective: objective.trim(), deadline, priority });
       toast.success('🚀 Mission launched — your executive team is briefing now');
       onClose();
+
+      if (createdMissionId) {
+        router.push(`/missions/${createdMissionId}`);
+      }
     } catch {
       toast.error('Network error. Please check your connection and try again.');
     } finally {

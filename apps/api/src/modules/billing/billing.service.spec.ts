@@ -12,7 +12,9 @@ describe('BillingService', () => {
       upsert: jest.fn().mockResolvedValue({ id: 'sub-001', status: 'ACTIVE' }),
     },
     organizationWallet: {
-      findUnique: jest.fn().mockResolvedValue({ companyId: 'comp-001', balanceUsd: 100 }),
+      findUnique: jest
+        .fn()
+        .mockResolvedValue({ companyId: 'comp-001', balanceUsd: 100 }),
       update: jest.fn().mockResolvedValue({}),
     },
     walletTransaction: {
@@ -20,7 +22,9 @@ describe('BillingService', () => {
       findMany: jest.fn().mockResolvedValue([]),
     },
     plan: {
-      findFirst: jest.fn().mockResolvedValue({ id: 'plan-001', code: 'growth' }),
+      findFirst: jest
+        .fn()
+        .mockResolvedValue({ id: 'plan-001', code: 'growth' }),
     },
     company: {
       update: jest.fn().mockResolvedValue({}),
@@ -61,7 +65,11 @@ describe('BillingService', () => {
       const email = 'test@example.com';
       const planCode = 'growth';
       const companyId = '7b18dfa8-7fba-4b77-8fa8-fb18dfa87fba';
-      const result = await service.createCheckoutSession(email, planCode, companyId);
+      const result = await service.createCheckoutSession(
+        email,
+        planCode,
+        companyId,
+      );
 
       expect(result).toHaveProperty('reference');
       expect(result.reference).toMatch(/^pay_mock_/);

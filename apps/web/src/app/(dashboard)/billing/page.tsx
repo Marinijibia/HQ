@@ -42,69 +42,115 @@ export default function BillingPage() {
   const [loading, setLoading] = React.useState(false);
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
 
+  // Live Token Usage & Plan State
+  const [usageData, setUsageData] = React.useState<{
+    totalQuota: number;
+    usedCredits: number;
+    remainingCredits: number;
+    remainingPercentage: number;
+    costCenters: CostCenter[];
+    activePlan: { code: string; name: string; status: string; periodEnd: string | null };
+  } | null>(null);
+
+  // Invoices list state (fetched live from API)
+  const [invoices, setInvoices] = React.useState<Invoice[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = React.useState(true);
+
   // Circle Agentic Payments State
-  const [usdcBalance, setUsdcBalance] = React.useState(100.0);
-  const [usdcCap, setUsdcCap] = React.useState(100.0);
+  const [usdcBalance, setUsdcBalance] = React.useState(0.0);
+  const [usdcCap, setUsdcCap] = React.useState(50.0);
   const [circleLoading, setCircleLoading] = React.useState(false);
   const [circleTransactions, setCircleTransactions] = React.useState<any[]>([]);
 
-  // Fetch real Organization Wallet Balance & Allowances on mount
+  // Fetch real Organization Wallet Balance, Token Usage, and Invoices on mount
   React.useEffect(() => {
-    const fetchWalletData = async () => {
-      try {
-        const headers: Record<string, string> = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
 
-        const [walletRes, allowancesRes, txRes] = await Promise.all([
-          fetch('/api/wallet/me', { headers }).catch(() => null),
-          fetch('/api/wallet/allowances', { headers }).catch(() => null),
-          fetch('/api/wallet/transactions', { headers }).catch(() => null),
+    const fetchAllBillingData = async () => {
+      try {
+        const [walletRes, allowancesRes, txRes, usageRes, historyRes, budgetsRes] = await Promise.allSettled([
+          fetch('/api/wallet/me', { headers }),
+          fetch('/api/wallet/allowances', { headers }),
+          fetch('/api/wallet/transactions', { headers }),
+          fetch('/api/billing/usage', { headers }),
+          fetch('/api/billing/history', { headers }),
+          fetch('/api/billing/budgets', { headers }),
         ]);
 
-        if (walletRes && walletRes.ok) {
-          const w = await walletRes.json();
-          if (w.balanceUsd !== undefined) setUsdcBalance(w.balanceUsd);
+        if (walletRes.status === 'fulfilled' && walletRes.value.ok) {
+          const w = await walletRes.value.json();
+          if (w.balanceUsd !== undefined) setUsdcBalance(Number(w.balanceUsd));
         }
 
-        if (allowancesRes && allowancesRes.ok) {
-          const a = await allowancesRes.json();
+        if (allowancesRes.status === 'fulfilled' && allowancesRes.value.ok) {
+          const a = await allowancesRes.value.json();
           if (Array.isArray(a) && a.length > 0) {
-            const cto = a.find((x: any) => x.roleKey === 'CTO') || a[0];
-            if (cto?.singleTxLimit) setUsdcCap(cto.singleTxLimit);
+            const cto = a.find((x: any) => x.roleKey === 'CTO' || x.roleKey === 'CFO') || a[0];
+            if (cto?.singleTxLimit) setUsdcCap(Number(cto.singleTxLimit));
           }
         }
 
-        if (txRes && txRes.ok) {
-          const txs = await txRes.json();
+        if (budgetsRes.status === 'fulfilled' && budgetsRes.value.ok) {
+          const b = await budgetsRes.value.json();
+          if (b.monthlyCap) setMonthlyCap(String(b.monthlyCap));
+          if (b.warningThreshold) setWarningThreshold(String(b.warningThreshold));
+          if (b.missionThreshold) setMissionThreshold(String(b.missionThreshold));
+        }
+
+        if (txRes.status === 'fulfilled' && txRes.value.ok) {
+          const txs = await txRes.value.json();
           if (Array.isArray(txs)) {
             setCircleTransactions(
               txs.map((t: any) => ({
                 id: t.id,
-                txHash: t.blockchainTxHash || t.circleTxId || '0x' + Math.random().toString(16).substring(2),
-                amountUsdc: t.amountUsdc || t.amountUsd,
+                txHash: t.blockchainTxHash || t.circleTxId || `0x${t.id.replace(/-/g, '')}`,
+                amountUsdc: Number(t.amountUsdc || t.amountUsd || 0),
                 vendorName: t.vendorName || 'Autonomous Service Provider',
                 serviceDescription: t.description || 'HQ Agentic USDC Settlement',
                 executiveRole: `${t.executiveRoleKey || 'CTO'} (Executive Director)`,
                 status: t.status || 'COMPLETED',
-                timestamp: t.createdAt ? new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
+                timestamp: t.createdAt
+                  ? new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : 'Recently',
               })),
             );
           }
         }
-      } catch {
-        /* ignore */
+
+        if (usageRes.status === 'fulfilled' && usageRes.value.ok) {
+          const u = await usageRes.value.json();
+          setUsageData(u);
+        }
+
+        if (historyRes.status === 'fulfilled' && historyRes.value.ok) {
+          const h = await historyRes.value.json();
+          if (Array.isArray(h)) {
+            setInvoices(h);
+          }
+        }
+      } catch (err) {
+        console.error('Failed fetching live billing data:', err);
+      } finally {
+        setInvoicesLoading(false);
       }
     };
 
-    fetchWalletData();
+    fetchAllBillingData();
   }, [token]);
 
   const handleSimulateCirclePayment = async () => {
+    if (usdcBalance < 45.0) {
+      toast.error(`❌ Insufficient USDC balance ($${usdcBalance.toFixed(2)} available). Top up your wallet first.`);
+      return;
+    }
     setCircleLoading(true);
     toast.info('⚡ Initiating Autonomous Circle USDC Settlement...');
     try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      };
 
       const res = await fetch('/api/wallet/agent-payment', {
         method: 'POST',
@@ -112,7 +158,7 @@ export default function BillingPage() {
         body: JSON.stringify({
           roleKey: 'CTO',
           amountUsd: 45.0,
-          vendorName: 'Cloudflare Edge AI Oracle',
+          vendorName: 'Cloudflare Edge AI Bandwidth',
           vendorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
           description: 'Instant autonomous serverless GPU bandwidth allocation for AI Boardroom',
         }),
@@ -149,21 +195,6 @@ export default function BillingPage() {
   const [monthlyCap, setMonthlyCap] = React.useState('500.00');
   const [warningThreshold, setWarningThreshold] = React.useState('80');
   const [missionThreshold, setMissionThreshold] = React.useState('1500');
-
-  // Invoices list state
-  const [invoices, setInvoices] = React.useState<Invoice[]>([
-    { id: 'INV-001', amount: '$0.00', status: 'Paid', date: 'Jul 01, 2026', type: 'Free Starter Reset' },
-    { id: 'INV-002', amount: '$150.00', status: 'Paid', date: 'Jun 01, 2026', type: 'Professional Subscription' },
-    { id: 'INV-003', amount: '$45.00', status: 'Paid', date: 'May 12, 2026', type: 'Credit Pack (5,000)' },
-  ]);
-
-  // Dynamic cost allocation statistics
-  const costCenters: CostCenter[] = [
-    { name: 'Mission Execution', percentage: 46, credits: 4333 },
-    { name: 'Research & Search', percentage: 22, credits: 2072 },
-    { name: 'AI Conversations', percentage: 18, credits: 1695 },
-    { name: 'Knowledge Indexing', percentage: 14, credits: 1320 },
-  ];
 
   React.useEffect(() => {
     const draft = localStorage.getItem('hq_onboarding_draft');
@@ -210,6 +241,15 @@ export default function BillingPage() {
         .then((data) => {
           if (data.success) {
             toast.success('🎉 Subscription active! Entitlement verified successfully.');
+            // Re-fetch live usage and invoices
+            fetch('/api/billing/usage', { headers })
+              .then((r) => r.json())
+              .then((u) => setUsageData(u))
+              .catch(() => {});
+            fetch('/api/billing/history', { headers })
+              .then((r) => r.json())
+              .then((h) => Array.isArray(h) && setInvoices(h))
+              .catch(() => {});
             // Clean URL query parameters
             window.history.replaceState({}, document.title, window.location.pathname);
           } else {
@@ -239,6 +279,11 @@ export default function BillingPage() {
       if (res.ok && data.success) {
         setUsdcBalance(data.remainingBalanceUsd);
         toast.success(`🎉 ${data.message}`);
+        // Refresh usage
+        fetch('/api/billing/usage', { headers })
+          .then((r) => r.json())
+          .then((u) => setUsageData(u))
+          .catch(() => {});
       } else {
         toast.error(`❌ Payment Notice: ${data.message || 'Failed to pay with HQ Wallet balance'}`);
       }
@@ -249,7 +294,7 @@ export default function BillingPage() {
     }
   };
 
-  const handleUpgrade = async (planCode: string = 'growth', gateway: 'stripe' | 'paystack' = 'paystack') => {
+  const handleUpgrade = async (planCode: string = 'growth') => {
     setLoading(true);
     toast.success(`💳 Initializing checkout session for ${planCode.toUpperCase()} ($)...`);
     try {
@@ -266,67 +311,89 @@ export default function BillingPage() {
       });
       const data = await response.json();
 
-      if (data.url && !data.reference?.startsWith('pay_mock_')) {
+      if (data.url) {
         toast.success('💳 Redirecting to Paystack payment gateway...');
         window.location.href = data.url;
         return;
       }
 
-      if (data.reference?.startsWith('pay_mock_')) {
-        toast.info('🧪 Simulating Paystack checkout popup...');
-        setTimeout(async () => {
-          const verifyRes = await fetch('/api/billing/verify', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ reference: data.reference }),
-          });
-          if (verifyRes.ok) {
-            toast.success('🎉 Subscription active! Entitlement verified.');
-          }
+      if (data.reference) {
+        const scriptLoaded = await loadPaystackScript();
+        if (!scriptLoaded) {
+          toast.error('❌ Failed to load Paystack payment script.');
           setLoading(false);
-        }, 1500);
-        return;
-      }
+          return;
+        }
 
-      const scriptLoaded = await loadPaystackScript();
-      if (!scriptLoaded) {
-        toast.error('❌ Failed to load Paystack payment script.');
+        const paystackPop = (window as any).PaystackPop;
+        const handler = paystackPop.setup({
+          key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+          email: user?.email || '',
+          amount: planCode === 'enterprise' ? 3000000 : 1500000,
+          ref: data.reference,
+          onClose: () => {
+            toast.warning('⚠️ Checkout closed.');
+            setLoading(false);
+          },
+          callback: async (response: any) => {
+            toast.success('💳 Payment successful! Verifying reference...');
+            const verifyRes = await fetch('/api/billing/verify', {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ reference: response.reference }),
+            });
+            if (verifyRes.ok) {
+              toast.success('🎉 Subscription active! Entitlement verified.');
+              fetch('/api/billing/usage', { headers })
+                .then((r) => r.json())
+                .then((u) => setUsageData(u))
+                .catch(() => {});
+              fetch('/api/billing/history', { headers })
+                .then((r) => r.json())
+                .then((h) => Array.isArray(h) && setInvoices(h))
+                .catch(() => {});
+            }
+            setLoading(false);
+          },
+        });
+        handler.openIframe();
+      } else {
+        toast.error(`❌ Payment notice: ${data.message || 'Unable to create checkout session'}`);
         setLoading(false);
-        return;
       }
-
-      const paystackPop = (window as any).PaystackPop;
-      const handler = paystackPop.setup({
-        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-        email: user?.email || 'billing@netify.ng',
-        amount: planCode === 'enterprise' ? 3000000 : 1500000,
-        ref: data.reference,
-        onClose: () => {
-          toast.warning('⚠️ Checkout closed.');
-          setLoading(false);
-        },
-        callback: async (response: any) => {
-          toast.success('💳 Payment successful! Verifying reference...');
-          const verifyRes = await fetch('/api/billing/verify', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ reference: response.reference }),
-          });
-          if (verifyRes.ok) {
-            toast.success('🎉 Subscription active! Growth plan entitlement verified.');
-          }
-          setLoading(false);
-        },
-      });
-      handler.openIframe();
     } catch (error) {
       toast.error('❌ Payment initialization failed.');
       setLoading(false);
     }
   };
 
-  const handleSaveBudgets = () => {
-    toast.success('✨ Budget ceilings and spending caps updated successfully');
+  const handleSaveBudgets = async () => {
+    toast.info('💾 Saving tenant budget ceilings...');
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      };
+
+      const res = await fetch('/api/billing/budgets', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          monthlyCap,
+          warningThreshold,
+          missionThreshold,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success('✨ Tenant budget ceilings & spending limits updated successfully');
+      } else {
+        toast.error(`❌ Failed to update budgets: ${data.message || 'Unknown error'}`);
+      }
+    } catch {
+      toast.error('❌ Network error updating budget ceilings.');
+    }
   };
 
   const handleDownloadInvoice = (invId: string) => {
@@ -515,20 +582,26 @@ export default function BillingPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-xs text-foreground/45 font-bold uppercase tracking-widest block">AI Credit Balance</span>
-                    <span className="text-3xl font-black text-[#1A1A1E] dark:text-white mt-1 block">9,420 credits</span>
+                    <span className="text-3xl font-black text-[#1A1A1E] dark:text-white mt-1 block">
+                      {(usageData?.remainingCredits ?? 5000).toLocaleString()} credits
+                    </span>
                   </div>
-                  <Badge variant="ai" className="text-xs">Active Billing Cycle</Badge>
+                  <Badge variant="ai" className="text-xs">
+                    {usageData?.activePlan?.name || 'Active Billing Cycle'}
+                  </Badge>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs font-bold text-foreground/50">
-                    <span>Current usage tier: 94.2% remaining</span>
-                    <span>10,000 total quota</span>
+                    <span>
+                      Current usage: {usageData?.remainingPercentage ?? 100}% remaining ({((usageData?.usedCredits ?? 0)).toLocaleString()} used)
+                    </span>
+                    <span>{(usageData?.totalQuota ?? 5000).toLocaleString()} total quota</span>
                   </div>
                   <div className="h-2 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden">
                     <div
                       className="h-full bg-hq-blue rounded-full transition-all"
-                      style={{ width: '94.2%', backgroundColor: brandColor }}
+                      style={{ width: `${usageData?.remainingPercentage ?? 100}%`, backgroundColor: brandColor }}
                     ></div>
                   </div>
                 </div>
@@ -541,22 +614,28 @@ export default function BillingPage() {
                   <p className="text-xs text-foreground/50 font-semibold mt-0.5">Details on credits consumed across operational modules.</p>
                 </div>
 
-                <div className="space-y-3">
-                  {costCenters.map((cc, i) => (
-                    <div key={i} className="text-xs space-y-1.5">
-                      <div className="flex justify-between font-bold">
-                        <span className="text-foreground/70">{cc.name}</span>
-                        <span className="text-white">{cc.credits.toLocaleString()} credits ({cc.percentage}%)</span>
+                {usageData && usageData.costCenters && usageData.costCenters.some((c) => c.credits > 0) ? (
+                  <div className="space-y-3">
+                    {usageData.costCenters.map((cc, i) => (
+                      <div key={i} className="text-xs space-y-1.5">
+                        <div className="flex justify-between font-bold">
+                          <span className="text-foreground/70">{cc.name}</span>
+                          <span className="text-white">{cc.credits.toLocaleString()} credits ({cc.percentage}%)</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-hq-purple rounded-full"
+                            style={{ width: `${cc.percentage}%` }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="h-1.5 w-full bg-[#F9F9FB] dark:bg-[#0A0A0C] rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-hq-purple rounded-full"
-                          style={{ width: `${cc.percentage}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl border border-card-border/60 bg-black/5 dark:bg-white/5 text-center text-xs text-foreground/50 font-semibold">
+                    Full AI credit balance available. No quota deductions recorded in the current billing cycle.
+                  </div>
+                )}
               </Card>
             </div>
 
@@ -573,16 +652,16 @@ export default function BillingPage() {
 
                 <div className="border-t border-card-border pt-3 space-y-2.5 text-xs font-bold">
                   <div className="flex justify-between">
-                    <span className="text-foreground/40">Cache Hit Rate</span>
-                    <span className="text-white">32.4%</span>
+                    <span className="text-foreground/40">Active Model Tier</span>
+                    <span className="text-white">Gemini Flash Direct</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-foreground/40">Low-Cost Routing Ratio</span>
-                    <span className="text-white">68.2% (Gemini Flash)</span>
+                    <span className="text-foreground/40">Routing Efficiency</span>
+                    <span className="text-white">Low-Latency Optimized</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-foreground/40">Saved Credits Today</span>
-                    <span className="text-green-500">420 credits</span>
+                    <span className="text-foreground/40">Subscription Status</span>
+                    <span className="text-emerald-400 capitalize">{usageData?.activePlan?.status || 'Active'}</span>
                   </div>
                 </div>
               </Card>
@@ -594,19 +673,6 @@ export default function BillingPage() {
         {activeTab === 'subscription' && (
           <div className="grid gap-6 md:grid-cols-3 text-left">
             <div className="md:col-span-2 space-y-6">
-              {/* Upgrade Intelligence alerts */}
-              <Card className="border border-yellow-500/20 bg-yellow-500/5 p-5 shadow-[var(--card-shadow)] space-y-4">
-                <div className="flex items-start gap-3">
-                  <ShieldAlert className="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-xs text-yellow-500 font-bold uppercase tracking-wider block">Contextual Upgrade Alert</span>
-                    <p className="text-xs text-white font-semibold leading-relaxed mt-1">
-                      Asad (CEO): &ldquo;Your team has reached today&apos;s mission capacity on the Starter plan. Upgrading to Growth unlocks unlimited parallel executions.&rdquo;
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
               {/* Plans side-by-side comparison */}
               <Card className="border border-card-border bg-card-bg p-5 shadow-[var(--card-shadow)] space-y-4">
                 <div className="flex items-center justify-between">
@@ -632,8 +698,13 @@ export default function BillingPage() {
                         <li>· 1GB Indexed Memory Vault</li>
                       </ul>
                     </div>
-                    <Button variant="outline" size="sm" className="w-full text-xs font-bold border-card-border mt-3" disabled>
-                      Current Plan
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs font-bold border-card-border mt-3"
+                      disabled={usageData?.activePlan?.code === 'FREE' || !usageData?.activePlan?.code}
+                    >
+                      {usageData?.activePlan?.code === 'FREE' || !usageData?.activePlan?.code ? 'Current Plan' : 'Free Tier'}
                     </Button>
                   </div>
 
@@ -656,10 +727,10 @@ export default function BillingPage() {
                     <Button
                       size="sm"
                       className="w-full text-xs font-extrabold bg-cyan-500 hover:bg-cyan-400 text-slate-950 mt-3 shadow-md shadow-cyan-500/20"
-                      disabled={loading}
+                      disabled={loading || usageData?.activePlan?.code === 'PRO' || usageData?.activePlan?.code === 'GROWTH'}
                       onClick={() => handleUpgrade('growth')}
                     >
-                      Upgrade to Growth ($10)
+                      {usageData?.activePlan?.code === 'PRO' || usageData?.activePlan?.code === 'GROWTH' ? 'Current Plan' : 'Upgrade to Growth ($10)'}
                     </Button>
                   </div>
 
@@ -679,10 +750,10 @@ export default function BillingPage() {
                     <Button
                       size="sm"
                       className="w-full text-xs font-extrabold bg-purple-600 hover:bg-purple-500 text-white mt-3 shadow-md shadow-purple-600/20"
-                      disabled={loading}
+                      disabled={loading || usageData?.activePlan?.code === 'ENTERPRISE'}
                       onClick={() => handleUpgrade('enterprise')}
                     >
-                      Upgrade Enterprise ($20)
+                      {usageData?.activePlan?.code === 'ENTERPRISE' ? 'Current Plan' : 'Upgrade Enterprise ($20)'}
                     </Button>
                   </div>
                 </div>
@@ -753,16 +824,7 @@ export default function BillingPage() {
                     disabled={loading}
                     onClick={() => handleUpgrade('growth')}
                   >
-                    Stripe USD Card Checkout
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full text-xs font-extrabold border-card-border h-9 text-hq-cyan hover:bg-cyan-500/10"
-                    disabled={loading}
-                    onClick={() => handleUpgrade('growth')}
-                  >
-                    Paystack Global USD ($) Checkout
+                    Paystack Global Checkout (USD / Multi-Currency)
                   </Button>
                   <Button
                     size="sm"
@@ -852,30 +914,46 @@ export default function BillingPage() {
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center justify-between border-b border-card-border pb-2">
                 <h3 className="text-sm font-extrabold text-[#1A1A1E] dark:text-white">Active Subscription Invoices</h3>
+                <span className="text-xs text-foreground/45 font-bold">{invoices.length} Records</span>
               </div>
 
               <div className="space-y-3">
-                {invoices.map((inv) => (
-                  <Card key={inv.id} className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-black text-[#1A1A1E] dark:text-white">{inv.id}</p>
-                      <p className="text-xs text-foreground/45 mt-0.5 font-semibold">{inv.type} · {inv.date}</p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-black text-white">{inv.amount}</span>
-                      <Badge variant="success" className="text-sm font-bold">
-                        {inv.status}
-                      </Badge>
-                      <button
-                        onClick={() => handleDownloadInvoice(inv.id)}
-                        className="text-foreground/35 hover:text-white p-1 rounded transition-colors"
-                      >
-                        <Download className="h-4 w-4" />
-                      </button>
-                    </div>
+                {invoicesLoading ? (
+                  <div className="p-8 text-center text-xs font-bold text-foreground/40">
+                    Loading verified billing history...
+                  </div>
+                ) : invoices.length === 0 ? (
+                  <Card className="border border-card-border bg-card-bg/50 p-8 shadow-[var(--card-shadow)] text-center space-y-2">
+                    <FileText className="h-8 w-8 text-foreground/30 mx-auto mb-2" />
+                    <h4 className="text-sm font-bold text-foreground">No Invoices Recorded Yet</h4>
+                    <p className="text-xs text-foreground/50 font-medium">
+                      Invoices and payment receipts will appear here once subscription orders or token pack top-ups settle.
+                    </p>
                   </Card>
-                ))}
+                ) : (
+                  invoices.map((inv) => (
+                    <Card key={inv.id} className="border border-card-border bg-card-bg p-4 shadow-[var(--card-shadow)] flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-black text-[#1A1A1E] dark:text-white">{inv.id}</p>
+                        <p className="text-xs text-foreground/45 mt-0.5 font-semibold">{inv.type} · {inv.date}</p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-black text-white">{inv.amount}</span>
+                        <Badge variant="success" className="text-sm font-bold">
+                          {inv.status}
+                        </Badge>
+                        <button
+                          onClick={() => handleDownloadInvoice(inv.id)}
+                          className="text-foreground/35 hover:text-white p-1 rounded transition-colors"
+                          title="Download Receipt"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </Card>
+                  ))
+                )}
               </div>
             </div>
           </div>

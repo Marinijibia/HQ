@@ -10,6 +10,7 @@ import {
   Req,
   Res,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
@@ -27,7 +28,7 @@ import {
   IsOptional,
   IsDateString,
 } from 'class-validator';
-import { MissionStatus } from '@prisma/client';
+import { MissionStatus, TaskStatus } from '@prisma/client';
 import * as types from '../../common/interfaces/request.interface';
 import { PrismaService } from '../database/prisma.service';
 
@@ -43,6 +44,10 @@ export class CreateMissionDto {
   @IsDateString()
   @IsOptional()
   deadline?: string;
+
+  @IsString()
+  @IsOptional()
+  priority?: string;
 }
 
 export class ScopeMissionPromptDto {
@@ -51,12 +56,16 @@ export class ScopeMissionPromptDto {
   message!: string;
 
   @IsString()
-  @IsNotEmpty()
-  companyId!: string;
+  @IsOptional()
+  companyId?: string;
 
   @IsString()
   @IsOptional()
   mode?: 'CONVERSATION' | 'JOB_ASSIGNMENT';
+
+  @IsString()
+  @IsOptional()
+  persona?: string;
 }
 
 export class InstallSuiteDto {
@@ -84,7 +93,7 @@ export class UpdateMissionDto {
 
 @ApiTags('Missions')
 @ApiBearerAuth()
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(AuthGuard)
 @Controller('missions')
 export class MissionController {
   constructor(
@@ -96,14 +105,25 @@ export class MissionController {
   ) {}
 
   @Post('ceo/scope')
-  @ApiOperation({ summary: 'Scope mission objective with CEO Asad & check department feasibility' })
-  async scopeWithCeo(@Body() dto: ScopeMissionPromptDto) {
-    return this.ceoOrchestrator.scopeMission(dto.companyId, dto.message, dto.mode);
+  @ApiOperation({
+    summary:
+      'Scope mission objective with CEO Asad & check department feasibility',
+  })
+  async scopeWithCeo(
+    @Req() req: types.AuthenticatedRequest,
+    @Body() dto: ScopeMissionPromptDto,
+  ) {
+    const companyId = req.user.companyId;
+    return this.ceoOrchestrator.scopeMission(companyId, dto.message, dto.mode, dto.persona);
   }
 
   @Post('ceo/stream')
-  @ApiOperation({ summary: 'Real-time Server-Sent Events (SSE) streaming for CEO Asad dialogue' })
+  @ApiOperation({
+    summary:
+      'Real-time Server-Sent Events (SSE) streaming for CEO Asad dialogue',
+  })
   async streamWithCeo(
+    @Req() req: types.AuthenticatedRequest,
     @Body() dto: ScopeMissionPromptDto,
     @Res() res: Response,
   ) {
@@ -112,7 +132,12 @@ export class MissionController {
     res.setHeader('Connection', 'keep-alive');
 
     try {
-      const scopeResult = await this.ceoOrchestrator.scopeMission(dto.companyId, dto.message, dto.mode);
+      const companyId = req.user.companyId;
+      const scopeResult = await this.ceoOrchestrator.scopeMission(
+        companyId,
+        dto.message,
+        dto.mode,
+      );
       const text = scopeResult.ceoResponse;
 
       const chunkSize = 20;
@@ -133,12 +158,21 @@ export class MissionController {
   }
 
   @Post('marketplace/install')
-  @ApiOperation({ summary: '1-Click installation of missing department suite into active workspace roster' })
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
+  @ApiOperation({
+    summary:
+      '1-Click installation of missing department suite into active workspace roster',
+  })
   async installDepartmentSuite(
     @Req() req: types.AuthenticatedRequest,
     @Body() dto: InstallSuiteDto,
   ) {
-    const companyId = dto.companyId || req.user.companyId;
+    const companyId = req.user.companyId;
 
     const listing = await this.prisma.marketplaceListing.findFirst({
       where: {
@@ -234,7 +268,11 @@ export class MissionController {
     try {
       const wbs = await this.cosService.generateTaskDAG(createDto.objective);
       if (wbs && wbs.tasks && wbs.tasks.length > 0) {
-        await this.missionRepository.createTasks(mission.id, wbs.tasks);
+        await this.missionRepository.createTasks(
+          mission.id,
+          wbs.tasks,
+          req.user.companyId,
+        );
       }
     } catch (e) {
       // Resilient fallback if AI execution encounters throttling
@@ -251,10 +289,16 @@ export class MissionController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get specific mission status and details' })
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
     const mission = await this.missionRepository.findById(id);
     if (!mission) {
       throw new NotFoundException('Mission not found');
+    }
+    if ((mission as any).companyId !== req.user.companyId) {
+      throw new ForbiddenException('Access denied: Mission belongs to another workspace');
     }
     return mission;
   }
@@ -266,6 +310,14 @@ export class MissionController {
     @Param('id') id: string,
     @Body() updateDto: UpdateMissionDto,
   ) {
+    const mission = await this.missionRepository.findById(id);
+    if (!mission) {
+      throw new NotFoundException('Mission not found');
+    }
+    if ((mission as any).companyId !== req.user.companyId) {
+      throw new ForbiddenException('Access denied: Mission belongs to another workspace');
+    }
+
     const data: Record<string, unknown> = { ...updateDto };
     if (updateDto.deadline) {
       data.deadline = new Date(updateDto.deadline);
@@ -291,6 +343,13 @@ export class MissionController {
     @Param('id') id: string,
     @Req() req: types.AuthenticatedRequest,
   ) {
+    const mission = await this.missionRepository.findById(id);
+    if (!mission) {
+      throw new NotFoundException('Mission not found');
+    }
+    if ((mission as any).companyId !== req.user.companyId) {
+      throw new ForbiddenException('Access denied: Mission belongs to another workspace');
+    }
     return this.missionRepository.softDelete(id, req.user.uid);
   }
 
@@ -302,14 +361,21 @@ export class MissionController {
     if (!mission) {
       throw new NotFoundException('Mission not found');
     }
+    if (mission.companyId !== req.user.companyId) {
+      throw new ForbiddenException('Access denied: Mission belongs to another workspace');
+    }
 
-    await this.moeService.transitionState(id, MissionStatus.EXECUTING, req.user.uid);
+    await this.moeService.transitionState(
+      id,
+      MissionStatus.EXECUTING,
+      req.user.uid,
+    );
 
     if (!mission.tasks || mission.tasks.length === 0) {
       try {
         const wbs = await this.cosService.generateTaskDAG(mission.objective);
         if (wbs && wbs.tasks && wbs.tasks.length > 0) {
-          await this.missionRepository.createTasks(id, wbs.tasks);
+          await this.missionRepository.createTasks(id, wbs.tasks, mission.companyId);
         }
       } catch (e) {
         // Resilient fallback
@@ -322,22 +388,70 @@ export class MissionController {
   @Post(':id/pause')
   @ApiOperation({ summary: 'Pause running mission' })
   async pause(@Req() req: types.AuthenticatedRequest, @Param('id') id: string) {
-    await this.moeService.transitionState(id, MissionStatus.PLANNING, req.user.uid);
+    const mission = (await this.missionRepository.findById(id)) as any;
+    if (!mission) {
+      throw new NotFoundException('Mission not found');
+    }
+    if (mission.companyId !== req.user.companyId) {
+      throw new ForbiddenException('Access denied: Mission belongs to another workspace');
+    }
+
+    await this.moeService.transitionState(
+      id,
+      MissionStatus.PLANNING,
+      req.user.uid,
+    );
     return this.missionRepository.findById(id);
   }
 
   @Post(':id/resume')
   @UseGuards(EntitlementGuard)
   @ApiOperation({ summary: 'Resume paused mission' })
-  async resume(@Req() req: types.AuthenticatedRequest, @Param('id') id: string) {
-    await this.moeService.transitionState(id, MissionStatus.EXECUTING, req.user.uid);
+  async resume(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    const mission = (await this.missionRepository.findById(id)) as any;
+    if (!mission) {
+      throw new NotFoundException('Mission not found');
+    }
+    if (mission.companyId !== req.user.companyId) {
+      throw new ForbiddenException('Access denied: Mission belongs to another workspace');
+    }
+
+    await this.moeService.transitionState(
+      id,
+      MissionStatus.EXECUTING,
+      req.user.uid,
+    );
     return this.missionRepository.findById(id);
   }
 
   @Post(':id/cancel')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Cancel current mission run' })
-  async cancel(@Req() req: types.AuthenticatedRequest, @Param('id') id: string) {
-    await this.moeService.transitionState(id, MissionStatus.ARCHIVED, req.user.uid);
+  async cancel(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    const mission = (await this.missionRepository.findById(id)) as any;
+    if (!mission) {
+      throw new NotFoundException('Mission not found');
+    }
+    if (mission.companyId !== req.user.companyId) {
+      throw new ForbiddenException('Access denied: Mission belongs to another workspace');
+    }
+
+    await this.moeService.transitionState(
+      id,
+      MissionStatus.ARCHIVED,
+      req.user.uid,
+    );
     return this.missionRepository.findById(id);
   }
 
@@ -345,19 +459,69 @@ export class MissionController {
   @ApiOperation({
     summary: 'Generate Task WBS DAG plan using AI Chief of Staff',
   })
-  async plan(@Param('id') id: string) {
+  async plan(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
     const mission = await this.missionRepository.findById(id);
     if (!mission) {
       throw new NotFoundException('Mission not found');
     }
-    return this.cosService.generateTaskDAG(mission.objective);
+    if ((mission as any).companyId !== req.user.companyId) {
+      throw new ForbiddenException('Access denied: Mission belongs to another workspace');
+    }
+
+    const wbs = await this.cosService.generateTaskDAG(mission.objective);
+    if (wbs && wbs.tasks && wbs.tasks.length > 0) {
+      await this.missionRepository.createTasks(
+        id,
+        wbs.tasks,
+        (mission as any).companyId,
+      );
+    }
+    return this.missionRepository.findById(id);
+  }
+
+  @Patch(':id/tasks/:taskId')
+  @ApiOperation({ summary: 'Update status of a specific mission task' })
+  async updateTask(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+    @Param('taskId') taskId: string,
+    @Body() body: { status: string },
+  ) {
+    const mission = await this.missionRepository.findById(id);
+    if (!mission) {
+      throw new NotFoundException('Mission not found');
+    }
+    if ((mission as any).companyId !== req.user.companyId) {
+      throw new ForbiddenException('Access denied: Mission belongs to another workspace');
+    }
+
+    let taskStatus: TaskStatus = TaskStatus.PENDING;
+    const raw = (body.status || '').toUpperCase();
+    if (raw === 'COMPLETED' || raw === 'DONE') taskStatus = TaskStatus.COMPLETED;
+    else if (raw === 'RUNNING' || raw === 'IN_PROGRESS') taskStatus = TaskStatus.RUNNING;
+    else if (raw === 'FAILED' || raw === 'ERROR') taskStatus = TaskStatus.FAILED;
+
+    return this.missionRepository.updateTaskStatus(taskId, taskStatus, id);
   }
 
   @Get(':id/health')
   @ApiOperation({
     summary: 'Calculate real-time mission execution health metrics',
   })
-  async getHealth(@Param('id') id: string) {
+  async getHealth(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    const mission = await this.missionRepository.findById(id);
+    if (!mission) {
+      throw new NotFoundException('Mission not found');
+    }
+    if ((mission as any).companyId !== req.user.companyId) {
+      throw new ForbiddenException('Access denied: Mission belongs to another workspace');
+    }
     return this.moeService.calculateHealthScore(id);
   }
 }

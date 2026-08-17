@@ -32,10 +32,22 @@ export class PromptCompilerService {
   compilePrompt(modules: PromptModulesInput, tokenLimit = 4096): string {
     this.logger.log('[Prompt Compiler] Compiling structured prompt modules...');
 
-    // 1. Pre-flight injection validation
-    this.validateInjection(modules.mission);
-    if (modules.userContext) {
-      this.validateInjection(modules.userContext);
+    // 1. Pre-flight injection validation across all active context modules
+    const modulesToValidate = [
+      modules.identity,
+      modules.mission,
+      modules.orgContext,
+      modules.userContext,
+      modules.missionContext,
+      modules.memoryContext,
+      modules.collaborationContext,
+      modules.toolContext,
+      modules.outputSchema,
+      modules.guardrails,
+    ];
+
+    for (const ctx of modulesToValidate) {
+      if (ctx) this.validateInjection(ctx);
     }
 
     // 2. Prioritized token budget allocations list

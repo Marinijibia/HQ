@@ -20,8 +20,8 @@ export const PLAN_CODES = {
 
 /** Active mission limits per plan — single source of truth */
 const MISSION_LIMITS: Record<string, number> = {
-  [PLAN_CODES.FREE]: 1,       // Freemium: 1 active mission at a time
-  [PLAN_CODES.GROWTH]: 10,    // Growth/Pro: 10 concurrent missions
+  [PLAN_CODES.FREE]: 1, // Freemium: 1 active mission at a time
+  [PLAN_CODES.GROWTH]: 10, // Growth/Pro: 10 concurrent missions
   [PLAN_CODES.PRO]: 10,
   [PLAN_CODES.TEAM]: 10,
   [PLAN_CODES.ENTERPRISE]: Infinity, // Enterprise: unlimited
@@ -62,7 +62,8 @@ export class EntitlementGuard implements CanActivate {
         `[EntitlementGuard] No subscription found for company ${companyId}. Applying Free tier limits as safety net.`,
       );
     } else {
-      planCode = (subscription.plan.code?.toLowerCase() ?? PLAN_CODES.FREE) as typeof PLAN_CODES.FREE;
+      planCode = (subscription.plan.code?.toLowerCase() ??
+        PLAN_CODES.FREE) as typeof PLAN_CODES.FREE;
     }
 
     // 2. Resolve the active mission limit for this plan
@@ -83,7 +84,8 @@ export class EntitlementGuard implements CanActivate {
 
     // 4. Enforce the limit — return an upgrade-friendly message for the web to intercept
     if (activeMissionsCount >= maxActiveMissions) {
-      const limitDisplay = maxActiveMissions === Infinity ? 'unlimited' : maxActiveMissions;
+      const limitDisplay =
+        maxActiveMissions === Infinity ? 'unlimited' : maxActiveMissions;
       throw new ForbiddenException(
         JSON.stringify({
           code: 'ENTITLEMENT_LIMIT_REACHED',

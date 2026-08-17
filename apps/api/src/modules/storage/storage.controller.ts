@@ -26,7 +26,13 @@ export class StorageController {
 
   @Post('upload')
   @ApiOperation({ summary: 'Secure upload file to cloud bucket' })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 50 * 1024 * 1024, // 50MB hard limit
+      },
+    }),
+  )
   async uploadFile(
     @Req() req: types.AuthenticatedRequest,
     @UploadedFile()

@@ -1,0 +1,13 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'europe-west1-docker.pkg.dev/netify-development/netify/hq-web:latest'
+      - '-f'
+      - 'apps/web/Dockerfile'
+      - '.'
+images:
+  - 'europe-west1-docker.pkg.dev/netify-development/netify/hq-web:latest'
+options:
+  machineType: 'E2_HIGHCPU_8'

@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AIProvider, GenerateOptions, ProviderResponse } from '../interfaces/ai-provider.interface';
+import {
+  AIProvider,
+  GenerateOptions,
+  ProviderResponse,
+} from '../interfaces/ai-provider.interface';
 
 @Injectable()
 export class AnthropicProvider implements AIProvider {
@@ -18,7 +22,9 @@ export class AnthropicProvider implements AIProvider {
     }
 
     const model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
-    this.logger.log(`[AnthropicProvider] Routing prompt to Anthropic API (${model})...`);
+    this.logger.log(
+      `[AnthropicProvider] Routing prompt to Anthropic API (${model})...`,
+    );
 
     const payload: any = {
       model,
@@ -56,20 +62,31 @@ export class AnthropicProvider implements AIProvider {
     if (options.jsonMode) {
       try {
         parsedJson = JSON.parse(text);
-        if (options.responseSchema && typeof options.responseSchema === 'object') {
+        if (
+          options.responseSchema &&
+          typeof options.responseSchema === 'object'
+        ) {
           for (const key of Object.keys(options.responseSchema)) {
             if (!(key in parsedJson)) {
-              this.logger.warn(`[AnthropicProvider] Response schema key '${key}' missing in parsed JSON output.`);
+              this.logger.warn(
+                `[AnthropicProvider] Response schema key '${key}' missing in parsed JSON output.`,
+              );
             }
           }
         }
       } catch (jsonErr) {
-        this.logger.warn(`[AnthropicProvider] JSON mode enabled but output parsing failed: ${jsonErr}`);
+        this.logger.warn(
+          `[AnthropicProvider] JSON mode enabled but output parsing failed: ${jsonErr}`,
+        );
       }
     }
 
-    const exactTokens = (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0);
-    const tokensUsed = exactTokens > 0 ? exactTokens : Math.round((options.prompt.length + text.length) / 4);
+    const exactTokens =
+      (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0);
+    const tokensUsed =
+      exactTokens > 0
+        ? exactTokens
+        : Math.round((options.prompt.length + text.length) / 4);
 
     return {
       text,
@@ -79,7 +96,10 @@ export class AnthropicProvider implements AIProvider {
     };
   }
 
-  async generateStream(options: GenerateOptions, onChunk: (chunk: string) => void): Promise<ProviderResponse> {
+  async generateStream(
+    options: GenerateOptions,
+    onChunk: (chunk: string) => void,
+  ): Promise<ProviderResponse> {
     const res = await this.generate(options);
     onChunk(res.text);
     return res;

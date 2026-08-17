@@ -37,6 +37,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 
 import { EmailModule } from './modules/email/email.module';
 import { PublicModule } from './modules/public/public.module';
+import { CmsModule } from './modules/cms/cms.module';
 
 @Module({
   imports: [
@@ -45,8 +46,8 @@ import { PublicModule } from './modules/public/public.module';
       // Explicitly resolve the .env path relative to this file so it loads correctly
       // regardless of which directory Turbo/Node starts the process from
       envFilePath: [
-        path.resolve(__dirname, '..', '.env'),        // dist/../.env = apps/api/.env
-        path.resolve(__dirname, '..', '..', '.env'),  // fallback: monorepo root .env
+        path.resolve(__dirname, '..', '.env'), // dist/../.env = apps/api/.env
+        path.resolve(__dirname, '..', '..', '.env'), // fallback: monorepo root .env
       ],
     }),
     LoggerModule.forRoot({
@@ -61,6 +62,7 @@ import { PublicModule } from './modules/public/public.module';
     RedisModule,
     EmailModule,
     PublicModule,
+    CmsModule,
     AuthModule,
     DatabaseModule,
     HealthModule,

@@ -27,4 +27,19 @@ export class ExecutePromptDto {
   @IsBoolean()
   @IsOptional()
   jsonMode?: boolean;
+
+  @IsString()
+  @IsOptional()
+  companyId?: string;
+
+  @IsString()
+  @IsOptional()
+  category?:
+    | 'MISSION'
+    | 'RESEARCH'
+    | 'CONVERSATION'
+    | 'STORAGE'
+    | 'ORCHESTRATION'
+    | 'EVALUATION';
 }
+

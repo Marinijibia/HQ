@@ -50,7 +50,11 @@ export class CeoService {
         if (company) {
           companyName = company.name;
           const identityObj: any = company.orgIntelligence?.identityData || {};
-          industryContext = identityObj.industry || identityObj.domain || company.slogan || industryContext;
+          industryContext =
+            identityObj.industry ||
+            identityObj.domain ||
+            company.slogan ||
+            industryContext;
         }
 
         // Fetch CEO executive's training data for persona enrichment
@@ -71,11 +75,16 @@ export class CeoService {
           },
         });
 
-        if (ceoExecutive?.trainingData && ceoExecutive.trainingData.length > 0) {
+        if (
+          ceoExecutive?.trainingData &&
+          ceoExecutive.trainingData.length > 0
+        ) {
           trainingContext = `\n\nYour Executive Training Context:\n${ceoExecutive.trainingData.map((td: any) => td.content?.substring(0, 400)).join('\n---\n')}`;
         }
       } catch (err) {
-        this.logger.warn(`[CEO Service] System prompt context load notice: ${err}`);
+        this.logger.warn(
+          `[CEO Service] System prompt context load notice: ${err}`,
+        );
       }
     }
 
@@ -117,7 +126,9 @@ Maintain an authoritative, visionary, direct, and growth-oriented perspective.${
     objective: string,
     companyId?: string,
   ): Promise<CeoStrategicSummary> {
-    this.logger.log(`[CEO Asad Agent] Compiling live strategic summary: "${objective}"`);
+    this.logger.log(
+      `[CEO Asad Agent] Compiling live strategic summary: "${objective}"`,
+    );
 
     const systemPrompt = await this.buildCeoSystemPrompt(companyId);
 
@@ -150,24 +161,35 @@ Maintain an authoritative, visionary, direct, and growth-oriented perspective.${
       systemPrompt,
       jsonMode: true,
       temperature: 0.2,
+      companyId,
+      category: 'ORCHESTRATION',
     });
 
     let cleanedText = response.text.trim();
     if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '');
+      cleanedText = cleanedText
+        .replace(/^```(?:json)?\n?/i, '')
+        .replace(/\n?```$/, '');
     }
 
     try {
       const parsed: CeoStrategicSummary = JSON.parse(cleanedText.trim());
-      this.logger.log(`[CEO Asad Agent] Live strategic summary compiled successfully.`);
+      this.logger.log(
+        `[CEO Asad Agent] Live strategic summary compiled successfully.`,
+      );
       return parsed;
     } catch {
-      this.logger.warn(`[CEO Asad Agent] JSON parse notice — returning structured raw text.`);
+      this.logger.warn(
+        `[CEO Asad Agent] JSON parse notice — returning structured raw text.`,
+      );
       return {
         missionOverview: response.text,
         strategicObjectives: [`Execute directive: ${objective}`],
         keyDecisions: ['Approve executive workgroup delegation'],
-        deliverablesList: ['Strategic Execution Briefing', 'Milestone Task Graph'],
+        deliverablesList: [
+          'Strategic Execution Briefing',
+          'Milestone Task Graph',
+        ],
         risks: ['Resource capacity alignment'],
         recommendations: [
           {
@@ -180,7 +202,10 @@ Maintain an authoritative, visionary, direct, and growth-oriented perspective.${
             recommendedDirectors: [],
           },
         ],
-        nextActions: ['Generate WBS Task Graph', 'Dispatch execution milestones'],
+        nextActions: [
+          'Generate WBS Task Graph',
+          'Dispatch execution milestones',
+        ],
       };
     }
   }

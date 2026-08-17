@@ -31,11 +31,18 @@ export class AiModule implements OnModuleInit {
   onModuleInit() {
     const rawProvider = process.env.AI_PROVIDER;
     const provider = (rawProvider || '').toLowerCase().trim();
-    const displayProvider = rawProvider ? `'${rawProvider}'` : 'unconfigured (defaulting to active provider resolution)';
-    this.logger.log(`[AiModule] Initializing AI Operating System Module (Configured System Provider: ${displayProvider})...`);
+    const displayProvider = rawProvider
+      ? `'${rawProvider}'`
+      : 'unconfigured (defaulting to active provider resolution)';
+    this.logger.log(
+      `[AiModule] Initializing AI Operating System Module (Configured System Provider: ${displayProvider})...`,
+    );
 
     if (provider === 'vertex') {
-      const projectId = process.env.VERTEX_PROJECT_ID || process.env.GCP_PROJECT || process.env.GOOGLE_CLOUD_PROJECT;
+      const projectId =
+        process.env.VERTEX_PROJECT_ID ||
+        process.env.GCP_PROJECT ||
+        process.env.GOOGLE_CLOUD_PROJECT;
       const location = process.env.VERTEX_LOCATION || 'europe-west1';
       const model = process.env.VERTEX_MODEL || 'gemini-2.5-flash';
 
@@ -44,7 +51,9 @@ export class AiModule implements OnModuleInit {
         this.logger.error(`❌ ${errorMsg}`);
         throw new Error(errorMsg);
       } else {
-        this.logger.log(`✅ [AiModule Startup Validation] Vertex AI active (Project: ${projectId}, Location: ${location}, Model: ${model}).`);
+        this.logger.log(
+          `✅ [AiModule Startup Validation] Vertex AI active (Project: ${projectId}, Location: ${location}, Model: ${model}).`,
+        );
       }
     }
   }

@@ -44,7 +44,7 @@ interface MissionTask {
 interface Mission {
   id: string;
   objective: string;
-  status: 'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'EXECUTING';
+  status: 'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'EXECUTING' | 'PLANNING' | 'ARCHIVED';
   progress?: number;
   assignedLead?: string;
   createdAt: string;
@@ -69,7 +69,6 @@ export default function MissionsCommandCenterPage() {
   const [launching, setLaunching] = React.useState(false);
   const [upgradeOpen, setUpgradeOpen] = React.useState(false);
   const [upgradeTrigger, setUpgradeTrigger] = React.useState<UpgradeTrigger | null>(null);
-
 
   const fetchMissions = React.useCallback(async () => {
     if (!token) {
@@ -155,12 +154,16 @@ export default function MissionsCommandCenterPage() {
     const matchesTab =
       activeTab === 'ALL'
         ? true
-        : m.status === activeTab || (activeTab === 'IN_PROGRESS' && m.status === 'EXECUTING');
+        : activeTab === 'IN_PROGRESS'
+        ? m.status === 'IN_PROGRESS' || m.status === 'EXECUTING' || m.status === 'PLANNING'
+        : activeTab === 'QUEUED'
+        ? m.status === 'QUEUED' || m.status === 'PLANNING'
+        : m.status === activeTab;
     const matchesSearch = m.objective.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
-  const activeCount = missions.filter((m) => m.status === 'IN_PROGRESS' || m.status === 'EXECUTING' || m.status === 'QUEUED').length;
+  const activeCount = missions.filter((m) => m.status === 'IN_PROGRESS' || m.status === 'EXECUTING' || m.status === 'PLANNING' || m.status === 'QUEUED').length;
   const completedCount = missions.filter((m) => m.status === 'COMPLETED').length;
   const successRate = missions.length > 0
     ? Math.min(100, Math.round(((completedCount + activeCount * 0.95) / missions.length) * 100))

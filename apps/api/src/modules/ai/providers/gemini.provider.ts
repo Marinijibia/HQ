@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AIProvider, GenerateOptions, ProviderResponse } from '../interfaces/ai-provider.interface';
+import {
+  AIProvider,
+  GenerateOptions,
+  ProviderResponse,
+} from '../interfaces/ai-provider.interface';
 
 @Injectable()
 export class GeminiProvider implements AIProvider {
@@ -7,8 +11,13 @@ export class GeminiProvider implements AIProvider {
   private readonly logger = new Logger(GeminiProvider.name);
 
   isConfigured(): boolean {
-    const key = process.env.GEMINI_API_KEY;
-    return Boolean(key && key.startsWith('AIzaSy'));
+    const key = (process.env.GEMINI_API_KEY || '').trim();
+    return Boolean(
+      key &&
+      key.length >= 10 &&
+      !key.includes('placeholder') &&
+      !key.includes('your-key'),
+    );
   }
 
   async generate(options: GenerateOptions): Promise<ProviderResponse> {
@@ -17,8 +26,16 @@ export class GeminiProvider implements AIProvider {
       throw new Error('GEMINI_API_KEY is missing.');
     }
 
-    const primaryModel = process.env.GEMINI_PRIMARY_MODEL || 'gemini-2.5-flash';
-    const fallbackModel = process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-pro';
+    const candidateModels = [
+      process.env.GEMINI_PRIMARY_MODEL,
+      'gemini-flash-latest',
+      'gemini-flash-lite-latest',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash',
+      'gemini-pro-latest',
+      process.env.GEMINI_FALLBACK_MODEL,
+    ].filter(Boolean) as string[];
 
     const payload: any = {
       contents: [{ parts: [{ text: options.prompt }] }],
@@ -33,56 +50,57 @@ export class GeminiProvider implements AIProvider {
       payload.systemInstruction = { parts: [{ text: options.systemPrompt }] };
     }
 
-    // 1. Attempt Primary Gemini Model (gemini-2.5-flash)
-    try {
-      this.logger.log(`[GeminiProvider] Dispatching prompt to Primary Gemini Model (${primaryModel})...`);
-      const primaryUrl = `https://generativelanguage.googleapis.com/v1beta/models/${primaryModel}:generateContent?key=${apiKey}`;
-      const res = await fetch(primaryUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+    let lastError: string | null = null;
 
-      if (res.ok) {
-        const data: any = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        const totalTokens = data.usageMetadata?.totalTokenCount;
-        if (text) {
-          return this.formatResponse(text, `gemini (${primaryModel})`, options, totalTokens);
+    for (const model of candidateModels) {
+      try {
+        this.logger.log(
+          `[GeminiProvider] Dispatching prompt to Gemini Model (${model})...`,
+        );
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(15000),
+        });
+
+        if (res.ok) {
+          const data: any = await res.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          const totalTokens = data.usageMetadata?.totalTokenCount;
+          if (text) {
+            return this.formatResponse(
+              text,
+              `gemini (${model})`,
+              options,
+              totalTokens,
+            );
+          }
         }
+        const errText = await res.text().catch(() => '');
+        this.logger.warn(
+          `[GeminiProvider] Model (${model}) notice [${res.status}]: ${errText}`,
+        );
+        lastError = `Model ${model} status ${res.status}: ${errText}`;
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(
+          `[GeminiProvider] Model (${model}) exception: ${errMsg}`,
+        );
+        lastError = `Model ${model} exception: ${errMsg}`;
       }
-      const errText = await res.text();
-      this.logger.warn(`[GeminiProvider] Primary Gemini (${primaryModel}) notice [${res.status}]: ${errText}`);
-    } catch (err) {
-      this.logger.warn(`[GeminiProvider] Primary Gemini (${primaryModel}) exception: ${err}`);
     }
 
-    // 2. Fallback to Secondary Gemini Model (gemini-2.5-pro)
-    this.logger.log(`[GeminiProvider] Failing over to Fallback Gemini Model (${fallbackModel})...`);
-    const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent?key=${apiKey}`;
-    const fallbackRes = await fetch(fallbackUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!fallbackRes.ok) {
-      const errText = await fallbackRes.text();
-      throw new Error(`Gemini API Fallback (${fallbackModel}) error status ${fallbackRes.status}: ${errText}`);
-    }
-
-    const fallbackData: any = await fallbackRes.json();
-    const fallbackText = fallbackData.candidates?.[0]?.content?.parts?.[0]?.text;
-    const fallbackTokens = fallbackData.usageMetadata?.totalTokenCount;
-
-    if (!fallbackText) {
-      throw new Error('Gemini API returned empty completion contents.');
-    }
-
-    return this.formatResponse(fallbackText, `gemini (${fallbackModel})`, options, fallbackTokens);
+    throw new Error(
+      `Gemini API execution failed across all models: ${lastError}`,
+    );
   }
 
-  async generateStream(options: GenerateOptions, onChunk: (chunk: string) => void): Promise<ProviderResponse> {
+  async generateStream(
+    options: GenerateOptions,
+    onChunk: (chunk: string) => void,
+  ): Promise<ProviderResponse> {
     const res = await this.generate(options);
     onChunk(res.text);
     return res;
@@ -98,26 +116,21 @@ export class GeminiProvider implements AIProvider {
     if (options.jsonMode) {
       try {
         parsedJson = JSON.parse(text);
-        if (options.responseSchema && typeof options.responseSchema === 'object') {
-          for (const key of Object.keys(options.responseSchema)) {
-            if (!(key in parsedJson)) {
-              this.logger.warn(`[GeminiProvider] Response schema key '${key}' missing in parsed JSON output.`);
-            }
-          }
+      } catch {
+        const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (jsonMatch && jsonMatch[1]) {
+          try {
+            parsedJson = JSON.parse(jsonMatch[1]);
+          } catch {}
         }
-      } catch (jsonErr) {
-        this.logger.warn(`[GeminiProvider] JSON mode enabled but output parsing failed: ${jsonErr}`);
       }
     }
-
-    const tokensUsed = exactTokens && typeof exactTokens === 'number'
-      ? exactTokens
-      : Math.round((options.prompt.length + text.length) / 4);
 
     return {
       text,
       providerName,
-      tokensUsed,
+      tokensUsed:
+        exactTokens || Math.round((options.prompt.length + text.length) / 4),
       parsedJson,
     };
   }

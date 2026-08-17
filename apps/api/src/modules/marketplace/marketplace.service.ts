@@ -1,6 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  IsArray,
+} from 'class-validator';
 
 export class PublishListingDto {
   @IsString()
@@ -39,7 +49,6 @@ export class PublishListingDto {
   @IsOptional()
   departmentKey?: string;
 }
-
 
 @Injectable()
 export class MarketplaceService {
@@ -110,7 +119,8 @@ export class MarketplaceService {
 
     if (listing.departmentKey) {
       let deptName = 'Technology';
-      if (listing.departmentKey === 'sales_marketing') deptName = 'Sales & Marketing';
+      if (listing.departmentKey === 'sales_marketing')
+        deptName = 'Sales & Marketing';
       if (listing.departmentKey === 'finance') deptName = 'Finance';
 
       const dept = await this.prisma.department.findFirst({

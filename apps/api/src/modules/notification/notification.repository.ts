@@ -2,18 +2,30 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { Notification } from '@prisma/client';
 
+const isUuid = (val?: string) =>
+  typeof val === 'string' &&
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+    val,
+  );
+
 @Injectable()
 export class NotificationRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findById(id: string): Promise<Notification | null> {
+  async findById(id: string, companyIdInput?: string): Promise<Notification | null> {
+    if (companyIdInput) {
+      const companyId = await this.prisma.resolveCompanyId(companyIdInput);
+      return this.prisma.notification.findFirst({
+        where: { id, companyId },
+      });
+    }
     return this.prisma.notification.findUnique({
       where: { id },
     });
   }
 
   async findByCompanyId(
-    companyId: string,
+    companyIdInput: string,
     filters?: {
       read?: boolean;
       priority?: string;
@@ -23,6 +35,8 @@ export class NotificationRepository {
       search?: string;
     },
   ): Promise<Notification[]> {
+    const companyId = await this.prisma.resolveCompanyId(companyIdInput);
+
     const where: {
       companyId: string;
       read?: boolean;
@@ -76,8 +90,20 @@ export class NotificationRepository {
     senderType?: string;
     actionUrl?: string;
   }): Promise<Notification> {
+    const companyId = await this.prisma.resolveCompanyId(data.companyId);
+    const senderId = isUuid(data.senderId) ? data.senderId : undefined;
+
     return this.prisma.notification.create({
-      data,
+      data: {
+        title: data.title,
+        message: data.message,
+        companyId,
+        priority: data.priority || 'MEDIUM',
+        category: data.category || 'SYSTEM',
+        senderId,
+        senderType: data.senderType || 'SYSTEM',
+        actionUrl: data.actionUrl,
+      },
     });
   }
 
@@ -94,7 +120,8 @@ export class NotificationRepository {
     });
   }
 
-  async markAllRead(companyId: string): Promise<{ count: number }> {
+  async markAllRead(companyIdInput: string): Promise<{ count: number }> {
+    const companyId = await this.prisma.resolveCompanyId(companyIdInput);
     return this.prisma.notification.updateMany({
       where: { companyId, read: false },
       data: { read: true },

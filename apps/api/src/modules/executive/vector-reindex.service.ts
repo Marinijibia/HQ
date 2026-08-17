@@ -23,7 +23,9 @@ export class VectorReindexService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.logger.log('🤖 Vector Reindex Service initialized. Scheduling background vector sync.');
+    this.logger.log(
+      '🤖 Vector Reindex Service initialized. Scheduling background vector sync.',
+    );
     // Run background reindex 10s after boot — non-blocking
     setTimeout(() => {
       this.reindexAllTrainingData().catch((err) => {
@@ -93,7 +95,9 @@ export class VectorReindexService implements OnModuleInit {
       );
       return true;
     } catch (err) {
-      this.logger.warn(`[VectorReindex] Failed to write embedding for ${tableName}:${recordId}: ${err}`);
+      this.logger.warn(
+        `[VectorReindex] Failed to write embedding for ${tableName}:${recordId}: ${err}`,
+      );
       return false;
     }
   }
@@ -105,9 +109,13 @@ export class VectorReindexService implements OnModuleInit {
    * Pass companyId to scope to a single org (called from CMS endpoints).
    * Omit for a full global reindex (called only on module init).
    */
-  async reindexAllTrainingData(companyId?: string): Promise<VectorIndexingStats> {
+  async reindexAllTrainingData(
+    companyId?: string,
+  ): Promise<VectorIndexingStats> {
     if (this.isIndexing) {
-      this.logger.warn('Vector reindexing already in progress. Skipping duplicate run.');
+      this.logger.warn(
+        'Vector reindexing already in progress. Skipping duplicate run.',
+      );
       return {
         executiveDocsCount: 0,
         departmentDocsCount: 0,
@@ -120,7 +128,9 @@ export class VectorReindexService implements OnModuleInit {
     }
 
     this.isIndexing = true;
-    this.logger.log('🔄 Starting vector reindexing — generating and writing real embeddings to pgvector...');
+    this.logger.log(
+      '🔄 Starting vector reindexing — generating and writing real embeddings to pgvector...',
+    );
 
     let totalChunks = 0;
     let embeddingsWritten = 0;
@@ -138,7 +148,9 @@ export class VectorReindexService implements OnModuleInit {
         : this.prisma.executiveTrainingData.findMany());
 
       execDocsCount = execDocs.length;
-      this.logger.log(`[VectorReindex] Processing ${execDocsCount} executive training docs...`);
+      this.logger.log(
+        `[VectorReindex] Processing ${execDocsCount} executive training docs...`,
+      );
 
       for (const doc of execDocs) {
         const chunks = this.chunkMarkdownContent(doc.content);
@@ -163,7 +175,9 @@ export class VectorReindexService implements OnModuleInit {
         : this.prisma.departmentTrainingData.findMany());
 
       deptDocsCount = deptDocs.length;
-      this.logger.log(`[VectorReindex] Processing ${deptDocsCount} department training docs...`);
+      this.logger.log(
+        `[VectorReindex] Processing ${deptDocsCount} department training docs...`,
+      );
 
       for (const doc of deptDocs) {
         const chunks = this.chunkMarkdownContent(doc.content);
@@ -185,7 +199,9 @@ export class VectorReindexService implements OnModuleInit {
         : this.prisma.knowledgeBase.findMany());
 
       kbDocsCount = kbDocs.length;
-      this.logger.log(`[VectorReindex] Processing ${kbDocsCount} knowledge base docs...`);
+      this.logger.log(
+        `[VectorReindex] Processing ${kbDocsCount} knowledge base docs...`,
+      );
 
       for (const doc of kbDocs) {
         const chunks = this.chunkMarkdownContent(doc.content);

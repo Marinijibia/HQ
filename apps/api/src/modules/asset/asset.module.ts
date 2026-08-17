@@ -5,9 +5,10 @@ import { AssetRepository } from './asset.repository';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { AiModule } from '../ai/ai.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [AuthModule, DatabaseModule, AiModule],
+  imports: [AuthModule, DatabaseModule, AiModule, StorageModule],
   controllers: [AssetController],
   providers: [AssetService, AssetRepository],
   exports: [AssetService, AssetRepository],

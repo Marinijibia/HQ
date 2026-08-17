@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { Card, Button, Badge } from '@hq/ui';
@@ -19,6 +19,7 @@ import {
   SlidersHorizontal,
   Send,
   MoreVertical,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from '../../../components/toast';
 import { useAuth } from '../../../contexts/auth-context';
@@ -87,7 +88,11 @@ export default function AdminStaffPage() {
   const fetchStaffData = React.useCallback(async () => {
     setLoading(true);
     try {
-      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('hq_admin_token') || localStorage.getItem('hq_auth_token') : null);
+      const activeToken =
+        token ||
+        (typeof window !== 'undefined'
+          ? localStorage.getItem('hq_admin_token') || localStorage.getItem('hq_auth_token')
+          : null);
       const headers: Record<string, string> = {};
       if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
 
@@ -123,23 +128,24 @@ export default function AdminStaffPage() {
   }, [fetchStaffData]);
 
   const handleResendInvite = (member: AdminStaffMember) => {
-    toast.success(`✉️ Re-dispatched invitation email to ${member.name} (${member.email})`);
+    toast.success(`Re-dispatched invitation email to ${member.name} (${member.email})`);
   };
 
   const handleRevokeInvite = (id: string) => {
     setStaffList((prev) => prev.filter((s) => s.id !== id));
-    toast.success('🚫 Invitation revoked successfully');
+    toast.success('Invitation revoked successfully');
   };
 
   const handleForcePasswordReset = (member: AdminStaffMember) => {
-    toast.success(`🔑 Issued mandatory password reset for ${member.name}`);
+    toast.success(`Issued mandatory password reset for ${member.name}`);
   };
 
   const activeStaff = staffList.filter((s) => s.status === 'ACTIVE');
   const pendingStaff = staffList.filter((s) => s.status === 'PENDING');
   const superAdminCount = staffList.filter((s) => s.role === 'SUPER_ADMINISTRATOR').length;
 
-  const currentList = activeTab === 'active' ? activeStaff : activeTab === 'pending' ? pendingStaff : staffList;
+  const currentList =
+    activeTab === 'active' ? activeStaff : activeTab === 'pending' ? pendingStaff : staffList;
   const filteredList = currentList.filter(
     (s) =>
       s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -150,14 +156,16 @@ export default function AdminStaffPage() {
   return (
     <div className="space-y-8 text-left max-w-7xl mx-auto pb-12 select-none">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-r from-slate-50 via-white dark:from-slate-950 dark:via-[#0B0F19] to-indigo-950/40 p-8 shadow-2xl backdrop-blur-xl text-slate-900 dark:text-white">
+      <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-cyan-500/20 bg-gradient-to-r from-white via-slate-50 to-blue-50/40 dark:from-[#0B0F19] dark:via-[#0E1526] dark:to-indigo-950/30 p-8 shadow-xl backdrop-blur-2xl text-slate-900 dark:text-white">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-black uppercase tracking-widest mb-3">
-              <UserPlus className="h-3.5 w-3.5 text-blue-400" />
-              <span>Admin Staff & Invitation Governance</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-300 text-xs font-black uppercase tracking-widest mb-3">
+              <UserPlus className="h-3.5 w-3.5 text-cyan-500" />
+              <span>Admin Staff &amp; Invitation Governance</span>
             </div>
-            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Admin Staff & Invitations</h1>
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Admin Staff &amp; Invitations
+            </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 max-w-2xl">
               Dispatch invitations to new admin staff members, track pending invitation acceptances, manage executive rank assignments, and enforce platform role permissions.
             </p>
@@ -166,14 +174,14 @@ export default function AdminStaffPage() {
           <div className="flex items-center gap-3">
             <Button
               onClick={fetchStaffData}
-              className="bg-white/5 hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2"
+              className="bg-white/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-xs cursor-pointer"
             >
               <RefreshCcw size={14} className={loading ? 'animate-spin' : ''} /> Refresh Roster
             </Button>
 
             <Button
               onClick={() => setShowInviteModal(true)}
-              className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-slate-900 dark:text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-500/20"
+              className="bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-md cursor-pointer"
             >
               <UserPlus size={16} /> Dispatch Invitation
             </Button>
@@ -181,145 +189,167 @@ export default function AdminStaffPage() {
         </div>
       </div>
 
-      {/* Stat Cards */}
+      {/* Stat Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Active Admin Staff</div>
-          <div className="text-3xl font-black text-slate-900 dark:text-white">{activeStaff.length}</div>
+        <div className="p-5 rounded-3xl bg-white/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-xl shadow-xs">
+          <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+            Total Staff Members
+          </div>
+          <div className="text-3xl font-black text-slate-900 dark:text-white">{staffList.length}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Pending Invitations</div>
-          <div className="text-3xl font-black text-amber-400">{pendingStaff.length}</div>
+        <div className="p-5 rounded-3xl bg-white/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-xl shadow-xs">
+          <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+            Active Staff
+          </div>
+          <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{activeStaff.length}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Accepted Invitations</div>
-          <div className="text-3xl font-black text-emerald-400">{activeStaff.length}</div>
+        <div className="p-5 rounded-3xl bg-white/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-xl shadow-xs">
+          <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+            Pending Invitations
+          </div>
+          <div className="text-3xl font-black text-amber-600 dark:text-amber-400">{pendingStaff.length}</div>
         </div>
-        <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 backdrop-blur-xl">
-          <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Super Administrators</div>
-          <div className="text-3xl font-black text-cyan-300">{superAdminCount}</div>
+        <div className="p-5 rounded-3xl bg-white/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-xl shadow-xs">
+          <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+            Super Administrators
+          </div>
+          <div className="text-3xl font-black text-cyan-600 dark:text-cyan-400">{superAdminCount}</div>
         </div>
       </div>
 
-      {/* Filter Tabs & Search */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/40 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-200 dark:border-white/10">
+      {/* Tabs & Search Filter */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/60 dark:bg-white/[0.03] p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08]">
         <div className="flex items-center gap-2">
-          {[
-            { id: 'active', label: `Active Staff (${activeStaff.length})`, icon: ShieldCheck },
-            { id: 'pending', label: `Pending Invitations (${pendingStaff.length})`, icon: Clock },
-            { id: 'history', label: `All Staff & History (${staffList.length})`, icon: Users },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  isActive
-                    ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300 shadow-md'
-                    : 'bg-white/5 border border-slate-100 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white'
-                }`}
-              >
-                <Icon size={14} />
-                {tab.label}
-              </button>
-            );
-          })}
+          <button
+            onClick={() => setActiveTab('active')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'active'
+                ? 'bg-cyan-500/15 border border-cyan-500/40 text-cyan-600 dark:text-cyan-300 font-black shadow-xs'
+                : 'bg-white/60 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Active Staff ({activeStaff.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'pending'
+                ? 'bg-amber-500/15 border border-amber-500/40 text-amber-600 dark:text-amber-300 font-black shadow-xs'
+                : 'bg-white/60 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Pending Invites ({pendingStaff.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'history'
+                ? 'bg-purple-500/15 border border-purple-500/40 text-purple-600 dark:text-purple-300 font-black shadow-xs'
+                : 'bg-white/60 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Full Roster ({staffList.length})
+          </button>
         </div>
 
         <div className="relative w-full sm:w-64">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search staff or email..."
+            placeholder="Search staff by name, email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none"
+            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500/50"
           />
         </div>
       </div>
 
-      {/* Roster & Invitations Table */}
-      <div className="border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-2xl">
+      {/* Staff Roster Table */}
+      <div className="border border-slate-200/80 dark:border-white/[0.08] rounded-3xl overflow-hidden bg-white/70 dark:bg-white/[0.02] backdrop-blur-xl shadow-lg">
         <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-          <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+          <thead className="bg-slate-50/80 dark:bg-white/[0.03] border-b border-slate-200 dark:border-white/10 text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px]">
             <tr>
-              <th className="p-4">Admin Staff Member</th>
-              <th className="p-4">Executive Rank</th>
-              <th className="p-4">Permission Role</th>
-              <th className="p-4">Invitation Status</th>
-              <th className="p-4">Invited / Accepted</th>
+              <th className="p-4">Staff Member</th>
+              <th className="p-4">Platform Role</th>
+              <th className="p-4">Assigned Rank</th>
+              <th className="p-4">Status</th>
+              <th className="p-4">Invited / Active Date</th>
               <th className="p-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-semibold">
             {filteredList.length > 0 ? (
               filteredList.map((member) => (
-                <tr key={member.id} className="hover:bg-white/5 transition-colors">
+                <tr key={member.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-600/20 border border-cyan-500/30 text-cyan-600 dark:text-cyan-300 flex items-center justify-center font-bold text-xs">
                         {member.name.slice(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-bold text-slate-900 dark:text-white text-sm">{member.name}</div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono">
-                          <Mail size={12} className="text-slate-500" /> {member.email}
+                        <div className="font-bold text-slate-900 dark:text-white text-sm">
+                          {member.name}
                         </div>
+                        <div className="text-[11px] text-slate-400 font-mono">{member.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className="px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-bold">
-                      {member.rank || 'Director-General (DG)'}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-[10px] font-mono font-bold">
+                    <span className="px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-[10px] font-mono font-bold uppercase">
                       {member.role}
                     </span>
                   </td>
                   <td className="p-4">
-                    {member.status === 'ACTIVE' ? (
-                      <span className="text-emerald-400 text-xs font-bold flex items-center gap-1">
-                        <CheckCircle2 size={13} /> Accepted & Active
-                      </span>
-                    ) : (
-                      <span className="text-amber-400 text-xs font-bold flex items-center gap-1">
-                        <Clock size={13} /> Invitation Pending
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5 text-slate-900 dark:text-white font-bold">
+                      <Award size={13} className="text-amber-500" />
+                      <span>{member.rank || 'Staff Officer'}</span>
+                    </div>
                   </td>
-                  <td className="p-4 text-slate-500 dark:text-slate-400 text-[11px]">
-                    {member.acceptedAt
-                      ? `Accepted ${new Date(member.acceptedAt).toLocaleDateString()}`
-                      : `Sent ${new Date(member.invitedAt).toLocaleDateString()}`}
+                  <td className="p-4">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                        member.status === 'ACTIVE'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                          : member.status === 'PENDING'
+                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                      }`}
+                    >
+                      {member.status === 'ACTIVE' ? (
+                        <CheckCircle2 size={11} />
+                      ) : (
+                        <Clock size={11} />
+                      )}
+                      {member.status}
+                    </span>
+                  </td>
+                  <td className="p-4 text-slate-400 font-mono text-[11px]">
+                    {new Date(member.invitedAt).toLocaleDateString()}
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       {member.status === 'PENDING' ? (
                         <>
-                          <Button
+                          <button
                             onClick={() => handleResendInvite(member)}
-                            className="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs px-3 py-1 rounded-xl flex items-center gap-1 font-bold"
+                            className="px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
                           >
-                            <Send size={12} /> Resend
-                          </Button>
-                          <Button
+                            <Send size={10} /> Re-send
+                          </button>
+                          <button
                             onClick={() => handleRevokeInvite(member.id)}
-                            className="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs px-3 py-1 rounded-xl flex items-center gap-1 font-bold"
+                            className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-[10px] font-bold transition-all cursor-pointer"
                           >
-                            <XCircle size={12} /> Revoke
-                          </Button>
+                            Revoke
+                          </button>
                         </>
                       ) : (
-                        <Button
+                        <button
                           onClick={() => handleForcePasswordReset(member)}
-                          className="bg-white/5 hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 text-xs px-3 py-1 rounded-xl flex items-center gap-1 font-bold"
+                          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
                         >
-                          <Key size={12} /> Force Reset
-                        </Button>
+                          <Key size={10} /> Force Reset
+                        </button>
                       )}
                     </div>
                   </td>
@@ -327,8 +357,8 @@ export default function AdminStaffPage() {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-slate-500 text-xs font-bold">
-                  No staff members or invitations found in this tab.
+                <td colSpan={6} className="p-12 text-center text-slate-400 font-medium">
+                  No staff members match the specified filters.
                 </td>
               </tr>
             )}
@@ -336,12 +366,8 @@ export default function AdminStaffPage() {
         </table>
       </div>
 
-      {/* Dispatch Invitation Modal */}
       {showInviteModal && (
-        <InviteUserModal
-          onClose={() => setShowInviteModal(false)}
-          onSuccess={() => fetchStaffData()}
-        />
+        <InviteUserModal onClose={() => setShowInviteModal(false)} />
       )}
     </div>
   );

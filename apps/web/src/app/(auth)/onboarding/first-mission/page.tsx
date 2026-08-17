@@ -93,7 +93,23 @@ export default function FirstMissionPage() {
           objective: missionObjective,
           assignedLead: 'asad',
         }),
-      }).catch((e) => console.error('First mission save notice:', e));
+      })
+        .then(async (r) => {
+          if (r.ok) {
+            const m = await r.json();
+            if (m?.id) {
+              fetch(`/api/missions/${m.id}`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ status: 'DELIVERED' }),
+              }).catch(() => null);
+            }
+          }
+        })
+        .catch((e) => console.error('First mission save notice:', e));
     }
   }, [progress, token, savedToDb, missionObjective]);
 

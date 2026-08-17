@@ -14,7 +14,22 @@ import { SettingsService } from './settings.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { Roles, UserRole } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { IsString, IsNotEmpty, IsEmail } from 'class-validator';
 import * as types from '../../common/interfaces/request.interface';
+
+export class AddTeamMemberDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  role!: string;
+}
 
 @ApiTags('Settings')
 @ApiBearerAuth()
@@ -30,11 +45,14 @@ export class SettingsController {
   }
 
   @Patch('org')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Update organization settings' })
-  updateOrgSettings(
-    @Req() req: types.AuthenticatedRequest,
-    @Body() dto: any,
-  ) {
+  updateOrgSettings(@Req() req: types.AuthenticatedRequest, @Body() dto: any) {
     return this.settingsService.updateOrgSettings(req.user.companyId, dto);
   }
 
@@ -45,16 +63,23 @@ export class SettingsController {
   }
 
   @Post('team')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Invite or add a new admin staff member' })
   addTeamMember(
     @Req() req: types.AuthenticatedRequest,
-    @Body() body: { email: string; name: string; role: string },
+    @Body() body: AddTeamMemberDto,
   ) {
     return this.settingsService.addTeamMember(
       req.user.companyId,
       body.email,
       body.name,
       body.role,
+      req.user.role,
     );
   }
 
@@ -83,12 +108,24 @@ export class SettingsController {
   }
 
   @Get('api-keys')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'List API keys' })
   listApiKeys(@Req() req: types.AuthenticatedRequest) {
     return this.settingsService.listApiKeys(req.user.companyId);
   }
 
   @Post('api-keys')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Create a new API key' })
   createApiKey(
     @Req() req: types.AuthenticatedRequest,
@@ -102,6 +139,12 @@ export class SettingsController {
   }
 
   @Delete('api-keys/:id')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Revoke an API key' })
   revokeApiKey(
     @Req() req: types.AuthenticatedRequest,
@@ -118,24 +161,31 @@ export class SettingsController {
 
   @Post('voice-profile')
   @ApiOperation({ summary: 'Save calibrated Asad voice profile & voice print' })
-  saveVoiceProfile(
-    @Req() req: types.AuthenticatedRequest,
-    @Body() dto: any,
-  ) {
+  saveVoiceProfile(@Req() req: types.AuthenticatedRequest, @Body() dto: any) {
     return this.settingsService.saveVoiceProfile(req.user.uid, dto);
   }
 
   @Get('governance')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
-  @ApiOperation({ summary: 'Get governance policies, delegations, and decision audit logs' })
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
+  @ApiOperation({
+    summary: 'Get governance policies, delegations, and decision audit logs',
+  })
   getGovernanceData(@Req() req: types.AuthenticatedRequest) {
     return this.settingsService.getGovernanceData(req.user?.companyId);
   }
 
   @Post('governance/policies')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Register a new governance policy rule' })
   createPolicy(
     @Req() req: types.AuthenticatedRequest,
@@ -148,20 +198,38 @@ export class SettingsController {
   }
 
   @Delete('governance/policies/:id')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Delete a governance policy rule' })
-  deletePolicy(@Param('id') id: string) {
-    return this.settingsService.deletePolicy(id);
+  deletePolicy(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    return this.settingsService.deletePolicy(id, req.user?.companyId);
   }
 
   @Post('governance/delegations')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Create a new delegation of authority' })
   createDelegation(
     @Req() req: types.AuthenticatedRequest,
-    @Body() body: { delegator: string; delegatee: string; scope: string; startDate?: string; endDate?: string },
+    @Body()
+    body: {
+      delegator: string;
+      delegatee: string;
+      scope: string;
+      startDate?: string;
+      endDate?: string;
+    },
   ) {
     return this.settingsService.createDelegation({
       ...body,
@@ -170,10 +238,17 @@ export class SettingsController {
   }
 
   @Delete('governance/delegations/:id')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMINISTRATOR, UserRole.ADMINISTRATOR)
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Revoke a delegation of authority' })
-  deleteDelegation(@Param('id') id: string) {
-    return this.settingsService.deleteDelegation(id);
+  deleteDelegation(
+    @Req() req: types.AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    return this.settingsService.deleteDelegation(id, req.user?.companyId);
   }
 }

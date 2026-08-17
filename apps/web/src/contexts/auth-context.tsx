@@ -23,6 +23,7 @@ interface AuthContextType {
   permissions: string[];
   loading: boolean;
   token: string | null;
+  setSession: (newToken: string) => void;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
@@ -36,20 +37,45 @@ const TOKEN_KEY = 'hq_auth_token';
 
 function decodeTokenPayload(token: string): any | null {
   try {
-    const payloadB64 = token.split('.')[0];
-    return JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+    if (!token || typeof token !== 'string') return null;
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const payloadB64 = parts.length === 3 ? parts[1] : parts[0];
+    let base64 = payloadB64.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4 !== 0) {
+      base64 += '=';
+    }
+    const jsonStr = decodeURIComponent(
+      Array.prototype.map
+        .call(atob(base64), (c: string) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(''),
+    );
+    return JSON.parse(jsonStr);
   } catch {
-    return null;
+    try {
+      const parts = token.split('.');
+      const payloadB64 = parts.length === 3 ? parts[1] : parts[0];
+      let base64 = payloadB64.replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4 !== 0) {
+        base64 += '=';
+      }
+      return JSON.parse(atob(base64));
+    } catch {
+      return null;
+    }
   }
 }
 
 function isTokenExpired(token: string): boolean {
   try {
     const payload = decodeTokenPayload(token);
-    if (!payload?.exp) return true;
-    return Date.now() / 1000 >= payload.exp - 60; // 60s buffer
+    if (!payload) return false;
+    if (typeof payload.exp === 'number') {
+      return Date.now() / 1000 >= payload.exp - 60; // 60s buffer
+    }
+    return false;
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -57,7 +83,7 @@ function getStoredToken(): string | null {
   if (typeof window === 'undefined') return null;
   const token = localStorage.getItem(TOKEN_KEY);
   if (!token || isTokenExpired(token)) {
-    if (token) localStorage.removeItem(TOKEN_KEY);
+    if (token && isTokenExpired(token)) localStorage.removeItem(TOKEN_KEY);
     return null;
   }
   return token;
@@ -175,8 +201,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: pass }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Login failed');
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { message: text || `Server error (${res.status})` };
+      }
+      if (!res.ok) throw new Error(data.message || (res.status === 500 ? 'Backend service unavailable. Please ensure the API is running.' : 'Login failed'));
       setSession(data.token);
       setUser(data.user);
       setDbUser(data.user);
@@ -200,8 +232,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: pass }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Registration failed');
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { message: text || `Server error (${res.status})` };
+      }
+      if (!res.ok) throw new Error(data.message || (res.status === 500 ? 'Backend service unavailable. Please ensure the API is running.' : 'Registration failed'));
       setSession(data.token);
       setUser(data.user);
       setDbUser(data.user);
@@ -243,6 +281,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         permissions,
         loading,
         token,
+        setSession,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,

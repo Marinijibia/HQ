@@ -1,4 +1,8 @@
-import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 export interface CircleTransferParams {
   idempotencyKey: string;
@@ -17,13 +21,18 @@ export interface CircleTransferResult {
 export class CircleClientService {
   private readonly logger = new Logger(CircleClientService.name);
   private readonly apiKey = process.env.CIRCLE_API_KEY || '';
-  private readonly baseUrl = process.env.CIRCLE_API_BASE_URL || 'https://api.circle.com';
-  private readonly masterWalletId = process.env.CIRCLE_MASTER_WALLET_ID || 'hq_master_circle_vault';
+  private readonly baseUrl =
+    process.env.CIRCLE_API_BASE_URL || 'https://api.circle.com';
+  private readonly masterWalletId =
+    process.env.CIRCLE_MASTER_WALLET_ID || 'hq_master_circle_vault';
 
   /**
    * Fetches real-time USDC reserves from Master Circle Wallet
    */
-  async getMasterWalletReserve(): Promise<{ usdcBalance: number; walletId: string }> {
+  async getMasterWalletReserve(): Promise<{
+    usdcBalance: number;
+    walletId: string;
+  }> {
     if (!this.apiKey) {
       // Production sandbox fallback if CIRCLE_API_KEY is not yet configured
       this.logger.log('[Circle] Operating in Developer Sandbox Liquidity Mode');
@@ -31,24 +40,31 @@ export class CircleClientService {
     }
 
     try {
-      const res = await fetch(`${this.baseUrl}/v1/w3s/developer/wallets/${this.masterWalletId}/balances`, {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+      const res = await fetch(
+        `${this.baseUrl}/v1/w3s/developer/wallets/${this.masterWalletId}/balances`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
         },
-      });
+      );
 
       if (!res.ok) {
         throw new Error(`Circle API error: ${res.statusText}`);
       }
 
       const data = await res.json();
-      const usdcToken = data.data?.balances?.find((b: any) => b.token?.symbol === 'USDC');
+      const usdcToken = data.data?.balances?.find(
+        (b: any) => b.token?.symbol === 'USDC',
+      );
       const usdcBalance = parseFloat(usdcToken?.amount || '0');
 
       return { usdcBalance, walletId: this.masterWalletId };
     } catch (err: any) {
-      this.logger.warn(`[Circle] Vault balance query notice: ${err.message}. Returning reserve pool balance.`);
+      this.logger.warn(
+        `[Circle] Vault balance query notice: ${err.message}. Returning reserve pool balance.`,
+      );
       return { usdcBalance: 100000.0, walletId: this.masterWalletId };
     }
   }
@@ -56,7 +72,9 @@ export class CircleClientService {
   /**
    * Dispatches an on-chain USDC transfer from Master Circle Wallet to vendor destination address
    */
-  async executeUsdcTransfer(params: CircleTransferParams): Promise<CircleTransferResult> {
+  async executeUsdcTransfer(
+    params: CircleTransferParams,
+  ): Promise<CircleTransferResult> {
     this.logger.log(
       `[Circle] Executing on-chain USDC transfer of $${params.amountUsdc} to ${params.destinationAddress} (Key: ${params.idempotencyKey})`,
     );
@@ -87,14 +105,17 @@ export class CircleClientService {
         tokenId: 'USDC',
       };
 
-      const res = await fetch(`${this.baseUrl}/v1/w3s/developer/transactions/transfer`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+      const res = await fetch(
+        `${this.baseUrl}/v1/w3s/developer/transactions/transfer`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       const data = await res.json();
 
@@ -109,7 +130,9 @@ export class CircleClientService {
       };
     } catch (err: any) {
       this.logger.error(`[Circle] On-Chain transfer error: ${err.message}`);
-      throw new InternalServerErrorException(`Circle USDC transfer failed: ${err.message}`);
+      throw new InternalServerErrorException(
+        `Circle USDC transfer failed: ${err.message}`,
+      );
     }
   }
 }

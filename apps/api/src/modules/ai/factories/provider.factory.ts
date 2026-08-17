@@ -70,13 +70,13 @@ export class ProviderFactory {
 
     this.logger.log(
       `[ProviderFactory] Configured providers: [${configured.join(', ') || 'NONE'}] | ` +
-      `Unconfigured: [${unconfigured.join(', ') || 'none'}]`,
+        `Unconfigured: [${unconfigured.join(', ') || 'none'}]`,
     );
 
     if (configured.length === 0) {
       this.logger.error(
         '[ProviderFactory] ⚠️ NO real AI providers are configured! All requests will fall back to the graceful degradation engine. ' +
-        'Set VERTEX_PROJECT_ID (production) or GEMINI_API_KEY (development).',
+          'Set VERTEX_PROJECT_ID (production) or GEMINI_API_KEY (development).',
       );
     }
   }
@@ -87,7 +87,10 @@ export class ProviderFactory {
    * - Development: Vertex unconfigured → auto-falls to Gemini if GEMINI_API_KEY is set
    * - DTO override is ONLY allowed for internal/admin calls
    */
-  getPrimaryProvider(requestedProviderName?: string, isInternalAdminCall: boolean = false): AIProvider {
+  getPrimaryProvider(
+    requestedProviderName?: string,
+    isInternalAdminCall: boolean = false,
+  ): AIProvider {
     const configProvider = (process.env.AI_PROVIDER || '').toLowerCase().trim();
 
     // Default to vertex in production, auto-detect in dev
@@ -96,11 +99,16 @@ export class ProviderFactory {
     // DTO override: ONLY allowed for explicitly flagged internal/admin requests
     if (requestedProviderName && isInternalAdminCall) {
       targetName = requestedProviderName.toLowerCase().trim();
-      this.logger.log(`[ProviderFactory] Authorized internal admin override → provider: ${targetName}`);
-    } else if (requestedProviderName && requestedProviderName.toLowerCase() !== targetName) {
+      this.logger.log(
+        `[ProviderFactory] Authorized internal admin override → provider: ${targetName}`,
+      );
+    } else if (
+      requestedProviderName &&
+      requestedProviderName.toLowerCase() !== targetName
+    ) {
       this.logger.warn(
         `[ProviderFactory] Unprivileged provider override '${requestedProviderName}' rejected. ` +
-        `Enforcing authoritative provider: '${targetName}'.`,
+          `Enforcing authoritative provider: '${targetName}'.`,
       );
     }
 
@@ -112,14 +120,16 @@ export class ProviderFactory {
     // Configured provider is not ready — walk the production failover order
     this.logger.warn(
       `[ProviderFactory] Primary provider '${targetName}' is not configured. ` +
-      `Walking production failover chain: ${this.PRODUCTION_FAILOVER_ORDER.join(' → ')}`,
+        `Walking production failover chain: ${this.PRODUCTION_FAILOVER_ORDER.join(' → ')}`,
     );
 
     for (const name of this.PRODUCTION_FAILOVER_ORDER) {
       if (name === targetName) continue; // Already tried
       const fallback = this.providersMap.get(name);
       if (fallback && fallback.isConfigured()) {
-        this.logger.log(`[ProviderFactory] Auto-selected configured provider: ${name}`);
+        this.logger.log(
+          `[ProviderFactory] Auto-selected configured provider: ${name}`,
+        );
         return fallback;
       }
     }
@@ -141,19 +151,31 @@ export class ProviderFactory {
    * When AI_FAILOVER_ENABLED=false (not recommended for production):
    *   Only the primary provider is returned. If it fails, the request errors.
    */
-  getFailoverSequence(requestedProviderName?: string, isInternalAdminCall: boolean = false): AIProvider[] {
-    const primary = this.getPrimaryProvider(requestedProviderName, isInternalAdminCall);
-    const failoverEnabled = (process.env.AI_FAILOVER_ENABLED || 'true').toLowerCase().trim() === 'true';
+  getFailoverSequence(
+    requestedProviderName?: string,
+    isInternalAdminCall: boolean = false,
+  ): AIProvider[] {
+    const primary = this.getPrimaryProvider(
+      requestedProviderName,
+      isInternalAdminCall,
+    );
+    const failoverEnabled =
+      (process.env.AI_FAILOVER_ENABLED || 'true').toLowerCase().trim() ===
+      'true';
 
     if (!failoverEnabled) {
-      this.logger.warn('[ProviderFactory] AI_FAILOVER_ENABLED=false — single provider mode active.');
+      this.logger.warn(
+        '[ProviderFactory] AI_FAILOVER_ENABLED=false — single provider mode active.',
+      );
       return [primary];
     }
 
     const sequence: AIProvider[] = [primary];
 
     // Parse explicit failover list from env var, or use the production default order
-    const allowedProvidersRaw = process.env.AI_FAILOVER_PROVIDERS || this.PRODUCTION_FAILOVER_ORDER.join(',');
+    const allowedProvidersRaw =
+      process.env.AI_FAILOVER_PROVIDERS ||
+      this.PRODUCTION_FAILOVER_ORDER.join(',');
     const allowedKeys = allowedProvidersRaw
       .split(',')
       .map((s) => s.trim().toLowerCase())

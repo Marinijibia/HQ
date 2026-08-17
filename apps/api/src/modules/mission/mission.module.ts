@@ -19,7 +19,18 @@ import { ExecutiveModule } from '../executive/executive.module';
     }),
   ],
   controllers: [MissionController],
-  providers: [MissionRepository, CosService, MoeService, CeoOrchestratorService],
-  exports: [MissionRepository, CosService, MoeService, CeoOrchestratorService, BullModule],
+  providers: [
+    MissionRepository,
+    CosService,
+    MoeService,
+    CeoOrchestratorService,
+  ],
+  exports: [
+    MissionRepository,
+    CosService,
+    MoeService,
+    CeoOrchestratorService,
+    BullModule,
+  ],
 })
 export class MissionModule {}

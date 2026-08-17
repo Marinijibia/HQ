@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ExecutiveRepository } from './executive.repository';
@@ -17,6 +18,8 @@ import { ResourceService } from './resource.service';
 import { FinanceService } from './finance.service';
 import { AiService } from '../ai/ai.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles, UserRole } from '../auth/roles.decorator';
 import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 
 export class ChatExecutiveDto {
@@ -65,31 +68,46 @@ export class ExecutiveController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all active C-Suite AI executives (scoped to org)' })
+  @ApiOperation({
+    summary: 'Get all active C-Suite AI executives (scoped to org)',
+  })
   async findAll(@Req() req: any) {
-    return this.executiveRepository.findAll(req.user?.companyId);
+    const companyId = req.user?.companyId || req.user?.uid;
+    return this.executiveRepository.findAll(companyId);
   }
 
   @Get('roster/capacity')
-  @ApiOperation({ summary: 'Audit workspace executive roster capacity & domain coverage' })
+  @ApiOperation({
+    summary: 'Audit workspace executive roster capacity & domain coverage',
+  })
   async getRosterCapacity(@Req() req: any) {
-    return this.resourceService.auditRosterCapacity(req.user?.companyId);
+    const companyId = req.user?.companyId || req.user?.uid;
+    return this.resourceService.auditRosterCapacity(companyId);
   }
 
   @Get('finance/health')
-  @ApiOperation({ summary: 'Run CFO financial health audit and runway calculations' })
+  @ApiOperation({
+    summary: 'Run CFO financial health audit and runway calculations',
+  })
   async getFinancialHealth(@Req() req: any) {
-    return this.financeService.auditFinancialHealth(req.user?.companyId);
+    const companyId = req.user?.companyId || req.user?.uid;
+    return this.financeService.auditFinancialHealth(companyId);
   }
 
   @Get('finance/forecast')
-  @ApiOperation({ summary: 'Generate CFO financial runway projection forecast' })
+  @ApiOperation({
+    summary: 'Generate CFO financial runway projection forecast',
+  })
   async getFinancialForecast(@Req() req: any) {
-    return this.financeService.forecastRunway(req.user?.companyId);
+    const companyId = req.user?.companyId || req.user?.uid;
+    return this.financeService.forecastRunway(companyId);
   }
 
   @Get('finance/unit-economics')
-  @ApiOperation({ summary: 'Calculate CFO Unit Economics — provide cac, arpu, churnRate, grossMargin via query' })
+  @ApiOperation({
+    summary:
+      'Calculate CFO Unit Economics — provide cac, arpu, churnRate, grossMargin via query',
+  })
   async getUnitEconomics(@Query() query: any) {
     const cac = parseFloat(query.cac);
     const arpu = parseFloat(query.arpu);
@@ -99,15 +117,24 @@ export class ExecutiveController {
     if ([cac, arpu, churnRate, grossMargin].some(isNaN)) {
       return {
         error: 'REQUIRES_INPUT',
-        message: 'Provide query params: cac, arpu, churnRate, grossMargin to calculate unit economics.',
+        message:
+          'Provide query params: cac, arpu, churnRate, grossMargin to calculate unit economics.',
       };
     }
 
-    return this.financeService.calculateUnitEconomics(cac, arpu, churnRate, grossMargin);
+    return this.financeService.calculateUnitEconomics(
+      cac,
+      arpu,
+      churnRate,
+      grossMargin,
+    );
   }
 
   @Get('finance/cap-table')
-  @ApiOperation({ summary: 'Simulate Cap Table dilution — provide preMoney, investment, optionPool via query' })
+  @ApiOperation({
+    summary:
+      'Simulate Cap Table dilution — provide preMoney, investment, optionPool via query',
+  })
   async getCapTableScenario(@Query() query: any) {
     const preMoney = parseFloat(query.preMoney);
     const investment = parseFloat(query.investment);
@@ -116,47 +143,72 @@ export class ExecutiveController {
     if ([preMoney, investment].some(isNaN)) {
       return {
         error: 'REQUIRES_INPUT',
-        message: 'Provide query params: preMoney, investment, and optionally optionPool.',
+        message:
+          'Provide query params: preMoney, investment, and optionally optionPool.',
       };
     }
 
-    return this.financeService.simulateCapTableDilution(preMoney, investment, optionPool);
+    return this.financeService.simulateCapTableDilution(
+      preMoney,
+      investment,
+      optionPool,
+    );
   }
 
   @Get('ceo/welcome')
   @ApiOperation({ summary: 'Get welcome greeting context from AI CEO' })
   async getWelcome(@Req() req: any) {
-    return this.ceoService.getWelcomeContext(req.user?.companyId);
+    const companyId = req.user?.companyId || req.user?.uid;
+    return this.ceoService.getWelcomeContext(companyId);
   }
 
   @Post('ceo/analyze')
   @ApiOperation({
     summary: 'Spawn CEO strategic reasoning and workgroup allocations',
   })
-  async analyze(@Body() dto: AnalyzeObjectiveDto) {
-    return this.ceoService.compileStrategicSummary(dto.objective);
+  async analyze(@Req() req: any, @Body() dto: AnalyzeObjectiveDto) {
+    const companyId = req.user?.companyId || req.user?.uid;
+    return this.ceoService.compileStrategicSummary(dto.objective, companyId);
   }
 
   @Post('qa/evaluate')
   @ApiOperation({ summary: 'Spawn QA validation gate pre-flight testing' })
-  async evaluate(@Body() dto: EvaluateDeliverableDto) {
+  async evaluate(@Req() req: any, @Body() dto: EvaluateDeliverableDto) {
+    const companyId = req.user?.companyId || req.user?.uid;
     return this.qaService.evaluateDeliverable(
       dto.objective,
       dto.content,
       dto.tone,
+      companyId,
     );
   }
 
   @Post(':id/activate')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMINISTRATOR,
+    UserRole.ORGANIZATION_OWNER,
+    UserRole.ADMINISTRATOR,
+  )
   @ApiOperation({ summary: 'Toggle AI executive active status in workspace' })
-  async toggleActivation(@Param('id') id: string, @Body() dto: ToggleExecutiveStatusDto) {
+  async toggleActivation(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: ToggleExecutiveStatusDto,
+  ) {
+    const companyId = req.user?.companyId || req.user?.uid;
+    const exec = await this.executiveRepository.findById(id, companyId);
+    if (!exec) {
+      throw new NotFoundException('Executive not found');
+    }
     return this.resourceService.activateExecutive(id, dto.isActive);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get specific AI executive configuration' })
-  async findOne(@Param('id') id: string) {
-    const exec = await this.executiveRepository.findById(id);
+  async findOne(@Req() req: any, @Param('id') id: string) {
+    const companyId = req.user?.companyId || req.user?.uid;
+    const exec = await this.executiveRepository.findById(id, companyId);
     if (!exec) {
       throw new NotFoundException('Executive not found');
     }
@@ -167,8 +219,13 @@ export class ExecutiveController {
   @ApiOperation({
     summary: 'Trigger chat response handler with specific executive',
   })
-  async chat(@Param('id') id: string, @Body() chatDto: ChatExecutiveDto) {
-    const exec = await this.executiveRepository.findById(id);
+  async chat(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() chatDto: ChatExecutiveDto,
+  ) {
+    const companyId = req.user?.companyId || req.user?.uid;
+    const exec = await this.executiveRepository.findById(id, companyId);
     if (!exec) {
       throw new NotFoundException('Executive not found');
     }
@@ -187,6 +244,8 @@ export class ExecutiveController {
         prompt: chatDto.message,
         systemPrompt,
         provider: 'gemini',
+        companyId,
+        category: 'CONVERSATION',
       });
       return {
         executiveId: id,

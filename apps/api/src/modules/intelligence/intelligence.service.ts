@@ -68,19 +68,26 @@ export class IntelligenceService {
         data: { companyId },
       });
     }
-    return this.enrich(intel as Record<string, unknown>);
+    return this.enrich(intel);
   }
 
   // ─── Update a single domain ─────────────────────────────────────────────────
-  async updateDomain(companyId: string, domain: Domain, data: Record<string, unknown>) {
+  async updateDomain(
+    companyId: string,
+    domain: Domain,
+    data: Record<string, unknown>,
+  ) {
     const dataKey = `${domain}Data`;
     const confKey = `${domain}Confidence`;
 
     const filledCount = Object.values(data).filter(
-      v => v !== null && v !== undefined && v !== '',
+      (v) => v !== null && v !== undefined && v !== '',
     ).length;
     const totalCount = Math.max(Object.keys(data).length, 1);
-    const confidence = Math.min(Math.round((filledCount / totalCount) * 100), 100);
+    const confidence = Math.min(
+      Math.round((filledCount / totalCount) * 100),
+      100,
+    );
 
     const updated = await this.prisma.orgIntelligence.upsert({
       where: { companyId },
@@ -98,10 +105,18 @@ export class IntelligenceService {
     });
 
     // Recalculate overall confidence + maturity level
-    const record = await this.prisma.orgIntelligence.findUnique({ where: { companyId } });
+    const record = await this.prisma.orgIntelligence.findUnique({
+      where: { companyId },
+    });
     if (record) {
-      const scores = DOMAINS.map(d => (record as Record<string, unknown>)[`${d}Confidence`] as number || 0);
-      const overall = Math.round(scores.reduce((a, b) => a + b, 0) / DOMAINS.length);
+      const scores = DOMAINS.map(
+        (d) =>
+          ((record as Record<string, unknown>)[`${d}Confidence`] as number) ||
+          0,
+      );
+      const overall = Math.round(
+        scores.reduce((a, b) => a + b, 0) / DOMAINS.length,
+      );
       const maturityLevel = calculateMaturityLevel(overall);
       await this.prisma.orgIntelligence.update({
         where: { companyId },
@@ -109,20 +124,31 @@ export class IntelligenceService {
       });
     }
 
-    return this.enrich(updated as Record<string, unknown>);
+    return this.enrich(updated);
   }
 
   // ─── Approve a pending suggestion ───────────────────────────────────────────
   async approveSuggestion(companyId: string, suggestionId: string) {
-    const intel = await this.prisma.orgIntelligence.findUnique({ where: { companyId } });
+    const intel = await this.prisma.orgIntelligence.findUnique({
+      where: { companyId },
+    });
     if (!intel) return null;
 
-    const suggestions = (intel.pendingSuggestions as { id: string; domain: string; data: Record<string, unknown> }[]) || [];
-    const suggestion = suggestions.find(s => s.id === suggestionId);
+    const suggestions =
+      (intel.pendingSuggestions as {
+        id: string;
+        domain: string;
+        data: Record<string, unknown>;
+      }[]) || [];
+    const suggestion = suggestions.find((s) => s.id === suggestionId);
     if (!suggestion) return null;
 
-    await this.updateDomain(companyId, suggestion.domain as Domain, suggestion.data);
-    const remaining = suggestions.filter(s => s.id !== suggestionId);
+    await this.updateDomain(
+      companyId,
+      suggestion.domain as Domain,
+      suggestion.data,
+    );
+    const remaining = suggestions.filter((s) => s.id !== suggestionId);
     return this.prisma.orgIntelligence.update({
       where: { companyId },
       data: { pendingSuggestions: remaining as Prisma.InputJsonValue },
@@ -131,23 +157,39 @@ export class IntelligenceService {
 
   // ─── Dismiss a pending suggestion ───────────────────────────────────────────
   async dismissSuggestion(companyId: string, suggestionId: string) {
-    const intel = await this.prisma.orgIntelligence.findUnique({ where: { companyId } });
+    const intel = await this.prisma.orgIntelligence.findUnique({
+      where: { companyId },
+    });
     if (!intel) return null;
 
     const suggestions = (intel.pendingSuggestions as { id: string }[]) || [];
-    const remaining = suggestions.filter(s => s.id !== suggestionId);
+    const remaining = suggestions.filter((s) => s.id !== suggestionId);
 
     return this.prisma.orgIntelligence.update({
       where: { companyId },
-      data: { pendingSuggestions: remaining as Prisma.InputJsonValue },
+      data: { pendingSuggestions: remaining },
     });
   }
 
   // ─── Add a learning insight ─────────────────────────────────────────────────
-  async addLearningInsight(companyId: string, source: string, insight: string, domain: Domain) {
-    const intel = await this.prisma.orgIntelligence.findUnique({ where: { companyId } });
+  async addLearningInsight(
+    companyId: string,
+    source: string,
+    insight: string,
+    domain: Domain,
+  ) {
+    const intel = await this.prisma.orgIntelligence.findUnique({
+      where: { companyId },
+    });
     const existing = (intel?.learningData as Record<string, unknown>) || {};
-    const insights = (existing.insights as { id: string; source: string; insight: string; domain: string; timestamp: string }[]) || [];
+    const insights =
+      (existing.insights as {
+        id: string;
+        source: string;
+        insight: string;
+        domain: string;
+        timestamp: string;
+      }[]) || [];
     insights.unshift({
       id: `${Date.now()}`,
       source,
@@ -157,21 +199,51 @@ export class IntelligenceService {
     });
     return this.prisma.orgIntelligence.upsert({
       where: { companyId },
-      create: { companyId, learningData: { insights: insights.slice(0, 50) } as Prisma.InputJsonValue, lastLearnedAt: new Date() },
-      update: { learningData: { insights: insights.slice(0, 50) } as Prisma.InputJsonValue, lastLearnedAt: new Date() },
+      create: {
+        companyId,
+        learningData: {
+          insights: insights.slice(0, 50),
+        },
+        lastLearnedAt: new Date(),
+      },
+      update: {
+        learningData: {
+          insights: insights.slice(0, 50),
+        },
+        lastLearnedAt: new Date(),
+      },
     });
   }
 
   // ─── Get / Update Organization Health Score ──────────────────────────────────
   async getHealthScore(companyId: string) {
-    const intel = await this.prisma.orgIntelligence.findUnique({ where: { companyId } });
-    return (intel?.healthScore as Record<string, unknown>) || this.defaultHealthScore();
+    const intel = await this.prisma.orgIntelligence.findUnique({
+      where: { companyId },
+    });
+    return (
+      (intel?.healthScore as Record<string, unknown>) ||
+      this.defaultHealthScore()
+    );
   }
 
-  async updateHealthScore(companyId: string, dimension: HealthDimension, data: Record<string, unknown>) {
-    const intel = await this.prisma.orgIntelligence.findUnique({ where: { companyId } });
-    const existing = (intel?.healthScore as Record<string, unknown>) || this.defaultHealthScore();
-    const updated = { ...existing, [dimension]: { ...((existing[dimension] as Record<string, unknown>) || {}), ...data } };
+  async updateHealthScore(
+    companyId: string,
+    dimension: HealthDimension,
+    data: Record<string, unknown>,
+  ) {
+    const intel = await this.prisma.orgIntelligence.findUnique({
+      where: { companyId },
+    });
+    const existing =
+      (intel?.healthScore as Record<string, unknown>) ||
+      this.defaultHealthScore();
+    const updated = {
+      ...existing,
+      [dimension]: {
+        ...((existing[dimension] as Record<string, unknown>) || {}),
+        ...data,
+      },
+    };
     return this.prisma.orgIntelligence.upsert({
       where: { companyId },
       create: { companyId, healthScore: updated as Prisma.InputJsonValue },
@@ -180,9 +252,21 @@ export class IntelligenceService {
   }
 
   // ─── Evolution Timeline ───────────────────────────────────────────────────────
-  async addTimelineEvent(companyId: string, event: { title: string; description?: string; type: string }) {
-    const intel = await this.prisma.orgIntelligence.findUnique({ where: { companyId } });
-    const existing = (intel?.evolutionTimeline as { id: string; title: string; description?: string; type: string; date: string }[]) || [];
+  async addTimelineEvent(
+    companyId: string,
+    event: { title: string; description?: string; type: string },
+  ) {
+    const intel = await this.prisma.orgIntelligence.findUnique({
+      where: { companyId },
+    });
+    const existing =
+      (intel?.evolutionTimeline as {
+        id: string;
+        title: string;
+        description?: string;
+        type: string;
+        date: string;
+      }[]) || [];
     existing.unshift({
       id: `${Date.now()}`,
       ...event,
@@ -190,33 +274,51 @@ export class IntelligenceService {
     });
     return this.prisma.orgIntelligence.upsert({
       where: { companyId },
-      create: { companyId, evolutionTimeline: existing.slice(0, 100) as Prisma.InputJsonValue },
-      update: { evolutionTimeline: existing.slice(0, 100) as Prisma.InputJsonValue },
+      create: {
+        companyId,
+        evolutionTimeline: existing.slice(0, 100),
+      },
+      update: {
+        evolutionTimeline: existing.slice(0, 100),
+      },
     });
   }
 
   async getTimeline(companyId: string) {
-    const intel = await this.prisma.orgIntelligence.findUnique({ where: { companyId } });
-    return (intel?.evolutionTimeline as { id: string; title: string; description?: string; type: string; date: string }[]) || [];
+    const intel = await this.prisma.orgIntelligence.findUnique({
+      where: { companyId },
+    });
+    return (
+      (intel?.evolutionTimeline as {
+        id: string;
+        title: string;
+        description?: string;
+        type: string;
+        date: string;
+      }[]) || []
+    );
   }
 
   // ─── Enrich with computed fields ────────────────────────────────────────────
   private enrich(intel: Record<string, unknown>) {
-    const domainStatuses = DOMAINS.map(domain => ({
+    const domainStatuses = DOMAINS.map((domain) => ({
       domain,
       label: this.domainLabel(domain),
       confidence: (intel[`${domain}Confidence`] as number) || 0,
-      hasData: intel[`${domain}Data`] !== null && intel[`${domain}Data`] !== undefined,
+      hasData:
+        intel[`${domain}Data`] !== null && intel[`${domain}Data`] !== undefined,
       data: intel[`${domain}Data`] || null,
     }));
 
     const missing = domainStatuses
-      .filter(d => d.confidence < 50)
-      .map(d => `${d.label} profile incomplete`);
+      .filter((d) => d.confidence < 50)
+      .map((d) => `${d.label} profile incomplete`);
 
     const overallConfidence = (intel.overallConfidence as number) || 0;
     const maturityLevel = calculateMaturityLevel(overallConfidence);
-    const maturityMeta = MATURITY_THRESHOLDS.find(t => t.level === maturityLevel) || MATURITY_THRESHOLDS[4];
+    const maturityMeta =
+      MATURITY_THRESHOLDS.find((t) => t.level === maturityLevel) ||
+      MATURITY_THRESHOLDS[4];
 
     return {
       ...intel,
@@ -232,7 +334,13 @@ export class IntelligenceService {
   private defaultHealthScore() {
     const result: Record<string, unknown> = {};
     for (const dim of HEALTH_DIMENSIONS) {
-      result[dim] = { score: 0, trend: 'stable', strengths: [], risks: [], actions: [] };
+      result[dim] = {
+        score: 0,
+        trend: 'stable',
+        strengths: [],
+        risks: [],
+        actions: [],
+      };
     }
     return result;
   }
@@ -266,8 +374,13 @@ export class IntelligenceService {
 
     // 3. Dynamically increment corporate health score by 5 points for strategy or operations
     try {
-      const dimensions: HealthDimension[] = ['strategy', 'operations', 'finance'];
-      const chosenDim = dimensions[Math.floor(Math.random() * dimensions.length)];
+      const dimensions: HealthDimension[] = [
+        'strategy',
+        'operations',
+        'finance',
+      ];
+      const chosenDim =
+        dimensions[Math.floor(Math.random() * dimensions.length)];
       const health = await this.getHealthScore(mission.companyId);
       const existingDim = (health[chosenDim] as Record<string, unknown>) || {};
       const currentScore = (existingDim.score as number) || 0;
@@ -276,12 +389,19 @@ export class IntelligenceService {
         score: newScore,
         trend: 'up',
       });
-    } catch { /* ignore health score error */ }
+    } catch {
+      /* ignore health score error */
+    }
   }
 
   // ─── AI Draft Generator for Domain Fields ────────────────────────────────────
-  async generateDraft(companyId: string, domain: Domain): Promise<Record<string, unknown>> {
-    const company = await this.prisma.company.findUnique({ where: { id: companyId } });
+  async generateDraft(
+    companyId: string,
+    domain: Domain,
+  ): Promise<Record<string, unknown>> {
+    const company = await this.prisma.company.findUnique({
+      where: { id: companyId },
+    });
     const companyName = company?.name || 'HQ Client Company';
 
     const systemPrompt = `You are the Chief Executive Officer's strategic analysis assistant.

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { PrismaService } from '../database/prisma.service';
 import { User, Company, Team, UserRole } from '@prisma/client';
 
@@ -26,9 +27,10 @@ export class UserRepository {
       });
     } catch {
       try {
-        const rows: any[] = await this.prisma.$queryRawUnsafe(`
-          SELECT * FROM users WHERE (id = '${id}' OR firebase_uid = '${id}') AND deleted_at IS NULL LIMIT 1
-        `);
+        const rows: any[] = await this.prisma.$queryRawUnsafe(
+          `SELECT * FROM users WHERE (id::text = $1 OR firebase_uid::text = $1) AND deleted_at IS NULL LIMIT 1`,
+          id,
+        );
         if (rows && rows.length > 0) {
           const u = rows[0];
           return {
@@ -50,14 +52,16 @@ export class UserRepository {
             createdBy: null,
             updatedBy: null,
             deletedBy: null,
-          } as UserWithRelations;
+          };
         }
       } catch {}
       return null;
     }
   }
 
-  async findByFirebaseUid(firebaseUid: string): Promise<UserWithRelations | null> {
+  async findByFirebaseUid(
+    firebaseUid: string,
+  ): Promise<UserWithRelations | null> {
     return this.findById(firebaseUid);
   }
 
@@ -74,9 +78,10 @@ export class UserRepository {
     } catch {
       try {
         const cleanEmail = email.toLowerCase().trim();
-        const rows: any[] = await this.prisma.$queryRawUnsafe(`
-          SELECT * FROM users WHERE LOWER(email) = '${cleanEmail}' AND deleted_at IS NULL LIMIT 1
-        `);
+        const rows: any[] = await this.prisma.$queryRawUnsafe(
+          `SELECT * FROM users WHERE LOWER(email) = $1 AND deleted_at IS NULL LIMIT 1`,
+          cleanEmail,
+        );
         if (rows && rows.length > 0) {
           const u = rows[0];
           return {
@@ -98,7 +103,7 @@ export class UserRepository {
             createdBy: null,
             updatedBy: null,
             deletedBy: null,
-          } as UserWithRelations;
+          };
         }
       } catch {}
       return null;
@@ -146,9 +151,9 @@ export class UserRepository {
       });
     } catch {
       try {
-        const rows: any[] = (await this.prisma.$queryRawUnsafe(`
+        const rows: any[] = await this.prisma.$queryRawUnsafe(`
           SELECT id, name, slug FROM companies WHERE deleted_at IS NULL LIMIT 1
-        `)) as any[];
+        `);
         if (rows && rows.length > 0) {
           return rows[0] as Company;
         }
@@ -161,7 +166,7 @@ export class UserRepository {
     const existing = await this.findDefaultCompany();
     if (existing) return existing;
 
-    const id = `c-default-${Date.now()}`;
+    const id = crypto.randomUUID();
     const slug = `hq-default-${Date.now()}`;
     try {
       return await this.prisma.company.create({
@@ -172,11 +177,15 @@ export class UserRepository {
         },
       });
     } catch {
-      await this.prisma.$executeRawUnsafe(`
-        INSERT INTO companies (id, name, slug, created_at, updated_at)
-        VALUES ('${id}', 'HQ Default Corporation', '${slug}', NOW(), NOW())
-        ON CONFLICT DO NOTHING
-      `).catch(() => {});
+      await this.prisma
+        .$executeRawUnsafe(
+          `INSERT INTO companies (id, name, slug, created_at, updated_at)
+           VALUES ($1, 'HQ Default Corporation', $2, NOW(), NOW())
+           ON CONFLICT DO NOTHING`,
+          id,
+          slug,
+        )
+        .catch(() => {});
 
       return {
         id,
@@ -194,7 +203,7 @@ export class UserRepository {
         createdBy: null,
         updatedBy: null,
         deletedBy: null,
-      } as Company;
+      };
     }
   }
 
@@ -217,7 +226,10 @@ export class UserRepository {
           id: data.id,
           firebaseUid: data.firebaseUid || data.id,
           email: data.email,
-          name: data.name || data.displayName || (data.email ? data.email.split('@')[0] : 'Member'),
+          name:
+            data.name ||
+            data.displayName ||
+            (data.email ? data.email.split('@')[0] : 'Member'),
           displayName: data.displayName || data.name,
           photoUrl: data.photoUrl,
           emailVerified: data.emailVerified ?? false,
@@ -232,12 +244,27 @@ export class UserRepository {
         },
       });
     } catch {
-      const name = data.name || data.displayName || (data.email ? data.email.split('@')[0] : 'Member');
-      await this.prisma.$executeRawUnsafe(`
-        INSERT INTO users (id, firebase_uid, email, name, display_name, role, company_id, email_verified, password_hash, created_at, updated_at)
-        VALUES ('${data.id}', '${data.firebaseUid || data.id}', '${data.email}', '${name}', '${name}', '${assignedRole}', '${data.companyId}', true, '${data.passwordHash || ''}', NOW(), NOW())
-        ON CONFLICT (email) DO UPDATE SET role = '${assignedRole}', name = '${name}'
-      `).catch(() => {});
+      const name =
+        data.name ||
+        data.displayName ||
+        (data.email ? data.email.split('@')[0] : 'Member');
+      const uid = data.firebaseUid || data.id;
+      const pwd = data.passwordHash || '';
+      await this.prisma
+        .$executeRawUnsafe(
+          `INSERT INTO users (id, firebase_uid, email, name, display_name, role, company_id, email_verified, password_hash, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8, NOW(), NOW())
+           ON CONFLICT (email) DO UPDATE SET role = $6, name = $4`,
+          data.id,
+          uid,
+          data.email,
+          name,
+          name,
+          assignedRole,
+          data.companyId,
+          pwd,
+        )
+        .catch(() => {});
 
       return {
         id: data.id,
@@ -258,7 +285,7 @@ export class UserRepository {
         createdBy: null,
         updatedBy: null,
         deletedBy: null,
-      } as UserWithRelations;
+      };
     }
   }
 
@@ -279,29 +306,23 @@ export class UserRepository {
 
   async update(
     id: string,
-    data: {
-      name?: string;
-      displayName?: string;
-      photoUrl?: string;
-      role?: 'OWNER' | 'ADMIN' | 'MEMBER';
-      companyId?: string;
-      teamId?: string;
-      passwordHash?: string;
-      lastLoginAt?: Date;
-      emailVerified?: boolean;
-    },
-  ): Promise<User | null> {
+    data: Partial<User>,
+  ): Promise<UserWithRelations | null> {
     try {
       const updateData: any = {};
       if (data.name !== undefined) updateData.name = data.name;
-      if (data.displayName !== undefined) updateData.displayName = data.displayName;
+      if (data.displayName !== undefined)
+        updateData.displayName = data.displayName;
       if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl;
-      if (data.role !== undefined) updateData.role = data.role as UserRole;
+      if (data.role !== undefined) updateData.role = data.role;
       if (data.companyId !== undefined) updateData.companyId = data.companyId;
       if (data.teamId !== undefined) updateData.teamId = data.teamId;
-      if (data.passwordHash !== undefined) updateData.passwordHash = data.passwordHash;
-      if (data.lastLoginAt !== undefined) updateData.lastLoginAt = data.lastLoginAt;
-      if (data.emailVerified !== undefined) updateData.emailVerified = data.emailVerified;
+      if (data.passwordHash !== undefined)
+        updateData.passwordHash = data.passwordHash;
+      if (data.lastLoginAt !== undefined)
+        updateData.lastLoginAt = data.lastLoginAt;
+      if (data.emailVerified !== undefined)
+        updateData.emailVerified = data.emailVerified;
 
       return await this.prisma.user.update({
         where: { id },
@@ -309,25 +330,52 @@ export class UserRepository {
       });
     } catch {
       const sets: string[] = [];
-      if (data.name) sets.push(`name = '${data.name}'`);
-      if (data.displayName) sets.push(`display_name = '${data.displayName}'`);
-      if (data.role) sets.push(`role = '${data.role}'`);
-      if (data.companyId) sets.push(`company_id = '${data.companyId}'`);
-      if (data.passwordHash) sets.push(`password_hash = '${data.passwordHash}'`);
-      if (data.lastLoginAt) sets.push(`last_login_at = NOW()`);
+      const values: any[] = [];
+      let paramIdx = 1;
+
+      if (data.name !== undefined) {
+        sets.push(`name = $${paramIdx++}`);
+        values.push(data.name);
+      }
+      if (data.displayName !== undefined) {
+        sets.push(`display_name = $${paramIdx++}`);
+        values.push(data.displayName);
+      }
+      if (data.role !== undefined) {
+        sets.push(`role = $${paramIdx++}`);
+        values.push(data.role);
+      }
+      if (data.companyId !== undefined) {
+        sets.push(`company_id = $${paramIdx++}`);
+        values.push(data.companyId);
+      }
+      if (data.passwordHash !== undefined) {
+        sets.push(`password_hash = $${paramIdx++}`);
+        values.push(data.passwordHash);
+      }
+      if (data.lastLoginAt !== undefined) {
+        sets.push(`last_login_at = NOW()`);
+      }
       sets.push(`updated_at = NOW()`);
 
       if (sets.length > 0) {
-        await this.prisma.$executeRawUnsafe(`
-          UPDATE users SET ${sets.join(', ')} WHERE id = '${id}'
-        `).catch(() => {});
+        values.push(id);
+        await this.prisma
+          .$executeRawUnsafe(
+            `UPDATE users SET ${sets.join(', ')} WHERE id = $${paramIdx}`,
+            ...values,
+          )
+          .catch(() => {});
       }
       return this.findById(id);
     }
   }
 
-  async updateUserRole(id: string, role: 'OWNER' | 'ADMIN' | 'MEMBER'): Promise<User | null> {
-    return this.update(id, { role });
+  async updateUserRole(
+    id: string,
+    role: UserRole | string,
+  ): Promise<User | null> {
+    return this.update(id, { role: role as any });
   }
 
   async softDelete(id: string, deletedBy?: string): Promise<User | null> {
@@ -340,9 +388,12 @@ export class UserRepository {
         },
       });
     } catch {
-      await this.prisma.$executeRawUnsafe(`
-        UPDATE users SET deleted_at = NOW() WHERE id = '${id}'
-      `).catch(() => {});
+      await this.prisma
+        .$executeRawUnsafe(
+          `UPDATE users SET deleted_at = NOW() WHERE id = $1`,
+          id,
+        )
+        .catch(() => {});
       return this.findById(id);
     }
   }

@@ -6,16 +6,10 @@ import { MissionStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 
 export type HealthScore =
-  | 'EXCELLENT'
-  | 'HEALTHY'
-  | 'ATTENTION_REQUIRED'
-  | 'CRITICAL';
+  'EXCELLENT' | 'HEALTHY' | 'ATTENTION_REQUIRED' | 'CRITICAL';
 
 export type OversightPolicy =
-  | 'INFORM'
-  | 'RECOMMEND'
-  | 'REQUIRE_APPROVAL'
-  | 'AUTOMATIC';
+  'INFORM' | 'RECOMMEND' | 'REQUIRE_APPROVAL' | 'AUTOMATIC';
 
 export interface LegalClearanceCertificate {
   approved: boolean;
@@ -59,7 +53,9 @@ Maintain an authoritative, strict, and risk-averse legal perspective.`;
     industryContext: string = 'Enterprise Software & Technology',
     companyName: string = 'your organization',
   ): Promise<LegalClearanceCertificate> {
-    this.logger.log(`[Legal Director] Initiating AI compliance audit for ${industryContext}...`);
+    this.logger.log(
+      `[Legal Director] Initiating AI compliance audit for ${industryContext}...`,
+    );
 
     const prompt = `
       Evaluate content for compliance in ${industryContext}:
@@ -78,9 +74,14 @@ Maintain an authoritative, strict, and risk-averse legal perspective.`;
 
     let approved = true;
     let regulatoryRiskScore = 15;
-    let complianceFrameworksVerified = ['GDPR', 'SOC2 Type II', 'Zero-Trust Audit Logs'];
+    let complianceFrameworksVerified = [
+      'GDPR',
+      'SOC2 Type II',
+      'Zero-Trust Audit Logs',
+    ];
     let restrictedKeywordsFound: string[] = [];
-    let legalNotes = 'Content satisfies enterprise regulatory guardrails and privacy standards.';
+    let legalNotes =
+      'Content satisfies enterprise regulatory guardrails and privacy standards.';
 
     try {
       const response = await this.aiService.executePrompt({
@@ -92,8 +93,12 @@ Maintain an authoritative, strict, and risk-averse legal perspective.`;
 
       const parsed = JSON.parse(response.text);
       approved = parsed.approved !== false;
-      regulatoryRiskScore = typeof parsed.regulatoryRiskScore === 'number' ? parsed.regulatoryRiskScore : 15;
-      complianceFrameworksVerified = parsed.complianceFrameworksVerified || complianceFrameworksVerified;
+      regulatoryRiskScore =
+        typeof parsed.regulatoryRiskScore === 'number'
+          ? parsed.regulatoryRiskScore
+          : 15;
+      complianceFrameworksVerified =
+        parsed.complianceFrameworksVerified || complianceFrameworksVerified;
       restrictedKeywordsFound = parsed.restrictedKeywordsFound || [];
       legalNotes = parsed.legalNotes || legalNotes;
     } catch (err) {
@@ -118,8 +123,14 @@ Maintain an authoritative, strict, and risk-averse legal perspective.`;
   /**
    * Toggle Legal Hold on any Mission
    */
-  async toggleLegalHold(missionId: string, isHoldActive: boolean, reason?: string): Promise<boolean> {
-    this.logger.log(`[Legal Director] Updating Legal Hold on mission ${missionId}: ${isHoldActive}`);
+  async toggleLegalHold(
+    missionId: string,
+    isHoldActive: boolean,
+    reason?: string,
+  ): Promise<boolean> {
+    this.logger.log(
+      `[Legal Director] Updating Legal Hold on mission ${missionId}: ${isHoldActive}`,
+    );
 
     const mission = await this.prisma.mission.update({
       where: { id: missionId },
@@ -165,7 +176,9 @@ Maintain an authoritative, strict, and risk-averse legal perspective.`;
       }
 
       if (mission.isLegalHold && newStatus === MissionStatus.ARCHIVED) {
-        throw new Error('Action Blocked: Mission is currently under Legal Hold.');
+        throw new Error(
+          'Action Blocked: Mission is currently under Legal Hold.',
+        );
       }
 
       await tx.mission.update({
@@ -183,7 +196,9 @@ Maintain an authoritative, strict, and risk-averse legal perspective.`;
 
       const isUuid = (val?: string) =>
         val &&
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+          val,
+        );
 
       await tx.auditLog.create({
         data: {

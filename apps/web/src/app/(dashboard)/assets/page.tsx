@@ -17,6 +17,17 @@ import {
   RotateCcw,
   ArrowRight,
   Sparkles,
+  Trash2,
+  Copy,
+  Check,
+  ExternalLink,
+  FileCode,
+  Maximize2,
+  Minimize2,
+  Eye,
+  Code,
+  Table,
+  Volume2,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth-context';
 import { SmartEmptyState } from '../../../components/smart-empty-state';
@@ -49,6 +60,68 @@ interface Asset {
   versions?: AssetVersion[];
 }
 
+function parseCsv(csvText: string): { headers: string[]; rows: string[][] } {
+  const lines = csvText.trim().split('\n').map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return { headers: [], rows: [] };
+  const headers = lines[0].split(',').map((h) => h.replace(/^["']|["']$/g, '').trim());
+  const rows = lines.slice(1).map((line) => line.split(',').map((c) => c.replace(/^["']|["']$/g, '').trim()));
+  return { headers, rows };
+}
+
+function RenderMarkdownView({ content }: { content: string }) {
+  const lines = content.split('\n');
+  return (
+    <div className="space-y-2.5 text-left text-xs leading-relaxed select-text p-2">
+      {lines.map((line, idx) => {
+        if (line.startsWith('# ')) {
+          return (
+            <h1 key={idx} className="text-base font-black text-foreground pt-3 pb-1 border-b border-card-border/60">
+              {line.replace('# ', '')}
+            </h1>
+          );
+        }
+        if (line.startsWith('## ')) {
+          return (
+            <h2 key={idx} className="text-sm font-black text-foreground pt-2.5 pb-0.5">
+              {line.replace('## ', '')}
+            </h2>
+          );
+        }
+        if (line.startsWith('### ')) {
+          return (
+            <h3 key={idx} className="text-xs font-bold text-foreground pt-2">
+              {line.replace('### ', '')}
+            </h3>
+          );
+        }
+        if (line.startsWith('> ')) {
+          return (
+            <blockquote key={idx} className="border-l-2 border-hq-blue pl-3 py-1 bg-hq-blue/5 rounded-r-lg text-foreground/85 italic font-medium">
+              {line.replace('> ', '')}
+            </blockquote>
+          );
+        }
+        if (line.startsWith('- ') || line.startsWith('* ')) {
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-hq-blue mt-1.5 shrink-0" />
+              <span className="text-foreground/80 font-medium">{line.replace(/^[-*]\s+/, '')}</span>
+            </div>
+          );
+        }
+        if (!line.trim()) {
+          return <div key={idx} className="h-1" />;
+        }
+        return (
+          <p key={idx} className="text-foreground/80 font-medium leading-relaxed">
+            {line}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function AssetCenterPage() {
   const { token } = useAuth();
 
@@ -75,6 +148,19 @@ export default function AssetCenterPage() {
     keyPoints: string[];
     confidenceScore: number;
   } | null>(null);
+
+  // Document full content & viewer state
+  const [assetContent, setAssetContent] = React.useState<{
+    content: string;
+    isText: boolean;
+    mimeType: string;
+    filename: string;
+  } | null>(null);
+  const [previewBlobUrl, setPreviewBlobUrl] = React.useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = React.useState<boolean>(false);
+  const [viewTab, setViewTab] = React.useState<'preview' | 'source' | 'table'>('preview');
+  const [contentLoading, setContentLoading] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
 
   // Custom onboarding data
   const [brandColor, setBrandColor] = React.useState('#0A84FF');
@@ -133,19 +219,30 @@ export default function AssetCenterPage() {
     }
   }, [token, activeCategory, searchQuery, fetchAssets]);
 
-  // Fetch full details of selected asset (including versions)
+  // Fetch full details, text content, and binary blob preview for selected asset
   React.useEffect(() => {
     setAiSummaryData(null);
+    setAssetContent(null);
+    setCopied(false);
+    setViewTab('preview');
+
     if (!token || !selectedAssetId) {
       setSelectedAsset(null);
+      setPreviewBlobUrl((prev) => {
+        if (prev) window.URL.revokeObjectURL(prev);
+        return null;
+      });
       return;
     }
+
+    let isMounted = true;
+
     const fetchSelectedAsset = async () => {
       try {
         const res = await fetch(`/api/assets/${selectedAssetId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (res.ok) {
+        if (res.ok && isMounted) {
           const data = await res.json();
           setSelectedAsset(data);
         }
@@ -153,8 +250,78 @@ export default function AssetCenterPage() {
         console.error('Failed retrieving asset details:', e);
       }
     };
+
+    const fetchAssetContent = async () => {
+      setContentLoading(true);
+      try {
+        const [contentRes, rawRes] = await Promise.allSettled([
+          fetch(`/api/assets/${selectedAssetId}/content`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`/api/assets/${selectedAssetId}/raw`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        if (contentRes.status === 'fulfilled' && contentRes.value.ok && isMounted) {
+          const data = await contentRes.value.json();
+          setAssetContent(data);
+        }
+
+        if (rawRes.status === 'fulfilled' && rawRes.value.ok && isMounted) {
+          const blob = await rawRes.value.blob();
+          const url = window.URL.createObjectURL(blob);
+          setPreviewBlobUrl((prev) => {
+            if (prev) window.URL.revokeObjectURL(prev);
+            return url;
+          });
+        }
+      } catch (e) {
+        console.error('Failed retrieving document preview:', e);
+      } finally {
+        if (isMounted) setContentLoading(false);
+      }
+    };
+
     fetchSelectedAsset();
+    fetchAssetContent();
+
+    return () => {
+      isMounted = false;
+    };
   }, [token, selectedAssetId]);
+
+  const handleDownload = async () => {
+    if (!token || !selectedAsset) return;
+    try {
+      toast.info(`Downloading "${selectedAsset.filename}"...`);
+      const res = await fetch(`/api/assets/${selectedAsset.id}/download`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Download request failed');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = selectedAsset.filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(`📥 "${selectedAsset.filename}" downloaded successfully`);
+    } catch {
+      toast.error('Failed downloading document asset.');
+    }
+  };
+
+  const handleCopyContent = () => {
+    if (assetContent?.content) {
+      navigator.clipboard.writeText(assetContent.content);
+      setCopied(true);
+      toast.success('📋 Document content copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const handleGenerateAiSummary = async () => {
     if (!token || !selectedAssetId) return;
@@ -211,6 +378,23 @@ export default function AssetCenterPage() {
     setUploadProgress(10);
 
     try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      let mime = file.type || 'text/plain';
+      if (!file.type || file.type === 'application/octet-stream') {
+        if (ext === 'pdf') mime = 'application/pdf';
+        else if (ext === 'docx') mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        else if (ext === 'doc') mime = 'application/msword';
+        else if (ext === 'md' || ext === 'markdown') mime = 'text/markdown';
+        else if (ext === 'json') mime = 'application/json';
+        else if (ext === 'csv') mime = 'text/csv';
+        else if (ext === 'png') mime = 'image/png';
+        else if (ext === 'jpg' || ext === 'jpeg') mime = 'image/jpeg';
+        else if (ext === 'svg') mime = 'image/svg+xml';
+        else if (ext === 'webp') mime = 'image/webp';
+        else if (ext === 'mp4') mime = 'video/mp4';
+        else mime = 'text/plain';
+      }
+
       const formData = new FormData();
       formData.append('file', file);
 
@@ -246,7 +430,7 @@ export default function AssetCenterPage() {
         body: JSON.stringify({
           filename: file.name,
           fileSize: file.size,
-          mimeType: file.type || 'text/plain',
+          mimeType: mime,
           sha256: uploadData.sha256,
           gcsPath: uploadData.gcsPath,
           classification: 'CONFIDENTIAL',
@@ -311,6 +495,30 @@ export default function AssetCenterPage() {
       }
     } catch (e) {
       console.error('Toggle Legal Hold failed:', e);
+    }
+  };
+
+  const handleDeleteAsset = async () => {
+    if (!token || !selectedAssetId) return;
+    if (selectedAsset?.isLegalHold) {
+      toast.error('Asset is under Legal Hold. Unlock hold before deletion.');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/assets/${selectedAssetId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        toast.success(`🗑️ "${selectedAsset?.filename}" deleted successfully`);
+        setSelectedAssetId(null);
+        setSelectedAsset(null);
+        fetchAssets();
+      } else {
+        toast.error('Failed to delete asset');
+      }
+    } catch {
+      toast.error('Network error deleting asset');
     }
   };
 
@@ -447,9 +655,9 @@ export default function AssetCenterPage() {
         </div>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-4 items-start">
-        {/* Asset list browser */}
-        <div className="lg:col-span-2 space-y-4">
+      <div className="grid gap-6 lg:grid-cols-12 items-start">
+        {/* Asset list browser (Left Sidebar) */}
+        <div className="lg:col-span-4 xl:col-span-4 space-y-4">
           {/* File Drag Drop Zone */}
           <div
             onDragOver={handleDragOver}
@@ -590,8 +798,8 @@ export default function AssetCenterPage() {
           )}
         </div>
 
-        {/* Detailed asset inspector panel */}
-        <div className="lg:col-span-2">
+        {/* Detailed asset inspector panel (Right Main Canvas) */}
+        <div className="lg:col-span-8 xl:col-span-8 space-y-4">
           {selectedAsset ? (
             <Card className="border border-card-border bg-card-bg/60 backdrop-blur-md p-5 shadow-[var(--card-shadow)] text-left space-y-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-20 bg-hq-blue/[0.01] rounded-full blur-2xl pointer-events-none" />
@@ -616,14 +824,25 @@ export default function AssetCenterPage() {
                       <ShieldAlert className="h-3.5 w-3.5 mr-1" />
                       {selectedAsset.isLegalHold ? 'Unlock Hold' : 'Legal Hold'}
                     </Button>
-                    <a
-                      href={selectedAsset.gcsPath}
-                      download
-                      className="inline-flex items-center justify-center rounded-full border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] px-3.5 py-1 text-xs font-bold text-foreground/75 hover:bg-black/5 hover:text-foreground transition-colors h-7"
+                    <Button
+                      onClick={handleDownload}
+                      variant="outline"
+                      size="sm"
+                      className="inline-flex items-center justify-center rounded-full border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C] px-3.5 text-xs font-bold text-foreground/75 hover:bg-black/5 hover:text-foreground transition-colors h-7"
                     >
                       <Download className="h-3.5 w-3.5 mr-1" />
                       Download
-                    </a>
+                    </Button>
+                    <Button
+                      onClick={handleDeleteAsset}
+                      disabled={selectedAsset.isLegalHold}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs font-bold h-7 rounded-full px-2.5 border-card-border text-red-500 hover:bg-red-500/10 hover:border-red-500/30 transition-all"
+                      title="Archive asset"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
 
@@ -642,21 +861,71 @@ export default function AssetCenterPage() {
 
               {/* Document Previewer & AI Summarizer */}
               <div className="space-y-3 text-left">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-[10px] font-black text-foreground/40 uppercase tracking-widest flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-hq-cyan" />
-                    Secure Document Preview
-                  </h4>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-card-border/60 pb-2">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-[10px] font-black text-foreground/40 uppercase tracking-widest flex items-center gap-1.5">
+                      <Eye className="h-3.5 w-3.5 text-hq-cyan" />
+                      Live In-App Document Preview
+                    </h4>
 
-                  <Button
-                    onClick={handleGenerateAiSummary}
-                    disabled={aiSummaryLoading}
-                    size="sm"
-                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-[11px] font-bold h-7 px-3 rounded-full flex items-center gap-1.5 shadow-sm shrink-0"
-                  >
-                    <Sparkles className={`h-3 w-3 ${aiSummaryLoading ? 'animate-spin' : ''}`} />
-                    {aiSummaryLoading ? 'Analyzing...' : 'AI Summary (Mr. Intelligence)'}
-                  </Button>
+                    {/* View mode toggle tabs for text/markdown/csv */}
+                    {assetContent?.isText && (
+                      <div className="flex items-center gap-1 bg-black/5 dark:bg-white/5 p-0.5 rounded-lg text-[10px] font-bold">
+                        {(selectedAsset.filename.endsWith('.md') || selectedAsset.mimeType.includes('markdown')) && (
+                          <button
+                            onClick={() => setViewTab('preview')}
+                            className={`px-2 py-0.5 rounded-md transition-colors ${
+                              viewTab === 'preview' ? 'bg-hq-blue text-white' : 'text-foreground/60 hover:text-foreground'
+                            }`}
+                          >
+                            Rendered
+                          </button>
+                        )}
+                        {(selectedAsset.filename.endsWith('.csv') || selectedAsset.mimeType.includes('csv')) && (
+                          <button
+                            onClick={() => setViewTab('table')}
+                            className={`px-2 py-0.5 rounded-md transition-colors flex items-center gap-1 ${
+                              viewTab === 'table' ? 'bg-hq-blue text-white' : 'text-foreground/60 hover:text-foreground'
+                            }`}
+                          >
+                            <Table className="h-3 w-3" />
+                            Table
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setViewTab('source')}
+                          className={`px-2 py-0.5 rounded-md transition-colors flex items-center gap-1 ${
+                            viewTab === 'source' ? 'bg-hq-blue text-white' : 'text-foreground/60 hover:text-foreground'
+                          }`}
+                        >
+                          <Code className="h-3 w-3" />
+                          Source
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      onClick={handleGenerateAiSummary}
+                      disabled={aiSummaryLoading}
+                      size="sm"
+                      className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-[11px] font-bold h-7 px-3 rounded-full flex items-center gap-1.5 shadow-sm shrink-0"
+                    >
+                      <Sparkles className={`h-3 w-3 ${aiSummaryLoading ? 'animate-spin' : ''}`} />
+                      {aiSummaryLoading ? 'Analyzing...' : 'AI Summary (Mr. Intelligence)'}
+                    </Button>
+
+                    <Button
+                      onClick={() => setIsFullscreen(true)}
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2.5 rounded-full text-xs font-bold border-card-border text-foreground/70 hover:text-foreground flex items-center gap-1"
+                      title="Expand Fullscreen Preview"
+                    >
+                      <Maximize2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
 
                 {/* AI Executive Summary Card */}
@@ -684,31 +953,181 @@ export default function AssetCenterPage() {
                   </div>
                 )}
 
-                <div className="min-h-36 rounded-2xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/50 p-4 text-xs leading-relaxed font-semibold overflow-y-auto text-foreground/80 max-h-56">
-                  {selectedAsset.mimeType.startsWith('image/') ? (
-                    <div className="flex flex-col items-center justify-center py-6 space-y-2">
-                      <FileImage className="h-10 w-10 text-hq-cyan" />
-                      <span className="text-xs text-foreground/45">
-                        Image content verified. Integrity hash match.
-                      </span>
+                {/* Live In-App Preview Container */}
+                <div className="rounded-2xl border border-card-border bg-[#F9F9FB] dark:bg-[#0A0A0C]/50 p-4 text-xs leading-relaxed font-semibold overflow-hidden text-foreground/80">
+                  {contentLoading ? (
+                    <div className="py-16 flex flex-col items-center justify-center space-y-2 text-foreground/40">
+                      <Sparkles className="h-6 w-6 animate-spin text-hq-blue" />
+                      <span className="text-xs font-bold">Loading Live In-App Document Preview...</span>
+                    </div>
+                  ) : selectedAsset.mimeType === 'application/pdf' || selectedAsset.filename.endsWith('.pdf') ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-[11px] text-foreground/50 font-bold px-1 pb-1">
+                        <span className="flex items-center gap-1.5 text-red-500">
+                          <FileText className="h-3.5 w-3.5" />
+                          Multi-Page Interactive PDF Reader
+                        </span>
+                        <span className="text-[10px] text-foreground/40">Native In-App Scroll & Zoom</span>
+                      </div>
+                      {previewBlobUrl ? (
+                        <iframe
+                          src={`${previewBlobUrl}#view=FitH&toolbar=1`}
+                          className="w-full h-[520px] rounded-xl border border-card-border bg-white dark:bg-[#0A0A0C] shadow-inner"
+                          title={selectedAsset.filename}
+                        />
+                      ) : (
+                        <div className="h-64 flex flex-col items-center justify-center text-foreground/40 text-xs space-y-2">
+                          <Sparkles className="h-5 w-5 animate-spin text-hq-blue" />
+                          <span>Loading PDF reader...</span>
+                        </div>
+                      )}
                     </div>
                   ) : selectedAsset.mimeType.startsWith('video/') ? (
-                    <div className="flex flex-col items-center justify-center py-6 space-y-2">
-                      <Video className="h-10 w-10 text-[#bf5af2]" />
-                      <span className="text-xs text-foreground/45">
-                        Video file format verified. Previews disabled on local fallbacks.
+                    <div className="p-2 flex flex-col items-center justify-center space-y-2">
+                      <video
+                        src={previewBlobUrl || `/api/assets/${selectedAsset.id}/raw`}
+                        controls
+                        className="w-full max-h-[460px] rounded-xl bg-black border border-card-border shadow-lg"
+                      />
+                      <span className="text-[11px] text-foreground/50 font-semibold">
+                        In-App Video Stream • {formatBytes(selectedAsset.fileSize)}
                       </span>
                     </div>
+                  ) : selectedAsset.mimeType.startsWith('audio/') ? (
+                    <div className="p-8 flex flex-col items-center justify-center space-y-4 bg-black/5 dark:bg-black/30 rounded-xl">
+                      <Volume2 className="h-10 w-10 text-hq-blue animate-pulse" />
+                      <audio
+                        src={previewBlobUrl || `/api/assets/${selectedAsset.id}/raw`}
+                        controls
+                        className="w-full max-w-md"
+                      />
+                      <span className="text-xs text-foreground/50 font-semibold">{selectedAsset.filename}</span>
+                    </div>
+                  ) : selectedAsset.mimeType.startsWith('image/') ? (
+                    <div className="flex flex-col items-center justify-center p-2 space-y-3">
+                      <div className="max-h-[480px] w-full overflow-auto rounded-xl bg-black/5 dark:bg-black/40 border border-card-border flex items-center justify-center p-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={previewBlobUrl || `/api/assets/${selectedAsset.id}/raw`}
+                          alt={selectedAsset.filename}
+                          className="max-h-[440px] w-auto object-contain rounded-lg shadow-sm"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between w-full text-[11px] text-foreground/50 font-bold px-1">
+                        <span>Verified Graphic Asset • {formatBytes(selectedAsset.fileSize)}</span>
+                        <Button
+                          onClick={handleDownload}
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 text-[11px] font-bold text-hq-blue hover:underline p-0"
+                        >
+                          Download High-Res
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (selectedAsset.filename.endsWith('.csv') || selectedAsset.mimeType.includes('csv')) && viewTab === 'table' ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between pb-1 border-b border-card-border/40">
+                        <span className="text-[11px] font-bold text-foreground/60 flex items-center gap-1.5">
+                          <Table className="h-3.5 w-3.5 text-hq-blue" />
+                          Interactive Data Table View
+                        </span>
+                        <Button
+                          onClick={handleCopyContent}
+                          variant="outline"
+                          size="sm"
+                          className="h-6 px-2.5 rounded-full text-[10px] font-bold border-card-border flex items-center gap-1"
+                        >
+                          {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                          <span>{copied ? 'Copied' : 'Copy CSV'}</span>
+                        </Button>
+                      </div>
+                      <div className="max-h-[480px] overflow-auto rounded-xl border border-card-border bg-white dark:bg-black/30">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 dark:bg-white/5 border-b border-card-border">
+                              {parseCsv(assetContent?.content || '').headers.map((h, i) => (
+                                <th key={i} className="p-2.5 font-black text-foreground border-r border-card-border/50 text-[11px] whitespace-nowrap">
+                                  {h}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {parseCsv(assetContent?.content || '').rows.map((row, rIdx) => (
+                              <tr key={rIdx} className="border-b border-card-border/30 hover:bg-black/5 dark:hover:bg-white/5">
+                                {row.map((cell, cIdx) => (
+                                  <td key={cIdx} className="p-2.5 text-foreground/80 border-r border-card-border/20 font-medium text-[11px] whitespace-nowrap">
+                                    {cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ) : assetContent?.isText ? (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between border-b border-card-border/60 pb-2">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-foreground/60">
+                          <FileCode className="h-3.5 w-3.5 text-hq-blue" />
+                          <span>Full Document Content ({assetContent.content.length} characters)</span>
+                        </div>
+                        <Button
+                          onClick={handleCopyContent}
+                          variant="outline"
+                          size="sm"
+                          className="h-6 px-2.5 rounded-full text-[10px] font-bold border-card-border flex items-center gap-1 hover:bg-black/5 dark:hover:bg-white/5"
+                        >
+                          {copied ? (
+                            <>
+                              <Check className="h-3 w-3 text-green-500" />
+                              <span>Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3 w-3" />
+                              <span>Copy Text</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      {viewTab === 'preview' && (selectedAsset.filename.endsWith('.md') || selectedAsset.filename.endsWith('.markdown') || selectedAsset.mimeType.includes('markdown')) ? (
+                        <div className="max-h-[480px] overflow-y-auto rounded-xl bg-white dark:bg-black/30 border border-card-border/70 p-4">
+                          <RenderMarkdownView content={assetContent.content} />
+                        </div>
+                      ) : (
+                        <div className="max-h-[480px] overflow-y-auto rounded-xl bg-white dark:bg-black/40 border border-card-border/70 p-3.5 select-text">
+                          <pre className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-foreground/90 break-words font-medium">
+                            {assetContent.content}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
                   ) : (
-                    <div>
-                      <p className="font-black text-foreground mb-2">
-                        {selectedAsset.filename} Description
-                      </p>
-                      <p className="text-foreground/70">
-                        {selectedAsset.description || 'No description provided for this index.'}
-                      </p>
-                      <div className="mt-4 border-t border-card-border/50 pt-2 text-[10px] text-foreground/35 font-bold uppercase tracking-wider">
-                        Ledger metadata index: {selectedAsset.gcsPath}
+                    <div className="space-y-3 py-3">
+                      <div className="flex items-center gap-3">
+                        {getMimeIcon(selectedAsset.mimeType)}
+                        <div>
+                          <p className="font-black text-foreground text-xs">{selectedAsset.filename}</p>
+                          <p className="text-[11px] text-foreground/50">{selectedAsset.description || 'Enterprise ledger asset index'}</p>
+                        </div>
+                      </div>
+                      <div className="border-t border-card-border/50 pt-2 flex items-center justify-between">
+                        <span className="text-[10px] text-foreground/35 font-bold uppercase tracking-wider">
+                          Storage Vault: {selectedAsset.gcsPath}
+                        </span>
+                        <Button
+                          onClick={handleDownload}
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs font-bold rounded-full border-card-border"
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          Download
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -771,6 +1190,126 @@ export default function AssetCenterPage() {
           )}
         </div>
       </div>
+
+      {/* Fullscreen Document Inspection Modal */}
+      {isFullscreen && selectedAsset && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-8 animate-in fade-in">
+          <div className="bg-white dark:bg-[#0E0E12] border border-card-border rounded-3xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            {/* Modal Header */}
+            <div className="p-4 px-6 border-b border-card-border flex items-center justify-between bg-[#F9F9FB] dark:bg-[#0A0A0C]">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-hq-blue/10 border border-hq-blue/20 flex items-center justify-center">
+                  {getMimeIcon(selectedAsset.mimeType)}
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-foreground flex items-center gap-2">
+                    {selectedAsset.filename}
+                    <Badge variant="ai" className="text-[10px]">
+                      {selectedAsset.classification}
+                    </Badge>
+                  </h3>
+                  <p className="text-[11px] text-foreground/45 font-medium">
+                    {formatBytes(selectedAsset.fileSize)} • Full In-App Reading Mode
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleDownload}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs font-bold h-8 rounded-full border-card-border"
+                >
+                  <Download className="h-3.5 w-3.5 mr-1.5" />
+                  Download
+                </Button>
+                <Button
+                  onClick={() => setIsFullscreen(false)}
+                  size="sm"
+                  className="bg-hq-blue hover:bg-hq-blue/90 text-white text-xs font-bold h-8 rounded-full px-3.5 flex items-center gap-1.5"
+                >
+                  <Minimize2 className="h-3.5 w-3.5" />
+                  Exit Fullscreen
+                </Button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 p-6 overflow-auto bg-slate-50 dark:bg-[#070709]">
+              {selectedAsset.mimeType === 'application/pdf' || selectedAsset.filename.endsWith('.pdf') ? (
+                previewBlobUrl ? (
+                  <iframe
+                    src={`${previewBlobUrl}#view=FitH&toolbar=1`}
+                    className="w-full h-full rounded-2xl border border-card-border bg-white shadow-md"
+                    title={selectedAsset.filename}
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center text-foreground/40 text-xs">
+                    Loading PDF preview...
+                  </div>
+                )
+              ) : selectedAsset.mimeType.startsWith('image/') ? (
+                <div className="h-full flex items-center justify-center p-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={previewBlobUrl || `/api/assets/${selectedAsset.id}/raw`}
+                    alt={selectedAsset.filename}
+                    className="max-h-full max-w-full object-contain rounded-2xl shadow-xl border border-card-border"
+                  />
+                </div>
+              ) : selectedAsset.mimeType.startsWith('video/') ? (
+                <div className="h-full flex items-center justify-center p-4">
+                  <video
+                    src={previewBlobUrl || `/api/assets/${selectedAsset.id}/raw`}
+                    controls
+                    className="max-h-full max-w-full rounded-2xl shadow-xl border border-card-border bg-black"
+                  />
+                </div>
+              ) : (selectedAsset.filename.endsWith('.csv') || selectedAsset.mimeType.includes('csv')) && viewTab === 'table' ? (
+                <div className="rounded-2xl border border-card-border bg-white dark:bg-black/40 overflow-auto max-h-full">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-100 dark:bg-white/5 border-b border-card-border sticky top-0">
+                        {parseCsv(assetContent?.content || '').headers.map((h, i) => (
+                          <th key={i} className="p-3 font-black text-foreground border-r border-card-border/50 text-xs whitespace-nowrap">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {parseCsv(assetContent?.content || '').rows.map((row, rIdx) => (
+                        <tr key={rIdx} className="border-b border-card-border/30 hover:bg-black/5 dark:hover:bg-white/5">
+                          {row.map((cell, cIdx) => (
+                            <td key={cIdx} className="p-3 text-foreground/85 border-r border-card-border/20 font-medium text-xs whitespace-nowrap">
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : assetContent?.isText ? (
+                <div className="rounded-2xl border border-card-border bg-white dark:bg-black/40 p-6 max-h-full overflow-y-auto select-text shadow-sm">
+                  {selectedAsset.filename.endsWith('.md') || selectedAsset.filename.endsWith('.markdown') ? (
+                    <RenderMarkdownView content={assetContent.content} />
+                  ) : (
+                    <pre className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-foreground/90 break-words font-medium">
+                      {assetContent.content}
+                    </pre>
+                  )}
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-foreground/40 text-xs">
+                  In-App preview not supported for this raw binary format.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
